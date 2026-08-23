@@ -483,4 +483,156 @@ class FindSimilarTermsTest extends TestCase
 
         $this->assertSame([], $result);
     }
+
+    // =========================================================================
+    // SQL candidate prefilter (#277)
+    // =========================================================================
+
+    /**
+     * Decide what the candidate SQL would admit, without a database.
+     *
+     * Mirrors what MySQL does with the clause: the LIKE tests are substring
+     * tests on a lowercase column, and their sum is compared to the threshold.
+     *
+     * @param array{sql: string, bindings: list<mixed>} $filter    The filter
+     * @param string                                    $textLc    Candidate term
+     * @param string                                    $lemmaLc   Candidate lemma
+     *
+     * @return bool
+     */
+    private static function admits(array $filter, string $textLc, string $lemmaLc = ''): bool
+    {
+        $bindings = $filter['bindings'];
+        $offset = 0;
+
+        // Family conditions come first when the searched term has a lemma
+        if (str_starts_with($filter['sql'], '(WoLemmaLC = ?')) {
+            $family = (string) $bindings[0];
+            if ($lemmaLc === $family || $textLc === $family) {
+                return true;
+            }
+            $offset = 2;
+        }
+
+        if (!str_contains($filter['sql'], 'LIKE')) {
+            return false;
+        }
+
+        $shared = 0;
+        $patterns = array_slice($bindings, $offset, count($bindings) - $offset - 1);
+        foreach ($patterns as $pattern) {
+            $pair = str_replace(['\\%', '\\_', '\\\\'], ['%', '_', '\\'], trim((string) $pattern, '%'));
+            if (str_contains($textLc, $pair)) {
+                $shared++;
+            }
+        }
+
+        return $shared >= (int) $bindings[count($bindings) - 1];
+    }
+
+    public function testTheFilterAdmitsEveryTermTheRankingWouldKeep(): void
+    {
+        $useCase = new FindSimilarTerms();
+
+        $vocabulary = [
+            'geschwindigkeit' => 'geschwindigkeit',
+            'begrenzung' => 'begrenzung',
+            'geschwindigkeitsmesser' => 'geschwindigkeit',
+            'beschwerde' => 'beschwerde',
+            'schwindel' => 'schwindel',
+            'katze' => 'katze',
+            'hund' => 'hund',
+            'unbegrenzt' => 'begrenzen',
+        ];
+        $searched = 'geschwindigkeitsbegrenzung';
+
+        $candidates = [];
+        $id = 1;
+        foreach ($vocabulary as $textLc => $lemmaLc) {
+            $candidates[] = ['id' => $id, 'textLc' => $textLc, 'status' => 1, 'lemmaLc' => $lemmaLc];
+            $id++;
+        }
+
+        // Everything the ranking picks must survive the SQL that feeds it
+        $kept = $useCase->rankByCoverage($candidates, $searched, count($candidates), 0.33);
+        $this->assertNotEmpty($kept, 'the ranking must keep something for this to prove anything');
+
+        $filter = $useCase->buildCandidateFilter($searched, 0.33, '');
+        $this->assertNotNull($filter);
+
+        foreach ($kept as $keptId) {
+            $candidate = $candidates[$keptId - 1];
+            $this->assertTrue(
+                self::admits($filter, $candidate['textLc'], $candidate['lemmaLc']),
+                "the prefilter dropped {$candidate['textLc']}, which the ranking keeps"
+            );
+        }
+    }
+
+    public function testTheFilterRejectsATermWithNothingInCommon(): void
+    {
+        $useCase = new FindSimilarTerms();
+
+        $filter = $useCase->buildCandidateFilter('geschwindigkeit', 0.33, '');
+        $this->assertNotNull($filter);
+
+        $this->assertFalse(self::admits($filter, 'hund'));
+        $this->assertTrue(self::admits($filter, 'geschwindigkeitsmesser'));
+    }
+
+    public function testTheFilterAdmitsTheWordFamilyWhateverItLooksLike(): void
+    {
+        $useCase = new FindSimilarTerms();
+
+        // "bought" and "buy" share no letter pair at all — only the lemma finds them
+        $filter = $useCase->buildCandidateFilter('bought', 0.33, 'buy');
+        $this->assertNotNull($filter);
+
+        $this->assertTrue(self::admits($filter, 'buys', 'buy'));
+        $this->assertTrue(self::admits($filter, 'buy', ''));
+        $this->assertFalse(self::admits($filter, 'xylophone', 'xylophone'));
+    }
+
+    public function testTheRequiredOverlapGrowsWithTheTermLength(): void
+    {
+        $useCase = new FindSimilarTerms();
+
+        // ceil(0.33 * pairs / 2), so a longer term demands more shared pairs
+        $short = $useCase->buildCandidateFilter('cat', 0.33, '');
+        $long = $useCase->buildCandidateFilter('geschwindigkeit', 0.33, '');
+        $this->assertNotNull($short);
+        $this->assertNotNull($long);
+
+        $this->assertSame(1, $short['bindings'][count($short['bindings']) - 1]);
+        $this->assertSame(3, $long['bindings'][count($long['bindings']) - 1]);
+    }
+
+    public function testATermTooShortForALetterPairFiltersToNothing(): void
+    {
+        $useCase = new FindSimilarTerms();
+
+        // No letter pair and no family: it scores zero against every term
+        $this->assertNull($useCase->buildCandidateFilter('a', 0.33, ''));
+        $this->assertNotNull($useCase->buildCandidateFilter('a', 0.33, 'a'));
+    }
+
+    public function testLikeWildcardsInATermAreEscaped(): void
+    {
+        $useCase = new FindSimilarTerms();
+
+        $filter = $useCase->buildCandidateFilter('100%_off', 0.33, '');
+        $this->assertNotNull($filter);
+
+        foreach ($filter['bindings'] as $binding) {
+            if (!is_string($binding)) {
+                continue;
+            }
+            $inner = trim($binding, '%');
+            $this->assertDoesNotMatchRegularExpression(
+                '/(?<!\\\\)[%_]/',
+                $inner,
+                "unescaped wildcard in LIKE pattern {$binding}"
+            );
+        }
+    }
 }

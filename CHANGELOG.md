@@ -75,6 +75,17 @@ ones are marked like "v1.0.0-fork".
   suggestion box never waits on the network. Languages with the lemmatizer set
   to *none* are unaffected.
 
+### Fixed
+
+* **Adding a term failed outright on a large vocabulary** (#277). Opening the
+  term editor read every term of the language into memory to look for similar
+  ones — affordable for a vocabulary built by hand, fatal for one seeded from a
+  dictionary import, where clicking a word spent a minute before dying on PHP's
+  memory limit. The search for candidates now happens in the database, which
+  returns the terms that stood a chance instead of all of them. Suggestions are
+  unchanged; the work behind them no longer grows with the size of your
+  vocabulary.
+
 ## [3.4.2-fork] - 2026-08-16
 
 ### Fixed

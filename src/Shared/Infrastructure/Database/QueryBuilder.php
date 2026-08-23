@@ -111,7 +111,13 @@ class QueryBuilder
     private array $columns = ['*'];
 
     /**
-     * @var array<int, array{column: string, operator: string, value: mixed, boolean: string}> WHERE conditions
+     * @var list<mixed> Values for placeholders in a raw SELECT expression
+     */
+    private array $selectBindings = [];
+
+    /**
+     * @var array<int, array{column: string, operator: string, value: mixed, boolean: string,
+     *      bindings?: list<mixed>}> WHERE conditions
      */
     private array $wheres = [];
 
@@ -181,6 +187,7 @@ class QueryBuilder
     public function select(array|string $columns = ['*']): static
     {
         $this->columns = is_array($columns) ? $columns : [$columns];
+        $this->selectBindings = [];
         return $this;
     }
 
@@ -190,12 +197,18 @@ class QueryBuilder
      * This method accepts a raw SQL string for the SELECT clause, allowing
      * complex expressions like function calls, aliases, and computed columns.
      *
-     * @param string $expression Raw SQL expression for SELECT clause
+     * The expression may carry `?` placeholders, whose values are passed in
+     * $bindings and bound ahead of the WHERE clause's own. As with whereRaw(),
+     * only the prepared execution path substitutes them.
+     *
+     * @param string      $expression Raw SQL expression for SELECT clause
+     * @param list<mixed> $bindings   Values for the placeholders in $expression
      */
-    public function selectRaw(string $expression): static
+    public function selectRaw(string $expression, array $bindings = []): static
     {
         // Split by comma, preserving function calls with parentheses
         $this->columns = [$expression];
+        $this->selectBindings = $bindings;
         return $this;
     }
 
@@ -440,15 +453,22 @@ class QueryBuilder
     /**
      * Add a raw WHERE clause.
      *
-     * @param string $sql     Raw SQL for the WHERE clause
-     * @param string $boolean The boolean connector
+     * The clause may carry `?` placeholders, whose values are passed in
+     * $bindings and bound in order alongside the other conditions. Note that
+     * only the prepared execution path substitutes them: rendering a bound
+     * clause through toSql() leaves the placeholders in place.
+     *
+     * @param string     $sql      Raw SQL for the WHERE clause
+     * @param list<mixed> $bindings Values for the placeholders in $sql
+     * @param string     $boolean  The boolean connector
      */
-    public function whereRaw(string $sql, string $boolean = 'AND'): static
+    public function whereRaw(string $sql, array $bindings = [], string $boolean = 'AND'): static
     {
         $this->wheres[] = [
             'column' => '',
             'operator' => 'RAW',
             'value' => $sql,
+            'bindings' => $bindings,
             'boolean' => strtoupper($boolean)
         ];
 
@@ -747,6 +767,7 @@ class QueryBuilder
     {
         $this->applyUserScope();
         $this->columns = ["COUNT($column) AS cnt"];
+        $this->selectBindings = [];
         $row = Connection::fetchOne($this->toSql());
 
         return (int) ($row['cnt'] ?? 0);
@@ -937,6 +958,10 @@ class QueryBuilder
         }
 
         $sql .= implode(', ', $this->columns);
+        /** @var mixed $selectBinding */
+        foreach ($this->selectBindings as $selectBinding) {
+            $this->bindings[] = $selectBinding;
+        }
         $sql .= ' FROM ' . $this->table;
 
         // Add JOINs
@@ -994,6 +1019,10 @@ class QueryBuilder
 
             if ($where['operator'] === 'RAW') {
                 $sql .= (string) $where['value'];
+                /** @var mixed $rawBinding */
+                foreach ($where['bindings'] ?? [] as $rawBinding) {
+                    $this->bindings[] = $rawBinding;
+                }
                 continue;
             }
 
@@ -1071,6 +1100,7 @@ class QueryBuilder
     {
         $this->applyUserScope();
         $this->columns = ["COUNT($column) AS cnt"];
+        $this->selectBindings = [];
         $sql = $this->toSqlPrepared();
         $row = Connection::preparedFetchOne($sql, $this->bindings);
 
