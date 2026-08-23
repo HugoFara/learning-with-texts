@@ -15,12 +15,15 @@ declare(strict_types=1);
 namespace Lwt\Tests\Modules\Dictionary\Infrastructure\Import;
 
 use Lwt\Modules\Dictionary\Infrastructure\Import\CsvImporter;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 /**
- * @covers \Lwt\Modules\Dictionary\Infrastructure\Import\CsvImporter
+ * What the importer does with a byte-order mark: UTF-8 is stripped from the
+ * first cell, UTF-16 and UTF-32 are refused with a message that says why.
  */
+#[CoversClass(CsvImporter::class)]
 class CsvImporterBomTest extends TestCase
 {
     private string $tmpDir;
