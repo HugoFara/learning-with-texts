@@ -116,4 +116,94 @@ class ParserRegistryTest extends TestCase
         $this->assertTrue($this->registry->has('custom'));
         $this->assertSame($customParser, $this->registry->get('custom'));
     }
+
+    // =========================================================================
+    // Opted-in parser resolution (#278)
+    // =========================================================================
+
+    public function testNoParserTypeLeavesTheLanguageOnTheBuiltInPipeline(): void
+    {
+        // Every language predating the field stores nothing here, and their
+        // parsing must not change
+        $this->assertNull($this->registry->getOptedInParserFromRow([]));
+        $this->assertNull($this->registry->getOptedInParserFromRow(['LgParserType' => null]));
+        $this->assertNull($this->registry->getOptedInParserFromRow(['LgParserType' => '']));
+        $this->assertNull($this->registry->getOptedInParserFromRow(['LgParserType' => '  ']));
+    }
+
+    public function testTheDefaultParserIsNotAnOptIn(): void
+    {
+        // "regex" is what the built-in pipeline already does
+        $this->assertNull($this->registry->getOptedInParserFromRow(['LgParserType' => 'regex']));
+    }
+
+    public function testLegacySignalsAreNotOptIns(): void
+    {
+        // resolveParserTypeFromRow() reads both of these; the pipeline has
+        // always handled them itself, so they must not route anywhere new
+        $this->assertNull($this->registry->getOptedInParserFromRow([
+            'LgRegexpWordCharacters' => 'MECAB',
+        ]));
+        $this->assertNull($this->registry->getOptedInParserFromRow([
+            'LgSplitEachChar' => 1,
+        ]));
+    }
+
+    public function testAnExplicitAvailableParserIsReturned(): void
+    {
+        $parser = $this->registry->getOptedInParserFromRow(['LgParserType' => 'character']);
+
+        $this->assertInstanceOf(CharacterParser::class, $parser);
+    }
+
+    public function testAnUnknownParserFallsBackToTheBuiltInPipeline(): void
+    {
+        $this->assertNull(
+            $this->registry->getOptedInParserFromRow(['LgParserType' => 'no-such-parser'])
+        );
+    }
+
+    public function testAnUnavailableParserFallsBackToTheBuiltInPipeline(): void
+    {
+        // Not to the regex parser: for a language that asked for jieba or
+        // mecab, regex yields a text with no words at all
+        $this->registry->register(new UnavailableTestParser());
+
+        $this->assertNull(
+            $this->registry->getOptedInParserFromRow(['LgParserType' => 'unavailable-test'])
+        );
+    }
+}
+
+/**
+ * A registered parser that the server cannot run.
+ */
+class UnavailableTestParser implements ParserInterface
+{
+    public function getType(): string
+    {
+        return 'unavailable-test';
+    }
+
+    public function getName(): string
+    {
+        return 'Unavailable Test Parser';
+    }
+
+    public function isAvailable(): bool
+    {
+        return false;
+    }
+
+    public function getAvailabilityMessage(): string
+    {
+        return 'not installed';
+    }
+
+    public function parse(
+        string $text,
+        \Lwt\Modules\Language\Domain\Parser\ParserConfig $config
+    ): \Lwt\Modules\Language\Domain\Parser\ParserResult {
+        throw new \RuntimeException('never called');
+    }
 }

@@ -86,6 +86,22 @@ ones are marked like "v1.0.0-fork".
   unchanged; the work behind them no longer grows with the size of your
   vocabulary.
 
+* **Chinese texts could not be read** (#278). A Chinese language created from
+  the built-in preset produced a text with no clickable words at all — nothing
+  to look up, nothing to track. Chinese and Japanese now come out of the preset
+  already pointed at a real tokenizer: **jieba** segments Chinese into words
+  rather than characters, and Japanese asks for MeCab as it always claimed to.
+  Where that tokenizer is not installed the language falls back to
+  character-by-character parsing, so it stays readable either way.
+
+* **Choosing a parser in the language form did nothing** (#278). The Parser
+  Type menu wrote its value to the database and no part of the parsing pipeline
+  ever read it — picking "Jieba (Chinese)" or "MeCab Python" parsed exactly as
+  before. The setting is now honoured. It also lists the parsers from
+  `config/parsers.php`, which it never did, so jieba and MeCab Python appear on
+  an install that has them. A language that names no parser — every language
+  that exists today — parses exactly as it did.
+
 ## [3.4.2-fork] - 2026-08-16
 
 ### Fixed

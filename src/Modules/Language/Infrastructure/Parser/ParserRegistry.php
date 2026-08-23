@@ -42,11 +42,16 @@ class ParserRegistry
     /**
      * Create a new parser registry with default parsers.
      *
-     * @param ExternalParserLoader|null $externalLoader Optional loader for external parsers
+     * Builds its own loader when none is given, so that a registry constructed
+     * directly still sees the parsers in config/parsers.php. It did not before,
+     * which is why jieba never reached the language form's parser list even on
+     * an install where it was installed and working.
+     *
+     * @param ExternalParserLoader|null $externalLoader Loader for external parsers
      */
     public function __construct(?ExternalParserLoader $externalLoader = null)
     {
-        $this->externalLoader = $externalLoader;
+        $this->externalLoader = $externalLoader ?? new ExternalParserLoader();
         $this->registerDefaultParsers();
         $this->registerExternalParsers();
     }
@@ -174,6 +179,40 @@ class ParserRegistry
     public function getDefaultType(): string
     {
         return self::DEFAULT_PARSER;
+    }
+
+    /**
+     * The parser a language deliberately asked for, if any.
+     *
+     * Only an explicit, non-default `LgParserType` counts. The legacy signals
+     * resolveParserTypeFromRow() also understands — the MECAB magic word and
+     * the split-each-character flag — are deliberately ignored here: the
+     * pipeline has always handled those itself, and every language predating
+     * this field carries no parser type at all, so returning null for them
+     * keeps their parsing byte-identical.
+     *
+     * @param array<string, mixed> $row Database row with Lg* prefixed columns
+     *
+     * @return ParserInterface|null The chosen parser, or null to leave the
+     *         language on the built-in pipeline
+     */
+    public function getOptedInParserFromRow(array $row): ?ParserInterface
+    {
+        $type = trim((string) ($row['LgParserType'] ?? ''));
+        if ($type === '' || $type === self::DEFAULT_PARSER) {
+            return null;
+        }
+
+        $parser = $this->get($type);
+        if ($parser === null || !$parser->isAvailable()) {
+            // An unavailable parser must not drop the language onto the regex
+            // parser: for the CJK languages that ask for jieba or mecab, that
+            // yields a text with no words at all. The built-in pipeline still
+            // honours their split-each-character setting, so fall back to it.
+            return null;
+        }
+
+        return $parser;
     }
 
     /**

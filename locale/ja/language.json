@@ -79,6 +79,7 @@
     "form.text_size_example": "テキストはこのサイズになります",
     "form.section_text_processing": "テキスト処理",
     "form.parser_type": "パーサータイプ",
+    "form.parser_automatic": "自動",
     "form.parser_unavailable": "（利用不可）",
     "form.character_substitutions": "文字置換",
     "form.character_substitutions_help": "解析前に文字を置換します（形式：from=to、|で区切り）",

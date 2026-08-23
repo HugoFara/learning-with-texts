@@ -18,6 +18,8 @@ declare(strict_types=1);
 
 namespace Lwt\Shared\Infrastructure\Database;
 
+use Lwt\Modules\Language\Domain\Parser\ParserConfig;
+use Lwt\Modules\Language\Infrastructure\Parser\ParserRegistry;
 use Lwt\Shared\Infrastructure\Exception\DatabaseException;
 
 /**
@@ -80,10 +82,13 @@ class TextParsing
         if ($pre === null) {
             return;
         }
-        [$ptext, $isMecab] = $pre;
+        [$ptext, $isMecab, $record] = $pre;
 
         // Preview HTML is shown before word splitting.
-        if ($isMecab) {
+        $tokens = self::tokenizeWithOptedInParser($ptext, $record);
+        if ($tokens !== null) {
+            StandardTextParser::echoPreview($ptext, $lid);
+        } elseif ($isMecab) {
             JapaneseTextParser::displayJapanesePreview($ptext);
             $tokens = JapaneseTextParser::tokenize($ptext);
         } else {
@@ -157,10 +162,93 @@ class TextParsing
         if ($pre === null) {
             return [];
         }
-        [$ptext, $isMecab] = $pre;
+        [$ptext, $isMecab, $record] = $pre;
+
+        $opted = self::tokenizeWithOptedInParser($ptext, $record);
+        if ($opted !== null) {
+            return $opted;
+        }
+
         return $isMecab
             ? JapaneseTextParser::tokenize($ptext)
             : StandardTextParser::tokenize($ptext, $lid);
+    }
+
+    /**
+     * Tokenize with the parser the language explicitly selected, if any.
+     *
+     * The parser registry has been able to describe jieba, MeCab and any
+     * configured external tokenizer for some time, but nothing consulted it:
+     * `LgParserType` was written by the language form and read by no one, so
+     * choosing "Jieba (Chinese)" changed nothing about how a text was parsed.
+     * This is where that setting takes effect.
+     *
+     * Only a deliberate choice routes here. A language with no parser type —
+     * which is every language created before the field meant anything — stays
+     * on the built-in pipeline, as does one that asked for a parser the server
+     * cannot run. Nothing changes for an install that has not opted in.
+     *
+     * @param string               $ptext  Preprocessed text (substitutions applied)
+     * @param array<string, mixed> $record The language row
+     *
+     * @return ParsedToken[]|null Tokens, or null to use the built-in pipeline
+     */
+    private static function tokenizeWithOptedInParser(string $ptext, array $record): ?array
+    {
+        // Cheap guard before building a registry, which reads the external
+        // parser config: almost every language names no parser at all.
+        if (trim((string) ($record['LgParserType'] ?? '')) === '') {
+            return null;
+        }
+
+        $parser = (new ParserRegistry())->getOptedInParserFromRow($record);
+        if ($parser === null) {
+            return null;
+        }
+
+        $config = ParserConfig::fromDatabaseRow($record);
+
+        try {
+            $result = $parser->parse($ptext, $config);
+        } catch (\RuntimeException $e) {
+            // A tokenizer that dies mid-import must not take the text with it
+            error_log('LWT: parser "' . $parser->getType() . '" failed: ' . $e->getMessage());
+            return null;
+        }
+
+        return self::adaptTokens($result->getTokens());
+    }
+
+    /**
+     * Convert parser-module tokens into the shape the persistence layer takes.
+     *
+     * The two differ only in bookkeeping: the module numbers sentences from
+     * zero and restarts the token order inside each one, while the persistence
+     * layer numbers sentences from one and wants a single running order across
+     * the whole text.
+     *
+     * @param array<int, \Lwt\Modules\Language\Domain\Parser\Token> $tokens Parser tokens
+     *
+     * @return ParsedToken[]
+     */
+    private static function adaptTokens(array $tokens): array
+    {
+        $adapted = [];
+        $order = 0;
+        foreach ($tokens as $token) {
+            $text = $token->getText();
+            if ($text === '') {
+                continue;
+            }
+            $order++;
+            $adapted[] = new ParsedToken(
+                $token->getSentenceIndex() + 1,
+                $order,
+                $token->isWord() ? 1 : 0,
+                $text
+            );
+        }
+        return $adapted;
     }
 
     /**
@@ -170,7 +258,8 @@ class TextParsing
      * @param string $text Raw text
      * @param int    $lid  Language ID
      *
-     * @return array{0: string, 1: bool}|null [preprocessed text, isMecab] or null if language missing
+     * @return array{0: string, 1: bool, 2: array<string, mixed>}|null
+     *         [preprocessed text, isMecab, language row] or null if missing
      */
     private static function preprocess(string $text, int $lid): ?array
     {
@@ -195,6 +284,6 @@ class TextParsing
             }
         }
 
-        return [$text, 'MECAB' === strtoupper(trim($termchar))];
+        return [$text, 'MECAB' === strtoupper(trim($termchar)), $record];
     }
 }
