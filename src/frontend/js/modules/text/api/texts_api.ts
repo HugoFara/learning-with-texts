@@ -38,6 +38,21 @@ export interface TextReadingConfig {
   annTextSize: number;
   // Reader layout settings
   readerWidth: number;
+  /**
+   * Set when the text parsed into (almost) no words, which happens when the
+   * language's word characters do not match its script. Null when fine.
+   */
+  parseWarning: ParseWarning | null;
+}
+
+/**
+ * Why a text came out with nothing the reader can click, and where to fix it.
+ */
+export interface ParseWarning {
+  headline: string;
+  detail: string;
+  linkLabel: string;
+  linkHref: string;
 }
 
 /**

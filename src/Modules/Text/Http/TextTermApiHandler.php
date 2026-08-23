@@ -26,6 +26,7 @@ use Lwt\Shared\Infrastructure\Database\Settings;
 use Lwt\Modules\Vocabulary\Application\Services\ExportService;
 use Lwt\Modules\Text\Application\Services\AnnotationService;
 use Lwt\Modules\Tags\Application\TagsFacade;
+use Lwt\Modules\Text\Domain\ParseCoverage;
 use Lwt\Modules\Text\Application\TextFacade;
 use Lwt\Modules\Text\Application\Services\TextScoringService;
 
@@ -216,6 +217,7 @@ class TextTermApiHandler
             'modeTrans' => $modeTrans,
             'termDelimiter' => $termDelimiter,
             'readerWidth' => $readerWidth,
+            'parseWarning' => self::parseWarning($words, $langId),
             'annTextSize' => match ($textSize) {
                 100 => 50,
                 150 => 50,
@@ -228,6 +230,45 @@ class TextTermApiHandler
         return [
             'words' => $words,
             'config' => $config,
+        ];
+    }
+
+    /**
+     * Tell the reader when a text holds nothing they can act on.
+     *
+     * A language whose word characters do not match the script of its texts
+     * does not fail: it parses successfully into nothing. The page still shows
+     * every character, so the text looks ordinary and simply refuses to
+     * respond to any click, with nothing anywhere to say why (#278).
+     *
+     * @param array<int, array<string, mixed>> $words  The rendered word list
+     * @param int                              $langId Language of the text
+     *
+     * @return array{headline: string, detail: string, linkLabel: string, linkHref: string}|null
+     */
+    private static function parseWarning(array $words, int $langId): ?array
+    {
+        $wordCount = 0;
+        $characters = 0;
+        foreach ($words as $word) {
+            $characters += mb_strlen((string) ($word['text'] ?? ''), 'UTF-8');
+            if (($word['isNotWord'] ?? true) === false) {
+                $wordCount++;
+            }
+        }
+
+        $verdict = ParseCoverage::assess($wordCount, $characters);
+        if (!ParseCoverage::isWarning($verdict)) {
+            return null;
+        }
+
+        return [
+            'headline' => $verdict === ParseCoverage::NO_WORDS
+                ? __('text.parse_warning.no_words')
+                : __('text.parse_warning.almost_no_words'),
+            'detail' => __('text.parse_warning.check_language'),
+            'linkLabel' => __('text.parse_warning.edit_language'),
+            'linkHref' => '/languages/' . $langId . '/edit',
         ];
     }
 
