@@ -216,6 +216,29 @@ class QueryBuilderTest extends TestCase
         $this->assertStringContainsString("WHERE TgID > 5 AND TgText != ''", $sql);
     }
 
+    public function testWhereRawBindsItsOwnPlaceholdersInClauseOrder(): void
+    {
+        $query = QueryBuilder::table('tags')
+            ->where('TgID', '>', 5)
+            ->whereRaw('(TgText LIKE ? OR TgText LIKE ?)', ['%ab%', '%cd%'])
+            ->where('TgComment', '=', 'note');
+
+        $sql = $query->toSqlPrepared();
+
+        $this->assertStringContainsString('(TgText LIKE ? OR TgText LIKE ?)', $sql);
+        $this->assertSame([5, '%ab%', '%cd%', 'note'], $query->getBindings());
+    }
+
+    public function testWhereRawWithoutBindingsAddsNone(): void
+    {
+        $query = QueryBuilder::table('tags')
+            ->whereRaw('TgID > 5')
+            ->where('TgText', '=', 'x');
+        $query->toSqlPrepared();
+
+        $this->assertSame(['x'], $query->getBindings());
+    }
+
     // ===== join() tests =====
 
     public function testJoinWithExplicitOperator(): void
