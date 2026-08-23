@@ -15,13 +15,16 @@ declare(strict_types=1);
 namespace Lwt\Tests\Modules\Dictionary\Infrastructure\Import;
 
 use Lwt\Modules\Dictionary\Infrastructure\Import\ArchiveExtractor;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use ZipArchive;
 
 /**
- * @covers \Lwt\Modules\Dictionary\Infrastructure\Import\ArchiveExtractor
+ * Archive detection, extraction and cleanup, including the path-traversal
+ * guard and the nested-file search extraction relies on.
  */
+#[CoversClass(ArchiveExtractor::class)]
 class ArchiveExtractorTest extends TestCase
 {
     private string $sandbox;
