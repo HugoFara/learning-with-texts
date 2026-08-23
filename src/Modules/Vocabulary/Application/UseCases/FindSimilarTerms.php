@@ -19,6 +19,7 @@ namespace Lwt\Modules\Vocabulary\Application\UseCases;
 
 use Lwt\Shared\Infrastructure\Database\QueryBuilder;
 use Lwt\Shared\Infrastructure\Database\Settings;
+use Lwt\Modules\Vocabulary\Application\Services\LetterPairProfile;
 use Lwt\Modules\Vocabulary\Application\Services\SimilarityCalculator;
 use Lwt\Modules\Vocabulary\Domain\LemmatizerInterface;
 use Lwt\Modules\Vocabulary\Infrastructure\Lemmatizers\DictionaryLemmatizer;
@@ -89,33 +90,42 @@ class FindSimilarTerms
         float $minRanking,
         float $phoneticWeight = 0.3
     ): array {
+        if ($maxCount <= 0) {
+            return [];
+        }
+
         $comparedTermLc = mb_strtolower($comparedTerm, 'UTF-8');
 
-        // Fetch words with their status for weighting
+        $lemmaLc = $this->resolveLemma($languageId, $comparedTermLc);
+        $term = $this->calculator->profile($comparedTermLc);
+
+        // Score all rows as they arrive. Only keep > threshold.
+        $pool = [];
         $rows = QueryBuilder::table('words')
             ->select(['WoID', 'WoTextLC', 'WoStatus', 'WoLemmaLC'])
             ->where('WoLgID', '=', $languageId)
             ->where('WoTextLC', '<>', $comparedTermLc)
-            ->getPrepared();
+            ->eachPrepared();
 
-        $candidates = [];
         foreach ($rows as $record) {
-            $candidates[] = [
-                'id' => (int) $record["WoID"],
-                'textLc' => (string) $record["WoTextLC"],
-                'status' => (int) $record["WoStatus"],
-                'lemmaLc' => (string) ($record["WoLemmaLC"] ?? ''),
-            ];
+            $entry = $this->poolEntry(
+                [
+                    'id' => (int) $record["WoID"],
+                    'textLc' => (string) $record["WoTextLC"],
+                    'status' => (int) $record["WoStatus"],
+                    'lemmaLc' => (string) ($record["WoLemmaLC"] ?? ''),
+                ],
+                $term,
+                $minRanking,
+                $phoneticWeight,
+                $lemmaLc
+            );
+            if ($entry !== null) {
+                $pool[] = $entry;
+            }
         }
 
-        return $this->rankByCoverage(
-            $candidates,
-            $comparedTermLc,
-            $maxCount,
-            $minRanking,
-            $phoneticWeight,
-            $this->resolveLemma($languageId, $comparedTermLc)
-        );
+        return $this->selectByCoverage($pool, $term, $maxCount, $phoneticWeight);
     }
 
     /**
@@ -221,29 +231,79 @@ class FindSimilarTerms
 
         $pool = [];
         foreach ($candidates as $candidate) {
-            $profile = $this->calculator->profile($candidate['textLc']);
-            $baseSimilarity = $this->calculator->getResidualCombinedRanking(
-                $profile,
-                $term,
-                $phoneticWeight
-            );
-            $isFamily = $this->sharesWordFamily($candidate, $lemmaLc);
-
-            // The threshold reads the unweighted score, as it always has
-            if (!$isFamily && $baseSimilarity < $minRanking) {
-                continue;
+            $entry = $this->poolEntry($candidate, $term, $minRanking, $phoneticWeight, $lemmaLc);
+            if ($entry !== null) {
+                $pool[] = $entry;
             }
-
-            $statusWeight = $this->calculator->getStatusWeight($candidate['status']);
-            $pool[] = [
-                'id' => $candidate['id'],
-                'profile' => $profile,
-                'family' => $isFamily,
-                'weight' => $statusWeight,
-                'weighted' => $baseSimilarity * $statusWeight,
-            ];
         }
 
+        return $this->selectByCoverage($pool, $term, $maxCount, $phoneticWeight);
+    }
+
+    /**
+     * Score one candidate and admit it to the pool, or turn it away.
+     *
+     * Split out so that {@see execute()} can score rows as they stream in
+     * rather than collecting them all first — the scoring itself is unchanged,
+     * and both callers share this so the two paths cannot drift apart.
+     *
+     * @param array{id: int, textLc: string, status: int, lemmaLc?: string} $candidate      Candidate
+     * @param LetterPairProfile                                             $term           Searched term's profile
+     * @param float                                                         $minRanking     Minimum (0-1)
+     * @param float                                                         $phoneticWeight Phonetic (0-1)
+     * @param string                                                        $lemmaLc        Term's lemma
+     *
+     * @return array{id: int, profile: LetterPairProfile, family: bool, weight: float, weighted: float}|null
+     *         The pool entry, or null when the candidate does not qualify
+     */
+    private function poolEntry(
+        array $candidate,
+        LetterPairProfile $term,
+        float $minRanking,
+        float $phoneticWeight,
+        string $lemmaLc
+    ): ?array {
+        $profile = $this->calculator->profile($candidate['textLc']);
+        $baseSimilarity = $this->calculator->getResidualCombinedRanking(
+            $profile,
+            $term,
+            $phoneticWeight
+        );
+        $isFamily = $this->sharesWordFamily($candidate, $lemmaLc);
+
+        // The threshold reads the unweighted score, as it always has
+        if (!$isFamily && $baseSimilarity < $minRanking) {
+            return null;
+        }
+
+        $statusWeight = $this->calculator->getStatusWeight($candidate['status']);
+
+        return [
+            'id' => $candidate['id'],
+            'profile' => $profile,
+            'family' => $isFamily,
+            'weight' => $statusWeight,
+            'weighted' => $baseSimilarity * $statusWeight,
+        ];
+    }
+
+    /**
+     * Pick from an already-scored pool, one at a time, by residual coverage.
+     *
+     * @param list<array{id: int, profile: LetterPairProfile, family: bool, weight: float, weighted: float}> $pool
+     *        Candidates that cleared the threshold
+     * @param LetterPairProfile $term           Searched term's profile
+     * @param int               $maxCount       Maximum to return
+     * @param float             $phoneticWeight Phonetic (0-1)
+     *
+     * @return list<int> Word IDs, most useful first
+     */
+    private function selectByCoverage(
+        array $pool,
+        LetterPairProfile $term,
+        int $maxCount,
+        float $phoneticWeight
+    ): array {
         $remaining = $term;
         $picked = [];
         $wanted = min($maxCount, count($pool));

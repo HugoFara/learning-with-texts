@@ -1033,6 +1033,23 @@ class QueryBuilder
     }
 
     /**
+     * Execute the query using prepared statements and yield rows one at a time.
+     *
+     * The streaming counterpart of {@see getPrepared()}, for scans too large
+     * to materialise. The query is built and sent when iteration starts, not
+     * when this is called. No other query may run on the connection until the
+     * generator is finished — see {@see PreparedStatement::fetchEach()}.
+     *
+     * @return \Generator<int, array<string, mixed>> Rows, one at a time
+     */
+    public function eachPrepared(): \Generator
+    {
+        $this->applyUserScope();
+        $sql = $this->toSqlPrepared();
+        yield from Connection::preparedFetchEach($sql, $this->bindings);
+    }
+
+    /**
      * Execute the query using prepared statements and return the first result.
      *
      * @return array<string, mixed>|null The first row or null

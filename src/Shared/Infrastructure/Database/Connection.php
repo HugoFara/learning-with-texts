@@ -327,6 +327,29 @@ class Connection
     }
 
     /**
+     * Execute a parameterized query and yield rows one at a time.
+     *
+     * The streaming counterpart of {@see preparedFetchAll()}, for scans whose
+     * result set is too large to hold in memory. See
+     * {@see PreparedStatement::fetchEach()} for the constraint this puts on
+     * the loop body: no other query may run on the connection until the
+     * generator is finished.
+     *
+     * @param string            $sql    The SQL query with ? placeholders
+     * @param array<int, mixed> $params Parameters to bind (indexed array)
+     *
+     * @return \Generator<int, array<string, mixed>> Rows, one at a time
+     */
+    public static function preparedFetchEach(string $sql, array $params = []): \Generator
+    {
+        $stmt = self::prepare($sql);
+        if (!empty($params)) {
+            $stmt->bindValues($params);
+        }
+        yield from $stmt->fetchEach();
+    }
+
+    /**
      * Execute a parameterized query and return the first row.
      *
      * @param string             $sql    The SQL query with ? placeholders

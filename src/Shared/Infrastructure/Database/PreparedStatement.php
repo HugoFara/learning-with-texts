@@ -215,6 +215,96 @@ class PreparedStatement
     }
 
     /**
+     * Execute and yield rows one at a time, without buffering the result set.
+     *
+     * `fetchAll()` materialises every row before the caller sees any of them,
+     * so scanning a large table costs memory proportional to the whole result
+     * — enough to exhaust the memory limit on a big vocabulary. This pulls
+     * rows from the server on demand and holds only the current one, which is
+     * what lets a caller scan a table it could never fit in memory.
+     *
+     * The result set stays open on the connection for the life of the
+     * generator, and mysqli permits no other query on that connection until it
+     * is done. So the loop body must not run queries of its own: gather
+     * anything else the loop needs before iteration starts.
+     *
+     * @return \Generator<int, array<string, mixed>> Rows, one at a time
+     *
+     * @throws DatabaseException If execution fails
+     *
+     * @psalm-suppress MixedAssignment Column values are mixed, as in fetchAll()
+     */
+    public function fetchEach(): \Generator
+    {
+        $params = empty($this->boundParams) ? null : $this->boundParams;
+        if (!$this->stmt->execute($params)) {
+            throw new DatabaseException(
+                'Failed to execute statement: ' . $this->stmt->error,
+                0,
+                null,
+                $this->sql,
+                $this->stmt->errno
+            );
+        }
+
+        $meta = $this->stmt->result_metadata();
+        if ($meta === false) {
+            // For queries that don't return a result set
+            return;
+        }
+
+        $columns = [];
+        foreach ($meta->fetch_fields() as $field) {
+            $columns[] = $field->name;
+        }
+        $meta->free();
+
+        // bind_result() binds by reference and rewrites the same slots on every
+        // fetch(), so each row is copied out before it leaves this method.
+        $current = array_fill(0, count($columns), null);
+        $this->bindRowSlots($current);
+
+        try {
+            while ($this->stmt->fetch()) {
+                $row = [];
+                foreach ($columns as $slot => $name) {
+                    $row[$name] = $current[$slot];
+                }
+                yield $row;
+            }
+        } finally {
+            // Release the result set even when the caller abandons the
+            // generator early, or the connection stays unusable.
+            $this->stmt->free_result();
+        }
+    }
+
+    /**
+     * Bind each column of the open result set to a slot of the given array.
+     *
+     * mysqli's bind_result() takes its destinations by reference, so this has
+     * to build an array of references into $target — an idiom Psalm cannot
+     * model, which is what the suppressions below are for. Kept in its own
+     * method so the suppressions cover only this, and not the fetch loop.
+     *
+     * @param array<int, mixed> $target Slots rewritten on every fetch()
+     *
+     * @psalm-suppress UnsupportedReferenceUsage
+     * @psalm-suppress UnusedVariable
+     * @psalm-suppress MixedAssignment
+     *
+     * @return void
+     */
+    private function bindRowSlots(array &$target): void
+    {
+        $refs = [];
+        foreach (array_keys($target) as $slot) {
+            $refs[] = &$target[$slot];
+        }
+        $this->stmt->bind_result(...$refs);
+    }
+
+    /**
      * Execute and fetch the first row.
      *
      * Uses PHP 8.1's execute() with params array.
