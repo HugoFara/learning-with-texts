@@ -20,6 +20,22 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ScheduleSql::class)]
 class ScheduleSqlTest extends TestCase
 {
+    /**
+     * The expression asks the schema whether `term_schedule` is there. Force
+     * the answer so these stay unit tests and never reach for a connection.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        ScheduleSql::setHasScheduleTable(true);
+    }
+
+    protected function tearDown(): void
+    {
+        ScheduleSql::setHasScheduleTable(null);
+        parent::tearDown();
+    }
+
     public function testFallsBackToTheStatusSeedForAnUngradedTerm(): void
     {
         $sql = ScheduleSql::effectiveDue();
@@ -62,6 +78,55 @@ class ScheduleSqlTest extends TestCase
     public function testTomorrowPredicateLooksOneDayAhead(): void
     {
         $this->assertStringContainsString('INTERVAL 1 DAY', ScheduleSql::isDueTomorrow());
+        $this->assertStringStartsWith(ScheduleSql::effectiveDue(), ScheduleSql::isDueTomorrow());
+    }
+
+    public function testSchemaWithoutTheScheduleTableNeverNamesIt(): void
+    {
+        // An install where the phase-2a migration did not run (#275). Naming a
+        // missing table fails the statement at prepare time, which took the
+        // review page and the vocabulary list to a 500 rather than degrading.
+        ScheduleSql::setHasScheduleTable(false);
+
+        $sql = ScheduleSql::effectiveDue();
+
+        $this->assertStringNotContainsString('term_schedule', $sql);
+        $this->assertStringContainsString('WoStatusChanged', $sql);
+    }
+
+    public function testDegradedExpressionKeepsEverySeedInterval(): void
+    {
+        // Every term on such a schema is ungraded by definition, so the seed
+        // expression alone is not an approximation — it is the same answer.
+        ScheduleSql::setHasScheduleTable(false);
+
+        $sql = ScheduleSql::effectiveDue();
+
+        foreach (LegacyStatusSeed::stabilityByStatus() as $status => $stability) {
+            $this->assertStringContainsString(
+                'WHEN ' . $status . ' THEN ' . (int) round($stability),
+                $sql,
+                "Status $status lost its seed interval without term_schedule"
+            );
+        }
+    }
+
+    public function testDegradedExpressionIsStillSelfContained(): void
+    {
+        ScheduleSql::setHasScheduleTable(false);
+
+        $sql = ScheduleSql::effectiveDue();
+
+        $this->assertStringStartsWith('(', $sql);
+        $this->assertStringEndsWith(')', $sql);
+        $this->assertSame(substr_count($sql, '('), substr_count($sql, ')'));
+    }
+
+    public function testPredicatesFollowTheDegradedExpression(): void
+    {
+        ScheduleSql::setHasScheduleTable(false);
+
+        $this->assertSame(ScheduleSql::effectiveDue() . ' <= NOW()', ScheduleSql::isDue());
         $this->assertStringStartsWith(ScheduleSql::effectiveDue(), ScheduleSql::isDueTomorrow());
     }
 

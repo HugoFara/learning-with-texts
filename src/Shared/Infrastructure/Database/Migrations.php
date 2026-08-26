@@ -47,8 +47,10 @@ class Migrations
     /**
      * How many times a failed migration is retried before being given up on.
      *
-     * Retries only happen when new migrations appear (see update()), so this
-     * counts upgrades, not requests.
+     * Counts requests: a failed migration is retried on the next request, and
+     * the one after, then left alone so a broken statement is not re-run on
+     * every page load. An upgrade that brings new migration files restores the
+     * budget — see {@see restoreRetryBudget()}.
      */
     public const MAX_ATTEMPTS = 3;
 
@@ -616,10 +618,34 @@ class Migrations
     }
 
     /**
+     * Give every failed migration its attempts back.
+     *
+     * Called when an upgrade brings new migration files along. A migration
+     * usually fails on a prerequisite rather than on itself, and the new files
+     * may be exactly what repairs it, so an exhausted attempt counter should
+     * not be what keeps it from ever running again.
+     *
+     * @return void
+     */
+    public static function restoreRetryBudget(): void
+    {
+        try {
+            Connection::execute(
+                "UPDATE _migrations SET attempts = 0
+                 WHERE status = '" . self::STATUS_FAILED . "'"
+            );
+        } catch (\RuntimeException $e) {
+            // Nothing to restore on an install too old to have the table yet
+            error_log('Could not restore migration retry budget: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Get migrations that failed and are still worth retrying.
      *
      * A migration is retried until MAX_ATTEMPTS is reached; past that it stays
-     * on record as failed so an administrator can investigate.
+     * on record as failed so an administrator can investigate — until an
+     * upgrade restores the budget, see {@see restoreRetryBudget()}.
      *
      * @return array<string> List of failed migration filenames
      */
@@ -715,12 +741,20 @@ class Migrations
             try {
                 Connection::execute($sql_query);
             } catch (\RuntimeException $e) {
-                // Log per-statement failure but continue with remaining
-                // statements. This handles fresh installs where baseline
-                // creates modern tables and legacy migrations reference
-                // old table names that no longer exist.
+                // Continue with the remaining statements either way: a fresh
+                // install runs legacy migrations against table names that
+                // baseline.sql never created, and those fail by design.
+                //
+                // Classify before logging, and say which kind this was. Logging
+                // both under one wording buried the eight real failures of
+                // issue #275 among ~170 expected ones, in a log where they read
+                // identically (#285).
+                if (self::isHarmlessFailure($e)) {
+                    error_log("Migration statement skipped (expected): $filename - " . $e->getMessage());
+                    continue;
+                }
                 error_log("Migration failed: $filename - " . $e->getMessage());
-                if ($firstError === null && !self::isHarmlessFailure($e)) {
+                if ($firstError === null) {
                     $firstError = $e->getMessage();
                 }
             }
@@ -932,18 +966,29 @@ class Migrations
         $allMigrations = self::getMigrationFiles();
         $newMigrations = array_diff($allMigrations, self::getRecordedMigrations());
 
-        // A migration that failed before gets another chance whenever an
-        // upgrade brings new migrations along: the reason it failed is often a
-        // missing prerequisite that a later migration repairs. Retrying only on
-        // upgrades (and never more than MAX_ATTEMPTS times) keeps ordinary
-        // requests from re-running broken SQL over and over.
-        $retryMigrations = [];
+        // A migration that failed before gets another chance, bounded by
+        // MAX_ATTEMPTS so ordinary requests cannot re-run broken SQL forever.
+        //
+        // This used to be gated on `count($newMigrations) > 0`, which made the
+        // retry unreachable exactly where it was needed most: a fresh install
+        // records every migration on its first run, so the second run has no
+        // new ones, the gate never opens, and a migration that failed stays
+        // failed at one attempt until some later release happens to add a file
+        // (#285). An install left without `term_schedule` that way is the one
+        // in #275.
+        //
+        // The gate's own intent survives below: a migration often fails on a
+        // prerequisite that a later migration repairs, so an upgrade that
+        // brings new files restores the attempt budget of everything that
+        // failed, and the retry starts over rather than staying exhausted.
         if (count($newMigrations) > 0) {
-            $retryMigrations = array_intersect(
-                self::getRetryableMigrations(),
-                $allMigrations
-            );
+            self::restoreRetryBudget();
         }
+
+        $retryMigrations = array_intersect(
+            self::getRetryableMigrations(),
+            $allMigrations
+        );
 
         $pendingMigrations = array_merge($newMigrations, $retryMigrations);
         sort($pendingMigrations);
@@ -1056,6 +1101,10 @@ class Migrations
                 self::restoreForeignKeys($foreignKeys);
                 self::reconcileForeignKeys();
                 Connection::execute("SET FOREIGN_KEY_CHECKS = 1");
+
+                // The run may have created a table that code later in this same
+                // request probes for before naming it in SQL.
+                Connection::forgetTableCache();
             }
         }
 

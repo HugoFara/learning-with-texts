@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Lwt\Modules\Review\Infrastructure;
 
 use Lwt\Modules\Review\Domain\Scheduling\LegacyStatusSeed;
+use Lwt\Shared\Infrastructure\Database\Connection;
 
 /**
  * SQL for reading a term's due date from its FSRS schedule.
@@ -34,6 +35,11 @@ use Lwt\Modules\Review\Domain\Scheduling\LegacyStatusSeed;
 final class ScheduleSql
 {
     /**
+     * @var bool|null Forced answer for the schema probe, null to look it up
+     */
+    private static ?bool $hasScheduleTable = null;
+
+    /**
      * When a term next falls due, whether or not it has been graded.
      *
      * Yields NULL for statuses that are never scheduled (98 ignored, 99 well
@@ -49,10 +55,52 @@ final class ScheduleSql
             $cases .= ' WHEN ' . $status . ' THEN ' . (int) round($stability);
         }
 
+        $seeded = 'DATE_ADD(WoStatusChanged, INTERVAL CASE WoStatus' . $cases . ' END DAY)';
+
+        // An install where 20260805_200000_add_fsrs_scheduling.sql did not run
+        // has no term_schedule, and naming it here would fail the statement at
+        // prepare time — taking the review page and the whole vocabulary list
+        // to a 500 rather than degrading (issue #275 is such an install). Every
+        // term on that schema is ungraded by definition, so the seed expression
+        // alone is not a fallback but the exact same answer.
+        if (!self::hasScheduleTable()) {
+            return '(' . $seeded . ')';
+        }
+
         return '(SELECT COALESCE('
             . '(SELECT ts.TsDue FROM term_schedule ts WHERE ts.TsWoID = WoID),'
-            . ' DATE_ADD(WoStatusChanged, INTERVAL CASE WoStatus' . $cases . ' END DAY)'
+            . ' ' . $seeded
             . '))';
+    }
+
+    /**
+     * Whether this schema carries the FSRS scheduling table.
+     *
+     * @return bool True when `term_schedule` can be named in a query
+     */
+    public static function hasScheduleTable(): bool
+    {
+        if (self::$hasScheduleTable !== null) {
+            return self::$hasScheduleTable;
+        }
+
+        // Deliberately not cached here as well: Connection memoises the lookup
+        // for the request and clears it when a migration run creates the table,
+        // so a second cache would only be one that could go stale.
+        return Connection::tableExists('term_schedule');
+    }
+
+    /**
+     * Override the schema probe — for tests, and to reset it between them.
+     *
+     * @param bool|null $exists True or false to force an answer, null to
+     *                          look it up again on the next call
+     *
+     * @return void
+     */
+    public static function setHasScheduleTable(?bool $exists): void
+    {
+        self::$hasScheduleTable = $exists;
     }
 
     /**

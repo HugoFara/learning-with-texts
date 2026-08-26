@@ -38,6 +38,11 @@ class Connection
     private static ?\mysqli $instance = null;
 
     /**
+     * @var array<string, bool> Memoised tableExists() answers, for this request
+     */
+    private static array $tableExists = [];
+
+    /**
      * Get the database connection instance.
      *
      * @return \mysqli The database connection
@@ -291,6 +296,52 @@ class Connection
     public static function reset(): void
     {
         self::$instance = null;
+        self::$tableExists = [];
+    }
+
+    /**
+     * Whether a table is present in the current database.
+     *
+     * For code that has to keep working against a schema where a migration did
+     * not run. A table named in raw SQL cannot be guarded by COALESCE or a LEFT
+     * JOIN: MySQL resolves names at prepare time, so a missing table fails the
+     * whole statement before any row is read. Callers ask this first and emit
+     * different SQL when the table is absent.
+     *
+     * The answer is memoised for the request. Migrations run during bootstrap,
+     * ahead of routing, and clear the cache when they finish, so a table
+     * created during the request is still seen by the code that reads it.
+     *
+     * @param string $table Table name, as it appears in the SQL
+     *
+     * @return bool True when the table exists
+     */
+    public static function tableExists(string $table): bool
+    {
+        if (isset(self::$tableExists[$table])) {
+            return self::$tableExists[$table];
+        }
+
+        /** @var int|string|null $found */
+        $found = self::preparedFetchValue(
+            'SELECT COUNT(*) AS value FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?',
+            [$table]
+        );
+
+        self::$tableExists[$table] = ((int) $found) > 0;
+
+        return self::$tableExists[$table];
+    }
+
+    /**
+     * Forget memoised table lookups, after work that may have created tables.
+     *
+     * @return void
+     */
+    public static function forgetTableCache(): void
+    {
+        self::$tableExists = [];
     }
 
     /**
