@@ -7,6 +7,20 @@ ones are marked like "v1.0.0-fork".
 
 ## [Unreleased]
 
+### Fixed
+
+* **A failed API write no longer reports success** (#284). Handlers signal
+  failure by returning an `error` payload rather than by throwing, and the
+  routers passed that straight to `Response::success()` — so the request came
+  back HTTP 200 and the interface, seeing a success, did nothing at all. Such
+  a payload is now recognised and sent as 400. The body is unchanged, so
+  anything reading the message out of it keeps working.
+
+* **API error messages reach the interface** (#284). The API client only ever
+  looked for `message` on a failed request, while the API sends `error` — so
+  even a well-formed error was shown as a bare "HTTP 400: Bad Request". It now
+  reads both.
+
 ## [3.5.0-fork] - 2026-08-27
 
 ### Added

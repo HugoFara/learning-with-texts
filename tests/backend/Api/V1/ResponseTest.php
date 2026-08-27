@@ -62,6 +62,84 @@ class ResponseTest extends TestCase
     }
 
     /**
+     * A payload that reports a failure must not be sent as 200.
+     */
+    public function testSuccessPromotesAnErrorPayloadToFourHundred(): void
+    {
+        $data = ['error' => 'Duplicate entry'];
+        $response = Response::success($data);
+
+        $this->assertEquals(400, $response->getStatusCode());
+        // The body is passed through untouched: callers already reading the
+        // message out of the payload keep finding it there.
+        $this->assertEquals($data, $response->getData());
+    }
+
+    /**
+     * The `success => false` convention is recognised too.
+     */
+    public function testSuccessPromotesAnUnsuccessfulPayloadToFourHundred(): void
+    {
+        $response = Response::success(['success' => false, 'error' => 'Nope']);
+
+        $this->assertEquals(400, $response->getStatusCode());
+    }
+
+    /**
+     * `error => null` is what handlers emit on the way *out* of a success
+     * branch, so it must stay a 200.
+     */
+    public function testSuccessKeepsTwoHundredWhenTheErrorKeyIsEmpty(): void
+    {
+        foreach ([null, '', '   '] as $empty) {
+            $response = Response::success(['success' => true, 'error' => $empty]);
+
+            $this->assertEquals(
+                200,
+                $response->getStatusCode(),
+                'error => ' . var_export($empty, true) . ' is not a failure'
+            );
+        }
+    }
+
+    /**
+     * An error envelope may flag failure with `error => true` and carry the
+     * text in `message`.
+     */
+    public function testSuccessPromotesABooleanErrorFlag(): void
+    {
+        $response = Response::success(['error' => true, 'message' => 'Boom']);
+
+        $this->assertEquals(400, $response->getStatusCode());
+    }
+
+    /**
+     * A caller that named its own status meant it.
+     */
+    public function testSuccessLeavesAnExplicitStatusAlone(): void
+    {
+        $response = Response::success(['error' => 'Duplicate entry'], 201);
+
+        $this->assertEquals(201, $response->getStatusCode());
+    }
+
+    /**
+     * Ordinary payloads are untouched, including non-arrays.
+     */
+    public function testSuccessLeavesOrdinaryPayloadsAtTwoHundred(): void
+    {
+        $this->assertEquals(200, Response::success(['id' => 1])->getStatusCode());
+        $this->assertEquals(200, Response::success([])->getStatusCode());
+        $this->assertEquals(200, Response::success('plain')->getStatusCode());
+        $this->assertEquals(200, Response::success(null)->getStatusCode());
+        // "errors" is a result field on batch endpoints, not a failure flag.
+        $this->assertEquals(
+            200,
+            Response::success(['imported' => 5, 'errors' => ['line 3']])->getStatusCode()
+        );
+    }
+
+    /**
      * Test error returns JsonResponse with error format.
      */
     public function testErrorReturnsJsonResponse(): void

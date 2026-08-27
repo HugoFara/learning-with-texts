@@ -642,10 +642,14 @@ class BookApiHandlerTest extends TestCase
     public function routePostHandlesTheCollection(): void
     {
         // No language in the body, so this is the handled-failure path rather
-        // than the trait's old 405 — POST /books is a real endpoint now.
+        // than the trait's old 405 — POST /books is a real endpoint now, and
+        // 400 rather than 405 is what distinguishes the two. It answered 200
+        // until issue #284: the handler reports the missing language by
+        // returning an error payload, which Response::success() used to send
+        // as a success.
         $response = $this->handler->routePost([], []);
 
-        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame(400, $response->getStatusCode());
     }
 
     // =========================================================================
