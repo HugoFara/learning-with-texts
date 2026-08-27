@@ -149,6 +149,65 @@ class ParserRegistryTest extends TestCase
         ]));
     }
 
+    public function testABackfilledCharacterTypeIsNotAnOptIn(): void
+    {
+        // 20251223_120000_add_parser_type.sql set LgParserType='character' on
+        // every LgSplitEachChar language, so an upgraded install carries a type
+        // nobody chose. Routing it to CharacterParser retokenizes the language:
+        // measured on a real database, Chinese went from 103 words to 122.
+        $this->assertNull($this->registry->getOptedInParserFromRow([
+            'LgParserType' => 'character',
+            'LgSplitEachChar' => 1,
+        ]));
+    }
+
+    public function testABackfilledMecabTypeIsNotAnOptIn(): void
+    {
+        // Same backfill, from the magic word this time. The built-in pipeline
+        // already routes these to JapaneseTextParser.
+        $this->assertNull($this->registry->getOptedInParserFromRow([
+            'LgParserType' => 'mecab',
+            'LgRegexpWordCharacters' => 'MECAB',
+        ]));
+        $this->assertNull($this->registry->getOptedInParserFromRow([
+            'LgParserType' => 'mecab',
+            'LgRegexpWordCharacters' => '  mecab  ',
+        ]));
+    }
+
+    public function testACharacterTypeWithoutTheSplitFlagIsAChoice(): void
+    {
+        // The backfill only ever wrote 'character' alongside the flag, so this
+        // combination could only have come from the language form.
+        $this->assertInstanceOf(
+            CharacterParser::class,
+            $this->registry->getOptedInParserFromRow([
+                'LgParserType' => 'character',
+                'LgSplitEachChar' => 0,
+            ])
+        );
+    }
+
+    public function testAParserUnrelatedToTheLegacyFlagsIsAlwaysAChoice(): void
+    {
+        // A language asking for jieba means it, whatever its other flags say
+        $this->registry->register(new UnavailableTestParser());
+
+        $this->assertNull($this->registry->getOptedInParserFromRow([
+            'LgParserType' => 'unavailable-test',
+            'LgSplitEachChar' => 1,
+        ]), 'an unavailable parser still falls back, but for its own reason');
+
+        $this->assertInstanceOf(
+            CharacterParser::class,
+            $this->registry->getOptedInParserFromRow([
+                'LgParserType' => 'character',
+                'LgRegexpWordCharacters' => 'MECAB',
+            ]),
+            'the magic word only excuses a mecab type, not any other'
+        );
+    }
+
     public function testAnExplicitAvailableParserIsReturned(): void
     {
         $parser = $this->registry->getOptedInParserFromRow(['LgParserType' => 'character']);
