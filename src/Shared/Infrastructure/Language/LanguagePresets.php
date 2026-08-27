@@ -38,7 +38,9 @@ class LanguagePresets
     /**
      * Cached language definitions.
      *
-     * @var array<string, array{0: string, 1: string, 2: bool, 3: string, 4: string, 5: bool, 6: bool, 7: bool}>|null
+     * @var array<string, array{
+     *     0: string, 1: string, 2: bool, 3: string, 4: string, 5: bool, 6: bool, 7: bool, 8: string
+     * }>|null
      */
     private static ?array $definitions = null;
 
@@ -62,8 +64,11 @@ class LanguagePresets
      * - 5: makeCharacterWord (bool) - Whether to split characters as words
      * - 6: removeSpaces (bool) - Whether to remove spaces
      * - 7: rightToLeft (bool) - Whether language is RTL
+     * - 8: parserType (string) - Tokenizer to use, '' to infer from the flags
      *
-     * @return array<string, array{0: string, 1: string, 2: bool, 3: string, 4: string, 5: bool, 6: bool, 7: bool}>
+     * @return array<string, array{
+     *     0: string, 1: string, 2: bool, 3: string, 4: string, 5: bool, 6: bool, 7: bool, 8: string
+     * }>
      *
      * @throws \RuntimeException If JSON file cannot be read or parsed
      */
@@ -80,7 +85,9 @@ class LanguagePresets
     /**
      * Load language definitions from JSON file.
      *
-     * @return array<string, array{0: string, 1: string, 2: bool, 3: string, 4: string, 5: bool, 6: bool, 7: bool}>
+     * @return array<string, array{
+     *     0: string, 1: string, 2: bool, 3: string, 4: string, 5: bool, 6: bool, 7: bool, 8: string
+     * }>
      *
      * @throws \RuntimeException If file cannot be read or JSON is invalid
      */
@@ -99,7 +106,7 @@ class LanguagePresets
         }
 
         // Convert from object format to legacy indexed array format
-        /** @var array<string, array{0: string, 1: string, 2: bool, 3: string, 4: string, 5: bool, 6: bool, 7: bool}> $result */
+        /** @var array<string, array{0: string, 1: string, 2: bool, 3: string, 4: string, 5: bool, 6: bool, 7: bool, 8: string}> $result */
         $result = [];
         foreach ($decoded as $name => $props) {
             if (!is_string($name) || !is_array($props)) {
@@ -114,7 +121,8 @@ class LanguagePresets
                 (string)($props['sentSplRegExp'] ?? ''),
                 (bool)($props['makeCharacterWord'] ?? false),
                 (bool)($props['removeSpaces'] ?? false),
-                (bool)($props['rightToLeft'] ?? false)
+                (bool)($props['rightToLeft'] ?? false),
+                (string)($props['parserType'] ?? '')
             ];
         }
 
@@ -126,7 +134,7 @@ class LanguagePresets
      *
      * @param string $name Language name (e.g., "English", "Japanese")
      *
-     * @return array{0: string, 1: string, 2: bool, 3: string, 4: string, 5: bool, 6: bool, 7: bool}|null
+     * @return array{0: string, 1: string, 2: bool, 3: string, 4: string, 5: bool, 6: bool, 7: bool, 8: string}|null
      */
     public static function get(string $name): ?array
     {

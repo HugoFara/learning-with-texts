@@ -103,6 +103,14 @@ ones are marked like "v1.0.0-fork".
   after the fact, in wording identical to a real failure, which is what buried
   the eight genuine errors of #275 among them. Expected failures now log as
   skipped, and `Migration failed:` means it.
+* **A text that parses into nothing now says so** (#278). When a language's
+  *Word Characters* setting does not match the script of its texts, parsing
+  does not fail — it succeeds and produces nothing. The text saves, opens and
+  shows every character, and simply refuses to respond to any click, with
+  nothing anywhere to explain why. The reading view and the check-text page now
+  say what happened and link straight to the language's settings. The test is a
+  word-to-character ratio rather than a plain zero, so it also catches a text
+  where only a few stray tokens matched.
 
 * **Adding a term failed outright on a large vocabulary** (#277). Opening the
   term editor read every term of the language into memory to look for similar
@@ -112,6 +120,22 @@ ones are marked like "v1.0.0-fork".
   returns the terms that stood a chance instead of all of them. Suggestions are
   unchanged; the work behind them no longer grows with the size of your
   vocabulary.
+
+* **Chinese texts could not be read** (#278). A Chinese language created from
+  the built-in preset produced a text with no clickable words at all — nothing
+  to look up, nothing to track. Chinese and Japanese now come out of the preset
+  already pointed at a real tokenizer: **jieba** segments Chinese into words
+  rather than characters, and Japanese asks for MeCab as it always claimed to.
+  Where that tokenizer is not installed the language falls back to
+  character-by-character parsing, so it stays readable either way.
+
+* **Choosing a parser in the language form did nothing** (#278). The Parser
+  Type menu wrote its value to the database and no part of the parsing pipeline
+  ever read it — picking "Jieba (Chinese)" or "MeCab Python" parsed exactly as
+  before. The setting is now honoured. It also lists the parsers from
+  `config/parsers.php`, which it never did, so jieba and MeCab Python appear on
+  an install that has them. A language that names no parser — every language
+  that exists today — parses exactly as it did.
 
 ## [3.4.2-fork] - 2026-08-16
 

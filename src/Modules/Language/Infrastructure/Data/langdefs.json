@@ -58,7 +58,7 @@
         "makeCharacterWord": true,
         "removeSpaces": true,
         "rightToLeft": false,
-        "parserType": "character"
+        "parserType": "jieba"
     },
     "Chinese (Traditional)": {
         "glosbeIso": "zh",
@@ -69,7 +69,7 @@
         "makeCharacterWord": true,
         "removeSpaces": true,
         "rightToLeft": false,
-        "parserType": "character"
+        "parserType": "jieba"
     },
     "Croatian": {
         "glosbeIso": "hr",

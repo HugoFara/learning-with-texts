@@ -79,6 +79,7 @@
     "form.text_size_example": "Текст будет такого размера",
     "form.section_text_processing": "Обработка текста",
     "form.parser_type": "Тип парсера",
+    "form.parser_automatic": "Автоматически",
     "form.parser_unavailable": " (недоступно)",
     "form.character_substitutions": "Замены символов",
     "form.character_substitutions_help": "Заменять символы перед парсингом (формат: from=to, через |)",

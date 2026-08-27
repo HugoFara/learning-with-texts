@@ -215,5 +215,10 @@
     "modal.lookup": "Recherche :",
     "modal.dict1": "Dict 1",
     "modal.dict2": "Dict 2",
-    "modal.translate": "Traduire"
+    "modal.translate": "Traduire",
+
+    "parse_warning.no_words": "Aucun mot n'a pu être extrait de ce texte.",
+    "parse_warning.almost_no_words": "Presque aucun mot n'a pu être extrait de ce texte.",
+    "parse_warning.check_language": "Le réglage « Caractères de mot » de la langue ne correspond pas à ce texte : rien n'y est cliquable ni apprenable.",
+    "parse_warning.edit_language": "Vérifier les réglages de la langue"
 }

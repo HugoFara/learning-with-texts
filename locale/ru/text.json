@@ -215,5 +215,10 @@
     "modal.lookup": "Поиск:",
     "modal.dict1": "Словарь 1",
     "modal.dict2": "Словарь 2",
-    "modal.translate": "Перевести"
+    "modal.translate": "Перевести",
+
+    "parse_warning.no_words": "Из этого текста не удалось выделить ни одного слова.",
+    "parse_warning.almost_no_words": "Почти ничего из этого текста не удалось выделить в слова.",
+    "parse_warning.check_language": "Настройка языка «Символы слова» не соответствует этому тексту, поэтому в нём ничего нельзя выбрать или выучить.",
+    "parse_warning.edit_language": "Проверить настройки языка"
 }
