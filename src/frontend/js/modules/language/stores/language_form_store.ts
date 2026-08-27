@@ -38,6 +38,7 @@ export interface LanguageFormData {
   regexpWordCharacters: string;
   removeSpaces: boolean;
   splitEachChar: boolean;
+  parserType: string;
   rightToLeft: boolean;
   ttsVoiceApi: string;
   showRomanization: boolean;
@@ -122,6 +123,7 @@ function createEmptyFormData(): LanguageFormData {
     regexpWordCharacters: 'a-zA-ZÀ-ÖØ-öø-ȳ',
     removeSpaces: false,
     splitEachChar: false,
+    parserType: '',
     rightToLeft: false,
     ttsVoiceApi: '',
     showRomanization: true
@@ -247,6 +249,7 @@ function createLanguageFormStore(): LanguageFormStoreState {
           regexpWordCharacters: lang.regexpWordCharacters,
           removeSpaces: lang.removeSpaces,
           splitEachChar: lang.splitEachChar,
+          parserType: lang.parserType ?? '',
           rightToLeft: lang.rightToLeft,
           ttsVoiceApi: lang.ttsVoiceApi,
           showRomanization: lang.showRomanization
@@ -324,6 +327,7 @@ function createLanguageFormStore(): LanguageFormStoreState {
       this.formData.regexpSplitSentences = l2Def.sentSplRegExp;
       this.formData.regexpWordCharacters = l2Def.wordCharRegExp;
       this.formData.splitEachChar = l2Def.makeCharacterWord;
+      this.formData.parserType = l2Def.parserType ?? '';
       this.formData.removeSpaces = l2Def.removeSpaces;
       this.formData.rightToLeft = l2Def.rightToLeft;
     },

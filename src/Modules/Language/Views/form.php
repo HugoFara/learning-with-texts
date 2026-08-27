@@ -432,6 +432,7 @@ $importMoreTitle = htmlspecialchars(__('language.form.import_more_entries'), ENT
                     <div class="control">
                         <div class="select is-fullwidth">
                             <select name="LgParserType" id="LgParserType" x-model="lang.parserType">
+                                <option value=""><?php echo __('language.form.parser_automatic'); ?></option>
                                 <?php foreach ($parserInfo as $type => $info) :
                                     $infoAvailable = isset($info['available']) && $info['available'];
                                     $infoName = isset($info['name']) && is_string($info['name']) ? $info['name'] : '';

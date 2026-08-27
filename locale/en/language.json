@@ -79,6 +79,7 @@
     "form.text_size_example": "Text will be this size",
     "form.section_text_processing": "Text Processing",
     "form.parser_type": "Parser Type",
+    "form.parser_automatic": "Automatic",
     "form.parser_unavailable": " (unavailable)",
     "form.character_substitutions": "Character Substitutions",
     "form.character_substitutions_help": "Replace characters before parsing (format: from=to, separated by |)",
