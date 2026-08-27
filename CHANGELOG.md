@@ -7,135 +7,105 @@ ones are marked like "v1.0.0-fork".
 
 ## [Unreleased]
 
+## [3.5.0-fork] - 2026-08-27
+
 ### Added
 
-* **Reviews are graded Again / Hard / Good / Easy** (#238, phase 2b). The review
-  card's Wrong/Correct pair becomes the four grades FSRS needs, each showing
-  when it would bring the term back — "3d", "2mo" — before you commit to it.
-  Keys 1-4 grade, as in Anki; the arrow keys still work, and setting a status
-  outright moved to Shift and the number keys. Hard, Good and Easy all raise
-  the term's status by one exactly as Correct did, so reading colours are
-  unchanged; what differs is what the scheduler learns.
+* **Reviews are graded Again / Hard / Good / Easy** (#238). The review card's
+  Wrong/Correct pair becomes the four grades FSRS needs, each showing when it
+  would bring the term back before you commit to it. Keys 1-4 grade, as in Anki;
+  setting a status outright moved to Shift and the number keys. All three
+  correct grades still raise the term's status by one, so reading colours are
+  unchanged — what differs is what the scheduler learns.
 
-* **Anki decks arrive already scheduled** (#228, #238). A term LWT has
-  scheduled now exports as a review card rather than a new one: it is due in
-  Anki when it is due in LWT, and carries its interval, review count, lapse
-  count, FSRS memory state and full review history. Anki's own FSRS reads that
-  state, so it continues from LWT's estimate instead of starting the term from
-  scratch. Suspended terms keep their schedule behind the suspension, so
-  unsuspending resumes rather than restarts. Nothing flows the other way —
-  re-importing a deck still updates only fields and suspension.
-
-### Removed
-
-* **The legacy Leitner scoring is gone** (#238, phase 2b). `WoTodayScore`,
-  `WoTomorrowScore` and `WoRandom` were a stored copy of a formula over a
-  term's status and the date it last changed. Everything reads the term's due
-  date now, so a migration drops all three columns — nothing is lost, because
-  the values were derived rather than entered, and every term keeps the
-  schedule it had. Two things go with them: the daily sweep that recomputed
-  the scores across your whole vocabulary on the first page load after
-  midnight, and the vocabulary list's **Score** column, which showed a
-  percentage of that formula and is now **Due**, counting the days until the
-  term comes back.
+* **Anki decks arrive already scheduled** (#228, #238). A term LWT has scheduled
+  now exports as a review card rather than a new one, carrying its due date,
+  interval, review and lapse counts, FSRS memory state and review history, so
+  Anki's own FSRS continues from LWT's estimate instead of starting over.
+  Suspended terms keep their schedule. Nothing flows the other way.
 
 ### Changed
 
-* **The review queue follows the FSRS schedule** (#238, phase 2b). Since 3.4.0
-  LWT has recorded FSRS memory state on every review while the queue still
-  ordered by the old Leitner score. It now picks and orders by each term's due
-  date. A term you have not graded yet keeps the schedule it already had — it
-  falls due exactly where its status put it — so nothing floods or empties on
-  upgrade, and it moves onto real scheduling the first time you grade it. Two
-  statuses shift by a day in the process: the old formula rounded before
-  comparing, putting status 2 at day 3 for an interval of 2, and status 5 at
-  day 72 for 71.
+* **The database lives in a named Docker volume** (#275). `docker-compose.yml`
+  no longer bind-mounts the database directory from the host, which on Windows
+  forced `lower_case_table_names=2` and made every migration fail. **An existing
+  install will look empty after upgrading**: the old data is still in
+  `./lwt_db_data` but is no longer mounted. Dump the database before upgrading
+  and import it afterwards.
 
-* **Similar terms suggest the parts of a compound, not its siblings**
-  ([#137](https://github.com/HugoFara/lwt/issues/137)). The term editor's
-  "Similar Terms" box ranked every candidate against the whole term on its own,
-  so for a compound like *Geschwindigkeitsbegrenzung* each word built on
-  *Geschwindigkeit* scored on that shared half and the term explaining the
-  other half — *Begrenzung* — was pushed off the list by its own siblings.
-  Suggestions are now picked one at a time, and after each pick the term
-  shrinks to the part still unexplained, so a candidate that only repeats an
-  earlier suggestion scores near nothing and a short term covering fresh ground
-  wins on merit. The first suggestion is unchanged, and terms you already know
-  are still preferred.
+* **The review queue follows the FSRS schedule** (#238). It picks and orders by
+  each term's due date instead of the retired Leitner score. A term you have not
+  graded keeps the schedule it already had, so nothing floods or empties on
+  upgrade. Statuses 2 and 5 come up a day earlier than before, where the old
+  formula rounded.
 
-* **Similar terms follow word families, not just spelling**
-  ([#136](https://github.com/HugoFara/lwt/issues/136)). Suggestions were ranked
-  purely on shared letter pairs, which cannot reach an irregular form: *bought*
-  and *buy* have no letters in common to match on, so neither found the other.
-  Terms sharing the searched term's lemma are now suggested first, whatever
-  they score on spelling. Terms already in your vocabulary use the lemma their
-  language's lemmatizer gave them when you saved them, so this follows
-  whichever lemmatizer you configured; a term you have not saved yet is looked
-  up in the local lemma dictionary only, never the NLP service, so the
-  suggestion box never waits on the network. Languages with the lemmatizer set
-  to *none* are unaffected.
+* **Similar terms suggest the parts of a compound, not its siblings** (#137).
+  For a compound like *Geschwindigkeitsbegrenzung*, every word built on
+  *Geschwindigkeit* used to crowd out *Begrenzung*, which explains the other
+  half. Suggestions are now picked one at a time, and the term shrinks to what
+  is still unexplained after each pick, so a candidate repeating an earlier
+  suggestion scores near nothing.
+
+* **Similar terms follow word families, not just spelling** (#136). Ranking on
+  shared letter pairs alone cannot reach an irregular form — *bought* and *buy*
+  have no letters in common. Terms sharing the searched term's lemma now come
+  first, using whichever lemmatizer the language is configured with. Languages
+  with the lemmatizer set to *none* are unaffected.
+
+### Removed
+
+* **The legacy Leitner scoring is gone** (#238). `WoTodayScore`,
+  `WoTomorrowScore` and `WoRandom` cached a formula over a term's status and the
+  date it changed; everything reads the due date now, so a migration drops all
+  three. Nothing is lost — the values were derived, and every term keeps its
+  schedule. The nightly recomputation across your whole vocabulary goes with
+  them, and the vocabulary list's **Score** column becomes **Due**, counting
+  days until the term returns.
 
 ### Fixed
 
-* **An incomplete schema no longer takes the review page and the vocabulary
-  list down with it** (#275, #285). The FSRS queue reads each term's due date
-  from `term_schedule`, and a table named in SQL cannot be guarded the way a
-  missing row can: on an install where that migration failed, MySQL rejected
-  the whole statement and both the review page and the entire term list
-  answered 500. They now fall back to the schedule a term's status implies —
-  which on such an install is the same answer, since no term there has ever
-  been graded — and start using the real schedule once the table is back.
+* **Chinese texts could not be read** (#278). A Chinese language from the
+  built-in preset produced a text with no clickable words at all. Chinese and
+  Japanese presets now point at a real tokenizer — **jieba** for Chinese, MeCab
+  for Japanese — falling back to character-by-character parsing where that
+  tokenizer is not installed, so the text stays readable either way.
 
-* **A failed migration gets retried again** (#285). A migration was only
-  reconsidered when an upgrade brought new files along, which on a fresh
-  install could never happen: the first run records every migration, so there
-  is never anything new afterwards and a migration that failed stayed failed at
-  one attempt, until some later release happened to add a file. Failures are
-  now retried on the next requests instead, up to three attempts, and an
-  upgrade that does bring new migrations restores that budget — so a migration
-  that failed on a prerequisite a later one repairs still gets its chance. This
-  is what left installs without `term_schedule` in the first place.
+* **Choosing a parser in the language form did nothing** (#278). The Parser Type
+  menu wrote its value to the database and no part of the parsing pipeline read
+  it. The setting is now honoured, and the menu lists the parsers from
+  `config/parsers.php`, so jieba and MeCab Python appear on an install that has
+  them. Every language that exists today parses exactly as it did.
+
+* **A text that parses into nothing now says so** (#278). A language whose *Word
+  Characters* setting does not match its texts does not fail — it parses into
+  nothing, and the text opens looking normal while refusing every click. The
+  reading view and the check-text page now say what happened and link to the
+  language's settings.
+
+* **An incomplete schema no longer takes the review page and the vocabulary list
+  down with it** (#275, #285). The review queue reads each term's due date from
+  `term_schedule`; on an install where that migration failed, naming the missing
+  table made MySQL reject the whole statement and both pages answered 500. They
+  now fall back to the schedule a term's status implies — the same answer on
+  such an install, since nothing there has been graded.
+
+* **A failed migration gets retried again** (#285). Retries only happened when
+  an upgrade brought new migration files, which on a fresh install never
+  happens: the first run records all of them, so a failure stayed failed at one
+  attempt until some later release added a file. Failures are now retried on the
+  following requests, up to three attempts, and an upgrade restores that budget.
+  This is what left installs without `term_schedule`.
 
 * **Expected migration failures stopped being logged as failures** (#285). A
-  healthy fresh install wrote ~178 `Migration failed:` lines while every one of
-  its migrations succeeded: legacy migrations rename tables that a fresh
-  install never had, and those statements fail by design. The log said so only
-  after the fact, in wording identical to a real failure, which is what buried
-  the eight genuine errors of #275 among them. Expected failures now log as
-  skipped, and `Migration failed:` means it.
-* **A text that parses into nothing now says so** (#278). When a language's
-  *Word Characters* setting does not match the script of its texts, parsing
-  does not fail — it succeeds and produces nothing. The text saves, opens and
-  shows every character, and simply refuses to respond to any click, with
-  nothing anywhere to explain why. The reading view and the check-text page now
-  say what happened and link straight to the language's settings. The test is a
-  word-to-character ratio rather than a plain zero, so it also catches a text
-  where only a few stray tokens matched.
+  healthy fresh install wrote ~178 `Migration failed:` lines while every
+  migration succeeded, because legacy migrations rename tables a fresh install
+  never had. Those now log as skipped, and `Migration failed:` means it.
 
 * **Adding a term failed outright on a large vocabulary** (#277). Opening the
   term editor read every term of the language into memory to look for similar
-  ones — affordable for a vocabulary built by hand, fatal for one seeded from a
-  dictionary import, where clicking a word spent a minute before dying on PHP's
-  memory limit. The search for candidates now happens in the database, which
-  returns the terms that stood a chance instead of all of them. Suggestions are
-  unchanged; the work behind them no longer grows with the size of your
-  vocabulary.
-
-* **Chinese texts could not be read** (#278). A Chinese language created from
-  the built-in preset produced a text with no clickable words at all — nothing
-  to look up, nothing to track. Chinese and Japanese now come out of the preset
-  already pointed at a real tokenizer: **jieba** segments Chinese into words
-  rather than characters, and Japanese asks for MeCab as it always claimed to.
-  Where that tokenizer is not installed the language falls back to
-  character-by-character parsing, so it stays readable either way.
-
-* **Choosing a parser in the language form did nothing** (#278). The Parser
-  Type menu wrote its value to the database and no part of the parsing pipeline
-  ever read it — picking "Jieba (Chinese)" or "MeCab Python" parsed exactly as
-  before. The setting is now honoured. It also lists the parsers from
-  `config/parsers.php`, which it never did, so jieba and MeCab Python appear on
-  an install that has them. A language that names no parser — every language
-  that exists today — parses exactly as it did.
+  ones — fatal for a vocabulary seeded from a dictionary import, where clicking
+  a word died on PHP's memory limit. Candidates are now selected in the
+  database. Suggestions are unchanged.
 
 ## [3.4.2-fork] - 2026-08-16
 

@@ -10,7 +10,7 @@
  * @author   HugoFara <git@hugofara.net>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lwt/developer/api
- * @since    3.4.3
+ * @since    3.5.0
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ namespace Lwt\Modules\Text\Domain;
  * This is the one place that decides a parse came out empty, so that the
  * reading view, the check-text page and the API all agree on when to say so.
  *
- * @since 3.4.3
+ * @since 3.5.0
  */
 final class ParseCoverage
 {
