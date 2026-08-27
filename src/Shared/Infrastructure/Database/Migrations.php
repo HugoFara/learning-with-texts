@@ -233,6 +233,44 @@ class Migrations
      */
     private static function addMissingForeignKeys(array $keys): int
     {
+        // Rows a missing constraint would have prevented are already in the
+        // database — that is the whole premise of repairing an install that
+        // lost its keys. InnoDB validates existing rows when a constraint is
+        // added, so with checks on it refuses the very keys most worth putting
+        // back, and the failure is only logged: the constraint is quietly lost.
+        //
+        // update() and Restore both happen to set this already, so the repair
+        // worked from there and nowhere else. Establish it here instead of
+        // depending on the caller, since the caller cannot know it is needed.
+        $checksWereOn = ((int) Connection::preparedFetchValue(
+            'SELECT @@FOREIGN_KEY_CHECKS AS value'
+        )) === 1;
+        if ($checksWereOn) {
+            Connection::execute('SET FOREIGN_KEY_CHECKS = 0');
+        }
+
+        try {
+            return self::addForeignKeysUnchecked($keys);
+        } finally {
+            if ($checksWereOn) {
+                Connection::execute('SET FOREIGN_KEY_CHECKS = 1');
+            }
+        }
+    }
+
+    /**
+     * Add the absent constraints, assuming FK checks are already off.
+     *
+     * @param array<array{
+     *     name: string, table: string, columns: array<string>,
+     *     refTable: string, refColumns: array<string>,
+     *     onUpdate: string, onDelete: string
+     * }> $keys Foreign keys to add if missing
+     *
+     * @return int How many were added
+     */
+    private static function addForeignKeysUnchecked(array $keys): int
+    {
         $existing = [];
         foreach (self::captureForeignKeys() as $key) {
             $existing[$key['table'] . '.' . $key['name']] = true;
