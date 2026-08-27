@@ -215,5 +215,10 @@
     "modal.lookup": "Nachschlagen:",
     "modal.dict1": "Wb 1",
     "modal.dict2": "Wb 2",
-    "modal.translate": "Übersetzen"
+    "modal.translate": "Übersetzen",
+
+    "parse_warning.no_words": "Aus diesem Text konnten keine Wörter gebildet werden.",
+    "parse_warning.almost_no_words": "Fast nichts in diesem Text konnte in Wörter umgewandelt werden.",
+    "parse_warning.check_language": "Die Einstellung „Wortzeichen“ der Sprache passt nicht zu diesem Text, daher lässt sich darin nichts anklicken oder lernen.",
+    "parse_warning.edit_language": "Spracheinstellungen prüfen"
 }

@@ -77,6 +77,15 @@ ones are marked like "v1.0.0-fork".
 
 ### Fixed
 
+* **A text that parses into nothing now says so** (#278). When a language's
+  *Word Characters* setting does not match the script of its texts, parsing
+  does not fail — it succeeds and produces nothing. The text saves, opens and
+  shows every character, and simply refuses to respond to any click, with
+  nothing anywhere to explain why. The reading view and the check-text page now
+  say what happened and link straight to the language's settings. The test is a
+  word-to-character ratio rather than a plain zero, so it also catches a text
+  where only a few stray tokens matched.
+
 * **Adding a term failed outright on a large vocabulary** (#277). Opening the
   term editor read every term of the language into memory to look for similar
   ones — affordable for a vocabulary built by hand, fatal for one seeded from a

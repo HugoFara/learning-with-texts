@@ -203,5 +203,10 @@
     "modal.translate": "翻译",
     "flash.text_too_long": "文本过长，必须小于 65000 字节",
     "flash.error_prefix": "错误：{message}",
-    "flash.error_creating_book": "创建书籍时出错：{error}"
+    "flash.error_creating_book": "创建书籍时出错：{error}",
+
+    "parse_warning.no_words": "无法从这段文本中提取出任何单词。",
+    "parse_warning.almost_no_words": "几乎无法从这段文本中提取出单词。",
+    "parse_warning.check_language": "该语言的“单词字符”设置与此文本不匹配，因此其中的内容无法点击或学习。",
+    "parse_warning.edit_language": "检查语言设置"
 }

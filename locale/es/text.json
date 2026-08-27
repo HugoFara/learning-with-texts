@@ -215,5 +215,10 @@
     "modal.lookup": "Buscar:",
     "modal.dict1": "Dicc. 1",
     "modal.dict2": "Dicc. 2",
-    "modal.translate": "Traducir"
+    "modal.translate": "Traducir",
+
+    "parse_warning.no_words": "No se pudo convertir en palabras ninguna parte de este texto.",
+    "parse_warning.almost_no_words": "Casi nada de este texto se pudo convertir en palabras.",
+    "parse_warning.check_language": "La configuración «Caracteres de palabra» del idioma no coincide con este texto, por lo que no se puede hacer clic ni aprender nada en él.",
+    "parse_warning.edit_language": "Revisar la configuración del idioma"
 }

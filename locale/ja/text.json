@@ -215,5 +215,10 @@
     "modal.lookup": "検索：",
     "modal.dict1": "辞書1",
     "modal.dict2": "辞書2",
-    "modal.translate": "翻訳"
+    "modal.translate": "翻訳",
+
+    "parse_warning.no_words": "このテキストからは単語を1つも抽出できませんでした。",
+    "parse_warning.almost_no_words": "このテキストからはほとんど単語を抽出できませんでした。",
+    "parse_warning.check_language": "この言語の「単語を構成する文字」の設定がこのテキストと一致していないため、クリックも学習もできません。",
+    "parse_warning.edit_language": "言語設定を確認"
 }
