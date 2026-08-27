@@ -10,7 +10,7 @@
 
 import Alpine from 'alpinejs';
 import { TermsApi } from '@modules/vocabulary/api/terms_api';
-import { TextsApi, type TextWord, type TextReadingConfig, type DictLinks, type MultiWordRef } from '@modules/text/api/texts_api';
+import { TextsApi, type TextWord, type TextReadingConfig, type DictLinks, type MultiWordRef, type ParseWarning } from '@modules/text/api/texts_api';
 import { injectTextStyles, generateParagraphStyles } from '@modules/text/pages/reading/text_styles';
 import { renderText, updateWordStatusInDOM, updateWordTranslationInDOM, type RenderSettings } from '@modules/text/pages/reading/text_renderer';
 
@@ -57,6 +57,7 @@ export interface WordStoreState {
   rightToLeft: boolean;
   textSize: number;
   removeSpaces: boolean;
+  parseWarning: ParseWarning | null;
   dictLinks: DictLinks;
 
   // Annotation/display settings
@@ -126,6 +127,7 @@ function createWordStore(): WordStoreState {
     rightToLeft: false,
     textSize: 100,
     removeSpaces: false,
+    parseWarning: null,
     dictLinks: {
       dict1: '',
       dict2: '',
@@ -231,6 +233,7 @@ function createWordStore(): WordStoreState {
       this.rightToLeft = config.rightToLeft;
       this.textSize = config.textSize;
       this.removeSpaces = config.removeSpaces ?? false;
+      this.parseWarning = config.parseWarning ?? null;
       this.dictLinks = config.dictLinks;
 
       // Annotation/display settings

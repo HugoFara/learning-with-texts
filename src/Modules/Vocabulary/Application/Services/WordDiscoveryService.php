@@ -153,14 +153,12 @@ class WordDiscoveryService
             return ['id' => $existingId, 'rows' => 0];
         }
 
-        $scoreColumns = TermStatusService::makeScoreRandomInsertUpdate('iv');
-        $scoreValues = TermStatusService::makeScoreRandomInsertUpdate('id');
 
         $bindings = [$langId, $term, $termlc, $status];
         $sql = "INSERT INTO words (
-                WoLgID, WoText, WoTextLC, WoStatus, WoStatusChanged, {$scoreColumns}"
+                WoLgID, WoText, WoTextLC, WoStatus, WoStatusChanged"
                 . UserScopedQuery::insertColumn('words')
-            . ") VALUES (?, ?, ?, ?, NOW(), {$scoreValues}"
+            . ") VALUES (?, ?, ?, ?, NOW()"
                 . UserScopedQuery::insertValuePrepared('words', $bindings)
             . ")";
 
@@ -188,14 +186,12 @@ class WordDiscoveryService
             throw new \RuntimeException("Text ID $textId not found");
         }
 
-        $scoreColumns = TermStatusService::makeScoreRandomInsertUpdate('iv');
-        $scoreValues = TermStatusService::makeScoreRandomInsertUpdate('id');
 
         $bindings = [$langId, $term, $termlc, $status];
         $sql = "INSERT INTO words (
-                WoLgID, WoText, WoTextLC, WoStatus, WoWordCount, WoStatusChanged, {$scoreColumns}"
+                WoLgID, WoText, WoTextLC, WoStatus, WoWordCount, WoStatusChanged"
                 . UserScopedQuery::insertColumn('words')
-            . ") VALUES (?, ?, ?, ?, 1, NOW(), {$scoreValues}"
+            . ") VALUES (?, ?, ?, ?, 1, NOW()"
                 . UserScopedQuery::insertValuePrepared('words', $bindings)
             . ")";
 
@@ -244,15 +240,13 @@ class WordDiscoveryService
             throw new \RuntimeException("Text ID $textId not found");
         }
 
-        $scoreColumns = TermStatusService::makeScoreRandomInsertUpdate('iv');
-        $scoreValues = TermStatusService::makeScoreRandomInsertUpdate('id');
 
         $bindings = [$langId, $wordlc, $text, $status, $translation];
         $sql = "INSERT INTO words (
                 WoLgID, WoTextLC, WoText, WoStatus, WoTranslation, WoSentence,
-                WoRomanization, WoStatusChanged, {$scoreColumns}"
+                WoRomanization, WoStatusChanged"
                 . UserScopedQuery::insertColumn('words')
-            . ") VALUES (?, ?, ?, ?, ?, '', '', NOW(), {$scoreValues}"
+            . ") VALUES (?, ?, ?, ?, ?, '', '', NOW()"
                 . UserScopedQuery::insertValuePrepared('words', $bindings)
             . ")";
 
@@ -297,11 +291,10 @@ class WordDiscoveryService
 
         if ($wid !== null) {
             // Word already exists — update its status
-            $scoreUpdate = TermStatusService::makeScoreRandomInsertUpdate('u');
             /** @var list<int|string> $updateBindings */
             $updateBindings = [$status, (int) $wid];
             Connection::preparedExecute(
-                "UPDATE words SET WoStatus = ?, WoStatusChanged = NOW(), {$scoreUpdate} WHERE WoID = ?"
+                "UPDATE words SET WoStatus = ?, WoStatusChanged = NOW() WHERE WoID = ?"
                 . UserScopedQuery::forTablePrepared('words', $updateBindings),
                 $updateBindings
             );
@@ -315,15 +308,13 @@ class WordDiscoveryService
         }
 
         try {
-            $scoreColumns = TermStatusService::makeScoreRandomInsertUpdate('iv');
-            $scoreValues = TermStatusService::makeScoreRandomInsertUpdate('id');
 
             /** @var list<int|string> $bindings */
             $bindings = [$langId, $term, $termlc, $status];
             $sql = "INSERT INTO words (
-                    WoLgID, WoText, WoTextLC, WoStatus, WoStatusChanged, {$scoreColumns}"
+                    WoLgID, WoText, WoTextLC, WoStatus, WoStatusChanged"
                     . UserScopedQuery::insertColumn('words')
-                . ") VALUES (?, ?, ?, ?, NOW(), {$scoreValues}"
+                . ") VALUES (?, ?, ?, ?, NOW()"
                     . UserScopedQuery::insertValuePrepared('words', $bindings)
                 . ")";
 
@@ -362,9 +353,8 @@ class WordDiscoveryService
      */
     public function setStatus(int $wordId, int $status): void
     {
-        $scoreUpdate = TermStatusService::makeScoreRandomInsertUpdate('u');
         $bindings = [$status, $wordId];
-        $sql = "UPDATE words SET WoStatus = ?, WoStatusChanged = NOW(), {$scoreUpdate} WHERE WoID = ?"
+        $sql = "UPDATE words SET WoStatus = ?, WoStatusChanged = NOW() WHERE WoID = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings);
         Connection::preparedExecute($sql, $bindings);
     }

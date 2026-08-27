@@ -48,6 +48,19 @@ final class LegacyStatusSeed
     ];
 
     /**
+     * The seed stability, in days, of every schedulable status.
+     *
+     * Exposed so the review queue can compute the same due date in SQL for a
+     * term that has no `term_schedule` row yet, without duplicating the table.
+     *
+     * @return array<int, float> Status => stability in days
+     */
+    public static function stabilityByStatus(): array
+    {
+        return self::STABILITY_BY_STATUS;
+    }
+
+    /**
      * Build the seed state for a term, or null if the status is not schedulable.
      *
      * 98 (ignored) and 99 (well-known) are manual flags that were never part of

@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Lwt\Modules\Review\Domain\Scheduling\LegacyStatusSeed;
 use Lwt\Modules\Review\Domain\Scheduling\MemoryState;
 use Lwt\Modules\Review\Domain\Scheduling\Rating;
+use Lwt\Modules\Review\Domain\Scheduling\ReviewLogEntry;
 use Lwt\Modules\Review\Domain\Scheduling\SchedulingResult;
 use Lwt\Modules\Review\Domain\Scheduling\SchedulingState;
 use Lwt\Modules\Review\Domain\TermScheduleRepositoryInterface;
@@ -29,6 +30,10 @@ final class MySqlTermScheduleRepository implements TermScheduleRepositoryInterfa
 
     public function find(int $wordId): ?MemoryState
     {
+        if (!ScheduleSql::hasScheduleTable()) {
+            return null;
+        }
+
         $params = [$wordId];
         $scope = $this->appendUserScope($params);
 
@@ -84,6 +89,14 @@ final class MySqlTermScheduleRepository implements TermScheduleRepositoryInterfa
 
     public function saveReview(int $wordId, SchedulingResult $result, Rating $rating, int $stateBefore): void
     {
+        // Nowhere to write on a schema where the phase-2a migration did not
+        // run. Dropping the write rather than failing keeps the review session
+        // going: the term's status still moves, and the schedule starts being
+        // kept once the schema is repaired.
+        if (!ScheduleSql::hasScheduleTable()) {
+            return;
+        }
+
         // Ownership is checked once here rather than trusted from the caller,
         // so neither write below can touch a foreign term.
         if (!$this->ownsWord($wordId)) {
@@ -136,6 +149,10 @@ final class MySqlTermScheduleRepository implements TermScheduleRepositoryInterfa
 
     public function countDue(?int $languageId = null): int
     {
+        if (!ScheduleSql::hasScheduleTable()) {
+            return 0;
+        }
+
         $params = [];
         $sql = 'SELECT COUNT(*) AS value
                 FROM term_schedule
@@ -167,6 +184,86 @@ final class MySqlTermScheduleRepository implements TermScheduleRepositoryInterfa
         );
 
         return $hit !== null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function findMany(array $wordIds): array
+    {
+        if ($wordIds === [] || !ScheduleSql::hasScheduleTable()) {
+            return [];
+        }
+
+        $params = [];
+        $inClause = Connection::buildPreparedInClause($wordIds, $params);
+        $scope = $this->appendUserScope($params);
+
+        $rows = Connection::preparedFetchAll(
+            'SELECT TsWoID, TsStability, TsDifficulty, TsDue, TsLastReview, TsReps, TsLapses, TsState
+             FROM term_schedule
+             JOIN words ON WoID = TsWoID
+             WHERE TsWoID IN ' . $inClause . $scope,
+            $params
+        );
+
+        $states = [];
+        foreach ($rows as $row) {
+            $states[(int) $row['TsWoID']] = new MemoryState(
+                stability: (float) $row['TsStability'],
+                difficulty: (float) $row['TsDifficulty'],
+                due: new DateTimeImmutable((string) $row['TsDue']),
+                lastReview: $row['TsLastReview'] !== null
+                    ? new DateTimeImmutable((string) $row['TsLastReview'])
+                    : null,
+                reps: (int) $row['TsReps'],
+                lapses: (int) $row['TsLapses'],
+                state: SchedulingState::from((int) $row['TsState']),
+            );
+        }
+
+        return $states;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function historyFor(array $wordIds): array
+    {
+        if ($wordIds === [] || !ScheduleSql::hasScheduleTable()) {
+            return [];
+        }
+
+        $params = [];
+        $inClause = Connection::buildPreparedInClause($wordIds, $params);
+        $scope = $this->appendUserScope($params);
+
+        $rows = Connection::preparedFetchAll(
+            'SELECT RlWoID, RlGrade, RlState, RlStability, RlDifficulty,
+                    RlElapsedDays, RlScheduledDays, RlReviewedAt
+             FROM review_log
+             JOIN words ON WoID = RlWoID
+             WHERE RlWoID IN ' . $inClause . $scope . '
+             ORDER BY RlWoID, RlReviewedAt, RlID',
+            $params
+        );
+
+        $history = [];
+        foreach ($rows as $row) {
+            $wordId = (int) $row['RlWoID'];
+            $history[$wordId][] = new ReviewLogEntry(
+                wordId: $wordId,
+                grade: Rating::from((int) $row['RlGrade']),
+                stateBefore: SchedulingState::from((int) $row['RlState']),
+                stability: (float) $row['RlStability'],
+                difficulty: (float) $row['RlDifficulty'],
+                elapsedDays: (int) $row['RlElapsedDays'],
+                scheduledDays: (int) $row['RlScheduledDays'],
+                reviewedAt: new DateTimeImmutable((string) $row['RlReviewedAt']),
+            );
+        }
+
+        return $history;
     }
 
     /**

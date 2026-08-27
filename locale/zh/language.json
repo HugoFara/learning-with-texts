@@ -79,6 +79,7 @@
     "form.text_size_example": "文本将以此大小显示",
     "form.section_text_processing": "文本处理",
     "form.parser_type": "解析器类型",
+    "form.parser_automatic": "自动",
     "form.parser_unavailable": "（不可用）",
     "form.character_substitutions": "字符替换",
     "form.character_substitutions_help": "解析前替换字符（格式：from=to，用 | 分隔）",

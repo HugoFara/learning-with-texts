@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Vocabulary\Application\Services;
 
+use Lwt\Modules\Review\Infrastructure\ScheduleSql;
 use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Shared\Infrastructure\Database\UserScopedQuery;
 
@@ -98,7 +99,7 @@ class WordListQueryService
             'WoID desc',
             'WoID asc',
             'WoStatus, WoTextLC',
-            'WoTodayScore',
+            ScheduleSql::effectiveDue(),
             'textswordcount desc, WoTextLC asc'
         ];
 
@@ -133,14 +134,14 @@ class WordListQueryService
                 $bindings[] = $perPage;
                 $sql = 'select WoID, WoText, WoTranslation, WoRomanization, WoSentence,
                         SentOK, WoStatus, LgName, LgRightToLeft, LgGoogleTranslateURI, Days,
-                        WoTodayScore AS Score, WoTomorrowScore AS Score2,
+                        Score,
                         ifnull(group_concat(distinct TgText order by TgText separator \',\'),\'\') as taglist
                         from (select WoID, WoTextLC, WoText, WoTranslation, WoRomanization,
                         WoSentence,
                         ifnull(WoSentence,\'\') like concat(\'%{\',WoText,\'}%\') as SentOK,
                         WoStatus, LgName, LgRightToLeft, LgGoogleTranslateURI,
-                        DATEDIFF( NOW( ) , WoStatusChanged ) AS Days, WoTodayScore,
-                        WoTomorrowScore
+                        DATEDIFF( NOW( ) , WoStatusChanged ) AS Days,
+                        DATEDIFF(' . ScheduleSql::effectiveDue() . ', NOW()) AS Score
                         from words, languages
                         where WoLgID = LgID ' . $whLang . $whStat . $whQuery . $wordScope . $langScope . '
                         group by WoID
@@ -158,8 +159,8 @@ class WordListQueryService
                 $sql = 'select WoID, WoText, WoTranslation, WoRomanization, WoSentence,
                         ifnull(WoSentence,\'\') like concat(\'%{\',WoText,\'}%\') as SentOK,
                         WoStatus, LgName, LgRightToLeft, LgGoogleTranslateURI,
-                        DATEDIFF( NOW( ) , WoStatusChanged ) AS Days, WoTodayScore AS Score,
-                        WoTomorrowScore AS Score2,
+                        DATEDIFF( NOW( ) , WoStatusChanged ) AS Days,
+                        DATEDIFF(' . ScheduleSql::effectiveDue() . ', NOW()) AS Score,
                         ifnull(group_concat(distinct TgText order by TgText separator \',\'),\'\') as taglist
                         from ((words left JOIN word_tag_map
                         ON WoID = WtWoID) left join tags
@@ -180,8 +181,8 @@ class WordListQueryService
             $sql = 'select distinct WoID, WoText, WoTranslation, WoRomanization,
                     WoSentence, ifnull(WoSentence,\'\') like \'%{%}%\' as SentOK, WoStatus,
                     LgName, LgRightToLeft, LgGoogleTranslateURI,
-                    DATEDIFF( NOW( ) , WoStatusChanged ) AS Days, WoTodayScore AS Score,
-                    WoTomorrowScore AS Score2,
+                    DATEDIFF( NOW( ) , WoStatusChanged ) AS Days,
+                    DATEDIFF(' . ScheduleSql::effectiveDue() . ', NOW()) AS Score,
                     ifnull(group_concat(distinct TgText order by TgText separator \',\'),\'\') as taglist
                     from ((words
                     left JOIN word_tag_map ON WoID = WtWoID)
@@ -228,10 +229,10 @@ class WordListQueryService
                     WoRomanization, WoSentence,
                     ifnull(WoSentence,\'\') like concat(\'%{\',WoText,\'}%\') as SentOK,
                     WoStatus, LgName, LgRightToLeft, LgGoogleTranslateURI,
-                    DATEDIFF( NOW( ) , WoStatusChanged ) AS Days, WoTodayScore AS Score,
-                    WoTomorrowScore AS Score2,
+                    DATEDIFF( NOW( ) , WoStatusChanged ) AS Days,
+                    DATEDIFF(' . ScheduleSql::effectiveDue() . ', NOW()) AS Score,
                     ifnull(group_concat(distinct TgText order by TgText separator \',\'),\'\') as taglist,
-                    WoTextLC, WoTodayScore
+                    WoTextLC
                     from ((words left JOIN word_tag_map
                     ON WoID = WtWoID)
                     left join tags on TgID = WtTgID),
@@ -261,10 +262,10 @@ class WordListQueryService
                     WoRomanization, WoSentence,
                     ifnull(WoSentence,\'\') like concat(\'%{\',WoText,\'}%\') as SentOK,
                     WoStatus, LgName, LgRightToLeft, LgGoogleTranslateURI,
-                    DATEDIFF( NOW( ) , WoStatusChanged ) AS Days, WoTodayScore AS Score,
-                    WoTomorrowScore AS Score2,
+                    DATEDIFF( NOW( ) , WoStatusChanged ) AS Days,
+                    DATEDIFF(' . ScheduleSql::effectiveDue() . ', NOW()) AS Score,
                     ifnull(group_concat(distinct TgText order by TgText separator \',\'),\'\') as taglist,
-                    WoTextLC, WoTodayScore
+                    WoTextLC
                     from ((words left JOIN word_tag_map
                     ON WoID = WtWoID)
                     left join tags on TgID = WtTgID),
@@ -278,10 +279,10 @@ class WordListQueryService
                     WoRomanization, WoSentence,
                     ifnull(WoSentence,\'\') like concat(\'%{\',WoText,\'}%\') as SentOK,
                     WoStatus, LgName, LgRightToLeft, LgGoogleTranslateURI,
-                    DATEDIFF( NOW( ) , WoStatusChanged ) AS Days, WoTodayScore AS Score,
-                    WoTomorrowScore AS Score2,
+                    DATEDIFF( NOW( ) , WoStatusChanged ) AS Days,
+                    DATEDIFF(' . ScheduleSql::effectiveDue() . ', NOW()) AS Score,
                     ifnull(group_concat(distinct TgText order by TgText separator \',\'),\'\') as taglist,
-                    WoTextLC, WoTodayScore
+                    WoTextLC
                     from ((words left JOIN word_tag_map
                     ON WoID = WtWoID)
                     left join tags on TgID = WtTgID),

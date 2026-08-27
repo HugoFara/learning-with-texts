@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Vocabulary\Infrastructure\Anki;
 
+use DateTimeImmutable;
 use PDO;
 use RuntimeException;
 use ZipArchive;
@@ -13,17 +14,41 @@ use ZipArchive;
  * LWT term data.
  *
  * Status mapping for `cards.queue`:
- *   - LWT 1..5:  queue=0 (new), due=position
+ *   - LWT 1..5:  queue=0 (new), due=position — unless the term has a schedule
  *   - LWT 98:    queue=-1 (suspended)  — "ignored"
  *   - LWT 99:    queue=-1 (suspended)  — "well-known"
  *
- * SRS scheduling state (interval, ease, due-date for review cards) is
- * intentionally not exported in this version; see Lemmatization-style follow-up.
+ * A term LWT has scheduled (issue #238) is written as a review card instead:
+ * `type`/`queue` 2, `due` in days from the collection's creation day, `ivl`,
+ * `reps` and `lapses` from its state, and the FSRS memory state in `data` as
+ * the `{"s":stability,"d":difficulty,"dr":retention}` JSON Anki reads. Its
+ * review history becomes `revlog` rows. A suspended term keeps queue -1 but
+ * still carries its state, so unsuspending it in Anki resumes the schedule
+ * rather than restarting it.
+ *
+ * Two deliberate simplifications, both recorded in
+ * docs-src/developer/term-status-fsrs.md:
+ *   - Relearning (LWT state 3) is exported as a review card. Anki puts
+ *     relearning cards in the learning queue, where `due` is a unix timestamp
+ *     rather than a day number; a transient state is not worth a second due
+ *     encoding, and the card is due at the same moment either way.
+ *   - `factor` is Anki's default 2500 rather than a measured ease. LWT has
+ *     never computed an SM-2 ease factor, and 0 would make Anki's own SM-2
+ *     collapse the interval if the user has FSRS switched off.
  */
 final class ApkgWriter
 {
     /** Anki's special "ignored" deck id; we use one deck per language instead. */
     private const COLLECTION_CREATION_TIMESTAMP = 1577836800; // 2020-01-01 UTC
+
+    /** Anki's card type/queue for a card in review. */
+    private const CARD_TYPE_REVIEW = 2;
+
+    /** Anki's default ease factor, in permille. */
+    private const DEFAULT_EASE_FACTOR = 2500;
+
+    /** revlog.type for a review-stage answer. */
+    private const REVLOG_TYPE_REVIEW = 1;
 
     /**
      * @param non-empty-list<ApkgNote> $notes
@@ -98,11 +123,18 @@ final class ApkgWriter
         $insertCard = $pdo->prepare(
             'INSERT INTO cards (id, nid, did, ord, mod, usn, type, queue, due, ivl, factor, '
             . 'reps, lapses, left, odue, odid, flags, data) '
-            . 'VALUES (:id, :nid, :did, 0, :mod, -1, 0, :queue, :due, 0, 0, 0, 0, 0, 0, 0, 0, \'\')'
+            . 'VALUES (:id, :nid, :did, 0, :mod, -1, :type, :queue, :due, :ivl, :factor, '
+            . ':reps, :lapses, 0, 0, 0, 0, :data)'
+        );
+        $insertRevlog = $pdo->prepare(
+            'INSERT INTO revlog (id, cid, usn, ease, ivl, lastIvl, factor, time, type) '
+            . 'VALUES (:id, :cid, -1, :ease, :ivl, :lastIvl, :factor, 0, :type)'
         );
 
         $position = 1;
         $nextId = $nowMillis;
+        /** @var array<int, true> $usedRevlogIds */
+        $usedRevlogIds = [];
         foreach ($notes as $note) {
             $noteId = $nextId++;
             $cardId = $nextId++;
@@ -127,18 +159,109 @@ final class ApkgWriter
                 ':csum' => AnkiSchema::fieldChecksum($note->term),
             ]);
 
+            $schedule = $note->schedule;
+            if ($schedule === null) {
+                $insertCard->execute([
+                    ':id' => $cardId,
+                    ':nid' => $noteId,
+                    ':did' => $deck->id,
+                    ':mod' => $nowSeconds,
+                    ':type' => 0,
+                    ':queue' => $note->suspended ? -1 : 0,
+                    ':due' => $position++,
+                    ':ivl' => 0,
+                    ':factor' => 0,
+                    ':reps' => 0,
+                    ':lapses' => 0,
+                    ':data' => '',
+                ]);
+                continue;
+            }
+
             $insertCard->execute([
                 ':id' => $cardId,
                 ':nid' => $noteId,
                 ':did' => $deck->id,
                 ':mod' => $nowSeconds,
-                ':queue' => $note->suspended ? -1 : 0,
-                ':due' => $position++,
+                ':type' => self::CARD_TYPE_REVIEW,
+                // Suspension is the user's own decision about the term and
+                // outranks the schedule; the state below survives either way.
+                ':queue' => $note->suspended ? -1 : self::CARD_TYPE_REVIEW,
+                ':due' => $this->dueDayNumber($schedule->due),
+                ':ivl' => max(1, $schedule->intervalDays),
+                ':factor' => self::DEFAULT_EASE_FACTOR,
+                ':reps' => $schedule->reps,
+                ':lapses' => $schedule->lapses,
+                ':data' => $this->memoryStateJson($schedule),
             ]);
+
+            foreach ($schedule->reviews as $review) {
+                $insertRevlog->execute([
+                    ':id' => $this->uniqueRevlogId($review->reviewedAt, $usedRevlogIds),
+                    ':cid' => $cardId,
+                    ':ease' => $review->ease,
+                    ':ivl' => $review->intervalDays,
+                    ':lastIvl' => $review->lastIntervalDays,
+                    ':factor' => self::DEFAULT_EASE_FACTOR,
+                    ':type' => self::REVLOG_TYPE_REVIEW,
+                ]);
+            }
         }
 
         $pdo->commit();
         unset($pdo);
+    }
+
+    /**
+     * A review card's `due`: whole days from the collection's creation day.
+     *
+     * Anki counts from the collection's creation *day* with a rollover hour;
+     * we create collections at midnight UTC and ignore rollover, so a card can
+     * land a day either side of where Anki would put it. Harmless for an
+     * export — Anki reschedules on the next answer regardless.
+     */
+    private function dueDayNumber(DateTimeImmutable $due): int
+    {
+        $days = (int) floor(
+            ($due->getTimestamp() - self::COLLECTION_CREATION_TIMESTAMP) / 86400
+        );
+
+        return max(0, $days);
+    }
+
+    /**
+     * The FSRS memory state Anki keeps in `cards.data`.
+     *
+     * Anki's own card data is a JSON object of optional keys; stability,
+     * difficulty and desired retention are the three that carry a schedule.
+     */
+    private function memoryStateJson(ApkgSchedule $schedule): string
+    {
+        return $this->jsonEncode([
+            's' => round($schedule->stability, 4),
+            'd' => round($schedule->difficulty, 4),
+            'dr' => round($schedule->desiredRetention, 4),
+        ]);
+    }
+
+    /**
+     * A revlog primary key derived from when the review happened.
+     *
+     * Anki keys revlog rows by their millisecond timestamp. LWT records review
+     * times to the second, so a term answered twice within one second would
+     * collide; step forward until the id is free.
+     *
+     * @param array<int, true> $used Ids already issued, by reference
+     */
+    private function uniqueRevlogId(DateTimeImmutable $reviewedAt, array &$used): int
+    {
+        $id = $reviewedAt->getTimestamp() * 1000;
+        while (isset($used[$id])) {
+            $id++;
+        }
+        $used[$id] = true;
+
+        return $id;
     }
 
     private function packageZip(string $outputPath, string $collectionDbPath): void

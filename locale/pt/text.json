@@ -215,5 +215,10 @@
     "modal.lookup": "Consultar:",
     "modal.dict1": "Dic. 1",
     "modal.dict2": "Dic. 2",
-    "modal.translate": "Traduzir"
+    "modal.translate": "Traduzir",
+
+    "parse_warning.no_words": "Não foi possível extrair nenhuma palavra deste texto.",
+    "parse_warning.almost_no_words": "Quase nada deste texto pôde ser convertido em palavras.",
+    "parse_warning.check_language": "A definição \"Caracteres de palavra\" do idioma não corresponde a este texto, por isso nada nele pode ser clicado ou aprendido.",
+    "parse_warning.edit_language": "Verificar as definições do idioma"
 }

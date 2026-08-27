@@ -91,44 +91,6 @@ class TermStatusServiceTest extends TestCase
     }
 
     // =========================================================================
-    // makeScoreRandomInsertUpdate()
-    // =========================================================================
-
-    #[Test]
-    public function makeScoreRandomInsertUpdateIvReturnsColumnNames(): void
-    {
-        $result = TermStatusService::makeScoreRandomInsertUpdate('iv');
-        $this->assertStringContainsString('WoTodayScore', $result);
-        $this->assertStringContainsString('WoTomorrowScore', $result);
-        $this->assertStringContainsString('WoRandom', $result);
-    }
-
-    #[Test]
-    public function makeScoreRandomInsertUpdateIdReturnsSqlFormulas(): void
-    {
-        $result = TermStatusService::makeScoreRandomInsertUpdate('id');
-        $this->assertStringContainsString('GREATEST', $result);
-        $this->assertStringContainsString('CASE', $result);
-        $this->assertStringContainsString('RAND()', $result);
-    }
-
-    #[Test]
-    public function makeScoreRandomInsertUpdateUReturnsSetClauses(): void
-    {
-        $result = TermStatusService::makeScoreRandomInsertUpdate('u');
-        $this->assertStringContainsString('WoTodayScore =', $result);
-        $this->assertStringContainsString('WoTomorrowScore =', $result);
-        $this->assertStringContainsString('WoRandom = RAND()', $result);
-    }
-
-    #[Test]
-    public function makeScoreRandomInsertUpdateUnknownTypeReturnsEmpty(): void
-    {
-        $result = TermStatusService::makeScoreRandomInsertUpdate('unknown');
-        $this->assertSame('', $result);
-    }
-
-    // =========================================================================
     // isValidStatus()
     // =========================================================================
 
@@ -382,30 +344,4 @@ class TermStatusServiceTest extends TestCase
     // =========================================================================
     // SQL constant sanity checks
     // =========================================================================
-
-    #[Test]
-    public function scoreFormulaTodayContainsExpectedSqlFragments(): void
-    {
-        $formula = TermStatusService::SCORE_FORMULA_TODAY;
-        $this->assertStringContainsString('GREATEST(-125', $formula);
-        $this->assertStringContainsString('WHEN WoStatus > 5 THEN 100', $formula);
-        $this->assertStringContainsString('DATEDIFF(NOW(),WoStatusChanged)', $formula);
-    }
-
-    #[Test]
-    public function scoreFormulaTomorrowContainsExpectedSqlFragments(): void
-    {
-        $formula = TermStatusService::SCORE_FORMULA_TOMORROW;
-        $this->assertStringContainsString('GREATEST(-125', $formula);
-        $this->assertStringContainsString('WHEN WoStatus > 5 THEN 100', $formula);
-    }
-
-    #[Test]
-    public function scoreFormulaTomorrowDiffersFromToday(): void
-    {
-        $this->assertNotSame(
-            TermStatusService::SCORE_FORMULA_TODAY,
-            TermStatusService::SCORE_FORMULA_TOMORROW
-        );
-    }
 }

@@ -21,6 +21,7 @@ namespace Lwt\Modules\Review\Http;
 
 use Lwt\Modules\Review\Application\ReviewFacade;
 use Lwt\Modules\Review\Domain\ReviewConfiguration;
+use Lwt\Modules\Review\Domain\Scheduling\Rating;
 use Lwt\Modules\Review\Infrastructure\SessionStateManager;
 use Lwt\Modules\Language\Application\LanguageFacade;
 use Lwt\Shared\Infrastructure\Language\LanguagePresets;
@@ -441,12 +442,26 @@ class ReviewApiHandler implements ApiRoutableInterface
      * @param int      $wordId Word ID
      * @param int|null $status Explicit status
      * @param int|null $change Status change amount
+     * @param int|null $grade  FSRS grade (1 Again, 2 Hard, 3 Good, 4 Easy)
      *
      * @return array{status?: int, controls?: string, error?: string}
      */
-    public function updateReviewStatus(int $wordId, ?int $status, ?int $change): array
-    {
-        if ($status !== null) {
+    public function updateReviewStatus(
+        int $wordId,
+        ?int $status,
+        ?int $change,
+        ?int $grade = null
+    ): array {
+        if ($grade !== null) {
+            // A graded answer carries the scheduling signal, so it takes
+            // precedence: it moves WoStatus by the same +-1 a binary answer
+            // would, and additionally feeds the term's FSRS state.
+            $rating = Rating::tryFrom($grade);
+            if ($rating === null) {
+                return ['error' => 'Invalid grade value'];
+            }
+            $result = $this->reviewFacade->submitAnswerWithGrade($wordId, $rating);
+        } elseif ($status !== null) {
             // Explicit status - validate it
             if (!TermStatus::isValid($status)) {
                 return ['error' => 'Invalid status value'];
@@ -455,7 +470,7 @@ class ReviewApiHandler implements ApiRoutableInterface
         } elseif ($change !== null) {
             $result = $this->reviewFacade->submitAnswerWithChange($wordId, $change);
         } else {
-            return ['error' => 'Must provide either status or change'];
+            return ['error' => 'Must provide either status, change or grade'];
         }
 
         if (!$result['success']) {
@@ -492,8 +507,29 @@ class ReviewApiHandler implements ApiRoutableInterface
 
         $status = isset($params['status']) ? (int)$params['status'] : null;
         $change = isset($params['change']) ? (int)$params['change'] : null;
+        $grade = isset($params['grade']) ? (int)$params['grade'] : null;
 
-        return $this->updateReviewStatus($termId, $status, $change);
+        return $this->updateReviewStatus($termId, $status, $change, $grade);
+    }
+
+    /**
+     * What each grade would schedule for a term.
+     *
+     * Feeds the hints under the four review buttons, so the user can see what
+     * answering Hard rather than Good costs before committing to it.
+     *
+     * @param array $params Request parameters
+     *
+     * @return array{intervals?: array<int, int>, error?: string}
+     */
+    public function formatIntervals(array $params): array
+    {
+        $termId = (int)($params['term_id'] ?? 0);
+        if ($termId === 0) {
+            return ['error' => 'term_id is required'];
+        }
+
+        return ['intervals' => $this->reviewFacade->previewIntervals($termId)];
     }
 
     /**
@@ -728,6 +764,8 @@ class ReviewApiHandler implements ApiRoutableInterface
                 return Response::success($this->formatTestConfig($params));
             case 'table-words':
                 return Response::success($this->formatTableWords($params));
+            case 'intervals':
+                return Response::success($this->formatIntervals($params));
             default:
                 return Response::error('Endpoint Not Found: ' . $frag1, 404);
         }

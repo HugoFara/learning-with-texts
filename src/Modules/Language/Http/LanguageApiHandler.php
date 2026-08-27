@@ -482,7 +482,8 @@ class LanguageApiHandler implements ApiRoutableInterface
                 'sentSplRegExp' => $def[4],
                 'makeCharacterWord' => $def[5],
                 'removeSpaces' => $def[6],
-                'rightToLeft' => $def[7]
+                'rightToLeft' => $def[7],
+                'parserType' => $def[8]
             ];
         }
 

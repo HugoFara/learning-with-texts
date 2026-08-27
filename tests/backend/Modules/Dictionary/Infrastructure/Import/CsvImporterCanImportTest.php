@@ -16,11 +16,14 @@ declare(strict_types=1);
 namespace Lwt\Tests\Modules\Dictionary\Infrastructure\Import;
 
 use Lwt\Modules\Dictionary\Infrastructure\Import\CsvImporter;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \Lwt\Modules\Dictionary\Infrastructure\Import\CsvImporter
+ * Whether a file is a CSV when the upload path has no extension, which is
+ * how PHP hands over $_FILES['file']['tmp_name'].
  */
+#[CoversClass(CsvImporter::class)]
 class CsvImporterCanImportTest extends TestCase
 {
     private string $tmpDir;

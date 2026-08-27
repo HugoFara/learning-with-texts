@@ -1415,13 +1415,6 @@ class TermCrudApiHandlerTest extends TestCase
         $this->assertStringContainsString('WoLemmaLC = ?', $source);
     }
 
-    public function testUpdateTermFullUsesScoreRandomUpdate(): void
-    {
-        $source = $this->getMethodSource('updateTermFull');
-
-        $this->assertStringContainsString("makeScoreRandomInsertUpdate('u')", $source);
-    }
-
     // =========================================================================
     // formatCreateTermFull tests
     // =========================================================================

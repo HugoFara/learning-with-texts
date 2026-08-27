@@ -194,8 +194,6 @@ class TermTranslationApiHandler
         $textlc = mb_strtolower($text, 'UTF-8');
 
         // Insert new word using prepared statement
-        $scoreColumns = TermStatusService::makeScoreRandomInsertUpdate('iv');
-        $scoreValues = TermStatusService::makeScoreRandomInsertUpdate('id');
 
         // Use raw SQL for complex INSERT with dynamic columns.
         // INSERTs can't use forTablePrepared; inject WoUsID into the
@@ -211,9 +209,8 @@ class TermTranslationApiHandler
         }
         $sql = "INSERT INTO words (
                 WoLgID, WoTextLC, WoText, WoStatus, WoTranslation,
-                WoSentence, WoRomanization, WoStatusChanged,
-                {$scoreColumns}{$userScopeColumn}
-            ) VALUES(?, ?, ?, 1, ?, ?, ?, NOW(), {$scoreValues}{$userScopeValue})";
+                WoSentence, WoRomanization, WoStatusChanged{$userScopeColumn}
+            ) VALUES(?, ?, ?, 1, ?, ?, ?, NOW(){$userScopeValue})";
 
         $stmt = Connection::prepare($sql);
         $stmt->bindValues($bindings);

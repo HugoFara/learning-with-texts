@@ -83,9 +83,6 @@ class GetTermById
             'WoWordCount' => $term->wordCount(),
             'WoCreated' => $term->createdAt()->format('Y-m-d H:i:s'),
             'WoStatusChanged' => $term->statusChangedAt()->format('Y-m-d H:i:s'),
-            'WoTodayScore' => $term->todayScore(),
-            'WoTomorrowScore' => $term->tomorrowScore(),
-            'WoRandom' => $term->random(),
         ];
     }
 }

@@ -6,6 +6,8 @@ namespace Lwt\Modules\Vocabulary\Application\Services\Anki;
 
 use Lwt\Modules\Language\Domain\LanguageRepositoryInterface;
 use Lwt\Modules\Language\Infrastructure\MySqlLanguageRepository;
+use Lwt\Modules\Review\Domain\TermScheduleRepositoryInterface;
+use Lwt\Modules\Review\Infrastructure\MySqlTermScheduleRepository;
 use Lwt\Modules\Tags\Application\Services\TermTagService;
 use Lwt\Modules\Vocabulary\Domain\TermRepositoryInterface;
 use Lwt\Modules\Vocabulary\Infrastructure\Anki\ApkgDeck;
@@ -28,6 +30,7 @@ final class ApkgExportService
         private readonly TermRepositoryInterface $terms,
         private readonly LanguageRepositoryInterface $languages,
         private readonly ApkgWriter $writer,
+        private readonly TermScheduleRepositoryInterface $schedules,
     ) {
     }
 
@@ -37,6 +40,7 @@ final class ApkgExportService
             new MySqlTermRepository(),
             new MySqlLanguageRepository(),
             new ApkgWriter(),
+            new MySqlTermScheduleRepository(),
         );
     }
 
@@ -85,11 +89,29 @@ final class ApkgExportService
 
         $deck = ApkgDeck::forLanguage($languageId, $language->name());
 
+        $termIdList = array_values(array_map(
+            static fn($t) => $t->id()->toInt(),
+            $terms
+        ));
+        $schedules = $this->schedules->findMany($termIdList);
+        $history = $this->schedules->historyFor($termIdList);
+
         $notes = [];
         $suspended = 0;
+        $scheduled = 0;
         foreach ($terms as $term) {
-            $tagNames = array_values(TermTagService::getWordTagsArray($term->id()->toInt()));
+            $termId = $term->id()->toInt();
+            $tagNames = array_values(TermTagService::getWordTagsArray($termId));
             $note = ApkgTermMapper::termToNote($term, $tagNames);
+
+            $state = $schedules[$termId] ?? null;
+            if ($state !== null) {
+                $note = $note->withSchedule(
+                    ApkgTermMapper::stateToSchedule($state, $history[$termId] ?? [])
+                );
+                $scheduled++;
+            }
+
             $notes[] = $note;
             if ($note->suspended) {
                 $suspended++;

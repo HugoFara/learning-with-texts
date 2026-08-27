@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Backend\Modules\Vocabulary\Infrastructure\Anki;
 
+use DateTimeImmutable;
 use Lwt\Modules\Vocabulary\Infrastructure\Anki\ApkgDeck;
 use Lwt\Modules\Vocabulary\Infrastructure\Anki\ApkgNote;
 use Lwt\Modules\Vocabulary\Infrastructure\Anki\ApkgReader;
+use Lwt\Modules\Vocabulary\Infrastructure\Anki\ApkgReview;
+use Lwt\Modules\Vocabulary\Infrastructure\Anki\ApkgSchedule;
 use Lwt\Modules\Vocabulary\Infrastructure\Anki\ApkgWriter;
+use PDO;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
 
@@ -25,6 +29,8 @@ final class ApkgWriterReaderTest extends TestCase
 {
     private string $tmpFile = '';
 
+    private string $extractedDb = '';
+
     protected function setUp(): void
     {
         if (!extension_loaded('pdo_sqlite')) {
@@ -36,6 +42,9 @@ final class ApkgWriterReaderTest extends TestCase
     {
         if ($this->tmpFile !== '' && is_file($this->tmpFile)) {
             unlink($this->tmpFile);
+        }
+        if ($this->extractedDb !== '' && is_file($this->extractedDb)) {
+            unlink($this->extractedDb);
         }
     }
 
@@ -146,6 +155,194 @@ final class ApkgWriterReaderTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessageMatches('/not found/i');
         (new ApkgReader())->read('/tmp/lwt-this-file-does-not-exist.apkg');
+    }
+
+    // =========================================================================
+    // Scheduling export (#238 phase 2b / #228)
+    // =========================================================================
+
+    public function testAnUnscheduledTermIsStillWrittenAsANewCard(): void
+    {
+        $rows = $this->cardsFor([$this->note(101, null)]);
+
+        self::assertSame(0, (int) $rows[0]['type']);
+        self::assertSame(0, (int) $rows[0]['queue']);
+        self::assertSame(0, (int) $rows[0]['ivl']);
+        self::assertSame('', (string) $rows[0]['data']);
+    }
+
+    public function testAScheduledTermBecomesAReviewCardCarryingItsMemoryState(): void
+    {
+        $due = new DateTimeImmutable('2026-03-01 00:00:00');
+        $schedule = new ApkgSchedule(
+            stability: 12.3456789,
+            difficulty: 5.5,
+            desiredRetention: 0.9,
+            due: $due,
+            intervalDays: 12,
+            reps: 4,
+            lapses: 1,
+        );
+
+        $rows = $this->cardsFor([$this->note(101, $schedule)]);
+
+        self::assertSame(2, (int) $rows[0]['type']);
+        self::assertSame(2, (int) $rows[0]['queue']);
+        self::assertSame(12, (int) $rows[0]['ivl']);
+        self::assertSame(4, (int) $rows[0]['reps']);
+        self::assertSame(1, (int) $rows[0]['lapses']);
+
+        // Due is a day number counted from the collection's creation day
+        $expectedDay = (int) floor(($due->getTimestamp() - 1577836800) / 86400);
+        self::assertSame($expectedDay, (int) $rows[0]['due']);
+
+        /** @var array{s: float, d: float, dr: float} $data */
+        $data = json_decode((string) $rows[0]['data'], true);
+        self::assertSame(12.3457, $data['s']);
+        self::assertSame(5.5, $data['d']);
+        self::assertSame(0.9, $data['dr']);
+    }
+
+    public function testASuspendedTermKeepsItsScheduleBehindTheSuspension(): void
+    {
+        $schedule = new ApkgSchedule(
+            stability: 3.0,
+            difficulty: 5.0,
+            desiredRetention: 0.9,
+            due: new DateTimeImmutable('2026-03-01 00:00:00'),
+            intervalDays: 3,
+            reps: 2,
+            lapses: 0,
+        );
+
+        $rows = $this->cardsFor([$this->note(101, $schedule, suspended: true)]);
+
+        // Unsuspending in Anki has to resume the schedule, not restart it
+        self::assertSame(-1, (int) $rows[0]['queue']);
+        self::assertSame(2, (int) $rows[0]['type']);
+        self::assertSame(3, (int) $rows[0]['ivl']);
+        self::assertNotSame('', (string) $rows[0]['data']);
+    }
+
+    public function testReviewHistoryBecomesRevlogRows(): void
+    {
+        $schedule = new ApkgSchedule(
+            stability: 9.0,
+            difficulty: 5.0,
+            desiredRetention: 0.9,
+            due: new DateTimeImmutable('2026-03-10 00:00:00'),
+            intervalDays: 9,
+            reps: 2,
+            lapses: 0,
+            reviews: [
+                new ApkgReview(new DateTimeImmutable('2026-02-01 10:00:00'), 3, 4, 0),
+                new ApkgReview(new DateTimeImmutable('2026-02-05 10:00:00'), 4, 9, 4),
+            ],
+        );
+
+        $pdo = $this->collectionFor([$this->note(101, $schedule)]);
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $pdo->query('SELECT * FROM revlog ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+
+        self::assertCount(2, $rows);
+        self::assertSame(3, (int) $rows[0]['ease']);
+        self::assertSame(4, (int) $rows[0]['ivl']);
+        self::assertSame(0, (int) $rows[0]['lastIvl']);
+        self::assertSame(4, (int) $rows[1]['ease']);
+        self::assertSame(9, (int) $rows[1]['ivl']);
+        self::assertSame(4, (int) $rows[1]['lastIvl']);
+
+        // Keyed by review time in milliseconds, as Anki does
+        self::assertSame(
+            (new DateTimeImmutable('2026-02-01 10:00:00'))->getTimestamp() * 1000,
+            (int) $rows[0]['id']
+        );
+
+        $cardId = (int) $pdo->query('SELECT id FROM cards')->fetchColumn();
+        self::assertSame($cardId, (int) $rows[0]['cid']);
+    }
+
+    public function testTwoReviewsInTheSameSecondGetDistinctRevlogIds(): void
+    {
+        $sameMoment = new DateTimeImmutable('2026-02-01 10:00:00');
+        $schedule = new ApkgSchedule(
+            stability: 1.0,
+            difficulty: 5.0,
+            desiredRetention: 0.9,
+            due: new DateTimeImmutable('2026-02-02 10:00:00'),
+            intervalDays: 1,
+            reps: 2,
+            lapses: 1,
+            reviews: [
+                new ApkgReview($sameMoment, 1, 1, 0),
+                new ApkgReview($sameMoment, 3, 1, 1),
+            ],
+        );
+
+        $pdo = $this->collectionFor([$this->note(101, $schedule)]);
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $pdo->query('SELECT id FROM revlog ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+
+        // revlog.id is the primary key, so a collision would have lost a row
+        self::assertCount(2, $rows);
+        self::assertNotSame((int) $rows[0]['id'], (int) $rows[1]['id']);
+    }
+
+    /**
+     * Build a note, optionally scheduled.
+     */
+    private function note(int $id, ?ApkgSchedule $schedule, bool $suspended = false): ApkgNote
+    {
+        return new ApkgNote(
+            lwtTermId: $id,
+            term: 'hola',
+            translation: 'hello',
+            romanization: '',
+            notes: '',
+            tags: [],
+            suspended: $suspended,
+            schedule: $schedule,
+        );
+    }
+
+    /**
+     * Write the notes to an .apkg and open the collection inside it.
+     *
+     * @param non-empty-list<ApkgNote> $notes
+     */
+    private function collectionFor(array $notes): PDO
+    {
+        $this->tmpFile = $this->makeTmpPath();
+        (new ApkgWriter())->write($this->tmpFile, ApkgDeck::forLanguage(7, 'Spanish'), $notes);
+
+        $zip = new ZipArchive();
+        self::assertTrue($zip->open($this->tmpFile) === true);
+        $sqlite = $zip->getFromName('collection.anki21');
+        $zip->close();
+        self::assertNotFalse($sqlite);
+
+        $extracted = $this->makeTmpPath();
+        file_put_contents($extracted, $sqlite);
+        $this->extractedDb = $extracted;
+
+        return new PDO('sqlite:' . $extracted);
+    }
+
+    /**
+     * The cards table of a collection built from these notes.
+     *
+     * @param non-empty-list<ApkgNote> $notes
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function cardsFor(array $notes): array
+    {
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $this->collectionFor($notes)
+            ->query('SELECT * FROM cards ORDER BY id')
+            ->fetchAll(PDO::FETCH_ASSOC);
+
+        return $rows;
     }
 
     private function makeTmpPath(): string

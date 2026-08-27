@@ -85,4 +85,29 @@ final class RecordScheduledReview
 
         return $this->scheduler->review($current, $rating, $now);
     }
+
+    /**
+     * Preview every grade at once, for the hints under the review buttons.
+     *
+     * Reads the term's state once rather than per grade — the scheduler is
+     * pure, so the four outcomes come from the same starting point anyway.
+     *
+     * @param int                    $wordId Term being reviewed
+     * @param DateTimeImmutable|null $now    Review time (defaults to now)
+     *
+     * @return array<int, int> Interval in days, keyed by Rating value
+     */
+    public function previewIntervals(int $wordId, ?DateTimeImmutable $now = null): array
+    {
+        $now ??= new DateTimeImmutable();
+
+        $current = $this->repository->findOrSeed($wordId);
+
+        $intervals = [];
+        foreach (Rating::cases() as $rating) {
+            $intervals[$rating->value] = $this->scheduler->review($current, $rating, $now)->intervalDays;
+        }
+
+        return $intervals;
+    }
 }

@@ -172,8 +172,8 @@ class MySqlBackupRepository implements BackupRepositoryInterface
             } elseif ($table == 'words') {
                 $result = Connection::querySelect(
                     'SELECT WoID, WoLgID, WoText, WoTextLC, WoStatus, WoTranslation,
-                    WoRomanization, WoSentence, WoCreated, WoStatusChanged, WoTodayScore,
-                    WoTomorrowScore, WoRandom FROM ' . $table . $scope['words']
+                    WoRomanization, WoSentence, WoCreated, WoStatusChanged
+                    FROM ' . $table . $scope['words']
                 );
             } elseif ($table == 'languages') {
                 $result = Connection::querySelect(
@@ -383,9 +383,6 @@ class MySqlBackupRepository implements BackupRepositoryInterface
                 `WoSentence` varchar(1000) DEFAULT NULL,
                 `WoCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `WoStatusChanged` timestamp NOT NULL DEFAULT '1970-01-01 01:00:01',
-                `WoTodayScore` double NOT NULL DEFAULT '0',
-                `WoTomorrowScore` double NOT NULL DEFAULT '0',
-                `WoRandom` double NOT NULL DEFAULT '0',
                 PRIMARY KEY (`WoID`),
                 UNIQUE KEY `WoLgIDTextLC` (`WoLgID`,`WoTextLC`),
                 KEY `WoLgID` (`WoLgID`),
@@ -393,10 +390,7 @@ class MySqlBackupRepository implements BackupRepositoryInterface
                 KEY `WoTextLC` (`WoTextLC`),
                 KEY `WoTranslation` (`WoTranslation`(333)),
                 KEY `WoCreated` (`WoCreated`),
-                KEY `WoStatusChanged` (`WoStatusChanged`),
-                KEY `WoTodayScore` (`WoTodayScore`),
-                KEY `WoTomorrowScore` (`WoTomorrowScore`),
-                KEY `WoRandom` (`WoRandom`)
+                KEY `WoStatusChanged` (`WoStatusChanged`)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8;\n",
             'word_tag_map' => "CREATE TABLE `word_tag_map` (
                 `WtWoID` int(11) unsigned NOT NULL,

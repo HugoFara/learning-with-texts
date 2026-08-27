@@ -6,7 +6,9 @@ namespace Lwt\Tests\Modules\Review\Http;
 
 use Lwt\Modules\Review\Http\ReviewApiHandler;
 use Lwt\Modules\Review\Application\ReviewFacade;
+use Lwt\Modules\Review\Domain\Scheduling\Rating;
 use Lwt\Modules\Review\Infrastructure\SessionStateManager;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 
@@ -307,7 +309,7 @@ class ReviewApiHandlerTest extends TestCase
         $result = $this->handler->updateReviewStatus(1, null, null);
 
         $this->assertArrayHasKey('error', $result);
-        $this->assertSame('Must provide either status or change', $result['error']);
+        $this->assertSame('Must provide either status, change or grade', $result['error']);
     }
 
     public function testUpdateReviewStatusAcceptsValidStatusValues(): void
@@ -553,5 +555,74 @@ class ReviewApiHandlerTest extends TestCase
 
         $this->assertSame([], $result['words']);
         $this->assertNull($result['langSettings']);
+    }
+
+    // =========================================================================
+    // Graded answers (#238 phase 2b)
+    // =========================================================================
+
+    public function testAGradeIsSubmittedThroughTheGradedPath(): void
+    {
+        $this->reviewFacade->expects($this->once())
+            ->method('submitAnswerWithGrade')
+            ->with(42, Rating::Hard)
+            ->willReturn(['success' => true, 'newStatus' => 3]);
+        $this->reviewFacade->expects($this->never())->method('submitAnswer');
+
+        $result = $this->handler->updateReviewStatus(42, null, null, 2);
+
+        $this->assertSame(3, $result['status']);
+    }
+
+    public function testAGradeWinsOverAStatusSentAlongsideIt(): void
+    {
+        // Only the graded path feeds the scheduler, so a client that sends both
+        // must not be able to lose the scheduling signal
+        $this->reviewFacade->expects($this->once())
+            ->method('submitAnswerWithGrade')
+            ->willReturn(['success' => true, 'newStatus' => 4]);
+        $this->reviewFacade->expects($this->never())->method('submitAnswer');
+
+        $this->handler->updateReviewStatus(42, 5, null, 4);
+    }
+
+    #[DataProvider('invalidGradeProvider')]
+    public function testAnOutOfRangeGradeIsRejected(int $grade): void
+    {
+        $this->reviewFacade->expects($this->never())->method('submitAnswerWithGrade');
+
+        $result = $this->handler->updateReviewStatus(42, null, null, $grade);
+
+        $this->assertSame('Invalid grade value', $result['error']);
+    }
+
+    /**
+     * @return array<string, array{int}>
+     */
+    public static function invalidGradeProvider(): array
+    {
+        return [
+            'below Again' => [0],
+            'above Easy' => [5],
+            'negative' => [-1],
+        ];
+    }
+
+    public function testIntervalsAreReportedPerGrade(): void
+    {
+        $this->reviewFacade->method('previewIntervals')
+            ->with(42)
+            ->willReturn([1 => 0, 2 => 2, 3 => 5, 4 => 12]);
+
+        $result = $this->handler->formatIntervals(['term_id' => 42]);
+
+        $this->assertSame([1 => 0, 2 => 2, 3 => 5, 4 => 12], $result['intervals']);
+    }
+
+    public function testIntervalsNeedATerm(): void
+    {
+        $result = $this->handler->formatIntervals([]);
+
+        $this->assertSame('term_id is required', $result['error']);
     }
 }

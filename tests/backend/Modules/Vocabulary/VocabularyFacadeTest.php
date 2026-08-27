@@ -1016,49 +1016,6 @@ class VocabularyFacadeTest extends TestCase
         $this->assertSame($expectedStats, $result);
     }
 
-    // =========================================================================
-    // Query Operations - findForReview
-    // =========================================================================
-
-    public function testFindForReviewDelegatesToRepository(): void
-    {
-        $terms = [$this->createMockTerm(1), $this->createMockTerm(2)];
-
-        $this->repository->expects($this->once())
-            ->method('findForReview')
-            ->with(1, 0.5, 50)
-            ->willReturn($terms);
-
-        $result = $this->facade->findForReview(1, 0.5, 50);
-
-        $this->assertSame($terms, $result);
-    }
-
-    public function testFindForReviewWithDefaults(): void
-    {
-        $terms = [$this->createMockTerm()];
-
-        $this->repository->expects($this->once())
-            ->method('findForReview')
-            ->with(null, 0.0, 100)
-            ->willReturn($terms);
-
-        $result = $this->facade->findForReview();
-
-        $this->assertSame($terms, $result);
-    }
-
-    public function testFindForReviewReturnsEmptyArray(): void
-    {
-        $this->repository->expects($this->once())
-            ->method('findForReview')
-            ->with(1, 0.0, 100)
-            ->willReturn([]);
-
-        $result = $this->facade->findForReview(1);
-
-        $this->assertSame([], $result);
-    }
 
     // =========================================================================
     // Query Operations - findRecent

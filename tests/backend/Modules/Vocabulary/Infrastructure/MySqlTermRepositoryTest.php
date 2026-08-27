@@ -114,8 +114,7 @@ class MySqlTermRepositoryTest extends TestCase
         $expectedKeys = [
             'id', 'languageId', 'text', 'textLowercase', 'lemma', 'lemmaLc',
             'status', 'translation', 'sentence', 'notes', 'romanization',
-            'wordCount', 'createdAt', 'statusChangedAt', 'todayScore',
-            'tomorrowScore', 'random',
+            'wordCount', 'createdAt', 'statusChangedAt',
         ];
 
         foreach ($expectedKeys as $key) {
@@ -282,7 +281,6 @@ class MySqlTermRepositoryTest extends TestCase
             'findPaginated'         => ['findPaginated', 5, 'array'],
             'searchByText'          => ['searchByText', 3, 'array'],
             'searchByTranslation'   => ['searchByTranslation', 3, 'array'],
-            'findForReview'         => ['findForReview', 3, 'array'],
             'findRecent'            => ['findRecent', 2, 'array'],
             'findRecentlyChanged'   => ['findRecentlyChanged', 3, 'array'],
             'findWithoutTranslation' => ['findWithoutTranslation', 1, 'array'],
@@ -344,16 +342,6 @@ class MySqlTermRepositoryTest extends TestCase
         $this->assertSame(50, $params[2]->getDefaultValue()); // limit
     }
 
-    #[Test]
-    public function findForReviewHasCorrectDefaults(): void
-    {
-        $method = new ReflectionMethod(MySqlTermRepository::class, 'findForReview');
-        $params = $method->getParameters();
-
-        $this->assertTrue($params[0]->allowsNull()); // languageId
-        $this->assertSame(0.0, $params[1]->getDefaultValue()); // scoreThreshold
-        $this->assertSame(100, $params[2]->getDefaultValue()); // limit
-    }
 
     #[Test]
     public function findRecentlyChangedHasCorrectDefaults(): void
@@ -399,7 +387,6 @@ class MySqlTermRepositoryTest extends TestCase
             'updateSentence'          => ['updateSentence', 2, 'bool'],
             'updateNotes'             => ['updateNotes', 2, 'bool'],
             'updateLemma'             => ['updateLemma', 2, 'bool'],
-            'updateScores'            => ['updateScores', 3, 'bool'],
             'getLanguagesWithTerms'   => ['getLanguagesWithTerms', 0, 'array'],
             'getStatistics'           => ['getStatistics', 1, 'array'],
             'getStatusDistribution'   => ['getStatusDistribution', 1, 'array'],
@@ -447,15 +434,6 @@ class MySqlTermRepositoryTest extends TestCase
         $this->assertSame('lemma', $params[1]->getName());
     }
 
-    #[Test]
-    public function updateScoresHasThreeParams(): void
-    {
-        $method = new ReflectionMethod(MySqlTermRepository::class, 'updateScores');
-        $params = $method->getParameters();
-        $this->assertSame('int', $params[0]->getType()?->getName());
-        $this->assertSame('float', $params[1]->getType()?->getName());
-        $this->assertSame('float', $params[2]->getType()?->getName());
-    }
 
     #[Test]
     public function deleteMultipleAcceptsArray(): void
@@ -537,7 +515,6 @@ class MySqlTermRepositoryTest extends TestCase
             'updateSentence'      => ['updateSentence'],
             'updateNotes'         => ['updateNotes'],
             'updateLemma'         => ['updateLemma'],
-            'updateScores'        => ['updateScores'],
         ];
     }
 
@@ -647,7 +624,6 @@ class MySqlTermRepositoryTest extends TestCase
             'findByLemma'     => ['findByLemma'],
             'findPaginated'   => ['findPaginated'],
             'searchByText'    => ['searchByText'],
-            'findForReview'   => ['findForReview'],
             'findRecent'      => ['findRecent'],
         ];
     }

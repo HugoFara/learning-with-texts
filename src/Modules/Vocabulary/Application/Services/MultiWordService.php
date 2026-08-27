@@ -67,8 +67,6 @@ class MultiWordService
      */
     public function createMultiWord(array $data): array
     {
-        $scoreColumns = TermStatusService::makeScoreRandomInsertUpdate('iv');
-        $scoreValues = TermStatusService::makeScoreRandomInsertUpdate('id');
 
         $sentence = ExportService::replaceTabNewline((string) $data['sentence']);
         $notes = ExportService::replaceTabNewline((string) ($data['notes'] ?? ''));
@@ -87,9 +85,9 @@ class MultiWordService
 
         $sql = "INSERT INTO words (
                 WoLgID, WoTextLC, WoText, WoStatus, WoTranslation, WoSentence,
-                WoNotes, WoRomanization, WoWordCount, WoStatusChanged, {$scoreColumns}"
+                WoNotes, WoRomanization, WoWordCount, WoStatusChanged"
                 . UserScopedQuery::insertColumn('words')
-            . ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), {$scoreValues}"
+            . ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()"
                 . UserScopedQuery::insertValuePrepared('words', $bindings)
             . ")";
 
@@ -123,7 +121,6 @@ class MultiWordService
      */
     public function updateMultiWord(int $wordId, array $data, int $oldStatus, int $newStatus): array
     {
-        $scoreUpdate = TermStatusService::makeScoreRandomInsertUpdate('u');
         $sentence = ExportService::replaceTabNewline((string) $data['sentence']);
         $notes = ExportService::replaceTabNewline((string) ($data['notes'] ?? ''));
 
@@ -140,7 +137,7 @@ class MultiWordService
             ];
             $sql = "UPDATE words SET
                     WoText = ?, WoTranslation = ?, WoSentence = ?, WoNotes = ?, WoRomanization = ?,
-                    WoStatus = ?, WoStatusChanged = NOW(), {$scoreUpdate}
+                    WoStatus = ?, WoStatusChanged = NOW()
                     WHERE WoID = ?"
                     . UserScopedQuery::forTablePrepared('words', $bindings);
             Connection::preparedExecute($sql, $bindings);
@@ -155,7 +152,7 @@ class MultiWordService
                 $wordId
             ];
             $sql = "UPDATE words SET
-                    WoText = ?, WoTranslation = ?, WoSentence = ?, WoNotes = ?, WoRomanization = ?, {$scoreUpdate}
+                    WoText = ?, WoTranslation = ?, WoSentence = ?, WoNotes = ?, WoRomanization = ?
                     WHERE WoID = ?"
                     . UserScopedQuery::forTablePrepared('words', $bindings);
             Connection::preparedExecute($sql, $bindings);

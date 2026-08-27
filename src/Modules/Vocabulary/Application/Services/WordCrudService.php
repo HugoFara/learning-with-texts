@@ -83,9 +83,6 @@ class WordCrudService
         $lemmaLc = $lemma !== null ? mb_strtolower($lemma, 'UTF-8') : null;
 
         try {
-            $scoreColumns = TermStatusService::makeScoreRandomInsertUpdate('iv');
-            $scoreValues = TermStatusService::makeScoreRandomInsertUpdate('id');
-
             $bindings = [
                 $data['WoLgID'],
                 $textlc,
@@ -100,9 +97,9 @@ class WordCrudService
             ];
             $sql = "INSERT INTO words (
                     WoLgID, WoTextLC, WoText, WoLemma, WoLemmaLC, WoStatus, WoTranslation,
-                    WoSentence, WoNotes, WoRomanization, WoStatusChanged, {$scoreColumns}"
+                    WoSentence, WoNotes, WoRomanization, WoStatusChanged"
                     . UserScopedQuery::insertColumn('words')
-                . ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), {$scoreValues}"
+                . ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()"
                     . UserScopedQuery::insertValuePrepared('words', $bindings)
                 . ")";
 
@@ -158,7 +155,6 @@ class WordCrudService
             : null;
         $lemmaLc = $lemma !== null ? mb_strtolower($lemma, 'UTF-8') : null;
 
-        $scoreUpdate = TermStatusService::makeScoreRandomInsertUpdate('u');
 
         $bindings = [$text, $translation, $sentence, $notes, $roman, $lemma, $lemmaLc];
 
@@ -169,7 +165,7 @@ class WordCrudService
             $sql = "UPDATE words SET
                 WoText = ?, WoTranslation = ?, WoSentence = ?, WoNotes = ?, WoRomanization = ?,
                 WoLemma = ?, WoLemmaLC = ?,
-                WoStatus = ?, WoStatusChanged = NOW(), {$scoreUpdate}
+                WoStatus = ?, WoStatusChanged = NOW()
                 WHERE WoID = ?"
                 . UserScopedQuery::forTablePrepared('words', $bindings);
             Connection::preparedExecute($sql, $bindings);
@@ -178,7 +174,7 @@ class WordCrudService
             $bindings[] = $wordId;
             $sql = "UPDATE words SET
                 WoText = ?, WoTranslation = ?, WoSentence = ?, WoNotes = ?, WoRomanization = ?,
-                WoLemma = ?, WoLemmaLC = ?, {$scoreUpdate}
+                WoLemma = ?, WoLemmaLC = ?
                 WHERE WoID = ?"
                 . UserScopedQuery::forTablePrepared('words', $bindings);
             Connection::preparedExecute($sql, $bindings);
@@ -458,9 +454,6 @@ class WordCrudService
             'WoWordCount' => $term->wordCount(),
             'WoCreated' => $term->createdAt()->format('Y-m-d H:i:s'),
             'WoStatusChanged' => $term->statusChangedAt()->format('Y-m-d H:i:s'),
-            'WoTodayScore' => $term->todayScore(),
-            'WoTomorrowScore' => $term->tomorrowScore(),
-            'WoRandom' => $term->random(),
         ];
     }
 }

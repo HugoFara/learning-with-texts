@@ -23,12 +23,15 @@ use Lwt\Modules\Review\Application\UseCases\GetNextTerm;
 use Lwt\Modules\Review\Application\UseCases\GetTableWords;
 use Lwt\Modules\Review\Application\UseCases\GetReviewConfiguration;
 use Lwt\Modules\Review\Application\UseCases\GetTomorrowCount;
+use Lwt\Modules\Review\Application\UseCases\RecordScheduledReview;
 use Lwt\Modules\Review\Application\UseCases\StartReviewSession;
 use Lwt\Modules\Review\Application\UseCases\SubmitAnswer;
+use Lwt\Modules\Review\Domain\Scheduling\Rating;
 use Lwt\Modules\Review\Domain\ReviewRepositoryInterface;
 use Lwt\Modules\Review\Domain\ReviewSession;
 use Lwt\Modules\Review\Domain\ReviewConfiguration;
 use Lwt\Modules\Review\Infrastructure\MySqlReviewRepository;
+use Lwt\Modules\Review\Infrastructure\ScheduleSql;
 use Lwt\Modules\Review\Infrastructure\SessionStateManager;
 use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Modules\Vocabulary\Application\Services\ExportService;
@@ -51,6 +54,7 @@ class ReviewFacade
     protected GetTomorrowCount $getTomorrowCount;
     protected StartReviewSession $startReviewSession;
     protected SubmitAnswer $submitAnswer;
+    protected RecordScheduledReview $scheduledReview;
 
     /**
      * Constructor.
@@ -63,6 +67,7 @@ class ReviewFacade
      * @param GetTomorrowCount|null          $getTomorrowCount     Tomorrow count use case
      * @param StartReviewSession|null        $startReviewSession   Start session use case
      * @param SubmitAnswer|null              $submitAnswer         Submit answer use case
+     * @param RecordScheduledReview|null     $scheduledReview      FSRS scheduling use case
      */
     public function __construct(
         ?ReviewRepositoryInterface $repository = null,
@@ -72,7 +77,8 @@ class ReviewFacade
         ?GetReviewConfiguration $getReviewConfiguration = null,
         ?GetTomorrowCount $getTomorrowCount = null,
         ?StartReviewSession $startReviewSession = null,
-        ?SubmitAnswer $submitAnswer = null
+        ?SubmitAnswer $submitAnswer = null,
+        ?RecordScheduledReview $scheduledReview = null
     ) {
         $this->repository = $repository ?? new MySqlReviewRepository();
         $this->sessionManager = $sessionManager ?? new SessionStateManager();
@@ -85,6 +91,7 @@ class ReviewFacade
             ?? new StartReviewSession($this->repository, $this->sessionManager);
         $this->submitAnswer = $submitAnswer
             ?? new SubmitAnswer($this->repository, $this->sessionManager);
+        $this->scheduledReview = $scheduledReview ?? new RecordScheduledReview();
     }
 
     // ==========================================
@@ -276,7 +283,7 @@ class ReviewFacade
      * @param int $wordId    Word ID
      * @param int $newStatus New status
      *
-     * @return array{oldStatus: int, newStatus: int, oldScore: int, newScore: int}
+     * @return array{oldStatus: int, newStatus: int}
      */
     public function updateWordStatus(int $wordId, int $newStatus): array
     {
@@ -392,10 +399,11 @@ class ReviewFacade
     public function getTableReviewWords(string $reviewsql, array $params = []): array
     {
         $sql = "SELECT DISTINCT WoID, WoText, WoTranslation, WoRomanization,
-            WoSentence, WoStatus, WoTodayScore AS Score
+            WoSentence, WoStatus,
+            DATEDIFF(" . ScheduleSql::effectiveDue() . ", NOW()) AS Score
             FROM $reviewsql AND WoStatus BETWEEN 1 AND 5
             AND WoTranslation != '' AND WoTranslation != '*'
-            ORDER BY WoTodayScore, WoRandom * RAND()";
+            ORDER BY " . ScheduleSql::effectiveDue() . ", RAND()";
 
         return Connection::preparedFetchAll($sql, $params);
     }
@@ -571,6 +579,31 @@ class ReviewFacade
     public function submitAnswerWithChange(int $wordId, int $change): array
     {
         return $this->submitAnswer->executeWithChange($wordId, $change);
+    }
+
+    /**
+     * Submit a graded answer (issue #238, phase 2b).
+     *
+     * @param int    $wordId Word ID
+     * @param Rating $grade  Again / Hard / Good / Easy
+     *
+     * @return array
+     */
+    public function submitAnswerWithGrade(int $wordId, Rating $grade): array
+    {
+        return $this->submitAnswer->executeWithGrade($wordId, $grade);
+    }
+
+    /**
+     * What each grade would schedule for a term, in days.
+     *
+     * @param int $wordId Word ID
+     *
+     * @return array<int, int> Interval in days, keyed by grade (1-4)
+     */
+    public function previewIntervals(int $wordId): array
+    {
+        return $this->scheduledReview->previewIntervals($wordId);
     }
 
     // ==========================================

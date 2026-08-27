@@ -133,9 +133,6 @@ class GetTermByIdTest extends TestCase
         $this->assertEquals(1, $result['WoWordCount']);
         $this->assertEquals('2024-01-15 10:30:00', $result['WoCreated']);
         $this->assertEquals('2024-01-16 11:00:00', $result['WoStatusChanged']);
-        $this->assertEquals(0.5, $result['WoTodayScore']);
-        $this->assertEquals(0.7, $result['WoTomorrowScore']);
-        $this->assertEquals(0.3, $result['WoRandom']);
     }
 
     public function testExecuteAsArrayReturnsNullWhenNotFound(): void
@@ -181,9 +178,6 @@ class GetTermByIdTest extends TestCase
             'WoWordCount',
             'WoCreated',
             'WoStatusChanged',
-            'WoTodayScore',
-            'WoTomorrowScore',
-            'WoRandom',
         ];
 
         foreach ($expectedKeys as $key) {

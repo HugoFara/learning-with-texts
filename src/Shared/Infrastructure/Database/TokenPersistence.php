@@ -18,6 +18,8 @@ declare(strict_types=1);
 
 namespace Lwt\Shared\Infrastructure\Database;
 
+use Lwt\Modules\Text\Domain\ParseCoverage;
+
 /**
  * Turns a parsed token stream into `sentences` and `word_occurrences` rows,
  * detecting multi-word expressions along the way — all in PHP.
@@ -152,6 +154,8 @@ final class TokenPersistence
                 $nonWordCounts[$lc] = ($nonWordCounts[$lc] ?? 0) + 1;
             }
         }
+        self::echoParseWarning($tokens, $wordCounts);
+
         $single = self::singleWordTerms($lid, array_keys($wordCounts));
         $wo = [];
         foreach ($wordCounts as $lc => $cnt) {
@@ -171,6 +175,40 @@ final class TokenPersistence
         echo '<script type="application/json" id="text-check-words-config">';
         echo \json_encode(['words' => $wo, 'nonWords' => $nw], JSON_HEX_TAG | JSON_HEX_AMP);
         echo '</script>';
+    }
+
+    /**
+     * Warn on the check-text page when the parse produced nothing learnable.
+     *
+     * This page exists to answer "did my parsing work?", and until now it
+     * answered a failed parse with an empty list of words and no explanation.
+     *
+     * @param ParsedToken[]     $tokens     Tokens for the whole text
+     * @param array<string,int> $wordCounts Word tokens by lowercase form
+     *
+     * @return void
+     */
+    private static function echoParseWarning(array $tokens, array $wordCounts): void
+    {
+        $characters = 0;
+        foreach ($tokens as $t) {
+            $characters += \mb_strlen($t->text, 'UTF-8');
+        }
+
+        $verdict = ParseCoverage::assess(array_sum($wordCounts), $characters);
+        if (!ParseCoverage::isWarning($verdict)) {
+            return;
+        }
+
+        $headline = $verdict === ParseCoverage::NO_WORDS
+            ? __('text.parse_warning.no_words')
+            : __('text.parse_warning.almost_no_words');
+
+        echo '<div class="notification is-warning is-light"><strong>'
+            . \htmlspecialchars($headline, ENT_QUOTES, 'UTF-8')
+            . '</strong> '
+            . \htmlspecialchars(__('text.parse_warning.check_language'), ENT_QUOTES, 'UTF-8')
+            . '</div>';
     }
 
     /**

@@ -471,10 +471,15 @@ export function checkDuplicateLanguage(
  * @param input Field to write to, if it exists
  * @param value Value to set
  */
-function setBoundValue(input: HTMLInputElement | null, value: string): void {
+function setBoundValue(
+  input: HTMLInputElement | HTMLSelectElement | null,
+  value: string
+): void {
   if (!input) return;
   input.value = value;
   input.dispatchEvent(new Event('input', { bubbles: true }));
+  // Alpine binds a <select> on change, not input
+  input.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 /**
@@ -514,6 +519,7 @@ function applyWizardPreset(): void {
           makeCharacterWord: boolean;
           removeSpaces: boolean;
           rightToLeft: boolean;
+          parserType?: string;
         }
       >;
     };
@@ -589,6 +595,13 @@ function applyWizardPreset(): void {
     setBoundChecked(
       lgForm.elements.namedItem('LgRightToLeft') as HTMLInputElement | null,
       l2Def.rightToLeft
+    );
+
+    // Tokenizer the preset asks for — jieba for Chinese, MeCab for Japanese.
+    // An empty value leaves it inferred from the flags above.
+    setBoundValue(
+      lgForm.elements.namedItem('LgParserType') as HTMLSelectElement | null,
+      l2Def.parserType ?? ''
     );
 
     console.log(`Applied wizard preset for ${data.l2} (L1: ${data.l1})`);

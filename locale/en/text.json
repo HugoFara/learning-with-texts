@@ -215,5 +215,10 @@
     "modal.lookup": "Lookup:",
     "modal.dict1": "Dict 1",
     "modal.dict2": "Dict 2",
-    "modal.translate": "Translate"
+    "modal.translate": "Translate",
+
+    "parse_warning.no_words": "None of this text could be turned into words.",
+    "parse_warning.almost_no_words": "Almost none of this text could be turned into words.",
+    "parse_warning.check_language": "The language's Word Characters setting does not match this text, so nothing in it can be clicked or learned.",
+    "parse_warning.edit_language": "Check the language settings"
 }

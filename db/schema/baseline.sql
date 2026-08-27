@@ -158,9 +158,6 @@ CREATE TABLE IF NOT EXISTS words (
     WoWordCount tinyint(3) unsigned NOT NULL DEFAULT 0,
     WoCreated timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     WoStatusChanged timestamp NOT NULL DEFAULT '1970-01-01 12:00:00',
-    WoTodayScore double NOT NULL DEFAULT '0',
-    WoTomorrowScore double NOT NULL DEFAULT '0',
-    WoRandom double NOT NULL DEFAULT '0',
     PRIMARY KEY (WoID),
     KEY WoUsID (WoUsID),
     UNIQUE KEY WoTextLCLgID (WoTextLC,WoLgID),
@@ -170,9 +167,6 @@ CREATE TABLE IF NOT EXISTS words (
     KEY WoCreated (WoCreated),
     KEY WoStatusChanged (WoStatusChanged),
     KEY WoWordCount(WoWordCount),
-    KEY WoTodayScore (WoTodayScore),
-    KEY WoTomorrowScore (WoTomorrowScore),
-    KEY WoRandom (WoRandom),
     KEY idx_words_lemma (WoLemmaLC, WoLgID),
     CONSTRAINT fk_words_user FOREIGN KEY (WoUsID) REFERENCES users(UsID) ON DELETE CASCADE
 )

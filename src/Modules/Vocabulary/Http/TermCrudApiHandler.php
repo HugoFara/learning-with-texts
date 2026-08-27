@@ -729,8 +729,6 @@ class TermCrudApiHandler
         $lemmaLc = $lemma !== null ? mb_strtolower($lemma, 'UTF-8') : null;
 
         // Insert the word
-        $scoreColumns = TermStatusService::makeScoreRandomInsertUpdate('iv');
-        $scoreValues = TermStatusService::makeScoreRandomInsertUpdate('id');
 
         // Use raw SQL for complex INSERT with dynamic columns.
         // INSERT cannot use forTablePrepared (which appends " AND … = ?",
@@ -750,9 +748,8 @@ class TermCrudApiHandler
         }
         $sql = "INSERT INTO words (
                 WoLgID, WoTextLC, WoText, WoLemma, WoLemmaLC, WoStatus, WoTranslation,
-                WoSentence, WoNotes, WoRomanization, WoStatusChanged,
-                {$scoreColumns}{$userScopeColumn}
-            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), {$scoreValues}{$userScopeValue})";
+                WoSentence, WoNotes, WoRomanization, WoStatusChanged{$userScopeColumn}
+            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(){$userScopeValue})";
 
         $stmt = Connection::prepare($sql);
         $stmt->bindValues($bindings);
@@ -863,7 +860,6 @@ class TermCrudApiHandler
         $lemmaLc = $lemma !== null ? mb_strtolower($lemma, 'UTF-8') : null;
 
         // Update the word
-        $scoreUpdate = TermStatusService::makeScoreRandomInsertUpdate('u');
 
         // Use raw SQL for dynamic score update
         $bindings = [$text, $translation, $romanization, $sentence, $notes, $lemma, $lemmaLc, $status, $termId];
@@ -877,8 +873,7 @@ class TermCrudApiHandler
              WoLemma = ?,
              WoLemmaLC = ?,
              WoStatus = ?,
-             WoStatusChanged = NOW(),
-             {$scoreUpdate}
+             WoStatusChanged = NOW()
              WHERE WoID = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             [$text, $translation, $romanization, $sentence, $notes, $lemma, $lemmaLc, $status, $termId]

@@ -14,6 +14,7 @@ vi.mock('alpinejs', () => ({
 // Mock text renderer
 vi.mock('../../../src/frontend/js/modules/text/pages/reading/text_renderer', () => ({
   renderText: vi.fn(() => '<div>rendered text</div>'),
+  renderParseWarning: vi.fn(() => ''),
   updateWordStatusInDOM: vi.fn()
 }));
 

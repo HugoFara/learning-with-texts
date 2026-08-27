@@ -10,6 +10,7 @@
 
 import Alpine from 'alpinejs';
 import { ReviewApi } from '@modules/review/api/review_api';
+import type { ReviewGrade } from '@modules/review/api/review_api';
 import { successSound, failureSound } from '@shared/utils/audio_feedback';
 import { openTermEditModal } from '@modules/vocabulary/components/term_edit_modal';
 
@@ -119,11 +120,17 @@ export interface ReviewStoreState {
   error: string | null;
   isInitialized: boolean;
 
+  // What each grade would schedule for the current word, in whole days.
+  // Empty until the answer is revealed, since that is when the hints show.
+  intervals: Record<string, number>;
+
   // Methods
   configure(config: ReviewConfig): void;
   nextWord(): Promise<void>;
   revealAnswer(): void;
   updateStatus(status: number, isCorrect?: boolean): Promise<void>;
+  gradeAnswer(grade: ReviewGrade): Promise<void>;
+  advanceAfterAnswer(isCorrect: boolean): Promise<void>;
   incrementStatus(): Promise<void>;
   decrementStatus(): Promise<void>;
   skipWord(): Promise<void>;
@@ -211,6 +218,7 @@ function createReviewStore(initialValues?: ReviewStoreInitialValues): ReviewStor
     isLoading: false,
     isFinished: false,
     answerRevealed: false,
+    intervals: {},
     isModalOpen: false,
     readAloudEnabled: false,
     tomorrowCount: 0,
@@ -255,6 +263,7 @@ function createReviewStore(initialValues?: ReviewStoreInitialValues): ReviewStor
       this.isLoading = true;
       this.answerRevealed = false;
       this.currentWord = null;
+      this.intervals = {};
       this.error = null;
 
       try {
@@ -315,6 +324,15 @@ function createReviewStore(initialValues?: ReviewStoreInitialValues): ReviewStor
     revealAnswer(): void {
       if (this.answerRevealed || !this.currentWord) return;
       this.answerRevealed = true;
+
+      // Fetch the hints in the background: the grade buttons appear straight
+      // away and show their interval when it arrives, rather than making the
+      // user wait on a round-trip to answer.
+      const wordId = this.currentWord.wordId;
+      void ReviewApi.getIntervals(wordId).then((response) => {
+        if (this.currentWord?.wordId !== wordId) return;
+        this.intervals = response.data?.intervals ?? {};
+      });
     },
 
     /**
@@ -340,28 +358,74 @@ function createReviewStore(initialValues?: ReviewStoreInitialValues): ReviewStor
           return;
         }
 
-        // Update progress
-        this.progress.remaining--;
-        if (isCorrect) {
-          this.progress.correct++;
-        } else {
-          this.progress.wrong++;
-        }
-
-        // Play feedback sound
-        this.playSound(isCorrect);
-
-        // Reset loading state before fetching next word
-        // (nextWord() checks isLoading and returns early if true)
-        this.isLoading = false;
-
-        // Fetch next word
-        await this.nextWord();
+        await this.advanceAfterAnswer(isCorrect);
       } catch (err) {
         console.error('Error updating status:', err);
         this.error = 'Failed to update status';
         this.isLoading = false;
       }
+    },
+
+    /**
+     * Grade the current word and move on.
+     *
+     * Unlike updateStatus(), which sends a status the client worked out for
+     * itself, this sends the grade and lets the server do both halves: nudge
+     * WoStatus the same +-1 as before, and feed the term's FSRS schedule.
+     * Anything but Again counts as a recall for the session tally.
+     *
+     * @param grade 1 Again, 2 Hard, 3 Good, 4 Easy
+     */
+    async gradeAnswer(grade: ReviewGrade): Promise<void> {
+      if (!this.currentWord || !this.answerRevealed || this.isLoading) return;
+
+      this.isLoading = true;
+
+      try {
+        const response = await ReviewApi.updateStatus(
+          this.currentWord.wordId,
+          undefined,
+          undefined,
+          grade
+        );
+
+        if (response.error) {
+          this.error = response.error;
+          this.isLoading = false;
+          return;
+        }
+
+        await this.advanceAfterAnswer(grade !== 1);
+      } catch (err) {
+        console.error('Error grading answer:', err);
+        this.error = 'Failed to update status';
+        this.isLoading = false;
+      }
+    },
+
+    /**
+     * Record an answer against the session tally and move to the next word.
+     *
+     * @param isCorrect Whether the user recalled the term
+     */
+    async advanceAfterAnswer(isCorrect: boolean): Promise<void> {
+      // Update progress
+      this.progress.remaining--;
+      if (isCorrect) {
+        this.progress.correct++;
+      } else {
+        this.progress.wrong++;
+      }
+
+      // Play feedback sound
+      this.playSound(isCorrect);
+
+      // Reset loading state before fetching next word
+      // (nextWord() checks isLoading and returns early if true)
+      this.isLoading = false;
+
+      // Fetch next word
+      await this.nextWord();
     },
 
     /**

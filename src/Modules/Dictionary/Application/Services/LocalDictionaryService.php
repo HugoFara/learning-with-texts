@@ -551,12 +551,10 @@ class LocalDictionaryService
 
         $sql = "INSERT IGNORE INTO {$wordsTable} (
                     WoLgID, WoTextLC, WoText, WoStatus, WoTranslation,
-                    WoSentence, WoRomanization, WoStatusChanged,
-                    WoTodayScore, WoTomorrowScore, WoRandom{$userColumn}
+                    WoSentence, WoRomanization, WoStatusChanged{$userColumn}
                 )
                 SELECT ?, le.LeTermLc, le.LeTerm, 1, le.LeDefinition,
-                       '', '', NOW(),
-                       0, -7, RAND(){$userValue}
+                       '', '', NOW(){$userValue}
                 FROM {$entriesTable} le
                 WHERE le.LeLdID = ?";
 

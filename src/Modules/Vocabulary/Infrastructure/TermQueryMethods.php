@@ -290,38 +290,6 @@ trait TermQueryMethods
         );
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function findForReview(
-        ?int $languageId = null,
-        float $scoreThreshold = 0.0,
-        int $limit = 100
-    ): array {
-        $query = $this->query()
-            ->whereIn('WoStatus', [
-                TermStatus::NEW,
-                TermStatus::LEARNING_2,
-                TermStatus::LEARNING_3,
-                TermStatus::LEARNING_4,
-                TermStatus::LEARNED
-            ])
-            ->where('WoTodayScore', '<=', $scoreThreshold)
-            ->orderBy('WoTodayScore', 'ASC')
-            ->orderBy('WoRandom', 'ASC')
-            ->limit($limit);
-
-        if ($languageId !== null) {
-            $query->where('WoLgID', '=', $languageId);
-        }
-
-        $rows = $query->getPrepared();
-
-        return array_map(
-            fn(array $row) => $this->mapToEntity($row),
-            $rows
-        );
-    }
 
     /**
      * {@inheritdoc}

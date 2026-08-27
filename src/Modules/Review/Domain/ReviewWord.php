@@ -82,7 +82,7 @@ final class ReviewWord
             is_string($sentence) ? $sentence : null,
             (int) $record['WoLgID'],
             (int) $record['WoStatus'],
-            (int) ($record['Score'] ?? $record['WoTodayScore'] ?? 0),
+            (int) ($record['Score'] ?? 0),
             (int) ($record['Days'] ?? 0)
         );
     }

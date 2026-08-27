@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Text\Application\UseCases;
 
+use Lwt\Modules\Text\Domain\ParseCoverage;
 use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Shared\Infrastructure\Database\TextParsing;
 use Lwt\Shared\Infrastructure\Database\UserScopedQuery;
@@ -37,7 +38,8 @@ class ParseText
      * @param string $text       Text content to parse
      * @param int    $languageId Language ID
      *
-     * @return array{sentences: int, words: int, unknownPercent: float, preview: string}
+     * @return array{sentences: int, words: int, unknownPercent: float, preview: string,
+     *         warning: string} `warning` is a ParseCoverage verdict, 'ok' when fine
      */
     public function execute(string $text, int $languageId): array
     {
@@ -57,18 +59,24 @@ class ParseText
                 'sentences' => 0,
                 'words' => 0,
                 'unknownPercent' => 100.0,
-                'preview' => 'Language not found'
+                'preview' => 'Language not found',
+                'warning' => ParseCoverage::OK
             ];
         }
 
         // Parse text (preview only, no save)
         $result = TextParsing::checkText($text, $languageId);
 
+        $words = $result['words'] ?? 0;
+
         return [
             'sentences' => $result['sentences'] ?? 0,
-            'words' => $result['words'] ?? 0,
+            'words' => $words,
             'unknownPercent' => $result['unknownPercent'] ?? 100.0,
-            'preview' => $result['preview'] ?? ''
+            'preview' => $result['preview'] ?? '',
+            // A language whose word characters do not fit the script parses
+            // successfully into nothing; say so rather than report a zero
+            'warning' => ParseCoverage::assess($words, mb_strlen($text, 'UTF-8'))
         ];
     }
 

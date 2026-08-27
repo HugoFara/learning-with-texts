@@ -209,13 +209,12 @@ class TermStatusApiHandler
      */
     public function setWordStatus(int $wid, int $status): int
     {
-        $scoreUpdate = TermStatusService::makeScoreRandomInsertUpdate('u');
 
         // Use raw SQL for dynamic score update
         $bindings = [$status, $wid];
         return Connection::preparedExecute(
             "UPDATE words
-            SET WoStatus = ?, WoStatusChanged = NOW(), {$scoreUpdate}
+            SET WoStatus = ?, WoStatusChanged = NOW()
             WHERE WoID = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             [$status, $wid]

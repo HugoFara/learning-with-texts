@@ -122,8 +122,6 @@ class SubmitAnswerTest extends TestCase
 
         $this->assertSame(0, $result['oldStatus']);
         $this->assertSame(0, $result['newStatus']);
-        $this->assertSame(0, $result['oldScore']);
-        $this->assertSame(0, $result['newScore']);
         $this->assertSame(0, $result['statusChange']);
         $this->assertSame(
             ['total' => 0, 'wrong' => 0, 'correct' => 0, 'remaining' => 0],
@@ -190,7 +188,6 @@ class SubmitAnswerTest extends TestCase
             ->willReturn([
                 'oldStatus' => 1,
                 'newStatus' => $status,
-                'oldScore' => 50,
                 'newScore' => 60
             ]);
 
@@ -216,7 +213,6 @@ class SubmitAnswerTest extends TestCase
             ->willReturn([
                 'oldStatus' => 2,
                 'newStatus' => 3,
-                'oldScore' => 40,
                 'newScore' => 55
             ]);
 
@@ -230,8 +226,6 @@ class SubmitAnswerTest extends TestCase
         $this->assertTrue($result['success']);
         $this->assertSame(2, $result['oldStatus']);
         $this->assertSame(3, $result['newStatus']);
-        $this->assertSame(40, $result['oldScore']);
-        $this->assertSame(55, $result['newScore']);
         $this->assertArrayNotHasKey('error', $result);
     }
 
@@ -245,8 +239,7 @@ class SubmitAnswerTest extends TestCase
         $this->mockOwnershipCheck(2);
         $this->repository->method('updateWordStatus')
             ->willReturn([
-                'oldStatus' => 2, 'newStatus' => 3,
-                'oldScore' => 50, 'newScore' => 60
+                'oldStatus' => 2, 'newStatus' => 3, 'newScore' => 60
             ]);
         $this->sessionManager->method('getSession')->willReturn(null);
 
@@ -262,8 +255,7 @@ class SubmitAnswerTest extends TestCase
         $this->mockOwnershipCheck(3);
         $this->repository->method('updateWordStatus')
             ->willReturn([
-                'oldStatus' => 3, 'newStatus' => 1,
-                'oldScore' => 60, 'newScore' => 30
+                'oldStatus' => 3, 'newStatus' => 1, 'newScore' => 30
             ]);
         $this->sessionManager->method('getSession')->willReturn(null);
 
@@ -279,8 +271,7 @@ class SubmitAnswerTest extends TestCase
         $this->mockOwnershipCheck(2);
         $this->repository->method('updateWordStatus')
             ->willReturn([
-                'oldStatus' => 2, 'newStatus' => 2,
-                'oldScore' => 50, 'newScore' => 50
+                'oldStatus' => 2, 'newStatus' => 2, 'newScore' => 50
             ]);
         $this->sessionManager->method('getSession')->willReturn(null);
 
@@ -300,8 +291,7 @@ class SubmitAnswerTest extends TestCase
         $this->mockOwnershipCheck(1);
         $this->repository->method('updateWordStatus')
             ->willReturn([
-                'oldStatus' => 1, 'newStatus' => 2,
-                'oldScore' => 30, 'newScore' => 45
+                'oldStatus' => 1, 'newStatus' => 2, 'newScore' => 45
             ]);
 
         $session = new ReviewSession(time(), 10, 0, 0);
@@ -330,8 +320,7 @@ class SubmitAnswerTest extends TestCase
         $this->mockOwnershipCheck(3);
         $this->repository->method('updateWordStatus')
             ->willReturn([
-                'oldStatus' => 3, 'newStatus' => 1,
-                'oldScore' => 60, 'newScore' => 20
+                'oldStatus' => 3, 'newStatus' => 1, 'newScore' => 20
             ]);
 
         $session = new ReviewSession(time(), 10, 0, 0);
@@ -355,8 +344,7 @@ class SubmitAnswerTest extends TestCase
         $this->mockOwnershipCheck(1);
         $this->repository->method('updateWordStatus')
             ->willReturn([
-                'oldStatus' => 1, 'newStatus' => 2,
-                'oldScore' => 30, 'newScore' => 45
+                'oldStatus' => 1, 'newStatus' => 2, 'newScore' => 45
             ]);
 
         $this->sessionManager->method('getSession')->willReturn(null);
@@ -414,8 +402,7 @@ class SubmitAnswerTest extends TestCase
             ->method('updateWordStatus')
             ->with(10, 3)
             ->willReturn([
-                'oldStatus' => 2, 'newStatus' => 3,
-                'oldScore' => 40, 'newScore' => 55
+                'oldStatus' => 2, 'newStatus' => 3, 'newScore' => 55
             ]);
 
         $this->sessionManager->method('getSession')->willReturn(null);
@@ -436,8 +423,7 @@ class SubmitAnswerTest extends TestCase
             ->method('updateWordStatus')
             ->with($this->anything(), 99)
             ->willReturn([
-                'oldStatus' => 5, 'newStatus' => 99,
-                'oldScore' => 80, 'newScore' => 100
+                'oldStatus' => 5, 'newStatus' => 99, 'newScore' => 100
             ]);
 
         $this->sessionManager->method('getSession')->willReturn(null);
@@ -457,8 +443,7 @@ class SubmitAnswerTest extends TestCase
             ->method('updateWordStatus')
             ->with($this->anything(), 1)
             ->willReturn([
-                'oldStatus' => 99, 'newStatus' => 1,
-                'oldScore' => 100, 'newScore' => 10
+                'oldStatus' => 99, 'newStatus' => 1, 'newScore' => 10
             ]);
 
         $this->sessionManager->method('getSession')->willReturn(null);
@@ -482,8 +467,7 @@ class SubmitAnswerTest extends TestCase
             ->method('updateWordStatus')
             ->with(10, 2)
             ->willReturn([
-                'oldStatus' => 3, 'newStatus' => 2,
-                'oldScore' => 55, 'newScore' => 40
+                'oldStatus' => 3, 'newStatus' => 2, 'newScore' => 40
             ]);
 
         $this->sessionManager->method('getSession')->willReturn(null);
@@ -504,8 +488,7 @@ class SubmitAnswerTest extends TestCase
             ->method('updateWordStatus')
             ->with($this->anything(), 98)
             ->willReturn([
-                'oldStatus' => 1, 'newStatus' => 98,
-                'oldScore' => 10, 'newScore' => 0
+                'oldStatus' => 1, 'newStatus' => 98, 'newScore' => 0
             ]);
 
         $this->sessionManager->method('getSession')->willReturn(null);
@@ -525,8 +508,7 @@ class SubmitAnswerTest extends TestCase
             ->method('updateWordStatus')
             ->with($this->anything(), 5)
             ->willReturn([
-                'oldStatus' => 98, 'newStatus' => 5,
-                'oldScore' => 0, 'newScore' => 80
+                'oldStatus' => 98, 'newStatus' => 5, 'newScore' => 80
             ]);
 
         $this->sessionManager->method('getSession')->willReturn(null);
@@ -547,8 +529,7 @@ class SubmitAnswerTest extends TestCase
         $this->mockOwnershipCheck(1);
         $this->repository->method('updateWordStatus')
             ->willReturn([
-                'oldStatus' => 1, 'newStatus' => 2,
-                'oldScore' => 30, 'newScore' => 45
+                'oldStatus' => 1, 'newStatus' => 2, 'newScore' => 45
             ]);
         $this->sessionManager->method('getSession')->willReturn(null);
 
@@ -558,8 +539,6 @@ class SubmitAnswerTest extends TestCase
         $this->assertArrayHasKey('success', $result);
         $this->assertArrayHasKey('oldStatus', $result);
         $this->assertArrayHasKey('newStatus', $result);
-        $this->assertArrayHasKey('oldScore', $result);
-        $this->assertArrayHasKey('newScore', $result);
         $this->assertArrayHasKey('statusChange', $result);
         $this->assertArrayHasKey('progress', $result);
     }
@@ -570,8 +549,7 @@ class SubmitAnswerTest extends TestCase
         $this->mockOwnershipCheck(1);
         $this->repository->method('updateWordStatus')
             ->willReturn([
-                'oldStatus' => 1, 'newStatus' => 2,
-                'oldScore' => 30, 'newScore' => 45
+                'oldStatus' => 1, 'newStatus' => 2, 'newScore' => 45
             ]);
 
         $session = new ReviewSession(time(), 5, 1, 0);

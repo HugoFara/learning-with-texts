@@ -16,11 +16,14 @@ declare(strict_types=1);
 namespace Lwt\Tests\Modules\Dictionary\Infrastructure\Import;
 
 use Lwt\Modules\Dictionary\Infrastructure\Import\JsonImporter;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \Lwt\Modules\Dictionary\Infrastructure\Import\JsonImporter
+ * Whether a file is JSON when the upload path has no extension, which is
+ * how PHP hands over $_FILES['file']['tmp_name'].
  */
+#[CoversClass(JsonImporter::class)]
 class JsonImporterCanImportTest extends TestCase
 {
     private string $tmpDir;

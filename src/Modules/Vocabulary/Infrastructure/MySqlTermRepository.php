@@ -67,9 +67,6 @@ class MySqlTermRepository implements TermRepositoryInterface
         'wordCount' => 'WoWordCount',
         'createdAt' => 'WoCreated',
         'statusChangedAt' => 'WoStatusChanged',
-        'todayScore' => 'WoTodayScore',
-        'tomorrowScore' => 'WoTomorrowScore',
-        'random' => 'WoRandom',
     ];
 
     /**
@@ -105,10 +102,7 @@ class MySqlTermRepository implements TermRepositoryInterface
             (string) ($row['WoRomanization'] ?? ''),
             (int) ($row['WoWordCount'] ?? 1),
             $this->parseDateTime(isset($row['WoCreated']) ? (string)$row['WoCreated'] : null),
-            $this->parseDateTime(isset($row['WoStatusChanged']) ? (string)$row['WoStatusChanged'] : null),
-            (float) ($row['WoTodayScore'] ?? 0.0),
-            (float) ($row['WoTomorrowScore'] ?? 0.0),
-            (float) ($row['WoRandom'] ?? 0.0)
+            $this->parseDateTime(isset($row['WoStatusChanged']) ? (string)$row['WoStatusChanged'] : null)
         );
     }
 
@@ -136,9 +130,6 @@ class MySqlTermRepository implements TermRepositoryInterface
             'WoWordCount' => $term->wordCount(),
             'WoCreated' => $term->createdAt()->format('Y-m-d H:i:s'),
             'WoStatusChanged' => $term->statusChangedAt()->format('Y-m-d H:i:s'),
-            'WoTodayScore' => $term->todayScore(),
-            'WoTomorrowScore' => $term->tomorrowScore(),
-            'WoRandom' => $term->random(),
         ];
     }
 

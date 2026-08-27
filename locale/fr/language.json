@@ -79,6 +79,7 @@
     "form.text_size_example": "Le texte aura cette taille",
     "form.section_text_processing": "Traitement du texte",
     "form.parser_type": "Type d'analyseur",
+    "form.parser_automatic": "Automatique",
     "form.parser_unavailable": " (indisponible)",
     "form.character_substitutions": "Substitutions de caractères",
     "form.character_substitutions_help": "Remplacer les caractères avant l'analyse (format : de=à, séparés par |)",

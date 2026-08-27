@@ -504,10 +504,9 @@ class CompleteImportService
             $sql = "INSERT " . ($overwrite != 0 ? '' : 'IGNORE ') .
                 " INTO words (
                     WoTextLC, WoText, WoTranslation, WoRomanization, WoSentence,
-                    WoStatus, WoStatusChanged, WoLgID{$userScopeCol},
-                    " . TermStatusService::makeScoreRandomInsertUpdate('iv') . "
+                    WoStatus, WoStatusChanged, WoLgID{$userScopeCol}
                 )
-                SELECT *, $langId as LgID{$userScopeVal}, " . TermStatusService::makeScoreRandomInsertUpdate('id') . "
+                SELECT *, $langId as LgID{$userScopeVal}" . "
                 FROM (
                     SELECT WoTextLC, WoText, WoTranslation, WoRomanization,
                     WoSentence, $status AS WoStatus,

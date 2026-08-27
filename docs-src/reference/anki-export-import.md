@@ -60,13 +60,28 @@ On the **vocabulary list page**, both the "ALL" and "Marked Terms" action dropdo
 
 | LWT status | Anki card state | On re-import |
 |------------|----------------|--------------|
-| 1–5 (learning / learned) | new card, not suspended | suspended-in-Anki → demoted to **Ignored** (98) |
+| 1–5 (learning / learned) | review card if LWT has scheduled it, else a new card | suspended-in-Anki → demoted to **Ignored** (98) |
 | 98 (Ignored) | suspended | unsuspending in Anki does not reverse this |
 | 99 (Well-known) | suspended | unsuspending in Anki does not reverse this |
 
 The status mapping is intentionally one-way for 98/99 → suspended on export. We don't promote terms to **Well-known** based on Anki state because suspension and "well-known" carry different semantics, and silently collapsing them would lose information.
 
-**Scheduling state (ease, interval, due date) is not exported or imported.** LWT and Anki keep their own SRS state. If you study the same word in both apps, you maintain two parallel review schedules — that's by design; see the discussion in [#228](https://github.com/HugoFara/lwt/issues/228).
+## Scheduling
+
+**Scheduling is exported, not imported.** A term LWT has scheduled arrives in Anki as a review card that is already due when LWT says it is due, carrying:
+
+- its **interval**, review count and lapse count;
+- its **FSRS memory state** — stability, difficulty and desired retention — in the card's `data`, which is where Anki's own FSRS keeps it, so Anki carries on from LWT's estimate rather than starting the term over;
+- its **review history**, one `revlog` row per answer, with the grade unchanged (both apps number Again..Easy 1–4).
+
+A suspended term keeps its schedule behind the suspension, so unsuspending it in Anki resumes rather than restarts.
+
+Two simplifications worth knowing:
+
+- A term in *relearning* is exported as an ordinary review card. Anki holds relearning cards in its learning queue, where the due date is a timestamp rather than a day number; the card comes due at the same moment either way.
+- The ease factor is Anki's default 2500 rather than a measured value. LWT has never computed an SM-2 ease, and writing 0 would make Anki's own SM-2 collapse the interval for anyone with FSRS switched off.
+
+**Nothing flows the other way.** Re-importing a deck updates fields and suspension only; whatever schedule Anki has built stays in Anki, and LWT keeps its own. If you answer the same word in both apps you still keep two schedules — exporting only gives Anki a sensible starting point instead of a blank one. See [#228](https://github.com/HugoFara/lwt/issues/228).
 
 ## What round-trips, what doesn't
 
@@ -78,7 +93,8 @@ The status mapping is intentionally one-way for 98/99 → suspended on export. W
 | Notes | ✅ |
 | Tags | ✅ |
 | Suspended ↔ Ignored (one direction) | ✅ |
-| Anki SRS state | ❌ (deliberate) |
+| LWT schedule → Anki (state, interval, history) | ✅ (export only) |
+| Anki SRS state → LWT | ❌ (deliberate) |
 | New notes added in Anki (no LWT id) | ❌ (silently skipped in v1) |
 | Deletions in Anki | ❌ (LWT terms are never auto-deleted) |
 

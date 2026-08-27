@@ -117,8 +117,8 @@ final class TermScheduleRepositoryIntegrationTest extends TestCase
     {
         Connection::preparedExecute(
             'INSERT INTO words (WoLgID, WoText, WoTextLC, WoStatus, WoTranslation,
-                                WoStatusChanged, WoTodayScore, WoTomorrowScore, WoRandom)
-             VALUES (?, ?, ?, ?, ?, ?, 0, 0, RAND())',
+                                WoStatusChanged)
+             VALUES (?, ?, ?, ?, ?, ?)',
             [self::$languageId, $text, strtolower($text), $status, 'translation', $statusChanged]
         );
 

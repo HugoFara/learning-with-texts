@@ -158,9 +158,7 @@ class FrequencyImportService
             return 0;
         }
 
-        $rowPlaceholder = '(?, ?, ?, ?, NOW(), '
-            . TermStatusService::SCORE_FORMULA_TODAY . ', '
-            . TermStatusService::SCORE_FORMULA_TOMORROW . ', RAND()'
+        $rowPlaceholder = '(?, ?, ?, ?, NOW()'
             . ($userId !== null ? ', ?' : '')
             . ')';
 
@@ -179,8 +177,7 @@ class FrequencyImportService
         }
 
         $sql = "INSERT IGNORE INTO words (
-                WoText, WoTextLC, WoLgID, WoStatus, WoStatusChanged,
-                WoTodayScore, WoTomorrowScore, WoRandom"
+                WoText, WoTextLC, WoLgID, WoStatus, WoStatusChanged"
             . UserScopedQuery::insertColumn('words')
             . ") VALUES " . implode(',', $placeholders);
 

@@ -278,21 +278,6 @@ interface TermRepositoryInterface
     public function searchByText(string $query, ?int $languageId = null, int $limit = 50): array;
 
     /**
-     * Find terms needing review (based on score thresholds).
-     *
-     * @param int|null $languageId     Language ID (null for all)
-     * @param float    $scoreThreshold Score threshold for today
-     * @param int      $limit          Maximum results
-     *
-     * @return Term[]
-     */
-    public function findForReview(
-        ?int $languageId = null,
-        float $scoreThreshold = 0.0,
-        int $limit = 100
-    ): array;
-
-    /**
      * Find recently added terms.
      *
      * @param int|null $languageId Language ID (null for all)

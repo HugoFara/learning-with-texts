@@ -10,7 +10,8 @@
 
 import Alpine from 'alpinejs';
 import type { WordStoreState } from '@modules/vocabulary/stores/word_store';
-import { renderText, updateWordStatusInDOM, type RenderSettings } from '../pages/reading/text_renderer';
+import { renderText, updateWordStatusInDOM, renderParseWarning, type RenderSettings }
+  from '../pages/reading/text_renderer';
 import { setupMultiWordSelection } from '../pages/reading/text_multiword_selection';
 import { TextsApi } from '@modules/text/api/texts_api';
 import { SettingsApi } from '@modules/admin/api/settings_api';
@@ -168,7 +169,7 @@ export function textReaderData(): TextReaderData {
 
       const settings = this.getRenderSettings();
       const html = renderText(this.store.words, settings);
-      container.innerHTML = html;
+      container.innerHTML = renderParseWarning(this.store.parseWarning) + html;
 
       // Apply RTL styling if needed
       if (this.store.rightToLeft) {

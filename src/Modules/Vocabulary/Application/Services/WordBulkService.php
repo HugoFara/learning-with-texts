@@ -129,21 +129,20 @@ class WordBulkService
 
         /** @var array<int, int> $ids */
         $ids = array_map('intval', $wordIds);
-        $scoreUpdate = TermStatusService::makeScoreRandomInsertUpdate('u');
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
         if ($relative) {
             if ($status > 0) {
                 // Increment status
                 $sql = "UPDATE words
-                        SET WoStatus = WoStatus + 1, WoStatusChanged = NOW(), {$scoreUpdate}
+                        SET WoStatus = WoStatus + 1, WoStatusChanged = NOW()
                         WHERE WoStatus IN (1,2,3,4) AND WoID IN ({$placeholders})"
                         . UserScopedQuery::forTablePrepared('words', $ids);
                 return Connection::preparedExecute($sql, $ids);
             } else {
                 // Decrement status
                 $sql = "UPDATE words
-                        SET WoStatus = WoStatus - 1, WoStatusChanged = NOW(), {$scoreUpdate}
+                        SET WoStatus = WoStatus - 1, WoStatusChanged = NOW()
                         WHERE WoStatus IN (2,3,4,5) AND WoID IN ({$placeholders})"
                         . UserScopedQuery::forTablePrepared('words', $ids);
                 return Connection::preparedExecute($sql, $ids);
@@ -154,7 +153,7 @@ class WordBulkService
         /** @var array<int, int> $bindings */
         $bindings = array_merge([$status], $ids);
         $sql = "UPDATE words
-                SET WoStatus = ?, WoStatusChanged = NOW(), {$scoreUpdate}
+                SET WoStatus = ?, WoStatusChanged = NOW()
                 WHERE WoID IN ({$placeholders})"
                 . UserScopedQuery::forTablePrepared('words', $bindings);
 
@@ -176,11 +175,10 @@ class WordBulkService
 
         /** @var array<int, int> $ids */
         $ids = array_map('intval', $wordIds);
-        $scoreUpdate = TermStatusService::makeScoreRandomInsertUpdate('u');
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
         $sql = "UPDATE words
-                SET WoStatusChanged = NOW(), {$scoreUpdate}
+                SET WoStatusChanged = NOW()
                 WHERE WoID IN ({$placeholders})"
                 . UserScopedQuery::forTablePrepared('words', $ids);
 
@@ -282,8 +280,6 @@ class WordBulkService
             return $max;
         }
 
-        $scoreColumns = TermStatusService::makeScoreRandomInsertUpdate('iv');
-        $scoreValues = TermStatusService::makeScoreRandomInsertUpdate('id');
 
         DB::beginTransaction();
         try {
@@ -295,9 +291,9 @@ class WordBulkService
                 $bindings = [$row['lg'], $textlc, $row['text'], $row['status'], $trans];
                 $sql = "INSERT INTO words (
                         WoLgID, WoTextLC, WoText, WoStatus, WoTranslation, WoSentence,
-                        WoRomanization, WoStatusChanged, {$scoreColumns}"
+                        WoRomanization, WoStatusChanged"
                         . UserScopedQuery::insertColumn('words')
-                    . ") VALUES (?, ?, ?, ?, ?, '', '', NOW(), {$scoreValues}"
+                    . ") VALUES (?, ?, ?, ?, ?, '', '', NOW()"
                         . UserScopedQuery::insertValuePrepared('words', $bindings)
                     . ")";
 

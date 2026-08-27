@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Vocabulary\Application\Services\Anki;
 
+use Lwt\Modules\Review\Domain\Scheduling\FsrsParameters;
+use Lwt\Modules\Review\Domain\Scheduling\MemoryState;
+use Lwt\Modules\Review\Domain\Scheduling\ReviewLogEntry;
 use Lwt\Modules\Vocabulary\Domain\Term;
 use Lwt\Modules\Vocabulary\Domain\ValueObject\TermStatus;
 use Lwt\Modules\Vocabulary\Infrastructure\Anki\ApkgNote;
+use Lwt\Modules\Vocabulary\Infrastructure\Anki\ApkgReview;
+use Lwt\Modules\Vocabulary\Infrastructure\Anki\ApkgSchedule;
 
 /**
  * Pure mapping between LWT Term entities and ApkgNote DTOs.
@@ -28,6 +33,62 @@ use Lwt\Modules\Vocabulary\Infrastructure\Anki\ApkgNote;
  */
 final class ApkgTermMapper
 {
+    /**
+     * Translate FSRS memory state and its history into the writer's shape.
+     *
+     * The interval Anki wants is the span the term was last scheduled for. The
+     * newest log entry has it exactly; a term seeded from its legacy status has
+     * no history, so fall back to the distance from its last review to its due
+     * date, which is what the seed set.
+     *
+     * @param list<ReviewLogEntry> $history Oldest first
+     */
+    public static function stateToSchedule(MemoryState $state, array $history): ApkgSchedule
+    {
+        $latest = $history === [] ? null : $history[count($history) - 1];
+
+        $intervalDays = $latest !== null
+            ? $latest->scheduledDays
+            : self::seededIntervalDays($state);
+
+        $reviews = [];
+        $previousInterval = 0;
+        foreach ($history as $entry) {
+            $reviews[] = new ApkgReview(
+                reviewedAt: $entry->reviewedAt,
+                ease: $entry->grade->value,
+                intervalDays: $entry->scheduledDays,
+                lastIntervalDays: $previousInterval,
+            );
+            $previousInterval = $entry->scheduledDays;
+        }
+
+        return new ApkgSchedule(
+            stability: $state->stability,
+            difficulty: $state->difficulty,
+            desiredRetention: (new FsrsParameters())->desiredRetention,
+            due: $state->due,
+            intervalDays: $intervalDays,
+            reps: $state->reps,
+            lapses: $state->lapses,
+            reviews: $reviews,
+        );
+    }
+
+    /**
+     * The interval implied by a seeded state, which has no review to read.
+     */
+    private static function seededIntervalDays(MemoryState $state): int
+    {
+        if ($state->lastReview === null) {
+            return max(1, (int) round($state->stability));
+        }
+
+        $days = (int) $state->lastReview->diff($state->due)->days;
+
+        return max(1, $days);
+    }
+
     /**
      * Build an ApkgNote from a Term + its current tag list.
      *

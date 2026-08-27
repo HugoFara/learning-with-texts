@@ -27,7 +27,25 @@ final class ApkgNote
         public readonly string $notes,
         public readonly array $tags,
         public readonly bool $suspended,
+        public readonly ?ApkgSchedule $schedule = null,
     ) {
+    }
+
+    /**
+     * The same note carrying scheduling state.
+     */
+    public function withSchedule(?ApkgSchedule $schedule): self
+    {
+        return new self(
+            $this->lwtTermId,
+            $this->term,
+            $this->translation,
+            $this->romanization,
+            $this->notes,
+            $this->tags,
+            $this->suspended,
+            $schedule,
+        );
     }
 
     public function guid(): string

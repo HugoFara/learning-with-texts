@@ -1372,32 +1372,6 @@ class DatabaseConnectTest extends TestCase
         $this->assertEquals('testmultiplespaces', $result);
     }
 
-    /**
-     * Test TermStatusService::makeScoreRandomInsertUpdate static method
-     */
-    public function testMakeScoreRandomInsertUpdate(): void
-    {
-        // Test insert variable mode (column names)
-        $result = TermStatusService::makeScoreRandomInsertUpdate('iv');
-        $this->assertIsString($result);
-        $this->assertStringContainsString('WoTodayScore', $result);
-        $this->assertStringContainsString('WoRandom', $result);
-
-        // Test insert data mode (values)
-        $result = TermStatusService::makeScoreRandomInsertUpdate('id');
-        $this->assertIsString($result);
-        $this->assertStringContainsString('RAND()', $result);
-
-        // Test update mode
-        $result = TermStatusService::makeScoreRandomInsertUpdate('u');
-        $this->assertIsString($result);
-        $this->assertStringContainsString('WoTodayScore', $result);
-
-        // Test with invalid mode (should return empty string)
-        $result = TermStatusService::makeScoreRandomInsertUpdate('x');
-        $this->assertIsString($result);
-        $this->assertEquals('', $result);
-    }
 
     /**
      * Test getVersionNumber function

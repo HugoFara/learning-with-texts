@@ -249,11 +249,10 @@ final class ApkgServiceIntegrationTest extends TestCase
         Connection::query(
             "INSERT INTO words (
                 WoLgID, WoText, WoTextLC, WoStatus, WoTranslation, WoSentence,
-                WoRomanization, WoNotes, WoWordCount, WoCreated, WoStatusChanged,
-                WoTodayScore, WoTomorrowScore, WoRandom
+                WoRomanization, WoNotes, WoWordCount, WoCreated, WoStatusChanged
             ) VALUES (
                 " . self::$languageId . ", '$tEsc', '$tlcEsc', $status,
-                '$trEsc', '', '$roEsc', '', 1, NOW(), NOW(), 0, 0, RAND()
+                '$trEsc', '', '$roEsc', '', 1, NOW(), NOW()
             )"
         );
         $id = (int) mysqli_insert_id($conn);

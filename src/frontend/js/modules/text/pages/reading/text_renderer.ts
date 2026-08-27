@@ -9,7 +9,7 @@
  */
 
 import type { WordData } from '@modules/vocabulary/stores/word_store';
-import type { MultiWordRef } from '@modules/text/api/texts_api';
+import type { MultiWordRef, ParseWarning } from '@modules/text/api/texts_api';
 import { parseInlineMarkdown } from '@shared/utils/inline_markdown';
 
 /**
@@ -271,6 +271,41 @@ function escapeAttr(text: string): string {
  * Words and adjacent punctuation are wrapped together to prevent line breaks.
  * Multi-word expressions are wrapped in mw-group spans with connected underlines.
  */
+/**
+ * Banner shown above a text that parsed into (almost) nothing.
+ *
+ * Such a text still displays every character, so without this it reads as an
+ * ordinary text that has inexplicably stopped responding to clicks.
+ *
+ * Built through the DOM rather than by concatenation: escapeHtml() leaves
+ * quotes alone, which is fine for text but would let an attribute value break
+ * out of the attribute it sits in.
+ *
+ * @param warning What the server found wrong, or null when the parse was fine
+ * @returns HTML for the banner, or an empty string
+ */
+export function renderParseWarning(warning: ParseWarning | null): string {
+  if (!warning) return '';
+
+  const box = document.createElement('div');
+  box.className = 'notification is-warning is-light';
+
+  const message = document.createElement('p');
+  const headline = document.createElement('strong');
+  headline.textContent = warning.headline;
+  message.append(headline, ` ${warning.detail}`);
+
+  const linkLine = document.createElement('p');
+  const link = document.createElement('a');
+  // setAttribute, not .href, so the path stays relative in the markup
+  link.setAttribute('href', warning.linkHref);
+  link.textContent = warning.linkLabel;
+  linkLine.append(link);
+
+  box.append(message, linkLine);
+  return box.outerHTML;
+}
+
 export function renderText(words: WordData[], settings: RenderSettings): string {
   if (words.length === 0) return '';
 

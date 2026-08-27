@@ -83,7 +83,7 @@ interface ReviewRepositoryInterface
      * @param int $wordId    Word ID
      * @param int $newStatus New status (1-5, 98, 99)
      *
-     * @return array{oldStatus: int, newStatus: int, oldScore: int, newScore: int}
+     * @return array{oldStatus: int, newStatus: int}
      */
     public function updateWordStatus(int $wordId, int $newStatus): array;
 

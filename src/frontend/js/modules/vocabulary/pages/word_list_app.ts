@@ -656,9 +656,20 @@ export function wordListData(): WordListData {
       );
     },
 
-    formatScore(score: number): string {
-      if (score < 0) return '0%';
-      return Math.floor(score) + '%';
+    /**
+     * The "due" column: whole days until the term comes up for review.
+     *
+     * This used to be the legacy score rendered as a percentage of a formula
+     * nobody could read off the screen. Days until due is the same information
+     * the scheduler actually acts on, and negative means overdue.
+     */
+    formatScore(days: number): string {
+      if (days <= 0) return t('vocabulary.list.due_now');
+      if (days < 30) return t('vocabulary.list.due_days', { count: String(days) });
+      if (days < 365) {
+        return t('vocabulary.list.due_months', { count: String(Math.round(days / 30)) });
+      }
+      return t('vocabulary.list.due_years', { count: String(Math.round(days / 365)) });
     },
 
     getStatusClass(status: number): string {

@@ -8,7 +8,8 @@ const { mockReviewApi } = vi.hoisted(() => ({
   mockReviewApi: {
     getNextWord: vi.fn(),
     updateStatus: vi.fn(),
-    getTomorrowCount: vi.fn()
+    getTomorrowCount: vi.fn(),
+    getIntervals: vi.fn(() => Promise.resolve({ data: { intervals: {} } }))
   }
 }));
 
@@ -407,6 +408,101 @@ describe('review/stores/review_store.ts', () => {
   // ===========================================================================
   // updateStatus Tests
   // ===========================================================================
+
+  describe('gradeAnswer', () => {
+    beforeEach(() => {
+      vi.spyOn(document, 'getElementById').mockReturnValue(null);
+      mockReviewApi.getNextWord.mockResolvedValue({
+        data: { term_id: 456, term_text: 'next', solution: '', group: '' },
+        error: undefined
+      });
+      mockReviewApi.updateStatus.mockResolvedValue({ data: {}, error: undefined });
+    });
+
+    it('sends the grade rather than a status the client worked out', async () => {
+      const store = getReviewStore();
+      store.currentWord = { wordId: 123 } as never;
+      store.answerRevealed = true;
+      store.progress = { total: 10, remaining: 5, wrong: 0, correct: 0 };
+
+      await store.gradeAnswer(2);
+
+      expect(mockReviewApi.updateStatus).toHaveBeenCalledWith(123, undefined, undefined, 2);
+    });
+
+    it('counts Again as a failure and the rest as recalls', async () => {
+      const store = getReviewStore();
+      store.currentWord = { wordId: 1 } as never;
+      store.answerRevealed = true;
+      store.progress = { total: 10, remaining: 5, wrong: 0, correct: 0 };
+
+      await store.gradeAnswer(1);
+      expect(store.progress.wrong).toBe(1);
+      expect(store.progress.correct).toBe(0);
+
+      store.currentWord = { wordId: 2 } as never;
+      store.answerRevealed = true;
+      await store.gradeAnswer(2);
+      expect(store.progress.wrong).toBe(1);
+      expect(store.progress.correct).toBe(1);
+    });
+
+    it('does nothing before the answer is revealed', async () => {
+      const store = getReviewStore();
+      store.currentWord = { wordId: 1 } as never;
+      store.answerRevealed = false;
+
+      await store.gradeAnswer(3);
+
+      expect(mockReviewApi.updateStatus).not.toHaveBeenCalled();
+    });
+
+    it('leaves the session tally alone when the server rejects the grade', async () => {
+      const store = getReviewStore();
+      store.currentWord = { wordId: 1 } as never;
+      store.answerRevealed = true;
+      store.progress = { total: 10, remaining: 5, wrong: 0, correct: 0 };
+      mockReviewApi.updateStatus.mockResolvedValue({ error: 'Invalid grade value' });
+
+      await store.gradeAnswer(3);
+
+      expect(store.error).toBe('Invalid grade value');
+      expect(store.progress.remaining).toBe(5);
+      expect(store.progress.correct).toBe(0);
+    });
+  });
+
+  describe('interval hints', () => {
+    it('fetches what each grade would schedule when the answer is revealed', async () => {
+      const store = getReviewStore();
+      store.currentWord = { wordId: 42 } as never;
+      mockReviewApi.getIntervals.mockResolvedValue({
+        data: { intervals: { 1: 0, 2: 2, 3: 5, 4: 12 } },
+        error: undefined
+      });
+
+      store.revealAnswer();
+
+      expect(mockReviewApi.getIntervals).toHaveBeenCalledWith(42);
+      await vi.waitFor(() => expect(store.intervals[3]).toBe(5));
+    });
+
+    it('drops hints that arrive after the user has moved on', async () => {
+      const store = getReviewStore();
+      store.currentWord = { wordId: 42 } as never;
+      let resolveIntervals: (value: unknown) => void = () => {};
+      mockReviewApi.getIntervals.mockReturnValue(
+        new Promise((resolve) => { resolveIntervals = resolve; })
+      );
+
+      store.revealAnswer();
+      store.currentWord = { wordId: 99 } as never;
+      resolveIntervals({ data: { intervals: { 1: 0, 2: 2, 3: 5, 4: 12 } } });
+
+      await Promise.resolve();
+      expect(store.intervals).toEqual({});
+    });
+  });
 
   describe('updateStatus', () => {
     beforeEach(() => {

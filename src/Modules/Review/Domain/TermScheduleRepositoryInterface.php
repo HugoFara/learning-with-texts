@@ -6,6 +6,7 @@ namespace Lwt\Modules\Review\Domain;
 
 use Lwt\Modules\Review\Domain\Scheduling\MemoryState;
 use Lwt\Modules\Review\Domain\Scheduling\Rating;
+use Lwt\Modules\Review\Domain\Scheduling\ReviewLogEntry;
 use Lwt\Modules\Review\Domain\Scheduling\SchedulingResult;
 
 /**
@@ -46,4 +47,26 @@ interface TermScheduleRepositoryInterface
      * @param int|null $languageId Restrict to one language, or null for all
      */
     public function countDue(?int $languageId = null): int;
+
+    /**
+     * Load memory state for many terms at once.
+     *
+     * Terms with no state are simply absent from the result, so the caller can
+     * tell "never graded" from "graded" without a second query. Built for the
+     * .apkg exporter, which needs a whole language's schedules in one go.
+     *
+     * @param list<int> $wordIds
+     *
+     * @return array<int, MemoryState> Keyed by word ID
+     */
+    public function findMany(array $wordIds): array;
+
+    /**
+     * Load the review history of many terms at once, oldest first.
+     *
+     * @param list<int> $wordIds
+     *
+     * @return array<int, list<ReviewLogEntry>> Keyed by word ID
+     */
+    public function historyFor(array $wordIds): array;
 }

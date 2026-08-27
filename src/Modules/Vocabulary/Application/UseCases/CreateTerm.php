@@ -121,10 +121,7 @@ class CreateTerm
             $romanization,
             $wordCount,
             $now,
-            $now,
-            0.0, // Initial today score
-            0.0, // Initial tomorrow score
-            (float) mt_rand() / (float) mt_getrandmax() // Random value for ordering
+            $now
         );
 
         // Persist

@@ -72,6 +72,8 @@ export interface LanguageDefinition {
   makeCharacterWord: boolean;
   removeSpaces: boolean;
   rightToLeft: boolean;
+  /** Tokenizer the preset asks for; '' leaves it inferred from the flags. */
+  parserType: string;
 }
 
 /**

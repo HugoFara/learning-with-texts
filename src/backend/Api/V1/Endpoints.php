@@ -52,6 +52,7 @@ class Endpoints
         'review/status' => ['PUT'],
         'review/config' => ['GET'],
         'review/table-words' => ['GET'],
+        'review/intervals' => ['GET'],
         'sentences-with-term' => ['GET'],
         'similar-terms' => ['GET'],
         'settings' => ['POST'],

@@ -37,6 +37,8 @@ const mockReviewStore = {
   incrementStatus: vi.fn(),
   decrementStatus: vi.fn(),
   updateStatus: vi.fn(),
+  gradeAnswer: vi.fn(),
+  intervals: {} as Record<string, number>,
   skipWord: vi.fn(),
   setReadAloud: vi.fn(),
   openModal: vi.fn(),
@@ -89,6 +91,7 @@ describe('review_view.ts', () => {
     mockReviewStore.incrementStatus.mockClear();
     mockReviewStore.decrementStatus.mockClear();
     mockReviewStore.updateStatus.mockClear();
+    mockReviewStore.gradeAnswer.mockClear();
     mockReviewStore.skipWord.mockClear();
     mockReviewStore.setReadAloud.mockClear();
     mockReviewStore.openModal.mockClear();
@@ -924,12 +927,32 @@ describe('review_view.ts', () => {
       mockReviewStore.currentWord = null;
     });
 
-    it('ArrowUp increments status when answer revealed', () => {
+    it('shows nothing under a grade button until its interval arrives', () => {
+      const componentFactory = getReviewAppComponent();
+      const component = componentFactory() as { intervalHint: (g: number) => string };
+      mockReviewStore.intervals = {};
+
+      expect(component.intervalHint(3)).toBe('');
+    });
+
+    it('scales the interval hint from days to months to years', () => {
+      const componentFactory = getReviewAppComponent();
+      const component = componentFactory() as { intervalHint: (g: number) => string };
+      mockReviewStore.intervals = { 1: 0, 2: 3, 3: 90, 4: 800 };
+
+      // A same-day interval reads as "today" rather than "0d"
+      expect(component.intervalHint(1)).toBe('today');
+      expect(component.intervalHint(2)).toBe('3d');
+      expect(component.intervalHint(3)).toBe('3mo');
+      expect(component.intervalHint(4)).toBe('2y');
+      mockReviewStore.intervals = {};
+    });
+
+    it('ArrowUp grades the answer Good when revealed', () => {
       const componentFactory = getReviewAppComponent();
       const component = componentFactory() as {
         store: ReturnType<typeof getReviewStore>;
         handleKeydown: (e: KeyboardEvent) => void;
-        incrementStatus: () => Promise<void>;
       };
       mockReviewStore.answerRevealed = true;
 
@@ -937,16 +960,15 @@ describe('review_view.ts', () => {
 
       component.handleKeydown(event);
 
-      expect(mockReviewStore.incrementStatus).toHaveBeenCalled();
+      expect(mockReviewStore.gradeAnswer).toHaveBeenCalledWith(3);
       mockReviewStore.answerRevealed = false;
     });
 
-    it('ArrowDown decrements status when answer revealed', () => {
+    it('ArrowDown grades the answer Again when revealed', () => {
       const componentFactory = getReviewAppComponent();
       const component = componentFactory() as {
         store: ReturnType<typeof getReviewStore>;
         handleKeydown: (e: KeyboardEvent) => void;
-        decrementStatus: () => Promise<void>;
       };
       mockReviewStore.answerRevealed = true;
 
@@ -954,7 +976,7 @@ describe('review_view.ts', () => {
 
       component.handleKeydown(event);
 
-      expect(mockReviewStore.decrementStatus).toHaveBeenCalled();
+      expect(mockReviewStore.gradeAnswer).toHaveBeenCalledWith(1);
       mockReviewStore.answerRevealed = false;
     });
 
@@ -1008,20 +1030,68 @@ describe('review_view.ts', () => {
       mockReviewStore.currentWord = null;
     });
 
-    it('Number keys set status when answer revealed', () => {
+    it('Number keys grade the answer when revealed', () => {
       const componentFactory = getReviewAppComponent();
       const component = componentFactory() as {
         store: ReturnType<typeof getReviewStore>;
         handleKeydown: (e: KeyboardEvent) => void;
-        setStatus: (s: number) => Promise<void>;
       };
       mockReviewStore.answerRevealed = true;
 
-      const event = new KeyboardEvent('keydown', { key: '3', cancelable: true });
+      const event = new KeyboardEvent('keydown', {
+        key: '3',
+        code: 'Digit3',
+        cancelable: true
+      });
 
       component.handleKeydown(event);
 
-      expect(mockReviewStore.updateStatus).toHaveBeenCalledWith(3);
+      expect(mockReviewStore.gradeAnswer).toHaveBeenCalledWith(3);
+      mockReviewStore.answerRevealed = false;
+    });
+
+    it('Shift and a number key still sets the status directly', () => {
+      const componentFactory = getReviewAppComponent();
+      const component = componentFactory() as {
+        store: ReturnType<typeof getReviewStore>;
+        handleKeydown: (e: KeyboardEvent) => void;
+      };
+      mockReviewStore.answerRevealed = true;
+
+      const event = new KeyboardEvent('keydown', {
+        key: '%',
+        code: 'Digit5',
+        shiftKey: true,
+        cancelable: true
+      });
+
+      component.handleKeydown(event);
+
+      // Read off the physical key, so a layout where Shift+5 is not "%" — or
+      // where the digits themselves are shifted — behaves the same
+      expect(mockReviewStore.updateStatus).toHaveBeenCalledWith(5);
+      expect(mockReviewStore.gradeAnswer).not.toHaveBeenCalled();
+      mockReviewStore.answerRevealed = false;
+    });
+
+    it('Number key 5 does not grade, there being only four grades', () => {
+      const componentFactory = getReviewAppComponent();
+      const component = componentFactory() as {
+        store: ReturnType<typeof getReviewStore>;
+        handleKeydown: (e: KeyboardEvent) => void;
+      };
+      mockReviewStore.answerRevealed = true;
+
+      const event = new KeyboardEvent('keydown', {
+        key: '5',
+        code: 'Digit5',
+        cancelable: true
+      });
+
+      component.handleKeydown(event);
+
+      expect(mockReviewStore.gradeAnswer).not.toHaveBeenCalled();
+      expect(mockReviewStore.updateStatus).not.toHaveBeenCalled();
       mockReviewStore.answerRevealed = false;
     });
   });

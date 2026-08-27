@@ -403,10 +403,7 @@ class ClassesTest extends TestCase
             'heh-lo',
             1,
             new DateTimeImmutable('2024-01-01'),
-            new DateTimeImmutable('2024-01-02'),
-            0.5,
-            0.7,
-            0.3
+            new DateTimeImmutable('2024-01-02')
         );
 
         $this->assertEquals(123, $term->id()->toInt());
@@ -417,7 +414,6 @@ class ClassesTest extends TestCase
         $this->assertEquals('Hello world.', $term->sentence());
         $this->assertEquals('My notes', $term->notes());
         $this->assertEquals('heh-lo', $term->romanization());
-        $this->assertEquals(0.5, $term->todayScore());
     }
 
     public function testTermAdvanceStatus(): void
@@ -529,19 +525,8 @@ class ClassesTest extends TestCase
         $term->updateSentence('This is a test.');
         $term->updateRomanization('test-ro');
 
-        $this->assertEquals('This is a test.', $term->sentence());
-        $this->assertEquals('test-ro', $term->romanization());
-    }
-
-    public function testTermUpdateScores(): void
-    {
-        $langId = LanguageId::fromInt(1);
-        $term = Term::create($langId, 'test');
-
-        $term->updateScores(0.8, 0.9);
-
-        $this->assertEquals(0.8, $term->todayScore());
-        $this->assertEquals(0.9, $term->tomorrowScore());
+        $this->assertSame('This is a test.', $term->sentence());
+        $this->assertSame('test-ro', $term->romanization());
     }
 
     public function testTermNeedsReview(): void

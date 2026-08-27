@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Tests\Backend\Modules\Vocabulary\Application\Services\Anki;
 
 use DateTimeImmutable;
+use Lwt\Modules\Review\Domain\Scheduling\MemoryState;
+use Lwt\Modules\Review\Domain\Scheduling\Rating;
+use Lwt\Modules\Review\Domain\Scheduling\ReviewLogEntry;
+use Lwt\Modules\Review\Domain\Scheduling\SchedulingState;
 use Lwt\Modules\Vocabulary\Application\Services\Anki\ApkgTermMapper;
 use Lwt\Modules\Vocabulary\Domain\Term;
 use Lwt\Modules\Vocabulary\Domain\ValueObject\TermStatus;
@@ -157,9 +161,6 @@ final class ApkgTermMapperTest extends TestCase
             wordCount: 1,
             createdAt: $now,
             statusChangedAt: $now,
-            todayScore: 0.0,
-            tomorrowScore: 0.0,
-            random: 0.5,
         );
     }
 
@@ -179,6 +180,92 @@ final class ApkgTermMapperTest extends TestCase
             notes: $notes,
             tags: [],
             suspended: $suspended,
+        );
+    }
+
+    // =========================================================================
+    // Scheduling export (#238 phase 2b / #228)
+    // =========================================================================
+
+    public function testTheLastReviewSuppliesTheExportedInterval(): void
+    {
+        $state = new MemoryState(
+            stability: 9.0,
+            difficulty: 5.0,
+            due: new DateTimeImmutable('2026-03-10 00:00:00'),
+            lastReview: new DateTimeImmutable('2026-03-01 00:00:00'),
+            reps: 2,
+            lapses: 0,
+            state: SchedulingState::Review,
+        );
+        $history = [
+            $this->logEntry(Rating::Good, 4, new DateTimeImmutable('2026-02-25 00:00:00')),
+            $this->logEntry(Rating::Easy, 9, new DateTimeImmutable('2026-03-01 00:00:00')),
+        ];
+
+        $schedule = ApkgTermMapper::stateToSchedule($state, $history);
+
+        self::assertSame(9, $schedule->intervalDays);
+        self::assertSame(2, $schedule->reps);
+        self::assertSame(9.0, $schedule->stability);
+    }
+
+    public function testASeededTermTakesItsIntervalFromLastReviewToDue(): void
+    {
+        // Never graded, so there is no review to read the interval off; the
+        // seed put its due date one status-interval after WoStatusChanged.
+        $state = new MemoryState(
+            stability: 27.0,
+            difficulty: 5.0,
+            due: new DateTimeImmutable('2026-03-28 00:00:00'),
+            lastReview: new DateTimeImmutable('2026-03-01 00:00:00'),
+            reps: 0,
+            lapses: 0,
+            state: SchedulingState::Review,
+        );
+
+        $schedule = ApkgTermMapper::stateToSchedule($state, []);
+
+        self::assertSame(27, $schedule->intervalDays);
+        self::assertSame([], $schedule->reviews);
+    }
+
+    public function testEachReviewCarriesThePreviousReviewsInterval(): void
+    {
+        $state = new MemoryState(
+            stability: 9.0,
+            difficulty: 5.0,
+            due: new DateTimeImmutable('2026-03-10 00:00:00'),
+            lastReview: new DateTimeImmutable('2026-03-01 00:00:00'),
+            reps: 3,
+            lapses: 1,
+            state: SchedulingState::Review,
+        );
+        $history = [
+            $this->logEntry(Rating::Again, 1, new DateTimeImmutable('2026-02-20 00:00:00')),
+            $this->logEntry(Rating::Good, 4, new DateTimeImmutable('2026-02-25 00:00:00')),
+            $this->logEntry(Rating::Easy, 9, new DateTimeImmutable('2026-03-01 00:00:00')),
+        ];
+
+        $reviews = ApkgTermMapper::stateToSchedule($state, $history)->reviews;
+
+        self::assertCount(3, $reviews);
+        self::assertSame([0, 1, 4], array_map(static fn($r) => $r->lastIntervalDays, $reviews));
+        // Grades pass through untouched: LWT and Anki both number them 1-4
+        self::assertSame([1, 3, 4], array_map(static fn($r) => $r->ease, $reviews));
+    }
+
+    private function logEntry(Rating $grade, int $scheduledDays, DateTimeImmutable $at): ReviewLogEntry
+    {
+        return new ReviewLogEntry(
+            wordId: 42,
+            grade: $grade,
+            stateBefore: SchedulingState::Review,
+            stability: 9.0,
+            difficulty: 5.0,
+            elapsedDays: 4,
+            scheduledDays: $scheduledDays,
+            reviewedAt: $at,
         );
     }
 }

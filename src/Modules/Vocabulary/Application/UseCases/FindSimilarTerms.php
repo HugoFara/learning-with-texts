@@ -31,6 +31,25 @@ use Lwt\Shared\UI\Helpers\IconHelper;
  */
 class FindSimilarTerms
 {
+    /**
+     * Most candidates ever pulled into PHP for a single lookup.
+     *
+     * A vocabulary built by hand never comes close; an imported one runs to
+     * hundreds of thousands of terms, and profiling every one of them exhausts
+     * the memory limit before it ever gets to the ranking. Past this many the
+     * selection is arbitrary, which is a far better failure than a fatal error.
+     */
+    private const MAX_CANDIDATES = 10000;
+
+    /**
+     * Most letter pairs of the searched term used to build the prefilter.
+     *
+     * Each pair costs one LIKE in the candidate query, so a pathologically long
+     * term is truncated. Testing a subset only ever admits more candidates than
+     * testing all of them, so the filter stays a superset either way.
+     */
+    private const MAX_FILTER_PAIRS = 40;
+
     private SimilarityCalculator $calculator;
 
     /**
@@ -89,17 +108,15 @@ class FindSimilarTerms
         float $minRanking,
         float $phoneticWeight = 0.3
     ): array {
-        $comparedTermLc = mb_strtolower($comparedTerm, 'UTF-8');
+        if ($maxCount <= 0) {
+            return [];
+        }
 
-        // Fetch words with their status for weighting
-        $rows = QueryBuilder::table('words')
-            ->select(['WoID', 'WoTextLC', 'WoStatus', 'WoLemmaLC'])
-            ->where('WoLgID', '=', $languageId)
-            ->where('WoTextLC', '<>', $comparedTermLc)
-            ->getPrepared();
+        $comparedTermLc = mb_strtolower($comparedTerm, 'UTF-8');
+        $lemmaLc = $this->resolveLemma($languageId, $comparedTermLc);
 
         $candidates = [];
-        foreach ($rows as $record) {
+        foreach ($this->fetchCandidates($languageId, $comparedTermLc, $minRanking, $lemmaLc) as $record) {
             $candidates[] = [
                 'id' => (int) $record["WoID"],
                 'textLc' => (string) $record["WoTextLC"],
@@ -114,8 +131,181 @@ class FindSimilarTerms
             $maxCount,
             $minRanking,
             $phoneticWeight,
-            $this->resolveLemma($languageId, $comparedTermLc)
+            $lemmaLc
         );
+    }
+
+    /**
+     * Read the terms worth ranking, rather than the whole vocabulary.
+     *
+     * This used to select every term of the language and let rankByCoverage()
+     * throw most of them away. That is affordable for the few thousand terms a
+     * reader adds by hand, but a vocabulary seeded from a dictionary import runs
+     * to hundreds of thousands, and materialising it exhausted the memory limit
+     * on every word click. The admission test is moved into SQL instead, so the
+     * rows that come back are the ones that stood a chance.
+     *
+     * @param int    $languageId     Language ID
+     * @param string $comparedTermLc Lowercased term
+     * @param float  $minRanking     Minimum similarity ranking (0-1)
+     * @param string $lemmaLc        The term's lemma, or an empty string
+     *
+     * @return array<int, array<string, mixed>> Candidate rows
+     */
+    private function fetchCandidates(
+        int $languageId,
+        string $comparedTermLc,
+        float $minRanking,
+        string $lemmaLc
+    ): array {
+        $query = QueryBuilder::table('words')
+            ->select(['WoID', 'WoTextLC', 'WoStatus', 'WoLemmaLC'])
+            ->where('WoLgID', '=', $languageId)
+            ->where('WoTextLC', '<>', $comparedTermLc)
+            ->limit(self::MAX_CANDIDATES);
+
+        // A non-positive threshold admits every term whatever it looks like, so
+        // there is nothing to narrow the scan with and the cap is the only bound.
+        if ($minRanking > 0) {
+            $filter = $this->buildCandidateFilter($comparedTermLc, $minRanking, $lemmaLc);
+            if ($filter === null) {
+                return [];
+            }
+            $query->whereRaw($filter['sql'], $filter['bindings']);
+        }
+
+        // Order the scan by how much of the term each candidate covers, so that
+        // a vocabulary large enough to hit the cap loses its weakest matches
+        // rather than whichever ones happen to have the lowest WoID.
+        $overlap = $this->buildOverlapExpression($comparedTermLc);
+        if ($overlap !== null) {
+            $query->selectRaw(
+                'WoID, WoTextLC, WoStatus, WoLemmaLC, ' . $overlap['sql'] . ' AS shared_pairs',
+                $overlap['bindings']
+            )->orderBy('shared_pairs', 'DESC');
+        }
+
+        $rows = $query->getPrepared();
+
+        // That ordering decides which rows survive the cap and nothing else.
+        // rankByCoverage() breaks its ties on whichever candidate it saw first,
+        // so the rows go back into WoID order before it sees them and a
+        // vocabulary that never reaches the cap ranks exactly as it used to.
+        usort($rows, fn(array $a, array $b): int => (int) $a['WoID'] <=> (int) $b['WoID']);
+
+        return $rows;
+    }
+
+    /**
+     * SQL counting the letter pairs a term shares with the searched one.
+     *
+     * A term pair never spans a space, so it belongs to a candidate's pair set
+     * exactly when it is a substring of the candidate — which makes the size of
+     * the intersection a sum of LIKE tests.
+     *
+     * @param string $comparedTermLc Lowercased term
+     *
+     * @return array{sql: string, bindings: list<mixed>, pairCount: int}|null Null
+     *         when the term is too short to have a letter pair
+     */
+    public function buildOverlapExpression(string $comparedTermLc): ?array
+    {
+        $pairs = array_slice(
+            $this->calculator->wordLetterPairs($comparedTermLc),
+            0,
+            self::MAX_FILTER_PAIRS
+        );
+        if ($pairs === []) {
+            return null;
+        }
+
+        $tests = [];
+        $bindings = [];
+        foreach ($pairs as $pair) {
+            $tests[] = '(WoTextLC LIKE ?)';
+            $bindings[] = '%' . addcslashes($pair, '\\%_') . '%';
+        }
+
+        return [
+            'sql' => '(' . implode(' + ', $tests) . ')',
+            'bindings' => $bindings,
+            'pairCount' => count($pairs),
+        ];
+    }
+
+    /**
+     * SQL admitting every term that could clear the threshold.
+     *
+     * Two ways in, matching the two ways rankByCoverage() admits a candidate.
+     * A term of the same word family gets in whatever it scores, exactly as the
+     * ranking treats it. Everything else has to share enough letter pairs with
+     * the searched term: the Dice coefficient is 2|A∩B| / (|A|+|B|), so clearing
+     * a threshold t needs |A∩B| >= t(|A|+|B|)/2, and dropping the candidate's own
+     * pair count — unknown until it is read — leaves the weaker t|B|/2 that can
+     * be tested in SQL.
+     *
+     * The bound covers the character half of the score. The phonetic half can in
+     * principle carry a candidate over on fewer shared pairs, which is why the
+     * loose form of the bound is the one used, but a term whose spelling has
+     * almost nothing in common with the searched one is not admitted on
+     * pronunciation alone. That is the one way this narrows the old behaviour.
+     *
+     * @param string $comparedTermLc Lowercased term
+     * @param float  $minRanking     Minimum similarity ranking (0-1)
+     * @param string $lemmaLc        The term's lemma, or an empty string
+     *
+     * @return array{sql: string, bindings: list<mixed>}|null Null when no term
+     *         can qualify, so the query is not worth running
+     */
+    public function buildCandidateFilter(
+        string $comparedTermLc,
+        float $minRanking,
+        string $lemmaLc
+    ): ?array {
+        $conditions = [];
+        $bindings = [];
+
+        // Same word family: admitted on the lemma, or on being the lemma
+        if ($lemmaLc !== '') {
+            $conditions[] = 'WoLemmaLC = ?';
+            $conditions[] = 'WoTextLC = ?';
+            $bindings[] = $lemmaLc;
+            $bindings[] = $lemmaLc;
+        }
+
+        $overlap = $this->buildOverlapExpression($comparedTermLc);
+        if ($overlap !== null) {
+            $conditions[] = $overlap['sql'] . ' >= ?';
+            $bindings = array_merge(
+                $bindings,
+                $overlap['bindings'],
+                [self::minimumSharedPairs($minRanking, $overlap['pairCount'])]
+            );
+        }
+
+        if ($conditions === []) {
+            // A term too short to have a letter pair scores zero against
+            // everything, and it has no family to fall back on
+            return null;
+        }
+
+        return [
+            'sql' => '(' . implode(' OR ', $conditions) . ')',
+            'bindings' => $bindings,
+        ];
+    }
+
+    /**
+     * Letter pairs a candidate must share before it could reach the threshold.
+     *
+     * @param float $minRanking    Minimum similarity ranking (0-1)
+     * @param int   $termPairCount Letter pairs in the searched term
+     *
+     * @return int Always at least one: nothing scores without an overlap
+     */
+    private static function minimumSharedPairs(float $minRanking, int $termPairCount): int
+    {
+        return max(1, (int) ceil($minRanking * $termPairCount / 2));
     }
 
     /**

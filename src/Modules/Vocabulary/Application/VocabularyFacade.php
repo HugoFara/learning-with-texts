@@ -359,23 +359,6 @@ class VocabularyFacade
     }
 
     /**
-     * Find terms for review.
-     *
-     * @param int|null $languageId     Language ID
-     * @param float    $scoreThreshold Score threshold
-     * @param int      $limit          Maximum results
-     *
-     * @return Term[]
-     */
-    public function findForReview(
-        ?int $languageId = null,
-        float $scoreThreshold = 0.0,
-        int $limit = 100
-    ): array {
-        return $this->repository->findForReview($languageId, $scoreThreshold, $limit);
-    }
-
-    /**
      * Find recently added terms.
      *
      * @param int|null $languageId Language ID

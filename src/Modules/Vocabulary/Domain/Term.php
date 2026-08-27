@@ -54,9 +54,6 @@ class Term
     private int $wordCount;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $statusChangedAt;
-    private float $todayScore;
-    private float $tomorrowScore;
-    private float $random;
 
     /**
      * Private constructor - use factory methods instead.
@@ -75,10 +72,7 @@ class Term
         string $romanization,
         int $wordCount,
         DateTimeImmutable $createdAt,
-        DateTimeImmutable $statusChangedAt,
-        float $todayScore,
-        float $tomorrowScore,
-        float $random
+        DateTimeImmutable $statusChangedAt
     ) {
         $this->id = $id;
         $this->languageId = $languageId;
@@ -94,9 +88,6 @@ class Term
         $this->wordCount = $wordCount;
         $this->createdAt = $createdAt;
         $this->statusChangedAt = $statusChangedAt;
-        $this->todayScore = $todayScore;
-        $this->tomorrowScore = $tomorrowScore;
-        $this->random = $random;
     }
 
     /**
@@ -136,10 +127,7 @@ class Term
             '',
             $wordCount,
             new DateTimeImmutable(),
-            new DateTimeImmutable(),
-            0.0,
-            0.0,
-            (float) mt_rand() / (float) mt_getrandmax()
+            new DateTimeImmutable()
         );
     }
 
@@ -163,9 +151,6 @@ class Term
      * @param int               $wordCount       The word count
      * @param DateTimeImmutable $createdAt       When the term was created
      * @param DateTimeImmutable $statusChangedAt When status last changed
-     * @param float             $todayScore      Today's review score
-     * @param float             $tomorrowScore   Tomorrow's review score
-     * @param float             $random          Random value for review ordering
      *
      * @return self
      *
@@ -185,10 +170,7 @@ class Term
         string $romanization,
         int $wordCount,
         DateTimeImmutable $createdAt,
-        DateTimeImmutable $statusChangedAt,
-        float $todayScore,
-        float $tomorrowScore,
-        float $random
+        DateTimeImmutable $statusChangedAt
     ): self {
         return new self(
             $id === 0 ? TermId::new() : TermId::fromInt($id),
@@ -204,10 +186,7 @@ class Term
             $romanization,
             $wordCount,
             $createdAt,
-            $statusChangedAt,
-            $todayScore,
-            $tomorrowScore,
-            $random
+            $statusChangedAt
         );
     }
 
@@ -350,19 +329,6 @@ class Term
         }
     }
 
-    /**
-     * Update review scores.
-     *
-     * @param float $todayScore    Today's score
-     * @param float $tomorrowScore Tomorrow's score
-     *
-     * @return void
-     */
-    public function updateScores(float $todayScore, float $tomorrowScore): void
-    {
-        $this->todayScore = $todayScore;
-        $this->tomorrowScore = $tomorrowScore;
-    }
 
     /**
      * Check if the term is known (learned or well-known).
@@ -494,21 +460,6 @@ class Term
     public function statusChangedAt(): DateTimeImmutable
     {
         return $this->statusChangedAt;
-    }
-
-    public function todayScore(): float
-    {
-        return $this->todayScore;
-    }
-
-    public function tomorrowScore(): float
-    {
-        return $this->tomorrowScore;
-    }
-
-    public function random(): float
-    {
-        return $this->random;
     }
 
     /**

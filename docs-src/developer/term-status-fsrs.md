@@ -222,13 +222,52 @@ is no 4-grade UI, and interval fuzzing and the parameter optimiser are omitted
 (fuzzing only exists to spread Anki's daily load; the optimiser needs
 accumulated history).
 
-## Phase 2b — retire the legacy scoring (proposed)
+## Phase 2b — retire the legacy scoring (in progress)
 
-Once 2a has accumulated real data: switch the review queue to order by `TsDue`,
-build the 4-grade UI, drop `SCORE_FORMULA_*` / `WoTodayScore` /
-`WoTomorrowScore` / `WoRandom` and their 16 call sites, and populate
-`cards.data` + `revlog` in the `.apkg` exporter so scheduling round-trips to
-Anki (#228).
+**Shipped so far:**
+
+- **The queue reads the schedule.** `ScheduleSql` supplies a term's due date to
+  next-word, the due and tomorrow counts, and the table listing, replacing
+  `WoTodayScore < 0` / `WoTomorrowScore < 0` / `ORDER BY WoTodayScore, WoRandom`.
+  Rows are seeded lazily, so a term without one falls back to the date
+  `LegacyStatusSeed` would have given it and the queue is unchanged on upgrade.
+  That reproduces the old test to within a day: the legacy formula rounded
+  before comparing, which put status 2 at day 3 (interval 2) and status 5 at day
+  72 (71). The two-pass `WoRandom` sampling is gone with it.
+- **The 4-grade UI.** `PUT /review/status` takes a `grade`, `GET
+  /review/intervals` previews what each grade would schedule, and the review
+  card shows four buttons with their intervals. Keys 1-4 grade (read off
+  `e.code`, so layouts where digits are shifted behave the same); setting a
+  status directly moved to Shift+1-5.
+
+**Found on the way:** the 2a shadow write was never firing from the review SPA.
+It lives in `SubmitAnswer::executeWithChange()`, but the client computed the new
+status itself and sent that, which routes through `execute()` — no scheduling
+write. So `term_schedule` stayed empty on installs that only ever used the main
+review screen. The graded path fixes this for the SPA; the binary `change`
+endpoint was always fine.
+
+- **Scheduling reaches Anki.** The `.apkg` exporter writes a scheduled term as
+  a review card — `type`/`queue` 2, due in days from the collection creation
+  day, interval, reps and lapses — with the FSRS memory state in `cards.data`
+  as `{"s":…,"d":…,"dr":…}` and its history as `revlog` rows. Grades pass
+  through unchanged, both apps numbering Again..Easy 1–4. Suspension still wins
+  the queue but no longer discards the state. Relearning is flattened to review
+  (Anki keys learning-queue due dates by timestamp, not day number) and the
+  ease factor is Anki's default 2500, since LWT has never computed an SM-2
+  ease and 0 would collapse the interval for anyone with FSRS off.
+
+- **The legacy scoring is retired.** `SCORE_FORMULA_*`,
+  `makeScoreRandomInsertUpdate()` and the three columns are gone, along with
+  the daily UPDATE across the whole `words` table that kept them fresh. The
+  scope was larger than this document claimed: sixteen files reference the
+  columns directly, but the SQL-fragment builder had **37** call sites across
+  fifteen more. `ReviewService` — 847 lines duplicating the queue with no
+  caller — was deleted rather than migrated.
+
+**Still unverified:** the .apkg export has been read back with SQLite and
+matches what Anki documents, but nobody has yet opened one of these decks in a
+real Anki install.
 
 ## Trade-offs & open questions
 

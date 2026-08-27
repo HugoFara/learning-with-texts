@@ -585,6 +585,55 @@ class MigrationsTest extends TestCase
         Connection::preparedExecute("DELETE FROM _migrations WHERE filename = ?", [$testFilename]);
     }
 
+    public function testAnUpgradeRestoresTheRetryBudget(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        Migrations::upgradeMigrationsTable();
+        $testFilename = 'test_budget_' . time() . '.sql';
+
+        for ($i = 0; $i < Migrations::MAX_ATTEMPTS; $i++) {
+            Migrations::recordMigration($testFilename, '', Migrations::STATUS_FAILED, 'boom');
+        }
+        $this->assertNotContains($testFilename, Migrations::getRetryableMigrations());
+
+        // A migration usually fails on a prerequisite rather than on itself, so
+        // new migration files are a reason to try an exhausted one again.
+        Migrations::restoreRetryBudget();
+
+        $this->assertContains(
+            $testFilename,
+            Migrations::getRetryableMigrations(),
+            'An upgrade should let an exhausted migration run again'
+        );
+
+        Connection::preparedExecute("DELETE FROM _migrations WHERE filename = ?", [$testFilename]);
+    }
+
+    public function testRestoringTheBudgetLeavesAppliedMigrationsAlone(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        Migrations::upgradeMigrationsTable();
+        $testFilename = 'test_budget_applied_' . time() . '.sql';
+
+        Migrations::recordMigration($testFilename, 'abc', Migrations::STATUS_APPLIED);
+        Migrations::restoreRetryBudget();
+
+        $this->assertNotContains(
+            $testFilename,
+            Migrations::getRetryableMigrations(),
+            'An applied migration must never be queued for a retry'
+        );
+        $this->assertContains($testFilename, Migrations::getAppliedMigrations());
+
+        Connection::preparedExecute("DELETE FROM _migrations WHERE filename = ?", [$testFilename]);
+    }
+
     public function testRecordMigrationPromotesFailureToApplied(): void
     {
         if (!self::$dbConnected) {

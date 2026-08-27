@@ -433,16 +433,19 @@ describe('words/word_list_app.ts', () => {
   // ===========================================================================
 
   describe('Helper methods', () => {
-    it('formatScore formats positive score', () => {
+    it('formatScore scales days until due', () => {
       const data = wordListData();
 
-      expect(data.formatScore(75.5)).toBe('75%');
+      expect(data.formatScore(3)).toBe('3d');
+      expect(data.formatScore(75)).toBe('3mo');
+      expect(data.formatScore(800)).toBe('2y');
     });
 
-    it('formatScore returns 0% for negative score', () => {
+    it('formatScore reads an overdue term as due now', () => {
       const data = wordListData();
 
-      expect(data.formatScore(-10)).toBe('0%');
+      expect(data.formatScore(0)).toBe('due');
+      expect(data.formatScore(-10)).toBe('due');
     });
 
     it('getStatusClass returns is-info for status 99', () => {

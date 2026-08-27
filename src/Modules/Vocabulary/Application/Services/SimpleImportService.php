@@ -127,8 +127,7 @@ class SimpleImportService
             ($removeSpaces ?
                 'WoTextLC = LOWER(REPLACE(@wotext," ","")), WoText = REPLACE(@wotext, " ", "")' :
                 'WoTextLC = LOWER(WoText)') . ",
-            WoStatus = ?, WoStatusChanged = NOW(), " .
-            TermStatusService::makeScoreRandomInsertUpdate('u');
+            WoStatus = ?, WoStatusChanged = NOW()";
 
         $stmt = Connection::prepare($sql);
         $stmt->bind('sis', $fileName, $langId, $status);
@@ -262,9 +261,7 @@ class SimpleImportService
         if ($fields["se"] != 0) {
             $rowPlaceholders .= ', ?';
         }
-        $rowPlaceholders .= ', ?, ?, NOW(), ' .  // WoLgID, WoStatus, WoStatusChanged
-            TermStatusService::SCORE_FORMULA_TODAY . ', ' .
-            TermStatusService::SCORE_FORMULA_TOMORROW . ', RAND()';
+        $rowPlaceholders .= ', ?, ?, NOW()';  // WoLgID, WoStatus, WoStatusChanged
 
         if ($userId !== null) {
             $rowPlaceholders .= ', ?';
@@ -288,8 +285,7 @@ class SimpleImportService
                 ($fields["tr"] != 0 ? 'WoTranslation, ' : '') .
                 ($fields["ro"] != 0 ? 'WoRomanization, ' : '') .
                 ($fields["se"] != 0 ? 'WoSentence, ' : '') .
-                "WoLgID, WoStatus, WoStatusChanged,
-                WoTodayScore, WoTomorrowScore, WoRandom"
+                "WoLgID, WoStatus, WoStatusChanged"
                 . UserScopedQuery::insertColumn('words')
             . ")
             VALUES " . implode(',', $placeholders);

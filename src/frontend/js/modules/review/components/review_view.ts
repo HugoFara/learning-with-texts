@@ -37,6 +37,20 @@ function getReviewTypes(): { id: number; label: string; title: string }[] {
 }
 
 /**
+ * The four FSRS grades, in the order they are shown and keyed 1-4.
+ *
+ * Again is the only one that counts as a failure, which is why it alone gets
+ * the danger colour; Hard/Good/Easy all raise the term's status by one, and
+ * differ in what they tell the scheduler.
+ */
+const GRADES: { value: 1 | 2 | 3 | 4; labelKey: string; style: string }[] = [
+  { value: 1, labelKey: 'review.card.grade_again', style: 'is-danger' },
+  { value: 2, labelKey: 'review.card.grade_hard', style: 'is-warning' },
+  { value: 3, labelKey: 'review.card.grade_good', style: 'is-success' },
+  { value: 4, labelKey: 'review.card.grade_easy', style: 'is-info' },
+];
+
+/**
  * Render the complete review interface.
  */
 export function renderReviewApp(container: HTMLElement): void {
@@ -239,12 +253,15 @@ function buildWordReviewArea(): string {
         <!-- After answer revealed -->
         <div x-show="store.answerRevealed" class="mb-5">
           <div class="buttons is-centered">
-            <button class="button is-danger" @click="decrementStatus" title="Arrow Down">
-              ${escapeHtml(t('review.card.wrong'))}
-            </button>
-            <button class="button is-success" @click="incrementStatus" title="Arrow Up">
-              ${escapeHtml(t('review.card.correct'))}
-            </button>
+            ${GRADES.map(grade => `
+              <button class="button ${grade.style}"
+                      @click="gradeAnswer(${grade.value})"
+                      title="${escapeHtml(t(grade.labelKey))} (${grade.value})">
+                <span>${escapeHtml(t(grade.labelKey))}</span>
+                <span class="is-size-7 ml-2 has-text-weight-normal"
+                      x-text="intervalHint(${grade.value})"></span>
+              </button>
+            `).join('')}
             <button class="button" @click="skipWord" title="Escape">
               ${escapeHtml(t('review.card.skip'))}
             </button>
@@ -253,7 +270,10 @@ function buildWordReviewArea(): string {
 
         <!-- Status buttons -->
         <div x-show="store.answerRevealed" class="mb-5">
-          <p class="is-size-7 has-text-grey mb-2">${escapeHtml(t('review.card.set_status_directly'))}</p>
+          <p class="is-size-7 has-text-grey mb-2">
+            ${escapeHtml(t('review.card.set_status_directly'))}
+            <span class="is-italic">(⇧1-5)</span>
+          </p>
           <div class="buttons is-centered are-small">
             ${[1, 2, 3, 4, 5].map(s => `
               <button class="button status-btn"
@@ -677,6 +697,28 @@ function registerReviewAppComponent(config: ReviewConfig): void {
       await this.store.updateStatus(status);
     },
 
+    async gradeAnswer(grade: number) {
+      if (grade < 1 || grade > 4) return;
+      await this.store.gradeAnswer(grade as 1 | 2 | 3 | 4);
+    },
+
+    /**
+     * The "in 3d" hint under a grade button.
+     *
+     * Blank until the intervals arrive, so the buttons never jump about while
+     * the request is in flight.
+     */
+    intervalHint(grade: number): string {
+      const days = this.store.intervals[String(grade)];
+      if (days === undefined) return '';
+      if (days < 1) return t('review.card.interval_today');
+      if (days < 30) return t('review.card.interval_days', { count: String(days) });
+      if (days < 365) {
+        return t('review.card.interval_months', { count: String(Math.round(days / 30)) });
+      }
+      return t('review.card.interval_years', { count: String(Math.round(days / 365)) });
+    },
+
     async skipWord() {
       await this.store.skipWord();
     },
@@ -713,6 +755,8 @@ function registerReviewAppComponent(config: ReviewConfig): void {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (this.store.isTableMode || this.store.isFinished) return;
 
+      if (this.handleDigitKey(e)) return;
+
       switch (e.key) {
         case ' ':
           e.preventDefault();
@@ -724,11 +768,11 @@ function registerReviewAppComponent(config: ReviewConfig): void {
           break;
         case 'ArrowUp':
           e.preventDefault();
-          if (this.store.answerRevealed) this.incrementStatus();
+          if (this.store.answerRevealed) this.gradeAnswer(3);
           break;
         case 'ArrowDown':
           e.preventDefault();
-          if (this.store.answerRevealed) this.decrementStatus();
+          if (this.store.answerRevealed) this.gradeAnswer(1);
           break;
         case 'i': case 'I':
           e.preventDefault();
@@ -742,11 +786,31 @@ function registerReviewAppComponent(config: ReviewConfig): void {
           e.preventDefault();
           if (this.store.currentWord) this.store.openModal();
           break;
-        case '1': case '2': case '3': case '4': case '5':
-          e.preventDefault();
-          if (this.store.answerRevealed) this.setStatus(parseInt(e.key, 10));
-          break;
       }
+    },
+
+    /**
+     * Digit-row shortcuts: 1-4 grade the answer, Shift+1-5 set a status.
+     *
+     * Read off `e.code` rather than `e.key` so the physical digit row works on
+     * layouts where a digit is itself shifted (AZERTY) or where Shift+1 is not
+     * "!" — `e.key` would report a different character on each.
+     *
+     * @returns Whether the key was handled
+     */
+    handleDigitKey(e: KeyboardEvent): boolean {
+      if (!e.code.startsWith('Digit') || !this.store.answerRevealed) return false;
+
+      const digit = parseInt(e.code.slice(5), 10);
+      if (digit < 1 || digit > 5) return false;
+
+      e.preventDefault();
+      if (e.shiftKey) {
+        this.setStatus(digit);
+      } else if (digit <= 4) {
+        this.gradeAnswer(digit);
+      }
+      return true;
     },
 
     // Finished state helpers (CSP-compatible)
@@ -930,7 +994,18 @@ onDomReady(() => {
   // Only init if Alpine is available and we're on the review page
   const container = document.getElementById('review-app');
   const configEl = document.getElementById('review-config');
-  if (container && configEl && window.Alpine) {
+  if (!container || !configEl) return;
+
+  // Alpine is only put on window after main.ts has awaited bootI18n(), so
+  // whether it is there yet when the DOM becomes ready is a race — and one the
+  // review page lost as soon as this chunk grew enough to shift the timing.
+  // Testing the flag once left the page on its spinner for good. Wait for
+  // Alpine to announce itself instead, and take the flag as the shortcut for
+  // when it has already started.
+  if (window.Alpine) {
     initReviewApp();
+    return;
   }
+
+  document.addEventListener('alpine:initialized', () => initReviewApp(), { once: true });
 });

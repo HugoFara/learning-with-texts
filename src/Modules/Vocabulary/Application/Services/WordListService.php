@@ -404,7 +404,6 @@ class WordListService
      */
     public function updateStatusByIdList(array $ids, int $newStatus, bool $relative, string $actionType): string
     {
-        $scoreUpdate = TermStatusService::makeScoreRandomInsertUpdate('u');
 
         if ($relative && $newStatus > 0) {
             // Status +1
@@ -413,7 +412,7 @@ class WordListService
             $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
             Connection::preparedExecute(
                 'update words
-                set WoStatus=WoStatus+1, WoStatusChanged = NOW(),' . $scoreUpdate . '
+                set WoStatus=WoStatus+1, WoStatusChanged = NOW()
                 where WoStatus in (1,2,3,4) and WoID in ' . $inClause . $userScope,
                 $bindings
             );
@@ -425,7 +424,7 @@ class WordListService
             $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
             Connection::preparedExecute(
                 'update words
-                set WoStatus=WoStatus-1, WoStatusChanged = NOW(),' . $scoreUpdate . '
+                set WoStatus=WoStatus-1, WoStatusChanged = NOW()
                 where WoStatus in (2,3,4,5) and WoID in ' . $inClause . $userScope,
                 $bindings
             );
@@ -438,7 +437,7 @@ class WordListService
         $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
         Connection::preparedExecute(
             'update words
-            set WoStatus=?, WoStatusChanged = NOW(),' . $scoreUpdate . '
+            set WoStatus=?, WoStatusChanged = NOW()
             where WoID in ' . $inClause . $userScope,
             $bindings
         );
@@ -460,7 +459,7 @@ class WordListService
 
         Connection::preparedExecute(
             'update words
-            set WoStatusChanged = NOW(),' . TermStatusService::makeScoreRandomInsertUpdate('u') . '
+            set WoStatusChanged = NOW()
             where WoID in ' . $inClause . $userScope,
             $bindings
         );
@@ -658,17 +657,15 @@ class WordListService
         $sentence = ExportService::replaceTabNewline((string)($data["WoSentence"] ?? ''));
         $romanization = (string)($data["WoRomanization"] ?? '');
 
-        $scoreColumns = TermStatusService::makeScoreRandomInsertUpdate('iv');
-        $scoreValues = TermStatusService::makeScoreRandomInsertUpdate('id');
 
         $bindings = [
             (int)$data["WoLgID"], $textLc, (string)$data["WoText"],
             (int)$data["WoStatus"], $translation, $sentence, $romanization
         ];
         $sql = "INSERT INTO words (WoLgID, WoTextLC, WoText, "
-            . "WoStatus, WoTranslation, WoSentence, WoRomanization, WoStatusChanged, {$scoreColumns}"
+            . "WoStatus, WoTranslation, WoSentence, WoRomanization, WoStatusChanged"
             . UserScopedQuery::insertColumn('words')
-            . ") VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), {$scoreValues}"
+            . ") VALUES (?, ?, ?, ?, ?, ?, ?, NOW()"
             . UserScopedQuery::insertValuePrepared('words', $bindings)
             . ")";
 
@@ -729,9 +726,7 @@ class WordListService
             $affected = Connection::preparedExecute(
                 'UPDATE words
                 SET WoText = ?, WoTextLC = ?, WoTranslation = ?, WoSentence = ?,
-                    WoRomanization = ?, WoStatus = ?, WoStatusChanged = NOW(),' .
-                TermStatusService::makeScoreRandomInsertUpdate('u') .
-                ' WHERE WoID = ?'
+                    WoRomanization = ?, WoStatus = ?, WoStatusChanged = NOW() WHERE WoID = ?'
                 . UserScopedQuery::forTablePrepared('words', $bindings),
                 $bindings
             );
@@ -740,9 +735,8 @@ class WordListService
             $affected = Connection::preparedExecute(
                 'UPDATE words
                 SET WoText = ?, WoTextLC = ?, WoTranslation = ?, WoSentence = ?,
-                    WoRomanization = ?,' .
-                TermStatusService::makeScoreRandomInsertUpdate('u') .
-                ' WHERE WoID = ?'
+                    WoRomanization = ?
+                 WHERE WoID = ?'
                 . UserScopedQuery::forTablePrepared('words', $bindings),
                 $bindings
             );

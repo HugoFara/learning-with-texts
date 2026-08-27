@@ -31,6 +31,20 @@ export interface ReviewStatusRequest {
   wordId: number;
   status?: number;
   change?: number;
+  grade?: ReviewGrade;
+}
+
+/**
+ * The four FSRS grades. Values match the server's Rating enum and Anki's
+ * `revlog.ease`, so a review needs no translation on the way out.
+ */
+export type ReviewGrade = 1 | 2 | 3 | 4;
+
+/**
+ * What each grade would schedule, in whole days, keyed by grade.
+ */
+export interface ReviewIntervalsResponse {
+  intervals: Record<string, number>;
 }
 
 /**
@@ -164,12 +178,28 @@ export const ReviewApi = {
   async updateStatus(
     termId: number,
     status?: number,
-    change?: number
+    change?: number,
+    grade?: ReviewGrade
   ): Promise<ApiResponse<ReviewStatusResponse>> {
     return apiPut<ReviewStatusResponse>('/review/status', {
       term_id: termId,
       status,
-      change
+      change,
+      grade
+    });
+  },
+
+  /**
+   * Get what each grade would schedule for a term.
+   *
+   * @param termId Term being reviewed
+   * @returns Promise with the interval in days per grade
+   */
+  async getIntervals(
+    termId: number
+  ): Promise<ApiResponse<ReviewIntervalsResponse>> {
+    return apiGet<ReviewIntervalsResponse>('/review/intervals', {
+      term_id: termId
     });
   },
 

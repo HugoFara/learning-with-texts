@@ -82,8 +82,6 @@ class SubmitAnswer
      *     success: bool,
      *     oldStatus: int,
      *     newStatus: int,
-     *     oldScore: int,
-     *     newScore: int,
      *     statusChange: int,
      *     progress: array{total: int, wrong: int, correct: int, remaining: int},
      *     error?: string
@@ -97,8 +95,6 @@ class SubmitAnswer
                 'success' => false,
                 'oldStatus' => 0,
                 'newStatus' => 0,
-                'oldScore' => 0,
-                'newScore' => 0,
                 'statusChange' => 0,
                 'progress' => ['total' => 0, 'wrong' => 0, 'correct' => 0, 'remaining' => 0],
                 'error' => 'Invalid status value'
@@ -113,8 +109,6 @@ class SubmitAnswer
                 'success' => false,
                 'oldStatus' => 0,
                 'newStatus' => 0,
-                'oldScore' => 0,
-                'newScore' => 0,
                 'statusChange' => 0,
                 'progress' => ['total' => 0, 'wrong' => 0, 'correct' => 0, 'remaining' => 0],
                 'error' => 'Word not found'
@@ -134,8 +128,6 @@ class SubmitAnswer
             'success' => true,
             'oldStatus' => $result['oldStatus'],
             'newStatus' => $result['newStatus'],
-            'oldScore' => $result['oldScore'],
-            'newScore' => $result['newScore'],
             'statusChange' => $statusChange,
             'progress' => $progress
         ];
@@ -158,8 +150,6 @@ class SubmitAnswer
                 'success' => false,
                 'oldStatus' => 0,
                 'newStatus' => 0,
-                'oldScore' => 0,
-                'newScore' => 0,
                 'statusChange' => 0,
                 'progress' => ['total' => 0, 'wrong' => 0, 'correct' => 0, 'remaining' => 0],
                 'error' => 'Word not found'

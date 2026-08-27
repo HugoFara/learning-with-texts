@@ -517,7 +517,6 @@ class ReviewUseCaseTest extends TestCase
                 ->willReturn([
                     'oldStatus' => 2,
                     'newStatus' => $status,
-                    'oldScore' => 50,
                     'newScore' => 60
                 ]);
 
@@ -550,7 +549,6 @@ class ReviewUseCaseTest extends TestCase
             ->willReturn([
                 'oldStatus' => 2,
                 'newStatus' => 3,
-                'oldScore' => 50,
                 'newScore' => 65
             ]);
 
@@ -569,8 +567,6 @@ class ReviewUseCaseTest extends TestCase
         $this->assertTrue($result['success']);
         $this->assertSame(2, $result['oldStatus']);
         $this->assertSame(3, $result['newStatus']);
-        $this->assertSame(50, $result['oldScore']);
-        $this->assertSame(65, $result['newScore']);
         $this->assertSame(1, $result['statusChange']); // positive change
     }
 
@@ -584,7 +580,6 @@ class ReviewUseCaseTest extends TestCase
             ->willReturn([
                 'oldStatus' => 4,
                 'newStatus' => 3,
-                'oldScore' => 70,
                 'newScore' => 55
             ]);
 
@@ -611,7 +606,6 @@ class ReviewUseCaseTest extends TestCase
             ->willReturn([
                 'oldStatus' => 3,
                 'newStatus' => 3,
-                'oldScore' => 50,
                 'newScore' => 50
             ]);
 
@@ -638,7 +632,6 @@ class ReviewUseCaseTest extends TestCase
             ->willReturn([
                 'oldStatus' => 2,
                 'newStatus' => 3,
-                'oldScore' => 50,
                 'newScore' => 65
             ]);
 
@@ -670,7 +663,6 @@ class ReviewUseCaseTest extends TestCase
             ->willReturn([
                 'oldStatus' => 2,
                 'newStatus' => 3,
-                'oldScore' => 50,
                 'newScore' => 65
             ]);
 
@@ -722,7 +714,6 @@ class ReviewUseCaseTest extends TestCase
             ->willReturn([
                 'oldStatus' => 2,
                 'newStatus' => 3,
-                'oldScore' => 50,
                 'newScore' => 60
             ]);
 
@@ -753,7 +744,6 @@ class ReviewUseCaseTest extends TestCase
             ->willReturn([
                 'oldStatus' => 3,
                 'newStatus' => 2,
-                'oldScore' => 60,
                 'newScore' => 40
             ]);
 
@@ -783,7 +773,6 @@ class ReviewUseCaseTest extends TestCase
             ->willReturn([
                 'oldStatus' => 5,
                 'newStatus' => 99,
-                'oldScore' => 80,
                 'newScore' => 100
             ]);
 
@@ -814,7 +803,6 @@ class ReviewUseCaseTest extends TestCase
             ->willReturn([
                 'oldStatus' => 1,
                 'newStatus' => 98,
-                'oldScore' => 20,
                 'newScore' => 0
             ]);
 
@@ -845,7 +833,6 @@ class ReviewUseCaseTest extends TestCase
             ->willReturn([
                 'oldStatus' => 99,
                 'newStatus' => 1,
-                'oldScore' => 100,
                 'newScore' => 10
             ]);
 
@@ -876,7 +863,6 @@ class ReviewUseCaseTest extends TestCase
             ->willReturn([
                 'oldStatus' => 98,
                 'newStatus' => 5,
-                'oldScore' => 0,
                 'newScore' => 80
             ]);
 

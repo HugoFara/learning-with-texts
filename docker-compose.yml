@@ -52,7 +52,8 @@ services:
     image: mariadb:12.1
     restart: unless-stopped
     volumes:
-      - ./lwt_db_data:/var/lib/mysql
+      # A named volume, NOT a host bind mount
+      - lwt_db_data:/var/lib/mysql
 
   nlp:
     build:
@@ -71,3 +72,4 @@ services:
 
 volumes:
   nlp_voices:
+  lwt_db_data:
