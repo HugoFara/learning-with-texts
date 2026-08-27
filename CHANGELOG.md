@@ -77,6 +77,32 @@ ones are marked like "v1.0.0-fork".
 
 ### Fixed
 
+* **An incomplete schema no longer takes the review page and the vocabulary
+  list down with it** (#275, #285). The FSRS queue reads each term's due date
+  from `term_schedule`, and a table named in SQL cannot be guarded the way a
+  missing row can: on an install where that migration failed, MySQL rejected
+  the whole statement and both the review page and the entire term list
+  answered 500. They now fall back to the schedule a term's status implies —
+  which on such an install is the same answer, since no term there has ever
+  been graded — and start using the real schedule once the table is back.
+
+* **A failed migration gets retried again** (#285). A migration was only
+  reconsidered when an upgrade brought new files along, which on a fresh
+  install could never happen: the first run records every migration, so there
+  is never anything new afterwards and a migration that failed stayed failed at
+  one attempt, until some later release happened to add a file. Failures are
+  now retried on the next requests instead, up to three attempts, and an
+  upgrade that does bring new migrations restores that budget — so a migration
+  that failed on a prerequisite a later one repairs still gets its chance. This
+  is what left installs without `term_schedule` in the first place.
+
+* **Expected migration failures stopped being logged as failures** (#285). A
+  healthy fresh install wrote ~178 `Migration failed:` lines while every one of
+  its migrations succeeded: legacy migrations rename tables that a fresh
+  install never had, and those statements fail by design. The log said so only
+  after the fact, in wording identical to a real failure, which is what buried
+  the eight genuine errors of #275 among them. Expected failures now log as
+  skipped, and `Migration failed:` means it.
 * **A text that parses into nothing now says so** (#278). When a language's
   *Word Characters* setting does not match the script of its texts, parsing
   does not fail — it succeeds and produces nothing. The text saves, opens and
