@@ -22,6 +22,8 @@ class WordDiscoveryServiceTest extends TestCase
 {
     private static bool $dbConnected = false;
     private static int $testLangId = 0;
+    /** @var list<int> Texts created by fixtures, removed in tearDown */
+    private static array $createdTextIds = [];
     private WordDiscoveryService $service;
     private WordCrudService $crudService;
 
@@ -95,6 +97,21 @@ class WordDiscoveryServiceTest extends TestCase
         if (!self::$dbConnected) {
             return;
         }
+
+        // Occurrences and sentences go first: they hold the FKs into texts and
+        // words, so removing the parents before them would be rejected.
+        foreach (self::$createdTextIds as $textId) {
+            Connection::query(
+                "DELETE FROM " . Globals::table('word_occurrences') . " WHERE Ti2TxID = " . $textId
+            );
+            Connection::query(
+                "DELETE FROM " . Globals::table('sentences') . " WHERE SeTxID = " . $textId
+            );
+            Connection::query(
+                "DELETE FROM " . Globals::table('texts') . " WHERE TxID = " . $textId
+            );
+        }
+        self::$createdTextIds = [];
 
         // Clean up test words after each test
         Connection::query("DELETE FROM " . Globals::table('words') . " WHERE WoText LIKE 'test%'");
@@ -237,6 +254,117 @@ class WordDiscoveryServiceTest extends TestCase
 
         $this->assertEquals($existingId, $result['id']);
         $this->assertEquals(0, $result['rows']); // No new rows inserted
+    }
+
+    /**
+     * The #283 regression: a term that exists but whose occurrences were never
+     * linked. A dictionary import creates exactly this state for a whole
+     * language — the reader still calls the word unknown, because it reads
+     * Ti2WoID rather than `words`, so marking it known used to INSERT into the
+     * unique index on (WoTextLC, WoLgID) and fail with "Duplicate entry".
+     */
+    public function testMarkingKnownAWordWhoseTermExistsButIsUnlinked(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $fixture = $this->createUnlinkedOccurrence('testimported');
+
+        $result = $this->service->insertWordWithStatus($fixture['textId'], 'testimported', 99);
+
+        // The term that already existed is the term being asked for, not a
+        // collision: no second row, and the status is the one requested.
+        $this->assertSame($fixture['wordId'], $result['id']);
+        $this->assertSame(
+            '99',
+            (string) Connection::fetchValue(
+                "SELECT WoStatus AS value FROM " . Globals::table('words')
+                . " WHERE WoID = " . $fixture['wordId']
+            )
+        );
+
+        // And the occurrence is linked, so the reader stops calling it unknown.
+        $this->assertSame(
+            (string) $fixture['wordId'],
+            (string) Connection::fetchValue(
+                "SELECT Ti2WoID AS value FROM " . Globals::table('word_occurrences')
+                . " WHERE Ti2TxID = " . $fixture['textId'] . " AND Ti2Order = 1"
+            )
+        );
+    }
+
+    /**
+     * A genuinely new word still gets created and linked.
+     *
+     * The guard against #283 must not turn the ordinary path into a no-op.
+     */
+    public function testMarkingKnownAWordWithNoTermCreatesAndLinksIt(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $fixture = $this->createUnlinkedOccurrence('testfresh', false);
+
+        $result = $this->service->insertWordWithStatus($fixture['textId'], 'testfresh', 99);
+
+        $this->assertGreaterThan(0, $result['id']);
+        $this->assertSame(
+            (string) $result['id'],
+            (string) Connection::fetchValue(
+                "SELECT Ti2WoID AS value FROM " . Globals::table('word_occurrences')
+                . " WHERE Ti2TxID = " . $fixture['textId'] . " AND Ti2Order = 1"
+            )
+        );
+    }
+
+    /**
+     * Build a text holding one unlinked occurrence of `$term`, optionally with
+     * the term already in `words` — the state a dictionary import leaves.
+     *
+     * @param string $term      Term text (must start with "test" to be cleaned up)
+     * @param bool   $withTerm  Whether to create the words row too
+     *
+     * @return array{textId: int, wordId: int}
+     */
+    private function createUnlinkedOccurrence(string $term, bool $withTerm = true): array
+    {
+        $words = Globals::table('words');
+        $texts = Globals::table('texts');
+        $sentences = Globals::table('sentences');
+        $occurrences = Globals::table('word_occurrences');
+        $lang = self::$testLangId;
+
+        Connection::query(
+            "INSERT INTO $texts (TxLgID, TxTitle, TxText) VALUES ($lang, 'testtext', '$term')"
+        );
+        $textId = (int) Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
+        self::$createdTextIds[] = $textId;
+
+        Connection::query(
+            "INSERT INTO $sentences (SeLgID, SeTxID, SeOrder, SeFirstPos, SeText)
+             VALUES ($lang, $textId, 1, 1, '$term')"
+        );
+        $sentenceId = (int) Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
+
+        Connection::query(
+            "INSERT INTO $occurrences
+                (Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text, Ti2WoID)
+             VALUES ($lang, $textId, $sentenceId, 1, 1, '$term', NULL)"
+        );
+        $wordId = 0;
+        if ($withTerm) {
+            // Deliberately not linked: this is what createVocabularyFromEntries
+            // used to do for every entry in the dictionary.
+            Connection::query(
+                "INSERT INTO $words (WoLgID, WoText, WoTextLC, WoStatus, WoStatusChanged)
+                 VALUES ($lang, '$term', '$term', 1, NOW())"
+            );
+            $wordId = (int) Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
+        }
+
+        return ['textId' => $textId, 'wordId' => $wordId];
     }
 
     // ===== Method Signature and Structure Tests (no DB required) =====

@@ -533,6 +533,15 @@ class LocalDictionaryService
      * vocabulary for this language. Sets WoStatus = 1 (new/unknown)
      * and WoTranslation from the dictionary definition.
      *
+     * The new rows are then linked to the occurrences they match. Creating
+     * them alone is not enough: the reader decides a word is unknown from
+     * `word_occurrences.Ti2WoID`, not from whether the term exists, so terms
+     * created here stayed invisible to it and every attempt to add one from
+     * the reading view collided with the unique index on (WoTextLC, WoLgID).
+     * Because an import covers essentially the whole language, that affected
+     * more or less every word in a text rather than isolated cases — see
+     * issue #283.
+     *
      * @param int $dictId     Dictionary ID
      * @param int $languageId Language ID
      *
@@ -558,7 +567,42 @@ class LocalDictionaryService
                 FROM {$entriesTable} le
                 WHERE le.LeLdID = ?";
 
-        return Connection::preparedExecute($sql, $bindings);
+        $created = Connection::preparedExecute($sql, $bindings);
+
+        $this->linkOccurrencesForLanguage($languageId);
+
+        return $created;
+    }
+
+    /**
+     * Point this language's unlinked occurrences at the terms matching them.
+     *
+     * Single-word occurrences only: a multi-word occurrence is an expression,
+     * matched by its own mechanism rather than through Ti2WoID.
+     *
+     * Nothing here filters by user, and it does not need to — the join pins
+     * occurrence and term to the same LgID, and a `languages` row has exactly
+     * one owner, so the statement cannot reach across users. This is the same
+     * confinement {@see \Lwt\Modules\Vocabulary\Application\Services\WordLinkingService}
+     * relies on, and the caller has already passed assertOwnsDictionary().
+     *
+     * @param int $languageId Language ID
+     *
+     * @return void
+     */
+    private function linkOccurrencesForLanguage(int $languageId): void
+    {
+        $occurrencesTable = Globals::table('word_occurrences');
+        $wordsTable = Globals::table('words');
+
+        Connection::preparedExecute(
+            "UPDATE {$occurrencesTable} o
+             JOIN {$wordsTable} w
+               ON LOWER(o.Ti2Text) = w.WoTextLC AND o.Ti2LgID = w.WoLgID
+             SET o.Ti2WoID = w.WoID
+             WHERE o.Ti2WoID IS NULL AND o.Ti2WordCount = 1 AND o.Ti2LgID = ?",
+            [$languageId]
+        );
     }
 
     /**

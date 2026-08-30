@@ -1028,6 +1028,38 @@ class TermCrudApiHandlerTest extends TestCase
         $this->assertGreaterThan($guard, $textLookup);
     }
 
+    public function testGetTermForEditAdoptsATermThatAlreadyExists(): void
+    {
+        $source = $this->getMethodSource('getTermForEdit');
+
+        // Issue #283: the caller passes no wordId when the reader thinks the
+        // word is unknown, but the reader reads that from the occurrence table
+        // and a dictionary-imported term is unlinked there. Resolving it by
+        // (WoTextLC, WoLgID) is what routes the form to the update path
+        // instead of a create that collides with the unique index.
+        $this->assertStringContainsString('findTermIdByText', $source);
+        $this->assertStringContainsString('$hasWordId = true;', $source);
+    }
+
+    public function testCreateTermFullDefersToUpdateWhenTheTermExists(): void
+    {
+        $source = $this->getMethodSource('createTermFull');
+
+        // The same resolution guards the endpoint itself, for API clients and
+        // for a form loaded before the term appeared.
+        $this->assertStringContainsString('findTermIdByText', $source);
+        $this->assertStringContainsString('return $this->updateTermFull($existingId, $data);', $source);
+    }
+
+    public function testUpdateTermFullLinksOccurrences(): void
+    {
+        $source = $this->getMethodSource('updateTermFull');
+
+        // A term whose occurrences were never linked stays invisible to the
+        // reader however often it is edited (#283).
+        $this->assertStringContainsString('linkToTextItems', $source);
+    }
+
     public function testGetTermForEditReturnsLanguageNotFoundError(): void
     {
         $source = $this->getMethodSource('getTermForEdit');

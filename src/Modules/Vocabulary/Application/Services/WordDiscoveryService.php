@@ -186,18 +186,38 @@ class WordDiscoveryService
             throw new \RuntimeException("Text ID $textId not found");
         }
 
+        // The reader calls a word unknown when its occurrence has no Ti2WoID,
+        // but what `words` is unique on is (WoTextLC, WoLgID). Those two
+        // disagree whenever a term was created without linking its occurrences
+        // — a dictionary import does exactly that for the whole language — and
+        // this used to INSERT straight into the collision, failing with
+        // "Duplicate entry" for every word in the text (issue #283). Resolve
+        // the term by what actually identifies it, and treat an existing row
+        // as the term being asked for rather than as an error.
+        $wid = $this->findTermIdByText($langId, $termlc);
 
-        $bindings = [$langId, $term, $termlc, $status];
-        $sql = "INSERT INTO words (
-                WoLgID, WoText, WoTextLC, WoStatus, WoWordCount, WoStatusChanged"
-                . UserScopedQuery::insertColumn('words')
-            . ") VALUES (?, ?, ?, ?, 1, NOW()"
-                . UserScopedQuery::insertValuePrepared('words', $bindings)
-            . ")";
+        if ($wid === null) {
+            $bindings = [$langId, $term, $termlc, $status];
+            $sql = "INSERT INTO words (
+                    WoLgID, WoText, WoTextLC, WoStatus, WoWordCount, WoStatusChanged"
+                    . UserScopedQuery::insertColumn('words')
+                . ") VALUES (?, ?, ?, ?, 1, NOW()"
+                    . UserScopedQuery::insertValuePrepared('words', $bindings)
+                . ")";
 
-        $wid = (int) Connection::preparedInsert($sql, $bindings);
+            $wid = (int) Connection::preparedInsert($sql, $bindings);
+        } else {
+            /** @var list<int|string> $updateBindings */
+            $updateBindings = [$status, $wid];
+            Connection::preparedExecute(
+                "UPDATE words SET WoStatus = ?, WoStatusChanged = NOW() WHERE WoID = ?"
+                . UserScopedQuery::forTablePrepared('words', $updateBindings),
+                $updateBindings
+            );
+        }
 
-        // Link to text items
+        // Either way the occurrences may still be unlinked — that is the state
+        // that made the term invisible to the reader in the first place.
         $this->linkingService->linkToTextItems($wid, $langId, $termlc);
 
         return [
@@ -206,6 +226,32 @@ class WordDiscoveryService
             'termlc' => $termlc,
             'hex' => StringUtils::toClassName($termlc)
         ];
+    }
+
+    /**
+     * The ID of the term this language already holds for `$termlc`, if any.
+     *
+     * Looks the term up by the pair `words` is unique on, which is the only
+     * reliable answer to "does this term exist" — the reader's own notion of a
+     * new word comes from the occurrence table and can be stale.
+     *
+     * @param int    $langId Language ID
+     * @param string $termlc Lowercased term text
+     *
+     * @return int|null Existing word ID, or null when the term is genuinely new
+     */
+    private function findTermIdByText(int $langId, string $termlc): ?int
+    {
+        $bindings = [$termlc, $langId];
+        /** @var int|string|null $wid */
+        $wid = Connection::preparedFetchValue(
+            "SELECT WoID FROM words WHERE WoTextLC = ? AND WoLgID = ?"
+            . UserScopedQuery::forTablePrepared('words', $bindings),
+            $bindings,
+            'WoID'
+        );
+
+        return $wid === null ? null : (int) $wid;
     }
 
     /**
@@ -281,18 +327,12 @@ class WordDiscoveryService
      */
     public function processWordForWellKnown(int $status, string $term, string $termlc, int $langId): array
     {
-        $bindings = [$termlc, $langId];
-        $wid = Connection::preparedFetchValue(
-            "SELECT WoID FROM words WHERE WoTextLC = ? AND WoLgID = ?"
-            . UserScopedQuery::forTablePrepared('words', $bindings),
-            $bindings,
-            'WoID'
-        );
+        $wid = $this->findTermIdByText($langId, $termlc);
 
         if ($wid !== null) {
             // Word already exists — update its status
             /** @var list<int|string> $updateBindings */
-            $updateBindings = [$status, (int) $wid];
+            $updateBindings = [$status, $wid];
             Connection::preparedExecute(
                 "UPDATE words SET WoStatus = ?, WoStatusChanged = NOW() WHERE WoID = ?"
                 . UserScopedQuery::forTablePrepared('words', $updateBindings),
@@ -300,7 +340,7 @@ class WordDiscoveryService
             );
 
             return [1, [
-                'wid' => (int) $wid,
+                'wid' => $wid,
                 'hex' => StringUtils::toClassName($termlc),
                 'term' => $term,
                 'status' => $status
