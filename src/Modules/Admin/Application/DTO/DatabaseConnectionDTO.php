@@ -5,7 +5,7 @@
  *
  * Data transfer object for database connection configuration.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Admin\Application\DTO

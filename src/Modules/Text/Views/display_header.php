@@ -12,7 +12,7 @@ declare(strict_types=1);
  * - $textLinks: string - Previous/next text navigation links
  * - $mediaPlayerHtml: string - Pre-rendered media player HTML
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views

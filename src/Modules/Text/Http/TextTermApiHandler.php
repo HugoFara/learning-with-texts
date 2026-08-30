@@ -6,7 +6,7 @@
  * Handles term translations, word discovery, text scoring, and text listing
  * operations. Extracted from TextApiHandler.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Text\Http

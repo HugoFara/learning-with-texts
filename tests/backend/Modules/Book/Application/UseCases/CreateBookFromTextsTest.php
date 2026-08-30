@@ -8,7 +8,7 @@
  * (Connection, TextParsing, Globals) cannot be fully exercised here;
  * those paths are tested for structure only.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Book\Application\UseCases

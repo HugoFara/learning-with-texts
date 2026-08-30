@@ -4,7 +4,7 @@
  * Unit tests for JsonImporter::canImport() — extension detection
  * via the original filename (regression test for GH discussion #233).
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Tests
  * @package  Lwt\Tests\Modules\Dictionary\Infrastructure\Import

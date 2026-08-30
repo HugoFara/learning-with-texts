@@ -6,7 +6,7 @@
  *
  * Static methods for string encoding, escaping, and transformation.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Core
  * @package  Lwt

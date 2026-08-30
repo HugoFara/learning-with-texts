@@ -7,7 +7,7 @@
  * unlike the rest of the API, where the worst case is a user reaching their
  * own data, these routes create accounts and grant the admin role.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Admin\Http

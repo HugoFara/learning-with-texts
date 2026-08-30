@@ -4,7 +4,7 @@
  * \file
  * \brief Prepared statement wrapper class for safe parameterized queries.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Database
  * @package  Lwt

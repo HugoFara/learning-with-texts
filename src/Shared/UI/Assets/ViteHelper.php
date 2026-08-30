@@ -8,7 +8,7 @@
  * supporting both development mode (with HMR) and production mode
  * (with manifest-based asset loading).
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category View
  * @package  Lwt

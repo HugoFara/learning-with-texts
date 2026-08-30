@@ -8,7 +8,7 @@
  * Variables expected:
  * - $data: array Server data from ServerDataService::getServerData()
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views

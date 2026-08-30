@@ -6,7 +6,7 @@
  * This service contains functions for finding, formatting, and displaying
  * sentences containing specific words.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Text\Application\Services

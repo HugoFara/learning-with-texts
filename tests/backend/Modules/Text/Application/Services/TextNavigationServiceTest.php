@@ -8,7 +8,7 @@
  * and is better suited for integration tests; here we test the pure
  * logic helper methods.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Text\Application\Services

@@ -7,7 +7,7 @@
  * This class provides a simple way to load configuration from .env files,
  * which is the modern standard for application configuration.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt

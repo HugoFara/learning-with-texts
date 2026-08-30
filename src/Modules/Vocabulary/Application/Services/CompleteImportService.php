@@ -3,7 +3,7 @@
 /**
  * Complete Import Service - Complex import with temp tables, translation merge, tags
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Vocabulary\Application\Services

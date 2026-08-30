@@ -7,7 +7,7 @@
  * - $error: string|null Error message to display
  * - $username: string Pre-filled username
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\User\Views

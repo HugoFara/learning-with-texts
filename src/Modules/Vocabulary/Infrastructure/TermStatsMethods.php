@@ -3,7 +3,7 @@
 /**
  * Term Stats Methods Trait
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Vocabulary\Infrastructure

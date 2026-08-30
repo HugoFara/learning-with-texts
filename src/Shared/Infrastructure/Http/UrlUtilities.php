@@ -6,7 +6,7 @@
  *
  * Functions for parsing and manipulating URLs, including dictionary URL parsing.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt

@@ -4,7 +4,7 @@
  * \file
  * \brief Abstract CRUD Controller for standardized resource management
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Shared\Http

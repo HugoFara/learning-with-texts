@@ -5,7 +5,7 @@
  *
  * Proxies YouTube API calls to keep the API key server-side.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Text\Http

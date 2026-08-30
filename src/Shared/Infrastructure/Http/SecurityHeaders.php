@@ -5,7 +5,7 @@
  *
  * Sends HTTP security headers to protect against common web vulnerabilities.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Core\Http

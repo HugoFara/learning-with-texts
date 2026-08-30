@@ -7,7 +7,7 @@
  * 1. Quick tier: heuristic based on user vocabulary size + subject categories
  * 2. Accurate coverage: samples text and computes known-word percentage
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Text\Application\Services

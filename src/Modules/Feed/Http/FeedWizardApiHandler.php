@@ -12,7 +12,7 @@
  * loads. They are plain reads, so they answer with data here and the wizard
  * keeps its state in the browser (#262, #266).
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Feed\Http

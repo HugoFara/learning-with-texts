@@ -5,7 +5,7 @@
  *
  * Wrapper around PasswordService for the User module.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\User\Application\Services

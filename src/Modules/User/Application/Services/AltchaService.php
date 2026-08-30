@@ -15,7 +15,7 @@
  * bounded by the existing auth rate limiter, so no server-side nonce store is
  * needed here.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\User\Application\Services

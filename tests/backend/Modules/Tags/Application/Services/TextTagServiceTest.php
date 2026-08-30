@@ -6,7 +6,7 @@
  * Tests boundary conditions, empty-array branches, and HTML rendering
  * for zero/negative IDs where no database calls are needed.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Tags\Application\Services

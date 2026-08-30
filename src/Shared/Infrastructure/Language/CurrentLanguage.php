@@ -3,7 +3,7 @@
 /**
  * Current Language - Resolves the effective language for the current request
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Shared\Infrastructure\Language

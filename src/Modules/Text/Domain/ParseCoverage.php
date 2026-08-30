@@ -3,7 +3,7 @@
 /**
  * Verdict on whether a parse produced anything learnable.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Text\Domain

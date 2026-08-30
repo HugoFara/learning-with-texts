@@ -3,7 +3,7 @@
 /**
  * NlpServiceHandler for NLP microservice integration.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Infrastructure
  * @package  Lwt\Modules\Language\Infrastructure

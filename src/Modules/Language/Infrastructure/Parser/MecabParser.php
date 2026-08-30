@@ -3,7 +3,7 @@
 /**
  * MeCab Parser - Japanese morphological analyzer parser.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Parser
  * @package  Lwt\Modules\Language\Infrastructure\Parser

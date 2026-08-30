@@ -4,7 +4,7 @@
  * \file
  * \brief Text parsing and processing utilities (facade).
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Database
  * @package  Lwt

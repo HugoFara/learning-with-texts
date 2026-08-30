@@ -3,7 +3,7 @@
 /**
  * Unit tests for ArchiveExtractor.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Tests
  * @package  Lwt\Tests\Modules\Dictionary\Infrastructure\Import

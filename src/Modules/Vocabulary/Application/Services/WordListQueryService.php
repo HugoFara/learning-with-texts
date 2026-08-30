@@ -3,7 +3,7 @@
 /**
  * Word List Query Service - Executes word list queries with filtering and pagination
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Vocabulary\Application\Services

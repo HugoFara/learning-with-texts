@@ -21,7 +21,7 @@
  *   1 = one or more feeds have issues
  *   2 = registry file missing or invalid
  *
- * PHP version 8.1
+ * PHP version 8.2
  */
 
 declare(strict_types=1);

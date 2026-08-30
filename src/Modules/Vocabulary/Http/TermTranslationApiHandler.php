@@ -5,7 +5,7 @@
  *
  * Handles API operations for term translations, dictionary lookups, and tags.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Vocabulary\Http

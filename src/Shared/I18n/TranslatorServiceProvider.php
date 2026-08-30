@@ -6,7 +6,7 @@
  * Registers the Translator service in the DI container and configures
  * the active locale from the user's app_language setting.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Shared\I18n

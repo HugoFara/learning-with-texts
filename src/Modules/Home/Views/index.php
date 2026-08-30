@@ -8,7 +8,7 @@
  * - $homeFacade: HomeFacade instance
  * - $languages: array Languages data for select dropdown
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Home\Views

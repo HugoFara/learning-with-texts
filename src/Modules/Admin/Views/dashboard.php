@@ -5,7 +5,7 @@
  *
  * Landing page for /admin with links to all admin subpages.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Admin\Views

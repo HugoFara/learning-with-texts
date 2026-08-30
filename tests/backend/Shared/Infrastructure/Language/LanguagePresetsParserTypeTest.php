@@ -3,7 +3,7 @@
 /**
  * Unit tests for the parser type carried by the language presets.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Tests
  * @package  Lwt\Tests\Shared\Infrastructure\Language

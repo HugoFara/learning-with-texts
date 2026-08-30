@@ -6,7 +6,7 @@
  * Provides cached, difficulty-ranked book suggestions from Project Gutenberg,
  * tailored to the user's current language and vocabulary level.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Text\Application\Services

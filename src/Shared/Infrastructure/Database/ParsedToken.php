@@ -4,7 +4,7 @@
  * \file
  * \brief Value object for a single parsed text token.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Database
  * @package  Lwt

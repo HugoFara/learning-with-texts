@@ -3,7 +3,7 @@
 /**
  * Text Read Controller - Text reading and display interface
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Text\Http

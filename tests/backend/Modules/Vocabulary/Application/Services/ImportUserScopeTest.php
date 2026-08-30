@@ -17,7 +17,7 @@
  * This test reads each method's source via reflection and asserts
  * the scope helpers + correct execute helper are present.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Vocabulary\Application\Services

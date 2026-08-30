@@ -16,7 +16,7 @@
  * SeID's parent text isn't owned by the caller. This test reads each
  * method's source via reflection and asserts those gates are present.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Text\Application\Services

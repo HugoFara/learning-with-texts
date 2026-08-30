@@ -8,7 +8,7 @@
  * - TextAnnotationApiHandler: annotation CRUD, print items, edit term form
  * - TextTermApiHandler: words, translations, scoring, text listing
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Text\Http

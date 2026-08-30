@@ -13,7 +13,7 @@
  * Pure parsing, no network or database access; the SSRF-guarded fetch lives
  * in the client (GdlClient), mirroring RssParser's split.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Feed\Application\Services

@@ -7,7 +7,7 @@
  * helpers added to defend against masquerading uploads. Exercises
  * them through reflection so we don't need a live NLP service.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Text\Http

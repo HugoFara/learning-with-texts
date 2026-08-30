@@ -3,7 +3,7 @@
 /**
  * Unit tests for SubmitAnswer use case.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Review\Application\UseCases

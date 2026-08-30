@@ -13,7 +13,7 @@
  * module-layer service rather than here — this client stays dependency-free
  * and deals only in catalog metadata and the raw ePUB URL.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Shared\Infrastructure\Http
