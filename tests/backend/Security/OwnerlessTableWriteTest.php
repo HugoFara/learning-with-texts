@@ -187,7 +187,7 @@ class OwnerlessTableWriteTest extends TestCase
         }
 
         // Raw SQL with the name interpolated, which is the prevailing idiom:
-        //   "INSERT IGNORE INTO " . Globals::table('text_tag_map') . " (...)"
+        //   "INSERT IGNORE INTO text_tag_map (...)"
         $interpolated = '/(INSERT\s+(IGNORE\s+)?INTO|UPDATE|DELETE\s+FROM)'
             . "[^;]{0,80}?table\\('($pattern)'\\)/is";
         if (preg_match($interpolated, $contents)) {

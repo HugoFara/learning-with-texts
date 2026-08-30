@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Lwt\Tests\Core\Utils;
 
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Shared\Infrastructure\Utilities\StringUtils;
 use Lwt\Shared\Infrastructure\Database\Escaping;
 use PHPUnit\Framework\TestCase;

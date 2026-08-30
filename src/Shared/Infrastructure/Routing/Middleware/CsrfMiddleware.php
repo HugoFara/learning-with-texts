@@ -5,7 +5,7 @@
  *
  * Validates CSRF tokens on state-changing requests (POST, PUT, DELETE, PATCH).
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Shared\Infrastructure\Routing\Middleware
@@ -19,7 +19,6 @@ declare(strict_types=1);
 
 namespace Lwt\Shared\Infrastructure\Routing\Middleware;
 
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Shared\Infrastructure\Http\Cors;
 
 /**

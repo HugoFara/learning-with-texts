@@ -58,19 +58,19 @@ class TranslationControllerTest extends TestCase
     private static function setupTestData(): void
     {
         // Reset auto_increment to prevent overflow (LgID is tinyint max 255)
-        $maxId = Connection::fetchValue("SELECT COALESCE(MAX(LgID), 0) AS value FROM " . Globals::table('languages'));
-        Connection::query("ALTER TABLE " . Globals::table('languages') . " AUTO_INCREMENT = " . ((int)$maxId + 1));
+        $maxId = Connection::fetchValue("SELECT COALESCE(MAX(LgID), 0) AS value FROM " . 'languages');
+        Connection::query("ALTER TABLE languages AUTO_INCREMENT = " . ((int)$maxId + 1));
 
         // Create a test language
         $existingLang = Connection::fetchValue(
-            "SELECT LgID AS value FROM " . Globals::table('languages') .
+            "SELECT LgID AS value FROM languages" .
             " WHERE LgName = 'TranslationControllerTestLang' LIMIT 1"
         );
 
         if ($existingLang) {
             self::$testLangId = (int)$existingLang;
         } else {
-            $table = Globals::table('languages');
+            $table = 'languages';
             Connection::query(
                 "INSERT INTO " . $table . " (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
                 "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, " .
@@ -93,16 +93,16 @@ class TranslationControllerTest extends TestCase
         }
 
         // Clean up test data
-        $wordsTable = Globals::table('words');
+        $wordsTable = 'words';
         Connection::query("DELETE FROM " . $wordsTable . " WHERE WoLgID = " . self::$testLangId);
-        $langTable = Globals::table('languages');
+        $langTable = 'languages';
         Connection::query(
             "DELETE FROM " . $langTable . " WHERE LgName = 'TranslationControllerTestLang'"
         );
 
         // Reset auto_increment to prevent overflow (LgID is tinyint max 255)
-        $maxId = Connection::fetchValue("SELECT COALESCE(MAX(LgID), 0) AS value FROM " . Globals::table('languages'));
-        Connection::query("ALTER TABLE " . Globals::table('languages') . " AUTO_INCREMENT = " . ((int)$maxId + 1));
+        $maxId = Connection::fetchValue("SELECT COALESCE(MAX(LgID), 0) AS value FROM " . 'languages');
+        Connection::query("ALTER TABLE languages AUTO_INCREMENT = " . ((int)$maxId + 1));
     }
 
     protected function setUp(): void

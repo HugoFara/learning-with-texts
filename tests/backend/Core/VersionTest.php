@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Lwt\Tests\Core;
 
 use Lwt\Shared\Infrastructure\ApplicationInfo;
-use Lwt\Shared\Infrastructure\Globals;
 use PHPUnit\Framework\TestCase;
 
 /**

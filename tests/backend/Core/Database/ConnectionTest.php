@@ -552,17 +552,21 @@ class ConnectionTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        // Get instance first
-        $instance1 = Connection::getInstance();
+        $instance = Connection::getInstance();
 
-        // Reset
         Connection::reset();
 
-        // Get instance again - should be fetched from Globals
-        $instance2 = Connection::getInstance();
-
-        // They should still be connected (Globals maintains the connection)
-        $this->assertInstanceOf(\mysqli::class, $instance2);
+        // Connection owns the handle outright, so a reset really does drop it
+        // rather than leaving a copy behind for the next getInstance() to find.
+        try {
+            Connection::getInstance();
+            $this->fail('getInstance() should throw after reset()');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('not initialized', $e->getMessage());
+        } finally {
+            // Restore it: the rest of the suite shares this connection.
+            Connection::setInstance($instance);
+        }
     }
 
     // ===== setInstance() tests =====

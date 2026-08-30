@@ -54,7 +54,7 @@ class LanguageControllerTest extends TestCase
 
         if (self::$dbConnected) {
             // Reset auto_increment to prevent overflow (LgID is tinyint max 255)
-            $languagesTable = Globals::table('languages');
+            $languagesTable = 'languages';
             $maxId = Connection::fetchValue("SELECT COALESCE(MAX(LgID), 0) AS value FROM {$languagesTable}");
             Connection::query("ALTER TABLE {$languagesTable} AUTO_INCREMENT = " . ((int)$maxId + 1));
         }
@@ -88,7 +88,7 @@ class LanguageControllerTest extends TestCase
         }
 
         // Clean up test languages
-        $languagesTable = Globals::table('languages');
+        $languagesTable = 'languages';
         Connection::query("DELETE FROM {$languagesTable} WHERE LgName LIKE 'Test_%'");
         Connection::query("DELETE FROM {$languagesTable} WHERE LgName LIKE 'TestLang%'");
 
@@ -106,7 +106,7 @@ class LanguageControllerTest extends TestCase
      */
     private function createTestLanguage(string $name): int
     {
-        $languagesTable = Globals::table('languages');
+        $languagesTable = 'languages';
         Connection::query(
             "INSERT INTO {$languagesTable} (
                 LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI,
@@ -287,9 +287,9 @@ class LanguageControllerTest extends TestCase
         $id = $this->createTestLanguage('TestLang_ControllerDelete');
 
         // Clean up any related data that might exist for this language
-        Connection::query("DELETE FROM " . Globals::table('texts') . " WHERE TxLgID = $id");
-        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE WoLgID = $id");
-        Connection::query("DELETE FROM " . Globals::table('news_feeds') . " WHERE NfLgID = $id");
+        Connection::query("DELETE FROM texts WHERE TxLgID = $id");
+        Connection::query("DELETE FROM words WHERE WoLgID = $id");
+        Connection::query("DELETE FROM news_feeds WHERE NfLgID = $id");
 
         $service = new LanguageFacade();
 

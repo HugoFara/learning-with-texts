@@ -6,7 +6,6 @@ namespace Lwt\Tests\Api\V1;
 
 use Lwt\Api\V1\ApiV1;
 use Lwt\Shared\Infrastructure\ApplicationInfo;
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Shared\Infrastructure\Container\Container;
 use Lwt\Shared\Infrastructure\Container\CoreServiceProvider;
 use Lwt\Shared\Infrastructure\Container\ControllerServiceProvider;

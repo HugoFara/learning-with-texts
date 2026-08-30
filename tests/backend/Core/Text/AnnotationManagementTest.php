@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Lwt\Tests\Core\Text;
 
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Modules\Text\Application\Services\AnnotationService;
 use PHPUnit\Framework\TestCase;
 

@@ -3,7 +3,7 @@
 /**
  * MySQL Book Repository
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Book\Infrastructure
@@ -65,7 +65,7 @@ class MySqlBookRepository implements BookRepositoryInterface
      */
     protected function query(): QueryBuilder
     {
-        return Globals::query($this->tableName);
+        return QueryBuilder::table($this->tableName);
     }
 
     /**

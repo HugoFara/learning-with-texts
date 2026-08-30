@@ -3,7 +3,7 @@
 /**
  * Text Display Service - Business logic for displaying annotated texts
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Text\Application\Services
@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Text\Application\Services;
 
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Shared\Infrastructure\Database\QueryBuilder;
 use Lwt\Shared\Infrastructure\Database\Settings;

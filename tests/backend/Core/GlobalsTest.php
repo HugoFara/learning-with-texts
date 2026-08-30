@@ -6,14 +6,13 @@ namespace Lwt\Tests\Core;
 
 use Lwt\Shared\Infrastructure\Exception\AuthException;
 use Lwt\Shared\Infrastructure\Globals;
-use Lwt\Shared\Infrastructure\Database\QueryBuilder;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for the Globals class.
  *
- * Tests global state management for database connection, table prefix,
- * and various application-wide settings.
+ * Tests request-scoped state: the database handle, database name and
+ * the authenticated user context that QueryBuilder scopes queries by.
  */
 class GlobalsTest extends TestCase
 {
@@ -31,27 +30,6 @@ class GlobalsTest extends TestCase
         Globals::reset();
 
         parent::tearDown();
-    }
-
-    // ===== initialize() tests =====
-
-    public function testInitialize(): void
-    {
-        Globals::initialize();
-
-        // After initialization, display settings should be false
-        $this->assertFalse(Globals::isErrorDisplayEnabled());
-    }
-
-    public function testInitializeOnlyOnce(): void
-    {
-        Globals::initialize();
-        Globals::setErrorDisplay(true);
-
-        // Second initialize should not reset values
-        Globals::initialize();
-
-        $this->assertTrue(Globals::isErrorDisplayEnabled());
     }
 
     // ===== dbConnection tests =====
@@ -84,56 +62,6 @@ class GlobalsTest extends TestCase
         $this->assertEquals('', Globals::getDatabaseName());
     }
 
-    // ===== errorDisplay tests =====
-
-    public function testSetErrorDisplayOn(): void
-    {
-        Globals::setErrorDisplay(true);
-
-        $this->assertTrue(Globals::isErrorDisplayEnabled());
-    }
-
-    public function testSetErrorDisplayOff(): void
-    {
-        Globals::setErrorDisplay(true);
-        Globals::setErrorDisplay(false);
-
-        $this->assertFalse(Globals::isErrorDisplayEnabled());
-    }
-
-    public function testIsErrorDisplayEnabledReturnsBool(): void
-    {
-        Globals::setErrorDisplay(false);
-        $this->assertIsBool(Globals::isErrorDisplayEnabled());
-
-        Globals::setErrorDisplay(true);
-        $this->assertIsBool(Globals::isErrorDisplayEnabled());
-    }
-
-    // ===== table() tests =====
-
-    public function testTableReturnsTableName(): void
-    {
-        $this->assertEquals('words', Globals::table('words'));
-    }
-
-    // ===== query() tests =====
-
-    public function testQueryReturnsQueryBuilder(): void
-    {
-        $qb = Globals::query('words');
-
-        $this->assertInstanceOf(QueryBuilder::class, $qb);
-    }
-
-    public function testQueryUsesCorrectTableName(): void
-    {
-        $qb = Globals::query('words');
-        $sql = $qb->toSql();
-
-        $this->assertStringContainsString('words', $sql);
-    }
-
     // ===== reset() tests =====
 
     public function testResetClearsAllValues(): void
@@ -142,10 +70,8 @@ class GlobalsTest extends TestCase
         $mockConnection = $this->createMock(\mysqli::class);
         Globals::setDbConnection($mockConnection);
         Globals::setDatabaseName('testdb');
-        Globals::setErrorDisplay(true);
         Globals::setCurrentUserId(42);
         Globals::setMultiUserEnabled(true);
-        Globals::initialize();
 
         // Reset
         Globals::reset();
@@ -153,7 +79,6 @@ class GlobalsTest extends TestCase
         // Verify all values are cleared
         $this->assertNull(Globals::getDbConnection());
         $this->assertEquals('', Globals::getDatabaseName());
-        $this->assertFalse(Globals::isErrorDisplayEnabled());
         $this->assertNull(Globals::getCurrentUserId());
         $this->assertFalse(Globals::isMultiUserEnabled());
     }
