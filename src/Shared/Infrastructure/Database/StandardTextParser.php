@@ -172,23 +172,6 @@ class StandardTextParser
     }
 
     /**
-     * Display preview HTML for standard text.
-     *
-     * @param string $text      Preprocessed text (after initial transformations)
-     * @param bool   $rtlScript Whether text is right-to-left
-     *
-     * @return void
-     */
-    public static function displayStandardPreview(string $text, bool $rtlScript): void
-    {
-        echo "<div id=\"check_text\" style=\"margin-right:50px;\">
-        <h4>Text</h4>
-        <p " . ($rtlScript ? 'dir="rtl"' : '') . ">" .
-        str_replace("\xC2\xB6", "<br /><br />", \htmlspecialchars($text, ENT_QUOTES, 'UTF-8')) .
-        "</p>";
-    }
-
-    /**
      * Build the tab-delimited token blob from preprocessed text.
      *
      * Produces one line per token as "<wordcount>\t<term>", where a term
@@ -323,20 +306,23 @@ class StandardTextParser
     }
 
     /**
-     * Echo the preview HTML for a (character-substituted) standard text.
+     * The text as the preview shows it, before word splitting.
      *
-     * @param string $text Preprocessed text (character substitutions applied)
+     * Paragraph breaks are still carried by the "\xC2\xB6" marker, which the
+     * caller renders.
+     *
+     * @param string $text Preprocessed text (substitutions applied)
      * @param int    $lid  Language ID
      *
-     * @return void
+     * @return string|null Preview text, or null if the language is unknown
      */
-    public static function echoPreview(string $text, int $lid): void
+    public static function previewText(string $text, int $lid): ?string
     {
         $settings = self::getLanguageSettings($lid);
         if ($settings === null) {
-            return;
+            return null;
         }
-        $text = self::applyInitialTransformations($text, $settings['splitEachChar']);
-        self::displayStandardPreview($text, (bool)$settings['rtlScript']);
+
+        return self::applyInitialTransformations($text, $settings['splitEachChar']);
     }
 }

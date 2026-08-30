@@ -44,6 +44,14 @@ class TextApiHandlerSaveTest extends TestCase
     }
 
     /**
+     * @param array<string, mixed> $params
+     */
+    private function updateArchived(int $textId, array $params): JsonResponse
+    {
+        return $this->handler->routePut(['texts', 'archived', (string) $textId], $params);
+    }
+
+    /**
      * A payload that passes validation, for tests that vary one field.
      *
      * @return array<string, mixed>
@@ -137,6 +145,79 @@ class TextApiHandlerSaveTest extends TestCase
     public function testPostToATextIdIsNotASave(): void
     {
         $res = $this->handler->routePost(['texts', '9'], $this->validPayload());
+
+        $this->assertSame(404, $res->getStatusCode());
+    }
+
+    /**
+     * POST /texts/check reports on a text without saving it, and validates
+     * what it needs before reaching the language lookup.
+     */
+    public function testCheckRejectsMissingText(): void
+    {
+        $res = $this->handler->routePost(['texts', 'check'], ['language_id' => 1]);
+
+        $this->assertSame(400, $res->getStatusCode());
+        $this->assertSame(['error' => 'text is required'], $res->getData());
+    }
+
+    public function testCheckRejectsWhitespaceOnlyText(): void
+    {
+        $res = $this->handler->routePost(['texts', 'check'], ['text' => " \n ", 'language_id' => 1]);
+
+        $this->assertSame(400, $res->getStatusCode());
+        $this->assertSame(['error' => 'text is required'], $res->getData());
+    }
+
+    public function testCheckRejectsMissingLanguage(): void
+    {
+        $res = $this->handler->routePost(['texts', 'check'], ['text' => 'Ein Text.']);
+
+        $this->assertSame(400, $res->getStatusCode());
+        $this->assertSame(['error' => 'language_id is required'], $res->getData());
+    }
+
+    /**
+     * The archived save validates its payload the way the active save does.
+     */
+    public function testArchivedUpdateRejectsMissingTitle(): void
+    {
+        $res = $this->updateArchived(9, ['text' => 'Some words', 'language_id' => 1]);
+
+        $this->assertSame(400, $res->getStatusCode());
+        $this->assertSame(['error' => 'title is required'], $res->getData());
+    }
+
+    public function testArchivedUpdateRejectsMissingText(): void
+    {
+        $res = $this->updateArchived(9, ['title' => 'A title', 'language_id' => 1]);
+
+        $this->assertSame(400, $res->getStatusCode());
+        $this->assertSame(['error' => 'text is required'], $res->getData());
+    }
+
+    public function testArchivedUpdateRejectsMissingLanguage(): void
+    {
+        $res = $this->updateArchived(9, ['title' => 'A title', 'text' => 'Some words']);
+
+        $this->assertSame(400, $res->getStatusCode());
+        $this->assertSame(['error' => 'language_id is required'], $res->getData());
+    }
+
+    /**
+     * `archived` names a sub-resource, so it must carry an id of its own
+     * rather than being read as the id.
+     */
+    public function testArchivedUpdateRequiresAnId(): void
+    {
+        $res = $this->handler->routePut(['texts', 'archived'], $this->validPayload());
+
+        $this->assertSame(404, $res->getStatusCode());
+    }
+
+    public function testArchivedUpdateRejectsNonNumericId(): void
+    {
+        $res = $this->handler->routePut(['texts', 'archived', 'not-an-id'], $this->validPayload());
 
         $this->assertSame(404, $res->getStatusCode());
     }

@@ -118,11 +118,20 @@ echo PageLayoutHelper::buildActionCard([
     </p>
 </div>
 
+<script type="application/json" id="dictionary-list-config"><?php
+echo json_encode(['languageId' => $langId], JSON_HEX_TAG | JSON_HEX_AMP);
+?></script>
+
+<div x-data="dictionaryList" x-init="init()">
+
+    <div x-show="error" class="notification is-danger is-light">
+        <span x-text="error"></span>
+    </div>
+
 <!-- Quick Create -->
 <div class="box mb-4">
     <h4 class="title is-5 mb-2"><?php echo __('dictionary.quick_create'); ?></h4>
-    <form method="POST" action="/languages/<?php echo $langId; ?>/dictionaries">
-        <?php echo \Lwt\Shared\UI\Helpers\FormHelper::csrfField(); ?>
+    <form @submit.prevent="create()">
         <div class="field has-addons">
             <div class="control is-expanded">
                 <?php
@@ -131,12 +140,13 @@ echo PageLayoutHelper::buildActionCard([
                     ENT_QUOTES
                 );
                 ?>
-                <input type="text" name="dict_name" class="input"
+                <input type="text" class="input"
+                       x-model="newName"
                        placeholder="<?php echo $createPlaceholder; ?>"
                        required>
             </div>
             <div class="control">
-                <button type="submit" name="create_dictionary" value="1" class="button is-primary">
+                <button type="submit" class="button is-primary" :disabled="isCreating">
                     <?php echo IconHelper::render('plus', ['alt' => __('common.create')]); ?>
                     <?php echo __('common.create'); ?>
                 </button>
@@ -156,92 +166,85 @@ echo PageLayoutHelper::buildActionCard([
         ?>
     </h4>
 
-    <script type="application/json" id="dictionary-list-config"><?php
-    echo json_encode(['languageId' => $langId], JSON_HEX_TAG | JSON_HEX_AMP);
-    ?></script>
 
-    <div x-data="dictionaryList" x-init="init()">
 
-        <div x-show="error" class="notification is-danger is-light">
-            <span x-text="error"></span>
-        </div>
-
-        <div x-show="isLoading" class="has-text-centered py-5">
-            <span class="icon is-large">
-                <i data-lucide="loader-2" class="animate-spin"></i>
-            </span>
-        </div>
-
-        <div x-show="!isLoading && dictionaries.length === 0" class="notification is-light">
-            <p><?php echo __('dictionary.no_local_dicts'); ?></p>
-            <p class="mt-2">
-                <a href="/word/upload?tab=dictionary" class="button is-primary is-small">
-                    <?php echo IconHelper::render('upload', ['alt' => __('common.import')]); ?>
-                    <?php echo __('dictionary.import_a_dictionary'); ?>
-                </a>
-            </p>
-        </div>
-
-        <div class="table-container" x-show="!isLoading && dictionaries.length > 0">
-            <table class="table is-fullwidth is-striped is-hoverable">
-                <thead>
-                    <tr>
-                        <th><?php echo __('common.name'); ?></th>
-                        <th><?php echo __('dictionary.col_format'); ?></th>
-                        <th><?php echo __('dictionary.col_entries'); ?></th>
-                        <th><?php echo __('dictionary.col_priority'); ?></th>
-                        <th><?php echo __('common.status'); ?></th>
-                        <th><?php echo __('common.actions'); ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <template x-for="dict in dictionaries" :key="dict.id">
-                        <tr>
-                            <td>
-                                <strong x-text="dict.name"></strong>
-                                <template x-if="hasDescription(dict)">
-                                    <span>
-                                        <br><span class="is-size-7 has-text-grey"
-                                                  x-text="descriptionOf(dict)"></span>
-                                    </span>
-                                </template>
-                            </td>
-                            <td><span class="tag" x-text="formatLabel(dict)"></span></td>
-                            <td x-text="entryCountLabel(dict)"></td>
-                            <td x-text="dict.priority"></td>
-                            <td><span :class="statusClass(dict)" x-text="statusLabel(dict)"></span></td>
-                            <td>
-                                <div class="buttons are-small">
-                                    <button type="button"
-                                            :class="toggleClass(dict)"
-                                            :disabled="isBusy(dict)"
-                                            :title="toggleTitle(dict)"
-                                            @click="toggle(dict)">
-                                        <span class="icon is-small">
-                                            <i :data-lucide="toggleIcon(dict)"></i>
-                                        </span>
-                                    </button>
-
-                                    <a href="/word/upload?tab=dictionary"
-                                       class="button is-info"
-                                       title="<?php
-                                        echo htmlspecialchars(__('dictionary.import_entries'), ENT_QUOTES);
-                                        ?>">
-                                        <?php echo IconHelper::render('upload', ['alt' => __('common.import')]); ?>
-                                    </a>
-
-                                    <button type="button" class="button is-danger"
-                                            :disabled="isBusy(dict)"
-                                            title="<?php echo htmlspecialchars(__('common.delete'), ENT_QUOTES); ?>"
-                                            @click="confirmDelete(dict)">
-                                        <?php echo IconHelper::render('trash', ['alt' => __('common.delete')]); ?>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </template>
-                </tbody>
-            </table>
-        </div>
+    <div x-show="isLoading" class="has-text-centered py-5">
+        <span class="icon is-large">
+            <i data-lucide="loader-2" class="animate-spin"></i>
+        </span>
     </div>
+
+    <div x-show="!isLoading && dictionaries.length === 0" class="notification is-light">
+        <p><?php echo __('dictionary.no_local_dicts'); ?></p>
+        <p class="mt-2">
+            <a href="/word/upload?tab=dictionary" class="button is-primary is-small">
+                <?php echo IconHelper::render('upload', ['alt' => __('common.import')]); ?>
+                <?php echo __('dictionary.import_a_dictionary'); ?>
+            </a>
+        </p>
+    </div>
+
+    <div class="table-container" x-show="!isLoading && dictionaries.length > 0">
+        <table class="table is-fullwidth is-striped is-hoverable">
+            <thead>
+                <tr>
+                    <th><?php echo __('common.name'); ?></th>
+                    <th><?php echo __('dictionary.col_format'); ?></th>
+                    <th><?php echo __('dictionary.col_entries'); ?></th>
+                    <th><?php echo __('dictionary.col_priority'); ?></th>
+                    <th><?php echo __('common.status'); ?></th>
+                    <th><?php echo __('common.actions'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="dict in dictionaries" :key="dict.id">
+                    <tr>
+                        <td>
+                            <strong x-text="dict.name"></strong>
+                            <template x-if="hasDescription(dict)">
+                                <span>
+                                    <br><span class="is-size-7 has-text-grey"
+                                              x-text="descriptionOf(dict)"></span>
+                                </span>
+                            </template>
+                        </td>
+                        <td><span class="tag" x-text="formatLabel(dict)"></span></td>
+                        <td x-text="entryCountLabel(dict)"></td>
+                        <td x-text="dict.priority"></td>
+                        <td><span :class="statusClass(dict)" x-text="statusLabel(dict)"></span></td>
+                        <td>
+                            <div class="buttons are-small">
+                                <button type="button"
+                                        :class="toggleClass(dict)"
+                                        :disabled="isBusy(dict)"
+                                        :title="toggleTitle(dict)"
+                                        @click="toggle(dict)">
+                                    <span class="icon is-small">
+                                        <i :data-lucide="toggleIcon(dict)"></i>
+                                    </span>
+                                </button>
+
+                                <a href="/word/upload?tab=dictionary"
+                                   class="button is-info"
+                                   title="<?php
+                                    echo htmlspecialchars(__('dictionary.import_entries'), ENT_QUOTES);
+                                    ?>">
+                                    <?php echo IconHelper::render('upload', ['alt' => __('common.import')]); ?>
+                                </a>
+
+                                <button type="button" class="button is-danger"
+                                        :disabled="isBusy(dict)"
+                                        title="<?php echo htmlspecialchars(__('common.delete'), ENT_QUOTES); ?>"
+                                        @click="confirmDelete(dict)">
+                                    <?php echo IconHelper::render('trash', ['alt' => __('common.delete')]); ?>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+</div>
+
 </div>

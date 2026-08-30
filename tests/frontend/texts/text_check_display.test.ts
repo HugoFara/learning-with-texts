@@ -1,441 +1,162 @@
 /**
- * Tests for text_check_display.ts - Display word statistics after text parsing
+ * Tests for text_check_display.ts - render the parse report from
+ * POST /texts/check.
+ *
+ * Translations are not loaded here, so t() returns the key it was given;
+ * assertions target structure and data rather than copy.
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import {
-  displayStatistics,
-  initTextCheckDisplay,
-  initTextCheckWords
-} from '../../../src/frontend/js/modules/text/pages/text_check_display';
+import { describe, it, expect, beforeEach } from 'vitest';
+
+import { renderCheckReport } from '../../../src/frontend/js/modules/text/pages/text_check_display';
+import type { TextCheckReport } from '../../../src/frontend/js/modules/text/api/texts_api';
+
+/** A report with everything empty, for tests that vary one part. */
+function emptyReport(): TextCheckReport {
+  return {
+    preview: '',
+    sentences: [],
+    words: [],
+    nonWords: [],
+    multiWords: [],
+    rtlScript: false,
+    warning: 'ok'
+  };
+}
 
 describe('text_check_display.ts', () => {
+  let container: HTMLElement;
+
   beforeEach(() => {
-    document.body.innerHTML = '';
-    vi.clearAllMocks();
-    // Clear global variables
-    delete window.WORDS;
-    delete window.MWORDS;
-    delete window.NOWORDS;
+    document.body.innerHTML = '<div id="check_text"></div>';
+    container = document.getElementById('check_text') as HTMLElement;
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-    document.body.innerHTML = '';
-    delete window.WORDS;
-    delete window.MWORDS;
-    delete window.NOWORDS;
-  });
+  describe('preview', () => {
+    it('renders the preview text', () => {
+      renderCheckReport({ ...emptyReport(), preview: 'Bonjour Manon.' }, container);
 
-  // ===========================================================================
-  // displayStatistics Tests
-  // ===========================================================================
-
-  describe('displayStatistics', () => {
-    beforeEach(() => {
-      document.body.innerHTML = '<div id="check_text"></div>';
+      expect(container.textContent).toContain('Bonjour Manon.');
     });
 
-    it('displays word list with counts', () => {
-      const words: [string, number, string][] = [
-        ['hello', 5, ''],
-        ['world', 3, '']
-      ];
+    it('breaks paragraphs on the pilcrow marker', () => {
+      renderCheckReport({ ...emptyReport(), preview: 'One ¶ Two' }, container);
 
-      displayStatistics(words, [], []);
-
-      const html = document.getElementById('check_text')!.innerHTML;
-      expect(html).toContain('Word List');
-      expect(html).toContain('[hello]');
-      expect(html).toContain('— 5');
-      expect(html).toContain('[world]');
-      expect(html).toContain('— 3');
-      expect(html).toContain('TOTAL: 2');
+      expect(container.querySelectorAll('br')).toHaveLength(2);
+      expect(container.textContent).toContain('One');
+      expect(container.textContent).toContain('Two');
     });
 
-    it('highlights saved words with red class', () => {
-      const words: [string, number, string][] = [
-        ['saved', 2, 'translation here'],
-        ['new', 4, '']
-      ];
+    it('marks the preview rtl for a right-to-left language', () => {
+      renderCheckReport({ ...emptyReport(), preview: 'שלום', rtlScript: true }, container);
 
-      displayStatistics(words, [], []);
-
-      const html = document.getElementById('check_text')!.innerHTML;
-      expect(html).toContain('class="has-text-danger has-text-weight-bold"');
-      expect(html).toContain('translation here');
-    });
-
-    it('displays expression list', () => {
-      const multiWords: [string, number, string][] = [
-        ['good morning', 2, 'greeting'],
-        ['thank you', 1, '']
-      ];
-
-      displayStatistics([], multiWords, []);
-
-      const html = document.getElementById('check_text')!.innerHTML;
-      expect(html).toContain('Expression List');
-      expect(html).toContain('[good morning]');
-      expect(html).toContain('[thank you]');
-      expect(html).toContain('TOTAL: 2');
-    });
-
-    it('displays non-word list', () => {
-      const nonWords: [string, string][] = [
-        ['123', '10'],
-        ['@#$', '5']
-      ];
-
-      displayStatistics([], [], nonWords);
-
-      const html = document.getElementById('check_text')!.innerHTML;
-      expect(html).toContain('Non-Word List');
-      expect(html).toContain('[123]');
-      expect(html).toContain('[@#$]');
-      expect(html).toContain('TOTAL: 2');
-    });
-
-    it('displays all sections together', () => {
-      const words: [string, number, string][] = [['test', 1, '']];
-      const multiWords: [string, number, string][] = [['test phrase', 1, '']];
-      const nonWords: [string, string][] = [['!!!', '1']];
-
-      displayStatistics(words, multiWords, nonWords);
-
-      const html = document.getElementById('check_text')!.innerHTML;
-      expect(html).toContain('Word List');
-      expect(html).toContain('Expression List');
-      expect(html).toContain('Non-Word List');
-    });
-
-    it('handles empty arrays', () => {
-      displayStatistics([], [], []);
-
-      const html = document.getElementById('check_text')!.innerHTML;
-      expect(html).toContain('TOTAL: 0');
-    });
-
-    it('appends to existing content', () => {
-      document.getElementById('check_text')!.innerHTML = '<p>Existing content</p>';
-
-      displayStatistics([['word', 1, '']], [], []);
-
-      const html = document.getElementById('check_text')!.innerHTML;
-      expect(html).toContain('Existing content');
-      expect(html).toContain('Word List');
+      expect(container.querySelector('p[dir="rtl"]')).not.toBeNull();
     });
   });
 
-  // ===========================================================================
-  // initTextCheckWords Tests
-  // ===========================================================================
-
-  describe('initTextCheckWords', () => {
-    it('sets global WORDS from config', () => {
-      document.body.innerHTML = `
-        <script id="text-check-words-config" type="application/json">
-          {"words": [["hello", 5, ""]], "nonWords": [["123", "3"]]}
-        </script>
-      `;
-
-      initTextCheckWords();
-
-      expect(window.WORDS).toEqual([['hello', 5, '']]);
-      expect(window.NOWORDS).toEqual([['123', '3']]);
-    });
-
-    it('does nothing when config element is missing', () => {
-      document.body.innerHTML = '';
-
-      initTextCheckWords();
-
-      expect(window.WORDS).toBeUndefined();
-      expect(window.NOWORDS).toBeUndefined();
-    });
-
-    it('handles empty config', () => {
-      document.body.innerHTML = `
-        <script id="text-check-words-config" type="application/json">
-          {}
-        </script>
-      `;
-
-      initTextCheckWords();
-
-      expect(window.WORDS).toEqual([]);
-      expect(window.NOWORDS).toEqual([]);
-    });
-
-    it('handles invalid JSON gracefully', () => {
-      document.body.innerHTML = `
-        <script id="text-check-words-config" type="application/json">
-          invalid json {
-        </script>
-      `;
-
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      initTextCheckWords();
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to parse text-check-words-config:',
-        expect.any(Error)
-      );
-    });
-  });
-
-  // ===========================================================================
-  // initTextCheckDisplay Tests
-  // ===========================================================================
-
-  describe('initTextCheckDisplay', () => {
-    beforeEach(() => {
-      document.body.innerHTML = '<div id="check_text"></div>';
-    });
-
-    it('initializes from config element', () => {
-      document.body.innerHTML = `
-        <div id="check_text"></div>
-        <script id="text-check-config" type="application/json">
-          {
-            "words": [["word1", 3, ""]],
-            "multiWords": [["expr1", 2, "translation"]],
-            "nonWords": [["!!!", "1"]],
-            "rtlScript": false
-          }
-        </script>
-      `;
-
-      initTextCheckDisplay();
-
-      const html = document.getElementById('check_text')!.innerHTML;
-      expect(html).toContain('[word1]');
-      expect(html).toContain('[expr1]');
-      expect(html).toContain('[!!!]');
-    });
-
-    it('applies RTL direction when rtlScript is true', () => {
-      // Note: Due to current implementation order, RTL is applied before
-      // displayStatistics creates the li elements. This test verifies
-      // that the function doesn't error and processes correctly.
-      document.body.innerHTML = `
-        <div id="check_text"></div>
-        <script id="text-check-config" type="application/json">
-          {
-            "words": [["مرحبا", 1, ""]],
-            "multiWords": [],
-            "nonWords": [],
-            "rtlScript": true
-          }
-        </script>
-      `;
-
-      // Should not throw
-      expect(() => initTextCheckDisplay()).not.toThrow();
-
-      // Verify content was created
-      const html = document.getElementById('check_text')!.innerHTML;
-      expect(html).toContain('مرحبا');
-    });
-
-    it('falls back to global variables when config is missing', () => {
-      document.body.innerHTML = '<div id="check_text"></div>';
-      window.WORDS = [['global_word', 1, '']];
-      window.MWORDS = [['global_expr', 1, '']];
-      window.NOWORDS = [['###', '1']];
-
-      initTextCheckDisplay();
-
-      const html = document.getElementById('check_text')!.innerHTML;
-      expect(html).toContain('[global_word]');
-      expect(html).toContain('[global_expr]');
-      expect(html).toContain('[###]');
-    });
-
-    it('uses config words over global variables', () => {
-      document.body.innerHTML = `
-        <div id="check_text"></div>
-        <script id="text-check-config" type="application/json">
-          {
-            "words": [["config_word", 1, ""]],
-            "multiWords": [],
-            "nonWords": [],
-            "rtlScript": false
-          }
-        </script>
-      `;
-      window.WORDS = [['global_word', 1, '']];
-
-      initTextCheckDisplay();
-
-      const html = document.getElementById('check_text')!.innerHTML;
-      expect(html).toContain('[config_word]');
-      expect(html).not.toContain('[global_word]');
-    });
-
-    it('handles invalid JSON gracefully', () => {
-      document.body.innerHTML = `
-        <div id="check_text"></div>
-        <script id="text-check-config" type="application/json">
-          not valid json
-        </script>
-      `;
-
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      initTextCheckDisplay();
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to parse text-check-config:',
-        expect.any(Error)
-      );
-    });
-
-    it('sets global variables from config for legacy compatibility', () => {
-      document.body.innerHTML = `
-        <div id="check_text"></div>
-        <script id="text-check-config" type="application/json">
-          {
-            "words": [["word", 1, ""]],
-            "multiWords": [["expr", 1, ""]],
-            "nonWords": [["123", "1"]],
-            "rtlScript": false
-          }
-        </script>
-      `;
-
-      initTextCheckDisplay();
-
-      expect(window.WORDS).toEqual([['word', 1, '']]);
-      expect(window.MWORDS).toEqual([['expr', 1, '']]);
-      expect(window.NOWORDS).toEqual([['123', '1']]);
-    });
-
-    it('uses global words when config words are empty', () => {
-      document.body.innerHTML = `
-        <div id="check_text"></div>
-        <script id="text-check-config" type="application/json">
-          {
-            "words": [],
-            "multiWords": [],
-            "nonWords": [],
-            "rtlScript": false
-          }
-        </script>
-      `;
-      window.WORDS = [['fallback_word', 1, '']];
-      window.NOWORDS = [['123', '1']];
-
-      initTextCheckDisplay();
-
-      const html = document.getElementById('check_text')!.innerHTML;
-      expect(html).toContain('[fallback_word]');
-    });
-
-    it('does nothing when neither config nor globals exist', () => {
-      document.body.innerHTML = '<div id="check_text"></div>';
-
-      initTextCheckDisplay();
-
-      // check_text should remain empty
-      expect(document.getElementById('check_text')!.innerHTML).toBe('');
-    });
-  });
-
-  // ===========================================================================
-  // RTL Support Tests
-  // ===========================================================================
-
-  describe('RTL support', () => {
-    it('does not apply RTL when rtlScript is false', () => {
-      document.body.innerHTML = `
-        <div id="check_text"></div>
-        <script id="text-check-config" type="application/json">
-          {
-            "words": [["word", 1, ""]],
-            "multiWords": [],
-            "nonWords": [],
-            "rtlScript": false
-          }
-        </script>
-      `;
-
-      initTextCheckDisplay();
-
-      const listItems = document.querySelectorAll('li');
-      listItems.forEach((li) => {
-        expect(li.getAttribute('dir')).toBeNull();
-      });
-    });
-
-    it('handles RTL config without error', () => {
-      // Note: Due to current implementation order, RTL is applied before
-      // displayStatistics creates the li elements. This test verifies
-      // that the RTL setting doesn't cause errors and content is still displayed.
-      document.body.innerHTML = `
-        <div id="check_text"></div>
-        <script id="text-check-config" type="application/json">
-          {
-            "words": [["word", 1, ""]],
-            "multiWords": [["expr", 1, ""]],
-            "nonWords": [["123", "1"]],
-            "rtlScript": true
-          }
-        </script>
-      `;
-
-      expect(() => initTextCheckDisplay()).not.toThrow();
-
-      // Verify all lists were created
-      expect(document.querySelectorAll('.wordlist li').length).toBeGreaterThan(0);
-      expect(document.querySelectorAll('.expressionlist li').length).toBeGreaterThan(0);
-      expect(document.querySelectorAll('.nonwordlist li').length).toBeGreaterThan(0);
-    });
-  });
-
-  // ===========================================================================
-  // HTML Structure Tests
-  // ===========================================================================
-
-  describe('HTML structure', () => {
-    beforeEach(() => {
-      document.body.innerHTML = '<div id="check_text"></div>';
-    });
-
-    it('creates word list with proper structure', () => {
-      displayStatistics([['word', 1, '']], [], []);
-
-      expect(document.querySelector('h4')).toBeTruthy();
-      expect(document.querySelector('ul.wordlist')).toBeTruthy();
-      expect(document.querySelector('ul.wordlist li')).toBeTruthy();
-    });
-
-    it('creates expression list with proper structure', () => {
-      displayStatistics([], [['expr', 1, '']], []);
-
-      expect(document.querySelector('ul.expressionlist')).toBeTruthy();
-    });
-
-    it('creates non-word list with proper structure', () => {
-      displayStatistics([], [], [['123', '1']]);
-
-      expect(document.querySelector('ul.nonwordlist')).toBeTruthy();
-    });
-
-    it('includes totals for all sections', () => {
-      displayStatistics(
-        [['w1', 1, ''], ['w2', 2, '']],
-        [['e1', 1, '']],
-        [['n1', '1'], ['n2', '2'], ['n3', '3']]
+  describe('sentences', () => {
+    it('lists each sentence in order', () => {
+      renderCheckReport(
+        { ...emptyReport(), sentences: ['First one.', 'Second one.'] },
+        container
       );
 
-      const html = document.getElementById('check_text')!.innerHTML;
-      // Check all TOTAL counts appear
-      const totalMatches = html.match(/TOTAL: \d+/g) || [];
-      expect(totalMatches.length).toBe(3);
-      expect(html).toContain('TOTAL: 2'); // words
-      expect(html).toContain('TOTAL: 1'); // expressions
-      expect(html).toContain('TOTAL: 3'); // non-words
+      const items = Array.from(container.querySelectorAll('ol li')).map(li => li.textContent);
+      expect(items).toEqual(['First one.', 'Second one.']);
     });
+  });
+
+  describe('warning', () => {
+    it('shows a banner when nothing parsed into words', () => {
+      renderCheckReport({ ...emptyReport(), warning: 'no_words' }, container);
+
+      expect(container.querySelector('.notification.is-warning')).not.toBeNull();
+    });
+
+    it('shows a banner when almost nothing parsed into words', () => {
+      renderCheckReport({ ...emptyReport(), warning: 'almost_no_words' }, container);
+
+      expect(container.querySelector('.notification.is-warning')).not.toBeNull();
+    });
+
+    it('stays quiet when the parse looks fine', () => {
+      renderCheckReport({ ...emptyReport(), warning: 'ok' }, container);
+
+      expect(container.querySelector('.notification.is-warning')).toBeNull();
+    });
+  });
+
+  describe('tallies', () => {
+    it('lists words with their counts', () => {
+      renderCheckReport(
+        { ...emptyReport(), words: [['bonjour', 2, ''], ['manon', 1, '']] },
+        container
+      );
+
+      const items = Array.from(container.querySelectorAll('.wordlist li')).map(li => li.textContent);
+      expect(items).toEqual(['[bonjour] — 2', '[manon] — 1']);
+    });
+
+    it('calls out a word that is already saved', () => {
+      renderCheckReport(
+        { ...emptyReport(), words: [['bonjour', 1, 'hello'], ['manon', 1, '']] },
+        container
+      );
+
+      const saved = container.querySelectorAll('.wordlist .has-text-danger');
+      expect(saved).toHaveLength(1);
+      expect(saved[0].textContent).toBe('[bonjour] — 1 — hello');
+    });
+
+    it('lists expressions and non-words with totals', () => {
+      renderCheckReport(
+        {
+          ...emptyReport(),
+          multiWords: [['bon jour', 1, 'good day']],
+          nonWords: [['.', 3]]
+        },
+        container
+      );
+
+      expect(container.querySelector('.expressionlist li')?.textContent)
+        .toBe('[bon jour] — 1 — good day');
+      expect(container.querySelector('.nonwordlist li')?.textContent).toBe('[.] — 3');
+      expect(container.textContent).toContain('TOTAL: 1');
+    });
+
+    it('marks list items rtl for a right-to-left language', () => {
+      renderCheckReport(
+        { ...emptyReport(), words: [['שלום', 1, '']], rtlScript: true },
+        container
+      );
+
+      expect(container.querySelector('.wordlist li[dir="rtl"]')).not.toBeNull();
+    });
+  });
+
+  describe('untrusted term text', () => {
+    it('renders a term containing markup as text, not markup', () => {
+      renderCheckReport(
+        { ...emptyReport(), words: [['<img src=x onerror=alert(1)>', 1, '']] },
+        container
+      );
+
+      expect(container.querySelector('img')).toBeNull();
+      expect(container.textContent).toContain('<img src=x onerror=alert(1)>');
+    });
+
+    it('renders a preview containing markup as text', () => {
+      renderCheckReport({ ...emptyReport(), preview: '<script>bad()</script>' }, container);
+
+      expect(container.querySelector('script')).toBeNull();
+      expect(container.textContent).toContain('<script>bad()</script>');
+    });
+  });
+
+  it('replaces a previous report rather than appending to it', () => {
+    renderCheckReport({ ...emptyReport(), sentences: ['Old.'] }, container);
+    renderCheckReport({ ...emptyReport(), sentences: ['New.'] }, container);
+
+    const items = Array.from(container.querySelectorAll('ol li')).map(li => li.textContent);
+    expect(items).toEqual(['New.']);
   });
 });

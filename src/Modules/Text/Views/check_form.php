@@ -40,8 +40,18 @@ $languagesOptionTyped = $languagesOption;
 
 <h2 class="title is-4"><?= __e('text.check.heading') ?></h2>
 
-<form class="validate" action="/text/check" method="post">
+<!--
+    Checking goes through POST /api/v1/texts/check (#262), so the form carries
+    no action of its own and the report renders in place.
+-->
+<form class="validate"
+      x-data="textCheckForm"
+      @submit="handleSubmit($event)">
     <?php echo \Lwt\Shared\UI\Helpers\FormHelper::csrfField(); ?>
+
+    <div x-show="hasError()" class="notification is-danger" x-cloak>
+        <span x-text="error"></span>
+    </div>
     <div class="box">
         <!-- Language -->
         <div class="field is-horizontal">
@@ -110,12 +120,15 @@ $languagesOptionTyped = $languagesOption;
             </button>
         </div>
         <div class="control">
-            <button type="submit" name="op" value="Check" class="button is-primary">
+            <button type="submit" class="button is-primary" :disabled="checking">
                 <span class="icon is-small">
                     <?php echo IconHelper::render('check', ['alt' => 'Check']); ?>
                 </span>
-                <span><?= __e('text.common.check') ?></span>
+                <span x-text="submitLabel()"><?= __e('text.common.check') ?></span>
             </button>
         </div>
     </div>
+
+    <!-- The parse report renders here once the API answers. -->
+    <div id="check_text" x-show="hasReport" x-cloak class="content mt-5"></div>
 </form>

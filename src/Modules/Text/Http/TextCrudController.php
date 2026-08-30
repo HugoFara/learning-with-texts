@@ -80,32 +80,6 @@ class TextCrudController extends BaseController
             $currentLang = $resolved > 0 ? (string) $resolved : '';
         }
 
-        $op = $this->param('op');
-        if ($op !== '') {
-            $noPagestart = (substr($op, -8) == 'and Open');
-            if (!$noPagestart) {
-                PageLayoutHelper::renderPageStart('Texts', true);
-            }
-            $result = $this->handleTextOperation($op, $noPagestart, $currentLang);
-            if ($result instanceof RedirectResponse) {
-                return $result;
-            }
-            if ($result['redirect']) {
-                return null;
-            }
-            // Ensure page structure exists for error messages
-            if ($noPagestart) {
-                PageLayoutHelper::renderPageStart('Texts', true);
-            }
-            if (isset($result['message']) && $result['message'] !== '') {
-                echo '<p class="notification is-danger">'
-                    . htmlspecialchars($result['message'], ENT_QUOTES, 'UTF-8')
-                    . '</p>';
-            }
-            PageLayoutHelper::renderPageEnd();
-            return null;
-        }
-
         PageLayoutHelper::renderPageStart('Texts', true);
         $this->showNewTextForm((int) $currentLang);
         PageLayoutHelper::renderPageEnd();
@@ -127,31 +101,6 @@ class TextCrudController extends BaseController
         $currentLang = Validation::language(
             InputValidator::getStringWithDb("filterlang", 'currentlanguage')
         );
-
-        $op = $this->param('op');
-        if ($op !== '') {
-            $noPagestart = (substr($op, -8) == 'and Open');
-            if (!$noPagestart) {
-                PageLayoutHelper::renderPageStart('Texts', true);
-            }
-            $result = $this->handleTextOperation($op, $noPagestart, $currentLang);
-            if ($result instanceof RedirectResponse) {
-                return $result;
-            }
-            if ($result['redirect']) {
-                return null;
-            }
-            if ($noPagestart) {
-                PageLayoutHelper::renderPageStart('Texts', true);
-            }
-            if (isset($result['message']) && $result['message'] !== '') {
-                echo '<p class="notification is-danger">'
-                    . htmlspecialchars($result['message'], ENT_QUOTES, 'UTF-8')
-                    . '</p>';
-            }
-            PageLayoutHelper::renderPageEnd();
-            return null;
-        }
 
         PageLayoutHelper::renderPageStart('Texts', true);
         $this->showEditTextForm($id);
@@ -239,26 +188,12 @@ class TextCrudController extends BaseController
 
         $delId = $this->paramInt('del');
         $archId = $this->paramInt('arch');
-        $op = $this->param('op');
         if ($delId !== null) {
             $delResult = $this->textService->deleteText($delId);
             $message = "Text deleted: {$delResult['sentences']} sentences, {$delResult['textItems']} text items";
         } elseif ($archId !== null) {
             $archResult = $this->textService->archiveText($archId);
             $message = "Text archived: {$archResult['sentences']} sentences, {$archResult['textItems']} text items";
-        } elseif ($op !== '') {
-            $result = $this->handleTextOperation(
-                $op,
-                $noPagestart,
-                $currentLang
-            );
-            if ($result instanceof RedirectResponse) {
-                return $result;
-            }
-            $message .= ($message ? " / " : "") . $result['message'];
-            if ($result['redirect']) {
-                return null;
-            }
         }
 
         $this->showTextsList($currentLang, $message);
@@ -330,55 +265,6 @@ class TextCrudController extends BaseController
         }
 
         return $message;
-    }
-
-    /**
-     * Handle the text editor's "Check" button.
-     *
-     * Saving moved to POST /api/v1/texts and PUT /api/v1/texts/{id} (#262), so
-     * `Save`, `Save and Open`, `Change` and `Change and Open` no longer arrive
-     * here — nor does the subtitle upload the save path used to accept, which
-     * file_import.ts has parsed in the browser for some time.
-     *
-     * "Check" stays a form POST because it renders a parsing report of whatever
-     * is in the box rather than saving anything, and that report is
-     * server-rendered HTML. The button names this route with formaction, so the
-     * form itself carries no action.
-     *
-     * @param string     $op          Operation name
-     * @param bool       $noPagestart Whether to skip page start
-     * @param string|int $currentLang Current language ID
-     *
-     * @return array{message: string, redirect: bool}|RedirectResponse
-     */
-    public function handleTextOperation(
-        string $op,
-        bool $noPagestart,
-        string|int $currentLang
-    ): array|RedirectResponse {
-        if ($op !== 'Check') {
-            return ['message' => '', 'redirect' => false];
-        }
-
-        $txText = $this->param('TxText');
-        $txLgId = $this->paramInt('TxLgID', 0) ?? 0;
-
-        if (!$this->textService->validateTextLength($txText)) {
-            return [
-                'message' => __('text.flash.error_prefix', ['message' => __('text.flash.text_too_long')]),
-                'redirect' => false,
-            ];
-        }
-
-        echo '<p><input type="button" value="&lt;&lt; Back" data-action="history-back" /></p>';
-        $this->textService->checkText(
-            StringUtils::removeSoftHyphens($txText),
-            $txLgId
-        );
-        echo '<p><input type="button" value="&lt;&lt; Back" data-action="history-back" /></p>';
-        PageLayoutHelper::renderPageEnd();
-
-        return ['message' => '', 'redirect' => true];
     }
 
     /**

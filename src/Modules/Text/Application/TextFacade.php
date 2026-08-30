@@ -22,7 +22,6 @@ namespace Lwt\Modules\Text\Application;
 
 use Lwt\Shared\Infrastructure\Utilities\StringUtils;
 use Lwt\Shared\Infrastructure\Database\Connection;
-use Lwt\Shared\Infrastructure\Database\Escaping;
 use Lwt\Shared\Infrastructure\Database\Maintenance;
 use Lwt\Shared\Infrastructure\Database\QueryBuilder;
 use Lwt\Shared\Infrastructure\Database\Settings;
@@ -430,8 +429,8 @@ class TextFacade
     /**
      * Get text parsing preview (sentences, words, unknown percent).
      *
-     * Returns parsing statistics without saving. Use this for new code.
-     * TextService::checkText() is kept for BC (outputs HTML directly).
+     * Returns parsing statistics without saving. For the full report the
+     * check page renders, see {@see checkTextReport()}.
      */
     public function getParsingPreview(string $text, int $languageId): array
     {
@@ -710,20 +709,20 @@ class TextFacade
     }
 
     /**
-     * Check text for parsing without saving (outputs HTML).
+     * Build the "check a text" report as data, without saving.
      *
      * @param string $text Text to check
      * @param int    $lgId Language ID
      *
-     * @return void
+     * @return array{preview: string, sentences: list<string>,
+     *         words: list<array{0: string, 1: int, 2: string}>,
+     *         nonWords: list<array{0: string, 1: int}>,
+     *         multiWords: list<array{0: string, 1: int, 2: string}>,
+     *         rtlScript: bool, warning: string}
      */
-    public function checkText(string $text, int $lgId): void
+    public function checkTextReport(string $text, int $lgId): array
     {
-        if (strlen(Escaping::prepareTextdata($text)) > 65000) {
-            echo "<p>Error: Text too long, must be below 65000 Bytes.</p>";
-        } else {
-            TextParsing::parseAndDisplayPreview($text, $lgId);
-        }
+        return TextParsing::checkTextReport($text, $lgId);
     }
 
     /**

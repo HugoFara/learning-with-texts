@@ -26,8 +26,6 @@ namespace Lwt\Views\Text;
 use Lwt\Shared\UI\Helpers\IconHelper;
 use Lwt\Shared\UI\Helpers\SearchableSelectHelper;
 
-// Form action URL - posts back to the same RESTful route
-
 // Type-safe variable extraction from controller context
 /**
  * @var int
@@ -50,12 +48,24 @@ $languagesTyped = $languages;
 ?>
 <h2 class="title is-4"><?= __e('text.edit.heading_archived') ?></h2>
 
+<script type="application/json" id="archived-text-config"><?php
+echo json_encode(['textId' => $textIdTyped], JSON_HEX_TAG | JSON_HEX_AMP);
+?></script>
+
+<!--
+    Saving goes through PUT /api/v1/texts/archived/{id} (#262), so the form
+    carries no action of its own.
+-->
 <form
     class="validate"
-    action="/text/archived/<?php echo $textIdTyped; ?>/edit#rec<?php echo $textIdTyped; ?>"
-    method="post">
+    x-data="archivedTextForm"
+    @submit="handleSubmit($event)">
     <?php echo \Lwt\Shared\UI\Helpers\FormHelper::csrfField(); ?>
     <input type="hidden" name="TxID" value="<?php echo $textIdTyped; ?>" />
+
+    <div x-show="hasSaveError()" class="notification is-danger" x-cloak>
+        <span x-text="saveError"></span>
+    </div>
 
     <div class="box">
         <!-- Language -->
@@ -242,7 +252,7 @@ $languagesTyped = $languages;
             </button>
         </div>
         <div class="control">
-            <button type="submit" name="op" value="Change" class="button is-primary">
+            <button type="submit" class="button is-primary" :disabled="saving">
                 <span class="icon is-small">
                     <?php echo IconHelper::render('save', ['alt' => 'Save']); ?>
                 </span>

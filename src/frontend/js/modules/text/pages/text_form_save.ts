@@ -125,3 +125,35 @@ export async function saveTextForm(
     error: '',
   };
 }
+
+/**
+ * Save the archived text editor's form through the API.
+ *
+ * The archived editor shares the active editor's field names, so it shares
+ * the payload reader; only the endpoint differs, because an archived text is
+ * saved without being reparsed.
+ *
+ * @param form   The archived text editor form
+ * @param textId Archived text ID to update
+ * @returns Where the save ended up, or a message to show
+ */
+export async function saveArchivedTextForm(
+  form: HTMLFormElement,
+  textId: number
+): Promise<TextSaveOutcome> {
+  const response = await TextsApi.updateArchived(textId, readTextForm(form));
+
+  if (response.error || !response.data) {
+    return {
+      textId: null,
+      bookId: null,
+      error: response.error ?? 'Could not save the text.',
+    };
+  }
+
+  return {
+    textId: response.data.textId,
+    bookId: null,
+    error: '',
+  };
+}

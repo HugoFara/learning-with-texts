@@ -5,7 +5,7 @@
  * @since   3.4.0
  */
 
-import { apiDelete, apiGet, apiPut, type ApiResponse } from '@shared/api/client';
+import { apiDelete, apiGet, apiPost, apiPut, type ApiResponse } from '@shared/api/client';
 
 /** A local dictionary as the list endpoint returns it. */
 export interface LocalDictionary {
@@ -32,6 +32,11 @@ export interface LocalDictionaryMutationResponse {
   error?: string;
 }
 
+/** Envelope returned by `POST /local-dictionaries`. */
+export interface LocalDictionaryCreateResponse extends LocalDictionaryMutationResponse {
+  dictionary?: LocalDictionary;
+}
+
 /** Local dictionary API methods. */
 export const LocalDictionariesApi = {
   /**
@@ -44,6 +49,25 @@ export const LocalDictionariesApi = {
   async list(languageId: number): Promise<ApiResponse<LocalDictionaryListResponse>> {
     return apiGet<LocalDictionaryListResponse>('/local-dictionaries', {
       language_id: languageId
+    });
+  },
+
+  /**
+   * Create an empty dictionary for a language.
+   *
+   * @param languageId Language to attach the dictionary to
+   * @param name       Dictionary name
+   *
+   * @returns Promise with the outcome and, on success, the created dictionary
+   */
+  async create(
+    languageId: number,
+    name: string
+  ): Promise<ApiResponse<LocalDictionaryCreateResponse>> {
+    return apiPost<LocalDictionaryCreateResponse>('/local-dictionaries', {
+      language_id: languageId,
+      name,
+      source_format: 'csv'
     });
   },
 

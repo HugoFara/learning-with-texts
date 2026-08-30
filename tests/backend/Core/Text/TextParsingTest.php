@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
  *
  * Tests the core text processing pipeline including:
  * - TextParsing::splitIntoSentences() - split text into sentences
- * - TextParsing::parseAndDisplayPreview() - parse and preview text
+ * - TextParsing::checkTextReport() - report on a parse without saving
  * - TextParsing::parseAndSave() - parse and save text to database
  * - Character substitutions
  * - Language-specific processing
@@ -320,20 +320,17 @@ class TextParsingTest extends TestCase
     }
 
     /**
-     * Test parseAndDisplayPreview check mode
+     * Test checkTextReport previews the text it was given
      */
-    public function testParseAndDisplayPreviewCheckMode(): void
+    public function testCheckTextReportPreviewsTheText(): void
     {
+        $report = TextParsing::checkTextReport("Test sentence.", self::$testLanguageId);
 
-        // parseAndDisplayPreview outputs HTML and returns void
-        $text = "Test sentence.";
-
-        // Capture the HTML output
-        ob_start();
-        TextParsing::parseAndDisplayPreview($text, self::$testLanguageId);
-        $output = ob_get_clean();
-
-        $this->assertStringContainsString('Test sentence', $output, 'Output should contain the text');
+        $this->assertStringContainsString(
+            'Test sentence',
+            $report['preview'],
+            'Report should preview the text'
+        );
     }
 
     /**

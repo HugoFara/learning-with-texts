@@ -143,11 +143,6 @@ function registerRoutes(Router $router): void
         'Lwt\\Modules\\Text\\Http\\TextController@archivedEdit',
         AUTH_MIDDLEWARE
     );
-    $router->post(
-        '/text/archived/{id:int}/edit',
-        'Lwt\\Modules\\Text\\Http\\TextController@archivedEdit',
-        AUTH_MIDDLEWARE
-    );
 
     // Delete archived text (RESTful route): DELETE /text/archived/123
     $router->delete(
@@ -483,11 +478,6 @@ function registerRoutes(Router $router): void
 
     // RESTful routes: /languages/{id}/dictionaries
     $router->get(
-        '/languages/{id:int}/dictionaries',
-        'Lwt\\Modules\\Dictionary\\Http\\DictionaryController@index',
-        AUTH_MIDDLEWARE
-    );
-    $router->post(
         '/languages/{id:int}/dictionaries',
         'Lwt\\Modules\\Dictionary\\Http\\DictionaryController@index',
         AUTH_MIDDLEWARE

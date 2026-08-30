@@ -57,50 +57,6 @@ class TextParsing
     }
 
     /**
-     * Parse text and display preview HTML for validation.
-     *
-     * Outputs HTML directly to show parsed sentences and word statistics.
-     *
-     * @param string $text Text to parse
-     * @param int    $lid  Language ID
-     *
-     * @return void
-     */
-    public static function parseAndDisplayPreview(string $text, int $lid): void
-    {
-        $record = QueryBuilder::table('languages')
-            ->select(['LgRightToLeft'])
-            ->where('LgID', '=', $lid)
-            ->firstPrepared();
-
-        if ($record === null) {
-            throw DatabaseException::recordNotFound('languages', 'LgID', $lid);
-        }
-        $rtlScript = (bool)$record['LgRightToLeft'];
-
-        $pre = self::preprocess($text, $lid);
-        if ($pre === null) {
-            return;
-        }
-        [$ptext, $isMecab, $record] = $pre;
-
-        // Preview HTML is shown before word splitting.
-        $tokens = self::tokenizeWithOptedInParser($ptext, $record);
-        if ($tokens !== null) {
-            StandardTextParser::echoPreview($ptext, $lid);
-        } elseif ($isMecab) {
-            JapaneseTextParser::displayJapanesePreview($ptext);
-            $tokens = JapaneseTextParser::tokenize($ptext);
-        } else {
-            StandardTextParser::echoPreview($ptext, $lid);
-            $tokens = StandardTextParser::tokenize($ptext, $lid);
-        }
-
-        TokenPersistence::echoCheckValid($tokens, $lid);
-        TokenPersistence::echoStatistics($tokens, $lid, $rtlScript);
-    }
-
-    /**
      * Parse text and save to database.
      *
      * @param string $text   Text to parse
@@ -130,6 +86,57 @@ class TextParsing
 
         $tokens = self::tokenize($text, $lid);
         TokenPersistence::save($tokens, $lid, $textId);
+    }
+
+    /**
+     * Build the full "check a text" report without saving anything.
+     *
+     * The data behind the report the check page used to receive as
+     * server-rendered HTML, so the page can render it from the API instead
+     * (#262, #266). Returns the same tokenization the import would perform,
+     * so what the report shows is what a save would store.
+     *
+     * @param string $text Text to parse
+     * @param int    $lid  Language ID
+     *
+     * @return array{preview: string, sentences: list<string>,
+     *         words: list<array{0: string, 1: int, 2: string}>,
+     *         nonWords: list<array{0: string, 1: int}>,
+     *         multiWords: list<array{0: string, 1: int, 2: string}>,
+     *         rtlScript: bool, warning: string}
+     *
+     * @throws DatabaseException If the language does not exist
+     */
+    public static function checkTextReport(string $text, int $lid): array
+    {
+        $record = QueryBuilder::table('languages')
+            ->select(['LgRightToLeft'])
+            ->where('LgID', '=', $lid)
+            ->firstPrepared();
+
+        if ($record === null) {
+            throw DatabaseException::recordNotFound('languages', 'LgID', $lid);
+        }
+        $rtlScript = (bool) $record['LgRightToLeft'];
+
+        $pre = self::preprocess($text, $lid);
+        if ($pre === null) {
+            throw DatabaseException::recordNotFound('languages', 'LgID', $lid);
+        }
+        [$ptext, $isMecab, $langRecord] = $pre;
+
+        // The preview shows the text as the parser sees it, before word
+        // splitting — the same point the old echoPreview() printed from.
+        $tokens = self::tokenizeWithOptedInParser($ptext, $langRecord);
+        if ($tokens === null && $isMecab) {
+            $preview = JapaneseTextParser::previewText($ptext);
+            $tokens = JapaneseTextParser::tokenize($ptext);
+        } else {
+            $preview = StandardTextParser::previewText($ptext, $lid) ?? $ptext;
+            $tokens ??= StandardTextParser::tokenize($ptext, $lid);
+        }
+
+        return ['preview' => $preview] + TokenPersistence::report($tokens, $lid, $rtlScript);
     }
 
     /**
