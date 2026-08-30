@@ -35,6 +35,7 @@ import '@/media';
 import './pages/text_list';
 import './pages/texts_grouped_app';
 import './pages/archived_texts_grouped_app';
+import './pages/archived_text_form';
 import './pages/text_status_chart';
 import './pages/youtube_import';
 import './pages/webpage_import';

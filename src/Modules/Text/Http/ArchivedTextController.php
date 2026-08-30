@@ -83,7 +83,6 @@ class ArchivedTextController extends BaseController
 
         $delId = $this->paramInt('del');
         $unarchId = $this->paramInt('unarch');
-        $op = $this->param('op');
         if ($delId !== null) {
             $message = $this->textService->deleteArchivedText($delId);
         } elseif ($unarchId !== null) {
@@ -93,18 +92,6 @@ class ArchivedTextController extends BaseController
             } else {
                 $message = $result['error'] ?? 'Failed to unarchive text';
             }
-        } elseif ($op == 'Change') {
-            $txId = $this->paramInt('TxID', 0) ?? 0;
-            $affected = $this->textService->updateArchivedText(
-                $txId,
-                $this->paramInt('TxLgID', 0) ?? 0,
-                $this->param('TxTitle'),
-                $this->param('TxText'),
-                $this->param('TxAudioURI'),
-                $this->param('TxSourceURI')
-            );
-            $message = "Updated: {$affected}";
-            TagsFacade::saveArchivedTextTagsFromForm($txId);
         }
 
         $chgId = $this->paramInt('chg');
@@ -140,24 +127,6 @@ class ArchivedTextController extends BaseController
     public function archivedEdit(int $id): ?RedirectResponse
     {
         PageLayoutHelper::renderPageStart('Archived Texts', true);
-
-        $message = '';
-
-        $op = $this->param('op');
-        if ($op == 'Change') {
-            $txId = $this->paramInt('TxID', 0) ?? 0;
-            $affected = $this->textService->updateArchivedText(
-                $txId,
-                $this->paramInt('TxLgID', 0) ?? 0,
-                $this->param('TxTitle'),
-                $this->param('TxText'),
-                $this->param('TxAudioURI'),
-                $this->param('TxSourceURI')
-            );
-            $message = "Updated: {$affected}";
-            TagsFacade::saveArchivedTextTagsFromForm($txId);
-            PageLayoutHelper::renderMessage($message, false);
-        }
 
         $textId = $id;
         $record = $this->textService->getArchivedTextById($textId);

@@ -356,6 +356,30 @@ export const TextsApi = {
   },
 
   /**
+   * Update an archived text.
+   *
+   * Archived texts carry no sentences or word occurrences, so unlike
+   * {@link update} this saves the row without reparsing it.
+   *
+   * @param textId Archived text ID to update
+   * @param data   Text fields
+   * @returns Promise with the saved text ID or error
+   */
+  async updateArchived(
+    textId: number,
+    data: TextCreateRequest
+  ): Promise<ApiResponse<TextSaveResponse>> {
+    return apiPut<TextSaveResponse>(`/texts/archived/${textId}`, {
+      title: data.title,
+      language_id: data.langId,
+      text: data.text,
+      source_uri: data.sourceUri,
+      audio_uri: data.audioUri,
+      tags: data.tags
+    });
+  },
+
+  /**
    * Update display mode for text reading.
    *
    * @param textId Text ID
