@@ -14,7 +14,7 @@
  * The term rows themselves are fetched by the bulkTranslateApp component from
  * GET /api/v1/terms/unknown-for-translate.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views
@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace Lwt\Views\Word;
 
 use Lwt\Shared\UI\Helpers\IconHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 // Type assertions for variables passed from controller
 assert(is_int($tid));
@@ -42,15 +43,14 @@ $altMarkNone = __('vocabulary.multi.mark_none');
 $lblChangeStatus = htmlspecialchars(__('vocabulary.bulk.change_status'), ENT_QUOTES, 'UTF-8');
 
 ?>
-<script type="application/json" id="bulk-translate-config">
-<?php echo json_encode([
+<?php ConfigIsland::render('bulk-translate-config', [
     'dictionaries' => $dictionaries,
     'sourceLanguage' => $sl,
     'targetLanguage' => $tl,
     'textId' => $tid,
     'offset' => $pos,
     'limit' => $limit
-], JSON_HEX_TAG | JSON_HEX_AMP); ?></script>
+]); ?>
 <script type="text/javascript"
         src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 

@@ -10,7 +10,7 @@
  * Variables expected:
  * - $bookId: int - The book being shown
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Book\Views
@@ -26,6 +26,7 @@ namespace Lwt\Views\Book;
 
 use Lwt\Shared\UI\Helpers\IconHelper;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 $actions = [
     ['url' => '/books', 'label' => __('book.all_books'), 'icon' => 'library'],
@@ -33,9 +34,7 @@ $actions = [
 ];
 ?>
 
-<script type="application/json" id="book-detail-config"><?php
-echo json_encode(['bookId' => $bookId], JSON_HEX_TAG | JSON_HEX_AMP);
-?></script>
+<?php ConfigIsland::render('book-detail-config', ['bookId' => $bookId]); ?>
 
 <div x-data="bookDetail" x-init="init()">
 

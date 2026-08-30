@@ -3,7 +3,7 @@
 /**
  * Feed Facade
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Feed\Application
@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Feed\Application;
 
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Modules\Feed\Application\Services\ArticleExtractor;
 use Lwt\Modules\Feed\Application\Services\RssParser;
 use Lwt\Modules\Feed\Application\UseCases\CreateFeed;
@@ -34,6 +33,7 @@ use Lwt\Modules\Feed\Domain\ArticleRepositoryInterface;
 use Lwt\Modules\Feed\Domain\Feed;
 use Lwt\Modules\Feed\Domain\FeedRepositoryInterface;
 use Lwt\Modules\Feed\Domain\TextCreationInterface;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 /**
  * Facade providing backward-compatible interface to Feed module.
@@ -842,12 +842,10 @@ class FeedFacade
         $config = $this->getFeedLoadConfig($currentFeed, $checkAutoupdate);
 
         // Output JSON config for Alpine component
-        echo '<script type="application/json" id="feed-loader-config">';
-        echo json_encode([
+        ConfigIsland::render('feed-loader-config', [
             'feeds' => $config['feeds'],
-            'redirectUrl' => $redirectUrl
-        ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
-        echo '</script>';
+            'redirectUrl' => $redirectUrl,
+        ]);
 
         // Alpine.js component wrapper
         echo '<div x-data="feedLoader()">';

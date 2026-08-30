@@ -7,7 +7,7 @@
  * home page. Kept in a separate file so the view itself only
  * contains side-effect HTML output, satisfying PSR-12.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Home\Views
@@ -24,6 +24,7 @@ namespace Lwt\Modules\Home\Views;
 use Lwt\Shared\Infrastructure\ApplicationInfo;
 use Lwt\Shared\Infrastructure\Database\Settings;
 use Lwt\Shared\Infrastructure\Globals;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 /**
  * When on a WordPress server, render a logout button.
@@ -76,11 +77,7 @@ function renderHomeConfig(?array $lastTextInfo, string $base, int $textCount, in
         'currentLanguageId' => $currentlang,
         'checkForUpdates' => $checkForUpdates,
     ];
-    ?>
-<script type="application/json" id="home-warnings-config">
-    <?php echo json_encode($config, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?>
-</script>
-    <?php
+    ConfigIsland::render('home-warnings-config', $config);
 }
 
 /**

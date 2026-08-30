@@ -9,6 +9,7 @@ use Lwt\Modules\Language\Application\LanguageFacade;
 use Lwt\Shared\Infrastructure\Database\Validation;
 use Lwt\Shared\Infrastructure\Http\InputValidator;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 /**
  * Controller for feed loading/importing operations.
@@ -51,12 +52,10 @@ class FeedLoadController
         $config = $this->feedFacade->getFeedLoadConfig($currentFeed, $checkAutoupdate);
 
         // Output JSON config for Alpine component
-        echo '<script type="application/json" id="feed-loader-config">';
-        echo json_encode([
+        ConfigIsland::render('feed-loader-config', [
             'feeds' => $config['feeds'],
             'redirectUrl' => $redirectUrl,
-        ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
-        echo '</script>';
+        ]);
 
         // Alpine.js component wrapper
         echo '<div x-data="feedLoader()">';

@@ -9,7 +9,7 @@
  * - $service: TagsFacade instance
  * - $formFieldPrefix: 'Tg' or 'T2'
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views
@@ -27,6 +27,7 @@ namespace Lwt\Modules\Tags\Views;
 
 use Lwt\Shared\UI\Helpers\IconHelper;
 use Lwt\Modules\Tags\Application\TagsFacade;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 /**
  * @var string $mode
@@ -59,14 +60,12 @@ $tagType = $formFieldPrefix === 'T2' ? 'text' : 'term';
 ?>
 <h2 class="title is-4"><?php echo $pageTitle; ?></h2>
 
-<script type="application/json" id="tag-form-config">
-<?php echo json_encode([
+<?php ConfigIsland::render('tag-form-config', [
     'type' => $tagType,
     'isEdit' => $isEdit,
     'tagId' => $tagId,
     'baseUrl' => $baseUrl,
-], JSON_HEX_TAG | JSON_HEX_AMP); ?>
-</script>
+]); ?>
 
 <form name="<?php echo $formName; ?>" class="validate"
       x-data="tagFormApp" @submit.prevent="save()">

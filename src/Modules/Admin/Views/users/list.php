@@ -9,7 +9,7 @@
  * Variables expected:
  * - $data: array carrying the initial search/sort/direction
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views\Admin
@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace Lwt\Views\Admin;
 
 use Lwt\Shared\UI\Helpers\IconHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 /** @var array<string, mixed> $data */
 $data = is_array($data ?? null) ? $data : [];
@@ -35,13 +36,11 @@ $searchPlaceholder = htmlspecialchars(__('admin.users_search_placeholder'), ENT_
 $titleEdit = htmlspecialchars(__('admin.users_action_edit'), ENT_QUOTES, 'UTF-8');
 $titleDelete = htmlspecialchars(__('admin.users_action_delete'), ENT_QUOTES, 'UTF-8');
 ?>
-<script type="application/json" id="user-list-config">
-<?php echo json_encode([
+<?php ConfigIsland::render('user-list-config', [
     'search' => $search,
     'sort' => $sort,
     'dir' => $dir,
-], JSON_HEX_TAG | JSON_HEX_AMP); ?>
-</script>
+]); ?>
 
 <div class="container" x-data="userManagement">
 

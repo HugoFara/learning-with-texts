@@ -9,7 +9,7 @@
  * - Create/edit feed forms
  * - Bulk actions
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views
@@ -25,13 +25,14 @@ namespace Lwt\Views\Feed;
 
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 use Lwt\Shared\UI\Helpers\IconHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
-$managerConfig = json_encode([
+$managerConfig = [
     'currentLanguageId' => $currentLanguageId ?? 0,
     'currentLanguageName' => $currentLanguageName ?? '',
-], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT);
+];
 ?>
-<script type="application/json" id="feed-manager-config"><?php echo $managerConfig; ?></script>
+<?php ConfigIsland::render('feed-manager-config', $managerConfig); ?>
 
 <!-- Notifications -->
 <div

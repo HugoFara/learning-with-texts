@@ -13,7 +13,7 @@
  * - $currentlang: int - Currently selected language ID
  * - $perPage: int - Terms per page setting
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views
@@ -31,6 +31,7 @@ namespace Lwt\Views\Word;
 
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 use Lwt\Shared\UI\Helpers\IconHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 /** @var int $currentlang */
 /** @var int $perPage */
@@ -745,11 +746,11 @@ echo PageLayoutHelper::buildActionCard([
 </div>
 
 <!-- Config for Alpine - pass active language and per-page setting -->
-<script type="application/json" id="word-list-config"><?php echo json_encode([
+<?php ConfigIsland::render('word-list-config', [
     'activeLanguageId' => $currentlang,
     'perPage' => $perPage,
     'csrfToken' => \Lwt\Shared\UI\Helpers\FormHelper::csrfToken(),
-], JSON_HEX_TAG | JSON_HEX_AMP); ?></script>
+]); ?>
 
 <style>
     .clickedit {

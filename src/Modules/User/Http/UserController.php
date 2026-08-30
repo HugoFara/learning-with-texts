@@ -3,7 +3,7 @@
 /**
  * User Controller
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\User\Http
@@ -456,9 +456,7 @@ class UserController extends BaseController
         // TTS data
         $ttsService = new TtsService();
         $languageOptions = $ttsService->getLanguageOptions(LanguagePresets::getAll());
-        $currentLanguageCode = json_encode(
-            $ttsService->getCurrentLanguageCode(LanguagePresets::getAll())
-        );
+        $currentLanguageCode = $ttsService->getCurrentLanguageCode(LanguagePresets::getAll());
 
         $this->render(__('preferences.page_title'), true);
 

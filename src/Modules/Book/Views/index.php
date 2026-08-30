@@ -11,7 +11,7 @@
  * - $languageId: int|null - Language filter from the query string
  * - $page: int - Page number from the query string
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Book\Views
@@ -27,6 +27,7 @@ namespace Lwt\Views\Book;
 
 use Lwt\Shared\UI\Helpers\IconHelper;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 $actions = [
     ['url' => '/texts/new', 'label' => __('book.import_epub'), 'icon' => 'file-up', 'class' => 'is-primary'],
@@ -49,12 +50,10 @@ $actions = [
 
 <?php echo PageLayoutHelper::buildActionCard($actions); ?>
 
-<script type="application/json" id="book-list-config"><?php
-echo json_encode([
+<?php ConfigIsland::render('book-list-config', [
     'languageId' => $languageId ?? 0,
     'page' => $page ?? 1,
-], JSON_HEX_TAG | JSON_HEX_AMP);
-?></script>
+]); ?>
 
 <div x-data="bookList" x-init="init()">
 

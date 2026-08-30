@@ -9,7 +9,7 @@ declare(strict_types=1);
  * - $message: string - Status/error message to display
  * - $activeLanguageId: int - Currently active language ID for default expansion
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views
@@ -29,6 +29,7 @@ namespace Lwt\Views\Text;
 use Lwt\Shared\UI\Helpers\SelectOptionsBuilder;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 use Lwt\Shared\UI\Helpers\IconHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 // Type-safe variable extraction from controller context
 /**
@@ -275,9 +276,6 @@ echo PageLayoutHelper::buildActionCard(
 </div>
 
 <!-- Config for Alpine - pass active language for default expansion -->
-<script type="application/json" id="archived-texts-grouped-config"><?php echo json_encode(
-    [
+<?php ConfigIsland::render('archived-texts-grouped-config', [
     'activeLanguageId' => $activeLanguageId
-    ],
-    JSON_HEX_TAG | JSON_HEX_AMP
-); ?></script>
+    ]); ?>
