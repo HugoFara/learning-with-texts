@@ -1,7 +1,7 @@
 /**
  * Annotation Toggle - Show/hide translations and annotations in text display.
  *
- * Extracted from Views/Text/display_header.php
+ * Drives the toggle buttons in the annotated display and print views.
  *
  * @license unlicense
  * @since 3.0.0
