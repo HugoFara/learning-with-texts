@@ -7,6 +7,77 @@ ones are marked like "v1.0.0-fork".
 
 ## [Unreleased]
 
+### Added
+
+* **One emitter and one reader for the values PHP hands a page** (#301). Server
+  values reach a page as a JSON island because the CSP build of Alpine cannot
+  evaluate inline expressions. All 35 islands now go through `ConfigIsland` on
+  the PHP side and `readPageConfig()` on the TypeScript side, instead of each
+  hand-rolling its own script tag, escaping flags and parser.
+
+* **Fetched source documents are cached** (#303). `FileCache` holds the text
+  behind a difficulty preview for 24 hours, keyed by URL. Only the document is
+  shared; coverage is still computed per user.
+
+* **`npm run serve`** (#303) starts the PHP dev server with
+  `PHP_CLI_SERVER_WORKERS` set. Use it instead of a bare `php -S`, which serves
+  one request at a time.
+
+### Changed
+
+* **The annotated text view is rendered by the browser** (#302). `/text/{id}/display`
+  was the last page building content in PHP. It now fetches
+  `GET /api/v1/texts/{id}/annotation`, and three view files become one. The
+  markup is unchanged, down to the class names the show/hide buttons rely on.
+
+* **Difficulty previews no longer refetch the book every time** (#303). Each
+  preview downloaded the whole text from Gutenberg — 5.4 s, essentially all
+  network — on every page load, and the suggestion panels ask for one per book
+  they list. Cached, the same call takes 0.02 s.
+
+* **`Globals` carries only what it needs to** (#300), going from 505 lines to
+  353. What remains is the request's database handle and user context; the
+  latter is what `QueryBuilder` scopes every query by, which the class now says
+  outright. `Connection` owns the mysqli handle alone, so `Connection::reset()`
+  genuinely clears it rather than recovering a second copy.
+
+* **Documentation matches the codebase again** (#298, #301). `CLAUDE.md`
+  described directories, helpers and tables that no longer exist. 530 file
+  docblocks also claimed PHP 8.1 while `composer.json` has required `^8.2` and
+  CI tests 8.2 through 8.5.
+
+### Removed
+
+* **Server-side rendering paths nothing reaches** (#299), 800 lines: the
+  word-by-word reading pane renderer superseded by `text_renderer.ts`, three
+  review views behind an unrouted controller method, and a frameset page header
+  from before the app had no framesets.
+
+* **`Globals::table()`** (#300), which was the identity function — a leftover
+  from a table prefix that no longer exists, called in 185 places and reading as
+  though it did something. Also `Globals::query()`, a one-line forward to
+  `QueryBuilder::table()`, and an error-display flag that was never switched on.
+
+### Fixed
+
+* **Config blobs could break out of their script element** (#301). Six islands
+  passed no escaping flags at all, so a value containing `</script>` closed the
+  element early and the rest parsed as markup. `preferences.php` separately
+  hand-spliced a pre-encoded value into a JSON literal, which held only while
+  the controller remembered to encode it.
+
+* **A malformed config blob no longer kills the page** (#301). The starter
+  vocabulary page parsed without a `try`/`catch`, so a bad blob threw during
+  `init()` and left an inert shell. `readPageConfig()` falls back to the
+  caller's defaults instead.
+
+* **Two empty ruby elements per annotated text** (#302). Splitting the stored
+  annotation on newlines yields a blank entry for any trailing newline, and the
+  API reported those as terms. Affected the annotated print view as well.
+
+* **Annotation items carry their romanization** (#302), resolved for the whole
+  text in one query rather than one lookup per term.
+
 ## [3.6.0-fork] - 2026-08-30
 
 ### Added
