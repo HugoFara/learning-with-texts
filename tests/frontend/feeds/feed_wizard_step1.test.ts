@@ -1,12 +1,17 @@
 /**
- * Tests for feed_wizard_step1.ts - Feed wizard step 1 (URL entry)
+ * Tests for feed_wizard_step1.ts - the three ways into the feed wizard.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-// Mock Alpine.js
+const { stores } = vi.hoisted(() => ({ stores: {} as Record<string, unknown> }));
+
 vi.mock('alpinejs', () => ({
   default: {
-    data: vi.fn()
+    data: vi.fn(),
+    store: vi.fn((name: string, value?: unknown) => {
+      if (value !== undefined) stores[name] = value;
+      return stores[name];
+    })
   }
 }));
 
@@ -17,299 +22,253 @@ vi.mock('../../../src/frontend/js/shared/api/client', () => ({
   apiDelete: vi.fn()
 }));
 
-// Create shared mock store
-const mockStore = {
-  configure: vi.fn()
-};
-
-// Mock feed_wizard_store
-vi.mock('../../../src/frontend/js/modules/feed/stores/feed_wizard_store', () => ({
-  getFeedWizardStore: vi.fn(() => mockStore)
-}));
-
 import Alpine from 'alpinejs';
-import { feedWizardStep1Data, initFeedWizardStep1Alpine, type Step1Config } from '../../../src/frontend/js/modules/feed/components/feed_wizard_step1';
 import { apiPost } from '../../../src/frontend/js/shared/api/client';
+import { getFeedWizardStore } from '../../../src/frontend/js/modules/feed/stores/feed_wizard_store';
+import {
+  feedWizardStep1Data,
+  initFeedWizardStep1Alpine
+} from '../../../src/frontend/js/modules/feed/components/feed_wizard_step1';
+
+const CURATED = [
+  {
+    language: 'fr',
+    languageName: 'French',
+    sources: [
+      {
+        name: 'Le Monde',
+        url: 'https://lemonde.fr/rss',
+        articleSectionTags: '//article',
+        filterTags: '',
+        options: 'edit_text=1',
+        category: 'News',
+        level: 'B2'
+      }
+    ]
+  },
+  {
+    language: 'de',
+    languageName: 'German',
+    sources: [
+      {
+        name: 'Tagesschau',
+        url: 'https://tagesschau.de/rss',
+        articleSectionTags: '//main',
+        filterTags: '',
+        options: '',
+        category: 'News',
+        level: 'B1'
+      }
+    ]
+  }
+];
+
+/** Put a page config on the page. */
+function withConfig(config: Record<string, unknown>): void {
+  document.body.innerHTML =
+    `<script type="application/json" id="feed-wizard-config">${JSON.stringify(config)}</script>` +
+    '<p id="lwt_last"></p><div id="lwt_article"></div>';
+}
 
 describe('feed_wizard_step1.ts', () => {
   beforeEach(() => {
-    document.body.innerHTML = '';
     vi.clearAllMocks();
-    mockStore.configure.mockClear();
+    document.body.innerHTML = '<p id="lwt_last"></p><div id="lwt_article"></div>';
+    getFeedWizardStore().reset();
+    Object.defineProperty(window, 'location', {
+      value: { href: '' },
+      writable: true
+    });
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
-    document.body.innerHTML = '';
   });
 
-  // ===========================================================================
-  // feedWizardStep1Data Factory Tests
-  // ===========================================================================
+  describe('tabs', () => {
+    it('opens on the curated registry when there is one', () => {
+      withConfig({ curatedFeeds: CURATED });
 
-  describe('feedWizardStep1Data', () => {
-    it('creates component with default values when no config', () => {
-      const component = feedWizardStep1Data();
-
-      expect(component.config).toBeDefined();
-      expect(component.config.rssUrl).toBe('');
-      expect(component.config.hasError).toBe(false);
-      expect(component.config.editFeedId).toBe(null);
-      expect(component.rssUrl).toBe('');
+      expect(feedWizardStep1Data().activeTab).toBe('browse');
     });
 
-    it('reads config from script tag', () => {
-      const config: Step1Config = {
-        rssUrl: 'https://example.com/feed.xml',
-        hasError: true,
-        editFeedId: 5,
-        languages: [],
-        curatedFeeds: []
-      };
-      document.body.innerHTML = `
-        <script id="wizard-step1-config" type="application/json">
-          ${JSON.stringify(config)}
-        </script>
-      `;
+    it('opens on the URL tab when the registry is empty', () => {
+      withConfig({ curatedFeeds: [] });
 
-      const component = feedWizardStep1Data();
-
-      expect(component.config.rssUrl).toBe('https://example.com/feed.xml');
-      expect(component.config.hasError).toBe(true);
-      expect(component.config.editFeedId).toBe(5);
-      expect(component.rssUrl).toBe('https://example.com/feed.xml');
+      expect(feedWizardStep1Data().activeTab).toBe('wizard');
     });
 
-    it('handles invalid JSON config gracefully', () => {
-      document.body.innerHTML = `
-        <script id="wizard-step1-config" type="application/json">
-          { invalid json }
-        </script>
-      `;
+    it('preselects the language filter matching the navbar language', () => {
+      withConfig({ curatedFeeds: CURATED, currentLanguageName: 'French' });
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      const component = feedWizardStep1Data();
-
-      expect(component.config.rssUrl).toBe('');
-      expect(consoleSpy).toHaveBeenCalled();
+      expect(feedWizardStep1Data().browseLanguageFilter).toBe('fr');
     });
   });
-
-  // ===========================================================================
-  // isValidUrl Tests
-  // ===========================================================================
 
   describe('isValidUrl', () => {
-    it('returns false for empty URL', () => {
+    it.each([
+      ['', false],
+      ['http://example.com/feed', true],
+      ['https://example.com/feed.xml', true],
+      ['not a url', false],
+      ['example.com/feed.xml', false]
+    ])('judges %s as %s', (url, expected) => {
       const component = feedWizardStep1Data();
-      component.rssUrl = '';
+      component.rssUrl = url;
 
-      expect(component.isValidUrl).toBe(false);
+      expect(component.isValidUrl).toBe(expected);
+    });
+  });
+
+  describe('filteredCuratedFeeds', () => {
+    it('keeps only the filtered language', () => {
+      withConfig({ curatedFeeds: CURATED });
+      const component = feedWizardStep1Data();
+      component.browseLanguageFilter = 'de';
+
+      expect(component.filteredCuratedFeeds.map(g => g.language)).toEqual(['de']);
     });
 
-    it('returns true for valid HTTP URL', () => {
+    it('searches names, categories and URLs', () => {
+      withConfig({ curatedFeeds: CURATED });
       const component = feedWizardStep1Data();
-      component.rssUrl = 'http://example.com/feed.xml';
+      component.browseLanguageFilter = '';
+      component.browseSearch = 'tagesschau';
 
-      expect(component.isValidUrl).toBe(true);
+      expect(component.filteredCuratedFeeds).toHaveLength(1);
+      expect(component.filteredCuratedFeeds[0].sources[0].name).toBe('Tagesschau');
     });
 
-    it('returns true for valid HTTPS URL', () => {
+    it('drops groups that no longer match', () => {
+      withConfig({ curatedFeeds: CURATED });
+      const component = feedWizardStep1Data();
+      component.browseLanguageFilter = '';
+      component.browseSearch = 'nothing here';
+
+      expect(component.filteredCuratedFeeds).toEqual([]);
+    });
+  });
+
+  describe('openWizard', () => {
+    it('reads the feed and hands over to step 2', async () => {
+      withConfig({});
+      vi.mocked(apiPost).mockResolvedValue({
+        data: {
+          success: true,
+          title: 'Le Monde',
+          articleSource: '',
+          articleSources: [],
+          items: [{ index: 0, title: 'One', link: 'https://a.example/1', host: 'a.example' }]
+        },
+        error: null
+      } as never);
+
       const component = feedWizardStep1Data();
       component.rssUrl = 'https://example.com/feed.xml';
+      component.openWizard();
+      await vi.waitFor(() => expect(component.saving).toBe(false));
 
-      expect(component.isValidUrl).toBe(true);
+      expect(apiPost).toHaveBeenCalledWith('/feeds/wizard/preview', {
+        rss_url: 'https://example.com/feed.xml'
+      });
+      expect(getFeedWizardStore().currentStep).toBe(2);
     });
 
-    it('returns false for invalid URL', () => {
+    it('shows what went wrong and stays put', async () => {
+      withConfig({});
+      vi.mocked(apiPost).mockResolvedValue({
+        data: { success: false, error: 'Not a feed' },
+        error: null
+      } as never);
+
+      const component = feedWizardStep1Data();
+      component.rssUrl = 'https://example.com/nope';
+      component.openWizard();
+      await vi.waitFor(() => expect(component.saving).toBe(false));
+
+      expect(component.hasSaveError()).toBe(true);
+      expect(component.saveError).toBe('Not a feed');
+      expect(getFeedWizardStore().currentStep).toBe(1);
+    });
+
+    it('does nothing for a URL that will not parse', () => {
+      withConfig({});
       const component = feedWizardStep1Data();
       component.rssUrl = 'not a url';
 
-      expect(component.isValidUrl).toBe(false);
+      component.openWizard();
+
+      expect(apiPost).not.toHaveBeenCalled();
     });
 
-    it('returns false for URL without protocol', () => {
+    it('does nothing while a read is already in flight', () => {
+      withConfig({});
       const component = feedWizardStep1Data();
-      component.rssUrl = 'example.com/feed.xml';
+      component.rssUrl = 'https://example.com/feed.xml';
+      component.saving = true;
 
-      expect(component.isValidUrl).toBe(false);
+      component.openWizard();
+
+      expect(apiPost).not.toHaveBeenCalled();
     });
   });
 
-  // ===========================================================================
-  // init() Tests
-  // ===========================================================================
-
-  describe('init()', () => {
-    it('configures store with step 1', () => {
-      const component = feedWizardStep1Data();
-
-      component.init();
-
-      expect(mockStore.configure).toHaveBeenCalledWith({
-        step: 1,
-        rssUrl: '',
-        editFeedId: null
-      });
+  describe('addCuratedFeed', () => {
+    beforeEach(() => {
+      withConfig({ curatedFeeds: CURATED, currentLanguageId: 4 });
     });
 
-    it('configures store with config values', () => {
-      const config: Step1Config = {
-        rssUrl: 'https://test.com/feed',
-        hasError: false,
-        editFeedId: 10,
-        languages: [],
-        curatedFeeds: []
-      };
-      document.body.innerHTML = `
-        <script id="wizard-step1-config" type="application/json">
-          ${JSON.stringify(config)}
-        </script>
-      `;
-
-      const component = feedWizardStep1Data();
-      component.init();
-
-      expect(mockStore.configure).toHaveBeenCalledWith({
-        step: 1,
-        rssUrl: 'https://test.com/feed',
-        editFeedId: 10
-      });
-    });
-  });
-
-  // ===========================================================================
-  // addCuratedFeed() Tests
-  // ===========================================================================
-
-  describe('addCuratedFeed()', () => {
-    const source = {
-      name: 'Tagesschau',
-      url: 'https://example.com/rss',
-      articleSectionTags: '//div',
-      filterTags: '//aside',
-      options: 'edit_text=1'
-    };
-
-    /**
-     * Put a step 1 config carrying a current language on the page.
-     */
-    function withCurrentLanguage(id: number): void {
-      const config: Partial<Step1Config> = {
-        rssUrl: '',
-        hasError: false,
-        editFeedId: null,
-        languages: [],
-        curatedFeeds: [],
-        currentLanguageId: id,
-        currentLanguageName: 'Deutsch'
-      };
-      document.body.innerHTML = `
-        <script id="wizard-step1-config" type="application/json">
-          ${JSON.stringify(config)}
-        </script>
-      `;
-    }
-
-    /**
-     * This used to fill a hidden form and submit it to /feeds/new after a
-     * $nextTick; it calls the API directly now, so there is no hidden form and
-     * no timing dependency left to get wrong.
-     */
     it('creates the feed through the API', async () => {
-      vi.mocked(apiPost).mockResolvedValue({ data: { success: true, feed: { id: 4 } } });
-      withCurrentLanguage(3);
+      vi.mocked(apiPost).mockResolvedValue({
+        data: { success: true, feed: { id: 42 } },
+        error: null
+      } as never);
 
       const component = feedWizardStep1Data();
-      component.addCuratedFeed(source);
-      await vi.waitFor(() => expect(apiPost).toHaveBeenCalled());
+      component.selectedUrls = ['https://lemonde.fr/rss'];
+      component.addSelectedFeeds();
+      await vi.waitFor(() => expect(window.location.href).toBe('/feeds/42/edit'));
 
       expect(apiPost).toHaveBeenCalledWith('/feeds', expect.objectContaining({
-        langId: 3,
-        name: 'Tagesschau',
-        sourceUri: 'https://example.com/rss',
-        articleSectionTags: '//div',
-        filterTags: '//aside',
+        langId: 4,
+        name: 'Le Monde',
+        sourceUri: 'https://lemonde.fr/rss',
+        articleSectionTags: '//article',
         options: 'edit_text=1'
       }));
     });
 
     it('shows the API error instead of navigating', async () => {
-      vi.mocked(apiPost).mockResolvedValue({ error: 'Language not found or access denied' });
-      withCurrentLanguage(3);
+      vi.mocked(apiPost).mockResolvedValue({
+        data: { success: false, error: 'Language is required' },
+        error: null
+      } as never);
 
       const component = feedWizardStep1Data();
-      component.addCuratedFeed(source);
-      await vi.waitFor(() => expect(component.hasSaveError()).toBe(true));
+      component.selectedUrls = ['https://lemonde.fr/rss'];
+      component.addSelectedFeeds();
+      await vi.waitFor(() => expect(component.saving).toBe(false));
 
-      expect(component.saveError).toBe('Language not found or access denied');
-      expect(component.saving).toBe(false);
+      expect(component.saveError).toBe('Language is required');
+      expect(window.location.href).toBe('');
     });
 
-    it('does nothing while a save is already in flight', async () => {
-      vi.mocked(apiPost).mockResolvedValue({ data: { success: true, feed: { id: 4 } } });
-      withCurrentLanguage(3);
+    it('does nothing when nothing is selected', () => {
+      feedWizardStep1Data().addSelectedFeeds();
 
-      const component = feedWizardStep1Data();
-      component.addCuratedFeed(source);
-      component.addCuratedFeed(source);
-      await vi.waitFor(() => expect(apiPost).toHaveBeenCalled());
-
-      expect(apiPost).toHaveBeenCalledTimes(1);
+      expect(apiPost).not.toHaveBeenCalled();
     });
   });
 
-  // ===========================================================================
-  // cancel() Tests
-  // ===========================================================================
+  it('cancel returns to the feed manager', () => {
+    feedWizardStep1Data().cancel();
 
-  describe('cancel()', () => {
-    it('navigates to feeds edit page with del_wiz', () => {
-      const originalLocation = window.location;
-      delete (window as { location?: Location }).location;
-      window.location = { href: '' } as Location;
-
-      const component = feedWizardStep1Data();
-      component.cancel();
-
-      expect(window.location.href).toBe('/feeds/manage');
-
-      window.location = originalLocation;
-    });
+    expect(window.location.href).toBe('/feeds/manage');
   });
 
-  // ===========================================================================
-  // store getter Tests
-  // ===========================================================================
+  it('registers itself with Alpine', () => {
+    initFeedWizardStep1Alpine();
 
-  describe('store getter', () => {
-    it('returns store from getFeedWizardStore', () => {
-      const component = feedWizardStep1Data();
-
-      expect(component.store).toBe(mockStore);
-    });
-  });
-
-  // ===========================================================================
-  // initFeedWizardStep1Alpine Tests
-  // ===========================================================================
-
-  describe('initFeedWizardStep1Alpine', () => {
-    it('registers feedWizardStep1 component with Alpine', () => {
-      initFeedWizardStep1Alpine();
-
-      expect(Alpine.data).toHaveBeenCalledWith('feedWizardStep1', feedWizardStep1Data);
-    });
-  });
-
-  // ===========================================================================
-  // Global Window Exposure Tests
-  // ===========================================================================
-
-  describe('global window exposure', () => {
-    it('exposes feedWizardStep1Data on window', () => {
-      expect(typeof window.feedWizardStep1Data).toBe('function');
-    });
+    expect(Alpine.data).toHaveBeenCalledWith('feedWizardStep1', feedWizardStep1Data);
   });
 });

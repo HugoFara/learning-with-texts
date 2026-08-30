@@ -13,6 +13,7 @@ import { initIcons } from '@shared/icons/lucide_icons';
 import { getCsrfToken } from '@shared/api/client';
 import { importEpubForm } from '@modules/book/api/books_api';
 import { saveTextForm } from './text_form_save';
+import { checkTextForm } from './text_check_run';
 
 // ── Gutenberg browser ───────────────────────────────────────────────
 
@@ -948,10 +949,13 @@ interface TextEditFormData {
   textId: number;
   saving: boolean;
   saveError: string;
+  checking: boolean;
+  hasReport: boolean;
 
   init(): void;
   hasSaveError(): boolean;
   handleSubmit(event: Event): void;
+  check(event: Event): void;
 }
 
 export function textEditFormData(): TextEditFormData {
@@ -959,6 +963,8 @@ export function textEditFormData(): TextEditFormData {
     textId: 0,
     saving: false,
     saveError: '',
+    checking: false,
+    hasReport: false,
 
     init() {
       const configEl = document.getElementById('text-edit-config');
@@ -978,16 +984,11 @@ export function textEditFormData(): TextEditFormData {
     /**
      * Save through PUT /api/v1/texts/{id} instead of posting the form.
      *
-     * "Check" is left alone: it asks the server to render a parsing report of
-     * the text in the box rather than to save anything, and that report is
-     * still a server-rendered page.
-     *
      * @param event Submit event
      */
     handleSubmit(event: Event) {
       const submitter = (event as SubmitEvent).submitter as HTMLButtonElement | null;
       const op = submitter?.value ?? 'Change';
-      if (op === 'Check') return;
 
       event.preventDefault();
       const form = event.target as HTMLFormElement | null;
@@ -1006,6 +1007,28 @@ export function textEditFormData(): TextEditFormData {
         window.location.href = openAfter
           ? `/text/${result.textId}/read`
           : `/texts#rec${result.textId}`;
+      });
+    },
+
+    /**
+     * Report on how the text in the box would parse, without saving it.
+     *
+     * This used to post the form to a server-rendered report page, losing
+     * whatever else was being edited; the report now renders in place.
+     *
+     * @param event Click event from the Check button
+     */
+    check(event: Event) {
+      const form = (event.target as HTMLElement | null)?.closest('form');
+      if (!form || this.checking) return;
+
+      this.saveError = '';
+      this.checking = true;
+
+      void checkTextForm(form, 'check_text').then((error) => {
+        this.checking = false;
+        this.saveError = error;
+        this.hasReport = error === '';
       });
     },
   };

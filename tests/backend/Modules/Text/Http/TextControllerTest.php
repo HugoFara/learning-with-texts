@@ -158,7 +158,7 @@ class TextControllerTest extends TestCase
 
         // TextCrudController
         $crudMethods = ['new', 'editSingle', 'delete', 'archive', 'unarchive', 'edit',
-            'handleMarkAction', 'handleTextOperation', 'showNewTextForm', 'showEditTextForm', 'showTextsList'];
+            'handleMarkAction', 'showNewTextForm', 'showEditTextForm', 'showTextsList'];
         $crudReflection = new \ReflectionClass(TextCrudController::class);
         foreach ($crudMethods as $method) {
             $this->assertTrue($crudReflection->hasMethod($method), "TextCrudController should have: $method");

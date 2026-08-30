@@ -143,11 +143,6 @@ function registerRoutes(Router $router): void
         'Lwt\\Modules\\Text\\Http\\TextController@archivedEdit',
         AUTH_MIDDLEWARE
     );
-    $router->post(
-        '/text/archived/{id:int}/edit',
-        'Lwt\\Modules\\Text\\Http\\TextController@archivedEdit',
-        AUTH_MIDDLEWARE
-    );
 
     // Delete archived text (RESTful route): DELETE /text/archived/123
     $router->delete(
@@ -456,10 +451,11 @@ function registerRoutes(Router $router): void
     // Edit feeds (legacy route - handles query params)
     $router->registerWithMiddleware('/feeds/edit', 'Lwt\\Modules\\Feed\\Http\\FeedController@edit', AUTH_MIDDLEWARE);
 
-    // Feed wizard
-    $router->registerWithMiddleware(
+    // Feed wizard. GET only: the wizard is one page that reads and saves
+    // through /api/v1 rather than four pages posting back here (#262).
+    $router->get(
         '/feeds/wizard',
-        'Lwt\\Modules\\Feed\\Http\\FeedWizardController@wizard',
+        'Lwt\\Modules\\Feed\\Http\\FeedController@wizard',
         AUTH_MIDDLEWARE
     );
 
@@ -483,11 +479,6 @@ function registerRoutes(Router $router): void
 
     // RESTful routes: /languages/{id}/dictionaries
     $router->get(
-        '/languages/{id:int}/dictionaries',
-        'Lwt\\Modules\\Dictionary\\Http\\DictionaryController@index',
-        AUTH_MIDDLEWARE
-    );
-    $router->post(
         '/languages/{id:int}/dictionaries',
         'Lwt\\Modules\\Dictionary\\Http\\DictionaryController@index',
         AUTH_MIDDLEWARE

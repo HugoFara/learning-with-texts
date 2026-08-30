@@ -22,7 +22,6 @@ declare(strict_types=1);
 namespace Lwt\Modules\Feed\Http;
 
 use Lwt\Modules\Feed\Application\FeedFacade;
-use Lwt\Modules\Feed\Infrastructure\FeedWizardSessionManager;
 use Lwt\Modules\Language\Application\LanguageFacade;
 use Lwt\Shared\Infrastructure\Http\FlashMessageService;
 
@@ -40,14 +39,12 @@ class FeedController
     public function __construct(
         FeedFacade $feedFacade,
         LanguageFacade $languageFacade,
-        ?FeedWizardSessionManager $wizardSession = null,
         ?FlashMessageService $flashService = null
     ) {
         $this->feedFacade = $feedFacade;
         $this->editController = new FeedEditController(
             $feedFacade,
             $languageFacade,
-            $wizardSession,
             $flashService
         );
         $this->loadController = new FeedLoadController(
@@ -119,6 +116,22 @@ class FeedController
 
     /** @param array<string, string> $params */
     public function newFeed(array $params): void
+    {
+        $this->editController->newFeed($params);
+    }
+
+    /**
+     * The feed wizard.
+     *
+     * `/feeds/wizard` used to be a four-step state machine driven by POSTs
+     * and `$_SESSION`, with `?step=` saying which page to render. The wizard
+     * is one page now — the same page `/feeds/new` serves — so the route only
+     * still exists because links to it do, including the one that reopens a
+     * saved feed as `?edit_feed={id}` (#262, #266).
+     *
+     * @param array<string, string> $params Route parameters
+     */
+    public function wizard(array $params): void
     {
         $this->editController->newFeed($params);
     }

@@ -158,20 +158,137 @@ describe('Feeds', () => {
         .should('eq', 404);
     });
 
-    /**
-     * The wizard's last step used to post to /feeds/edit. That route has
-     * redirected to the manager since the server-rendered feeds list was
-     * retired, so finishing the wizard discarded the feed. Walking the whole
-     * wizard needs a live RSS URL, so what is asserted here is that the form
-     * no longer targets the route that swallowed it.
-     */
-    it('does not point the wizard finish at the retired route', () => {
-      cy.request('/feeds/wizard?step=4').then((response) => {
+  });
+
+  /**
+   * The wizard was four pages posting back to /feeds/wizard, with the parsed
+   * feed and the fetched article held in $_SESSION between them. It is one
+   * page now: the steps are panels, and the two server-side reads are API
+   * calls. Walking it needs a live RSS URL, so what is asserted here is the
+   * shape of the page and the endpoints behind it.
+   */
+  describe('wizard', () => {
+    it('serves all four steps as one page', () => {
+      cy.request('/feeds/wizard').then((response) => {
         const html = String(response.body);
+        expect(html).to.contain('x-data="feedWizard"');
+        expect(html).to.contain('feed-wizard-config');
+        expect(html).to.contain('x-data="feedWizardStep1"');
+        expect(html).to.contain('x-data="feedWizardStep2"');
+        expect(html).to.contain('x-data="feedWizardStep3"');
         expect(html).to.contain('x-data="feedWizardStep4"');
+      });
+    });
+
+    it('posts nothing back to the page routes', () => {
+      cy.request('/feeds/wizard').then((response) => {
+        const html = String(response.body);
+        expect(html).to.not.contain('action="/feeds/wizard"');
         expect(html).to.not.contain('action="/feeds/edit"');
         expect(html).to.not.contain('name="save_feed"');
       });
+
+      cy.request({ method: 'POST', url: '/feeds/wizard', failOnStatusCode: false })
+        .its('status')
+        .should('eq', 404);
+    });
+
+    it('carries the feed being reopened into the page config', () => {
+      cy.request('/feeds/wizard?edit_feed=123').then((response) => {
+        expect(String(response.body)).to.contain('"editFeedId":123');
+      });
+    });
+
+    it('rejects a feed preview with no URL', () => {
+      cy.apiRequest({
+        method: 'POST',
+        url: '/api/v1/feeds/wizard/preview',
+        body: {},
+        failOnStatusCode: false
+      }).then((response) => {
+        expect(response.body.success).to.eq(false);
+        expect(response.body.error).to.eq('Feed URL is required');
+      });
+    });
+
+    it('rejects an article preview with no URL', () => {
+      cy.apiRequest({
+        method: 'POST',
+        url: '/api/v1/feeds/wizard/article',
+        body: { index: 0 },
+        failOnStatusCode: false
+      }).then((response) => {
+        expect(response.body.success).to.eq(false);
+        expect(response.body.error).to.eq('Feed URL is required');
+      });
+    });
+
+    /**
+     * Walking the four steps needs a feed to walk, and reaching a real one
+     * would make the test depend on someone else's uptime. The two reads are
+     * stubbed instead; what is being tested here is the part no unit test
+     * covers — that each step mounts, picks and hands over in one page, under
+     * the CSP build of Alpine.
+     */
+    it('walks all four steps without leaving the page', () => {
+      cy.intercept('POST', '**/api/v1/feeds/wizard/preview', {
+        body: {
+          success: true,
+          title: 'Example News',
+          articleSource: '',
+          articleSources: ['description'],
+          items: [
+            { index: 0, title: 'First', link: 'https://news.example/1', host: 'news.example' },
+            { index: 1, title: 'Second', link: 'https://news.example/2', host: 'news.example' }
+          ]
+        }
+      }).as('preview');
+
+      cy.intercept('POST', '**/api/v1/feeds/wizard/article', {
+        body: {
+          success: true,
+          html: '<div id="wrap"><p id="body-text">Bonjour Manon.</p><aside id="ad">Ad</aside></div>'
+        }
+      }).as('article');
+
+      cy.visit('/feeds/wizard');
+
+      // Step 1: the URL tab reads the feed instead of posting.
+      cy.contains('.tabs a', 'Enter Feed URL').click();
+      cy.get('input[name="rss_url"]').type('https://news.example/rss');
+      cy.get('form.validate').filter(':visible').find('button[type="submit"]').click();
+      cy.wait('@preview');
+
+      // Step 2: the article is on the page, and clicking it offers selectors.
+      cy.wait('@article');
+      cy.get('#lwt_article #body-text').should('be.visible');
+      // A step that mounts after the page's one icon pass still gets icons.
+      cy.get('.wizard-controls svg').should('exist');
+      cy.get('.wizard-controls i[data-lucide]').should('not.exist');
+      cy.get('select[name="selected_feed"] option').should('have.length', 2);
+      cy.get('#lwt_article #body-text').click();
+      cy.get('select[name="mark_action"] option').should('have.length.greaterThan', 1);
+      cy.get('select[name="mark_action"]').select(1);
+      // Scoped: the advanced panel carries a hidden "Get" of its own.
+      cy.get('.wizard-controls').contains('button', 'Get').click();
+      cy.get('#lwt_sel li').should('have.length', 1);
+      cy.get('.wizard-controls').contains('button', 'Next').click();
+
+      // Step 3: the same article, now for picking what to drop. The panel
+      // scrolls inside #lwt_container, so existence is the assertion.
+      cy.contains('Elements to filter out').should('exist');
+      cy.get('#lwt_sel li').should('have.length', 0);
+      cy.get('.wizard-controls').contains('button', 'Next').click();
+
+      // Step 4: the picked selectors arrive in the save form, and the
+      // language is named rather than asked for.
+      cy.get('select[name="NfLgID"]').should('not.exist');
+      cy.get('input[name="NfSourceURI"]').should('have.value', 'https://news.example/rss');
+      cy.get('input[name="NfName"]').should('have.value', 'Example News');
+      cy.get('input[name="NfArticleSectionTags"]').should('not.have.value', '');
+
+      // One page throughout: the URL never moved.
+      cy.location('pathname').should('eq', '/feeds/wizard');
     });
   });
 });

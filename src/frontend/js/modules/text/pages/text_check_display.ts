@@ -1,175 +1,185 @@
 /**
- * Text Check Display - Display word statistics after text parsing.
+ * Text Check Display - render the parse report from `POST /texts/check`.
  *
- * Handles the display of word lists, expression lists, and non-word lists
- * after a text has been checked/parsed. Used by the text check functionality.
+ * The report used to arrive as HTML echoed mid-request, with the word lists
+ * hydrated from two JSON blobs the server printed alongside it. It is one
+ * payload now (#262, #266), and it is rendered here.
+ *
+ * Everything is built as DOM nodes rather than an HTML string: the payload
+ * carries raw term text, so a term containing markup has to land in a text
+ * node to stay inert.
  *
  * @license unlicense
  * @since   3.0.0
  */
 
-import { onDomReady } from '@shared/utils/dom_ready';
+import { t } from '@shared/i18n/translator';
+import type {
+  TextCheckNonWordEntry,
+  TextCheckReport,
+  TextCheckWordEntry
+} from '../api/texts_api';
+
+/** Paragraph breaks survive parsing as this marker. */
+const PARAGRAPH_MARKER = '¶';
 
 /**
- * Word entry with text, count, and optional translation.
- * [word, count, translation]
+ * Build an element, optionally with text and a class.
  */
-type WordEntry = [string, number, string];
-
-/**
- * Non-word entry with text and count.
- * [text, count]
- */
-type NonWordEntry = [string, string];
-
-/**
- * Configuration passed from PHP via JSON.
- */
-interface TextCheckConfig {
-  words: WordEntry[];
-  nonWords: NonWordEntry[];
-  multiWords: WordEntry[];
-  rtlScript: boolean;
-}
-
-// Global variables for backwards compatibility with legacy code
-declare global {
-  interface Window {
-    WORDS?: WordEntry[];
-    NOWORDS?: NonWordEntry[];
-    MWORDS?: WordEntry[];
-  }
+function el(tag: string, text?: string, className?: string): HTMLElement {
+  const node = document.createElement(tag);
+  if (text !== undefined) node.textContent = text;
+  if (className !== undefined) node.className = className;
+  return node;
 }
 
 /**
- * Display the word statistics in the check_text container.
+ * Render the preview paragraph, splitting it back into paragraphs.
  *
- * @param words - Array of [word, count, translation] tuples
- * @param multiWords - Array of [word, count, translation] tuples for multi-word expressions
- * @param nonWords - Array of [text, count] tuples for non-word items
+ * @param preview   Preview text, paragraph breaks marked
+ * @param rtlScript Whether the language is right-to-left
  */
-export function displayStatistics(
-  words: WordEntry[],
-  multiWords: WordEntry[],
-  nonWords: NonWordEntry[]
-): void {
-  let h = '<h4>Word List <span class="has-text-danger has-text-weight-bold">(red = already saved)</span></h4>' +
-    '<ul class="wordlist">';
+function previewSection(preview: string, rtlScript: boolean): HTMLElement {
+  const section = document.createElement('div');
+  section.appendChild(el('h4', t('text.check.heading_text')));
 
-  words.forEach((v) => {
-    h += '<li><span' + (v[2] === '' ? '' : ' class="has-text-danger has-text-weight-bold"') + '>[' + v[0] + '] — ' +
-      v[1] + (v[2] === '' ? '' : ' — ' + v[2]) + '</span></li>';
-  });
+  const paragraph = el('p', undefined);
+  if (rtlScript) paragraph.setAttribute('dir', 'rtl');
 
-  h += '</ul><p>TOTAL: ' + words.length +
-    '</p><h4>Expression List</span></h4><ul class="expressionlist">';
-
-  multiWords.forEach((v) => {
-    h += '<li><span>[' + v[0] + '] — ' + v[1] +
-      (v[2] === '' ? '' : ' — ' + v[2]) + '</span></li>';
-  });
-
-  h += '</ul><p>TOTAL: ' + multiWords.length +
-    '</p><h4>Non-Word List</span></h4><ul class="nonwordlist">';
-
-  nonWords.forEach((v) => {
-    h += '<li>[' + v[0] + '] — ' + v[1] + '</li>';
-  });
-
-  h += '</ul><p>TOTAL: ' + nonWords.length + '</p>';
-
-  const checkTextEl = document.getElementById('check_text');
-  if (checkTextEl) {
-    checkTextEl.insertAdjacentHTML('beforeend', h);
-  }
-}
-
-/**
- * Apply RTL direction to list items if the language is right-to-left.
- *
- * @param rtlScript - Whether the language uses RTL script
- */
-function applyRtlIfNeeded(rtlScript: boolean): void {
-  if (rtlScript) {
-    document.querySelectorAll('li').forEach(li => {
-      li.setAttribute('dir', 'rtl');
-    });
-  }
-}
-
-/**
- * Initialize the text check display from JSON configuration.
- * Reads configuration from a script element with id="text-check-config".
- * Words and non-words come from text-check-words-config (set by checkValid).
- * Multi-words and RTL setting come from text-check-config (set by displayStatistics).
- */
-export function initTextCheckDisplay(): void {
-  const configEl = document.getElementById('text-check-config');
-  if (!configEl) {
-    // Try legacy global variables for backwards compatibility
-    if (window.WORDS !== undefined) {
-      displayStatistics(
-        window.WORDS,
-        window.MWORDS || [],
-        window.NOWORDS || []
-      );
+  preview.split(PARAGRAPH_MARKER).forEach((part, index) => {
+    if (index > 0) {
+      paragraph.appendChild(document.createElement('br'));
+      paragraph.appendChild(document.createElement('br'));
     }
-    return;
-  }
+    paragraph.appendChild(document.createTextNode(part));
+  });
 
-  try {
-    const config: TextCheckConfig = JSON.parse(configEl.textContent || '{}');
-
-    // Apply RTL if needed
-    applyRtlIfNeeded(config.rtlScript);
-
-    // Get words and non-words from global variables (set by initTextCheckWords)
-    // or from the config if provided
-    const words = (config.words && config.words.length > 0) ? config.words : (window.WORDS || []);
-    const nonWords = (config.nonWords && config.nonWords.length > 0) ? config.nonWords : (window.NOWORDS || []);
-    const multiWords = config.multiWords || [];
-
-    // Display the statistics
-    displayStatistics(words, multiWords, nonWords);
-
-    // Also set global variables for any legacy code that might need them
-    window.WORDS = words;
-    window.MWORDS = multiWords;
-    window.NOWORDS = nonWords;
-  } catch (e) {
-    console.error('Failed to parse text-check-config:', e);
-  }
+  section.appendChild(paragraph);
+  return section;
 }
 
 /**
- * Initialize just the word data (used by checkValid).
- * Reads from text-check-words-config element.
+ * Render the sentence split.
  */
-export function initTextCheckWords(): void {
-  const configEl = document.getElementById('text-check-words-config');
-  if (!configEl) {
-    return;
-  }
+function sentenceSection(sentences: string[], rtlScript: boolean): HTMLElement {
+  const section = document.createElement('div');
+  section.appendChild(el('h4', t('text.check.heading_sentences')));
 
-  try {
-    const config = JSON.parse(configEl.textContent || '{}') as {
-      words: WordEntry[];
-      nonWords: NonWordEntry[];
-    };
+  const list = document.createElement('ol');
+  sentences.forEach((sentence) => {
+    const item = el('li', sentence);
+    if (rtlScript) item.setAttribute('dir', 'rtl');
+    list.appendChild(item);
+  });
 
-    // Set global variables for displayStatistics to use later
-    window.WORDS = config.words || [];
-    window.NOWORDS = config.nonWords || [];
-  } catch (e) {
-    console.error('Failed to parse text-check-words-config:', e);
-  }
+  section.appendChild(list);
+  return section;
 }
 
-// Auto-initialize on document ready
-onDomReady(() => {
-  // Initialize words data first (from checkValid)
-  initTextCheckWords();
+/**
+ * Render the parse-coverage warning, when the verdict is one.
+ *
+ * @param verdict ParseCoverage verdict
+ * @returns The banner, or null when the parse looks fine
+ */
+function warningSection(verdict: string): HTMLElement | null {
+  if (verdict !== 'no_words' && verdict !== 'almost_no_words') {
+    return null;
+  }
 
-  // Then initialize full display (from displayStatistics)
-  initTextCheckDisplay();
-});
+  const banner = el('div', undefined, 'notification is-warning is-light');
+  banner.appendChild(el('strong', t(`text.parse_warning.${verdict}`)));
+  banner.appendChild(document.createTextNode(' ' + t('text.parse_warning.check_language')));
+  return banner;
+}
+
+/**
+ * Render one tallied list plus its total.
+ *
+ * A term that is already saved as a vocabulary entry carries a translation,
+ * and is called out the way the server-rendered report called it out.
+ *
+ * @param heading   Section heading
+ * @param entries   Terms to list
+ * @param listClass Class for the <ul>
+ * @param note      Optional note appended to the heading
+ * @param rtlScript Whether the language is right-to-left
+ */
+function tallySection(
+  heading: string,
+  entries: (TextCheckWordEntry | TextCheckNonWordEntry)[],
+  listClass: string,
+  note: string | null,
+  rtlScript: boolean
+): HTMLElement {
+  const section = document.createElement('div');
+
+  const title = el('h4', heading + ' ');
+  if (note !== null) {
+    title.appendChild(el('span', note, 'has-text-danger has-text-weight-bold'));
+  }
+  section.appendChild(title);
+
+  const list = el('ul', undefined, listClass);
+  entries.forEach((entry) => {
+    const translation = entry.length > 2 ? String(entry[2]) : '';
+    const item = document.createElement('li');
+    if (rtlScript) item.setAttribute('dir', 'rtl');
+
+    const span = el('span', `[${String(entry[0])}] — ${String(entry[1])}`);
+    if (translation !== '') {
+      span.textContent += ` — ${translation}`;
+      span.className = 'has-text-danger has-text-weight-bold';
+    }
+
+    item.appendChild(span);
+    list.appendChild(item);
+  });
+  section.appendChild(list);
+
+  section.appendChild(el('p', `TOTAL: ${entries.length}`));
+  return section;
+}
+
+/**
+ * Render a whole parse report into a container, replacing what it held.
+ *
+ * @param report    The report from `POST /texts/check`
+ * @param container Element to render into
+ */
+export function renderCheckReport(report: TextCheckReport, container: HTMLElement): void {
+  container.textContent = '';
+
+  const warning = warningSection(report.warning);
+  if (warning !== null) container.appendChild(warning);
+
+  container.appendChild(previewSection(report.preview, report.rtlScript));
+  container.appendChild(sentenceSection(report.sentences, report.rtlScript));
+  container.appendChild(
+    tallySection(
+      t('text.check.heading_words'),
+      report.words,
+      'wordlist',
+      t('text.check.already_saved'),
+      report.rtlScript
+    )
+  );
+  container.appendChild(
+    tallySection(
+      t('text.check.heading_expressions'),
+      report.multiWords,
+      'expressionlist',
+      null,
+      report.rtlScript
+    )
+  );
+  container.appendChild(
+    tallySection(
+      t('text.check.heading_non_words'),
+      report.nonWords,
+      'nonwordlist',
+      null,
+      report.rtlScript
+    )
+  );
+}

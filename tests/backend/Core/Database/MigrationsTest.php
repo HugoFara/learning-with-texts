@@ -660,6 +660,59 @@ class MigrationsTest extends TestCase
         Connection::preparedExecute("DELETE FROM _migrations WHERE filename = ?", [$testFilename]);
     }
 
+    public function testAConstraintIsRestoredEvenWhenItsRowsViolateIt(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        // The premise of repairing an install that lost its keys is that rows
+        // the constraint would have prevented are already there. InnoDB
+        // validates existing rows when a constraint is added, so with FK checks
+        // on it refuses exactly the keys most worth restoring (errno 1452) and
+        // addMissingForeignKeys() only logs it — the constraint is lost.
+        $before = Migrations::captureForeignKeys();
+        $target = null;
+        foreach ($before as $key) {
+            if ($key['table'] === 'texttags' && count($key['columns']) === 1) {
+                $target = $key;
+                break;
+            }
+        }
+        if ($target === null) {
+            $this->markTestSkipped('No single-column texttags constraint to exercise');
+        }
+
+        Connection::execute('SET FOREIGN_KEY_CHECKS = 0');
+        Connection::preparedExecute(
+            'INSERT IGNORE INTO texttags (TtTxID, TtT2ID) VALUES (?, ?)',
+            [999123, 999123]
+        );
+        Connection::execute('SET FOREIGN_KEY_CHECKS = 1');
+
+        try {
+            Migrations::dropAllForeignKeys();
+            Migrations::restoreForeignKeys($before);
+
+            $names = array_map(
+                static fn(array $k): string => $k['table'] . '.' . $k['name'],
+                Migrations::captureForeignKeys()
+            );
+            $this->assertContains(
+                $target['table'] . '.' . $target['name'],
+                $names,
+                'A constraint its own rows violate must still be restored'
+            );
+        } finally {
+            Connection::execute('SET FOREIGN_KEY_CHECKS = 0');
+            Connection::preparedExecute(
+                'DELETE FROM texttags WHERE TtTxID = ? AND TtT2ID = ?',
+                [999123, 999123]
+            );
+            Connection::execute('SET FOREIGN_KEY_CHECKS = 1');
+        }
+    }
+
     public function testForeignKeysSurviveDropAndRestore(): void
     {
         if (!self::$dbConnected) {
@@ -857,6 +910,34 @@ class MigrationsTest extends TestCase
             'sentences' => ['SeID'],
             'users' => ['UsID'],
         ];
+    }
+
+    /**
+     * A term whose word count was never computed is repaired after a run.
+     *
+     * Dictionary imports left every term they created at WoWordCount = 0
+     * (issue #283), which is "not counted yet" rather than a count — matched
+     * by neither the reader's WoWordCount = 1 lookup nor expression matching's
+     * > 1. The import fixes its own rows now; this covers the installs that
+     * already ran it.
+     */
+    public function testAMigrationRunComputesMissingWordCounts(): void
+    {
+        $method = new \ReflectionMethod(Migrations::class, 'computeMissingWordCounts');
+        $this->assertTrue(
+            $method->isPrivate(),
+            'the repair is an internal step of the run, not a public entry point'
+        );
+
+        // It must survive a tokenizer that is not installed: an upgrade cannot
+        // be allowed to fail because MeCab is missing from the machine.
+        $source = file_get_contents(
+            __DIR__ . '/../../../../src/Shared/Infrastructure/Database/Migrations.php'
+        );
+        $this->assertIsString($source);
+        $body = substr($source, (int) strpos($source, 'function computeMissingWordCounts'));
+        $this->assertStringContainsString('catch (\Throwable $e)', $body);
+        $this->assertStringContainsString('Maintenance::initWordCount()', $body);
     }
 
     public function testMigrationsOnlyRunOnce(): void

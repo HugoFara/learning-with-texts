@@ -28,6 +28,7 @@ use Lwt\Modules\Text\Application\Services\GutenbergSuggestionService;
 use Lwt\Modules\Book\Application\BookFacade;
 use Lwt\Modules\Tags\Application\TagsFacade;
 use Lwt\Modules\Text\Application\TextFacade;
+use Lwt\Modules\Text\Application\UseCases\UpdateText;
 use Lwt\Shared\Infrastructure\Container\Container;
 use Lwt\Shared\Infrastructure\Database\Settings;
 use Lwt\Shared\Infrastructure\Http\GdlClient;
@@ -37,6 +38,7 @@ use Lwt\Shared\Http\ApiRoutableTrait;
 use Lwt\Shared\Infrastructure\Database\QueryBuilder;
 use Lwt\Shared\Infrastructure\Http\GutenbergClient;
 use Lwt\Shared\Infrastructure\Http\JsonResponse;
+use Lwt\Shared\Infrastructure\Utilities\StringUtils;
 use Lwt\Api\V1\Response;
 
 /**
@@ -321,6 +323,10 @@ class TextApiHandler implements ApiRoutableInterface
             return $this->handleExtractEpubUrl($params);
         }
 
+        if ($frag1 === 'check') {
+            return $this->handleCheckText($params);
+        }
+
         if ($frag1 === '') {
             return $this->handleSaveText(0, $params);
         }
@@ -360,6 +366,13 @@ class TextApiHandler implements ApiRoutableInterface
 
         if ($frag1 === 'bulk-action') {
             return $this->handleBulkAction($params);
+        }
+
+        if ($frag1 === 'archived') {
+            if ($frag2 === '' || !ctype_digit($frag2)) {
+                return Response::error('Archived Text ID (Integer) Expected', 404);
+            }
+            return $this->handleSaveArchivedText((int) $frag2, $params);
         }
 
         if ($frag1 === '' || !ctype_digit($frag1)) {
@@ -462,6 +475,114 @@ class TextApiHandler implements ApiRoutableInterface
             'textId' => $result['textId'],
             'bookId' => null,
             'message' => $result['message'],
+        ]);
+    }
+
+    /**
+     * Handle POST /texts/check.
+     *
+     * Parses a text and reports what the parser made of it — the sentence
+     * split, the word/expression/non-word tallies and the coverage verdict —
+     * without saving anything. The JSON counterpart of the `op=Check` form
+     * POST, which answered with a server-rendered report page (#262, #266).
+     *
+     * @param array<string, mixed> $params Request body
+     */
+    private function handleCheckText(array $params): JsonResponse
+    {
+        $text = (string) ($params['text'] ?? '');
+        if (trim($text) === '') {
+            return Response::error('text is required', 400);
+        }
+
+        $languageId = (int) ($params['language_id'] ?? 0);
+        if ($languageId <= 0) {
+            return Response::error('language_id is required', 400);
+        }
+        // languages is user-scoped, so somebody else's language finds nothing.
+        $ownsLanguage = QueryBuilder::table('languages')
+            ->where('LgID', '=', $languageId)
+            ->existsPrepared();
+        if (!$ownsLanguage) {
+            return Response::error('Language not found', 404);
+        }
+
+        $facade = Container::getInstance()->getTyped(TextFacade::class);
+
+        if (!$facade->validateTextLength($text)) {
+            return Response::error(__('text.flash.text_too_long'), 422);
+        }
+
+        return Response::success(
+            $facade->checkTextReport(StringUtils::removeSoftHyphens($text), $languageId)
+        );
+    }
+
+    /**
+     * Handle PUT /texts/archived/{id}.
+     *
+     * The JSON counterpart of the `op=Change` form POST the archived text
+     * editor used to make (#262).
+     *
+     * An archived text is a row in `texts` with `TxArchivedAt` set, and it
+     * carries no sentences or word occurrences — so this updates the row and
+     * stops, where {@see handleSaveText()} reparses. Reparsing an archived
+     * text would build occurrence rows for a text that is not being read.
+     *
+     * @param int                  $textId Archived text id
+     * @param array<string, mixed> $params Request body
+     */
+    private function handleSaveArchivedText(int $textId, array $params): JsonResponse
+    {
+        $title = trim((string) ($params['title'] ?? ''));
+        if ($title === '') {
+            return Response::error('title is required', 400);
+        }
+
+        $text = (string) ($params['text'] ?? '');
+        if (trim($text) === '') {
+            return Response::error('text is required', 400);
+        }
+
+        $languageId = (int) ($params['language_id'] ?? 0);
+        if ($languageId <= 0) {
+            return Response::error('language_id is required', 400);
+        }
+        // languages is user-scoped, so somebody else's language finds nothing.
+        $ownsLanguage = QueryBuilder::table('languages')
+            ->where('LgID', '=', $languageId)
+            ->existsPrepared();
+        if (!$ownsLanguage) {
+            return Response::error('Language not found', 404);
+        }
+
+        $facade = Container::getInstance()->getTyped(TextFacade::class);
+
+        if (!$facade->validateTextLength($text)) {
+            return Response::error(__('text.flash.text_too_long'), 422);
+        }
+
+        // Establish the row exists and is the caller's before writing, rather
+        // than reading it off the UPDATE's affected count: a save that changes
+        // nothing affects no rows, which is not the same as "not found".
+        if ($facade->getArchivedTextById($textId) === null) {
+            return Response::error('Archived text not found', 404);
+        }
+
+        $affected = $facade->updateArchivedText(
+            $textId,
+            $languageId,
+            $title,
+            $text,
+            (string) ($params['audio_uri'] ?? ''),
+            (string) ($params['source_uri'] ?? '')
+        );
+
+        TagsFacade::saveArchivedTextTags($textId, $this->tagNames($params));
+
+        return Response::success([
+            'textId' => $textId,
+            'message' => UpdateText::formatArchivedUpdateMessage($affected),
         ]);
     }
 

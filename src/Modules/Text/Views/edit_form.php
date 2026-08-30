@@ -107,10 +107,8 @@ if (!$isNew) {
 <?php endif; ?>
 
 <!--
-    Saving goes through /api/v1/texts (#262), so the form carries no action of
-    its own. The edit form's "Check" button is the one exception and names its
-    own target with formaction/formmethod: it asks for a server-rendered
-    parsing report rather than saving anything.
+    Saving and checking both go through /api/v1/texts (#262), so the form
+    carries no action of its own.
 -->
 <form class="validate"
       @submit="handleSubmit($event)"
@@ -1215,9 +1213,9 @@ if (!$isNew) {
             </button>
         </div>
         <div class="control">
-            <button type="submit" name="op" value="Check" class="button is-info is-outlined"
-                    formmethod="post"
-                    formaction="/texts/<?php echo $textIdTyped; ?>/edit">
+            <button type="button" class="button is-info is-outlined"
+                    :disabled="checking"
+                    @click="check($event)">
                 <span class="icon is-small">
                     <?php echo IconHelper::render('check', ['alt' => __('text.common.check')]); ?>
                 </span>
@@ -1243,5 +1241,10 @@ if (!$isNew) {
             </button>
         </div>
     </div>
+    <?php endif; ?>
+
+    <?php if (!$isNew) : ?>
+    <!-- The parse report renders here when "Check" is used. -->
+    <div id="check_text" x-show="hasReport" x-cloak class="content mt-5"></div>
     <?php endif; ?>
 </form>

@@ -128,25 +128,38 @@ final class TokenPersistence
     }
 
     /**
-     * Echo the sentence list and per-word JSON for the check-text preview.
+     * Build the check-a-text report as data.
      *
-     * @param ParsedToken[] $tokens Tokens for the whole text
-     * @param int           $lid    Language ID
+     * The sentence split, the word/expression/non-word tallies and the
+     * parse-coverage verdict — what the check page used to receive as HTML
+     * echoed mid-request (#262, #266).
      *
-     * @return void
+     * Values are returned raw. The caller renders them — the client builds
+     * text nodes rather than markup — so nothing is HTML-escaped here.
+     *
+     * @param ParsedToken[] $tokens    Tokens for the whole text
+     * @param int           $lid       Language ID
+     * @param bool          $rtlScript Whether the language is right-to-left
+     *
+     * @return array{sentences: list<string>, words: list<array{0: string, 1: int, 2: string}>,
+     *         nonWords: list<array{0: string, 1: int}>,
+     *         multiWords: list<array{0: string, 1: int, 2: string}>,
+     *         rtlScript: bool, warning: string}
      */
-    public static function echoCheckValid(array $tokens, int $lid): void
+    public static function report(array $tokens, int $lid, bool $rtlScript): array
     {
         $bySentence = self::groupBySentence($tokens);
-        echo '<h4>Sentences</h4><ol>';
+
+        $sentences = [];
         foreach ($bySentence as $sTokens) {
-            echo '<li>' . \htmlspecialchars(self::sentenceText($sTokens), ENT_QUOTES, 'UTF-8') . '</li>';
+            $sentences[] = self::sentenceText($sTokens);
         }
-        echo '</ol>';
 
         $wordCounts = [];
         $nonWordCounts = [];
+        $characters = 0;
         foreach ($tokens as $t) {
+            $characters += \mb_strlen($t->text, 'UTF-8');
             $lc = self::lc($t->text);
             if ($t->wordCount === 1) {
                 $wordCounts[$lc] = ($wordCounts[$lc] ?? 0) + 1;
@@ -154,76 +167,46 @@ final class TokenPersistence
                 $nonWordCounts[$lc] = ($nonWordCounts[$lc] ?? 0) + 1;
             }
         }
-        self::echoParseWarning($tokens, $wordCounts);
 
         $single = self::singleWordTerms($lid, array_keys($wordCounts));
-        $wo = [];
+
+        // The tallies are keyed by the term itself, and PHP turns a numeric
+        // key into an int — a text containing "42" would otherwise report a
+        // number where every other term reports a string. Cast on the way out.
+        $words = [];
         foreach ($wordCounts as $lc => $cnt) {
-            $wo[] = [
-                \htmlspecialchars($lc, ENT_QUOTES, 'UTF-8'),
-                $cnt,
-                \htmlspecialchars($single[$lc]['tr'] ?? '', ENT_QUOTES, 'UTF-8'),
-            ];
+            /** @psalm-suppress RedundantCast, RedundantCastGivenDocblockType */
+            $words[] = [(string) $lc, $cnt, (string) ($single[$lc]['tr'] ?? '')];
         }
-        $nw = [];
+
+        $nonWords = [];
         foreach ($nonWordCounts as $lc => $cnt) {
-            $nw[] = [
-                \htmlspecialchars($lc, ENT_QUOTES, 'UTF-8'),
-                \htmlspecialchars((string)$cnt, ENT_QUOTES, 'UTF-8'),
-            ];
+            /** @psalm-suppress RedundantCast */
+            $nonWords[] = [(string) $lc, $cnt];
         }
-        echo '<script type="application/json" id="text-check-words-config">';
-        echo \json_encode(['words' => $wo, 'nonWords' => $nw], JSON_HEX_TAG | JSON_HEX_AMP);
-        echo '</script>';
+
+        return [
+            'sentences' => $sentences,
+            'words' => $words,
+            'nonWords' => $nonWords,
+            'multiWords' => self::multiWordOccurrences($bySentence, $lid),
+            'rtlScript' => $rtlScript,
+            'warning' => ParseCoverage::assess(array_sum($wordCounts), $characters),
+        ];
     }
 
     /**
-     * Warn on the check-text page when the parse produced nothing learnable.
+     * Tally the multi-word terms occurring in a parsed text.
      *
-     * This page exists to answer "did my parsing work?", and until now it
-     * answered a failed parse with an empty list of words and no explanation.
+     * @param array<int, list<ParsedToken>> $bySentence Tokens grouped by sentence
+     * @param int                           $lid        Language ID
      *
-     * @param ParsedToken[]     $tokens     Tokens for the whole text
-     * @param array<string,int> $wordCounts Word tokens by lowercase form
-     *
-     * @return void
+     * @return list<array{0: string, 1: int, 2: string}> [term, occurrences, translation]
      */
-    private static function echoParseWarning(array $tokens, array $wordCounts): void
-    {
-        $characters = 0;
-        foreach ($tokens as $t) {
-            $characters += \mb_strlen($t->text, 'UTF-8');
-        }
-
-        $verdict = ParseCoverage::assess(array_sum($wordCounts), $characters);
-        if (!ParseCoverage::isWarning($verdict)) {
-            return;
-        }
-
-        $headline = $verdict === ParseCoverage::NO_WORDS
-            ? __('text.parse_warning.no_words')
-            : __('text.parse_warning.almost_no_words');
-
-        echo '<div class="notification is-warning is-light"><strong>'
-            . \htmlspecialchars($headline, ENT_QUOTES, 'UTF-8')
-            . '</strong> '
-            . \htmlspecialchars(__('text.parse_warning.check_language'), ENT_QUOTES, 'UTF-8')
-            . '</div>';
-    }
-
-    /**
-     * Echo the multi-word statistics JSON for the check-text preview.
-     *
-     * @param ParsedToken[] $tokens    Tokens for the whole text
-     * @param int           $lid       Language ID
-     * @param bool          $rtlScript Whether the language is right-to-left
-     *
-     * @return void
-     */
-    public static function echoStatistics(array $tokens, int $lid, bool $rtlScript): void
+    private static function multiWordOccurrences(array $bySentence, int $lid): array
     {
         $mwTerms = self::multiWordTerms($lid);
-        $occ = self::detectMultiWords(self::groupBySentence($tokens), $mwTerms);
+        $occ = self::detectMultiWords($bySentence, $mwTerms);
 
         $idInfo = [];
         foreach ($mwTerms as $terms) {
@@ -231,27 +214,20 @@ final class TokenPersistence
                 $idInfo[$info['id']] = $info;
             }
         }
+
         $byWo = [];
         foreach ($occ as $o) {
             $byWo[$o['id']] = ($byWo[$o['id']] ?? 0) + 1;
         }
+
         $mw = [];
         foreach ($byWo as $id => $cnt) {
             $info = $idInfo[$id] ?? ['text' => '', 'tr' => ''];
-            $mw[] = [
-                \htmlspecialchars(self::lc($info['text']), ENT_QUOTES, 'UTF-8'),
-                $cnt,
-                \htmlspecialchars($info['tr'], ENT_QUOTES, 'UTF-8'),
-            ];
+            $mw[] = [self::lc($info['text']), $cnt, $info['tr']];
         }
-        \usort($mw, fn(array $a, array $b): int => \strcmp((string)$a[0], (string)$b[0]));
+        \usort($mw, fn(array $a, array $b): int => \strcmp((string) $a[0], (string) $b[0]));
 
-        echo '<script type="application/json" id="text-check-config">';
-        echo \json_encode(
-            ['words' => [], 'multiWords' => $mw, 'nonWords' => [], 'rtlScript' => $rtlScript],
-            JSON_HEX_TAG | JSON_HEX_AMP
-        );
-        echo '</script>';
+        return $mw;
     }
 
     // =========================================================================

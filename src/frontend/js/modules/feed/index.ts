@@ -19,6 +19,8 @@ export * from './utils/xpath_utils';
 
 // Services
 export { HighlightService, getHighlightService, initHighlightService } from './services/highlight_service';
+export { showSelectedArticle, clearArticle, ARTICLE_CONTAINER_ID } from './services/article_preview';
+export { openFeed, resumeFeed, toStoreOptions } from './services/wizard_flow';
 
 // Stores
 export { initFeedWizardStore, getFeedWizardStore } from './stores/feed_wizard_store';
@@ -38,3 +40,5 @@ export { feedWizardStep4Data, initFeedWizardStep4Alpine } from './components/fee
 
 // Pages (side effects)
 import './pages/feed_manager_app';
+export { feedWizardData } from './pages/feed_wizard';
+export { readWizardPageConfig } from './pages/feed_wizard_config';

@@ -1234,11 +1234,11 @@ class TextFacadeTest extends TestCase
         );
     }
 
-    public function testCheckTextMethodExists(): void
+    public function testCheckTextReportMethodExists(): void
     {
         $this->assertTrue(
-            method_exists($this->facade, 'checkText'),
-            'checkText method should exist'
+            method_exists($this->facade, 'checkTextReport'),
+            'checkTextReport method should exist'
         );
     }
 

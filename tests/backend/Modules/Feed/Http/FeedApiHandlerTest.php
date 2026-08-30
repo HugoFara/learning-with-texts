@@ -877,6 +877,36 @@ class FeedApiHandlerTest extends TestCase
     }
 
     #[Test]
+    public function routePostWizardPreviewDelegatesToTheWizardHandler(): void
+    {
+        $this->feedFacade->expects($this->once())
+            ->method('detectAndParseFeed')
+            ->willReturn(false);
+
+        $result = $this->handler->routePost(
+            ['feeds', 'wizard', 'preview'],
+            ['rss_url' => 'https://news.example/rss']
+        );
+
+        $this->assertInstanceOf(JsonResponse::class, $result);
+    }
+
+    #[Test]
+    public function routePostWizardArticleDelegatesToTheWizardHandler(): void
+    {
+        $this->feedFacade->expects($this->once())
+            ->method('detectAndParseFeed')
+            ->willReturn(false);
+
+        $result = $this->handler->routePost(
+            ['feeds', 'wizard', 'article'],
+            ['rss_url' => 'https://news.example/rss', 'index' => 0]
+        );
+
+        $this->assertInstanceOf(JsonResponse::class, $result);
+    }
+
+    #[Test]
     public function routePostWithInvalidFragmentReturnsError(): void
     {
         $result = $this->handler->routePost(['feeds', 'invalid', 'bad'], []);

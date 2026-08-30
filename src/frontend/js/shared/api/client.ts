@@ -482,6 +482,28 @@ async function parseResponse<T>(response: Response): Promise<T> {
 }
 
 /**
+ * Pull a human-readable message out of a failed response.
+ *
+ * The API is not consistent about where the text lives. `Response::error()`
+ * emits `{error: "..."}`, some handlers return `{error: "...", success: false}`
+ * of their own, and the exception handler emits `{error: true, message: "..."}`
+ * — so `error` is only usable as the message when it is a string. Falling all
+ * the way through to the status line keeps a message on screen either way.
+ *
+ * Reading `error` at all is new: every wrapper below used to look only at
+ * `message`, which meant that even a correctly-formed error response arrived
+ * in the UI as a bare "HTTP 400: Bad Request".
+ */
+async function errorMessageFrom(response: Response): Promise<string> {
+  const body = await parseResponse<{ message?: unknown; error?: unknown }>(response);
+  const fromError = typeof body.error === 'string' ? body.error : '';
+  const fromMessage = typeof body.message === 'string' ? body.message : '';
+  return (
+    fromError || fromMessage || `HTTP ${response.status}: ${response.statusText}`
+  );
+}
+
+/**
  * Make a GET request to the API.
  *
  * @param endpoint API endpoint (e.g., '/terms/123')
@@ -505,12 +527,7 @@ export async function apiGet<T>(
     });
 
     if (!response.ok) {
-      const errorData = await parseResponse<{ message?: string }>(response);
-      return {
-        error:
-          errorData.message ||
-          `HTTP ${response.status}: ${response.statusText}`
-      };
+      return { error: await errorMessageFrom(response) };
     }
 
     const data = await parseResponse<T>(response);
@@ -542,12 +559,7 @@ export async function apiPost<T>(
     });
 
     if (!response.ok) {
-      const errorData = await parseResponse<{ message?: string }>(response);
-      return {
-        error:
-          errorData.message ||
-          `HTTP ${response.status}: ${response.statusText}`
-      };
+      return { error: await errorMessageFrom(response) };
     }
 
     const data = await parseResponse<T>(response);
@@ -579,12 +591,7 @@ export async function apiPut<T>(
     });
 
     if (!response.ok) {
-      const errorData = await parseResponse<{ message?: string }>(response);
-      return {
-        error:
-          errorData.message ||
-          `HTTP ${response.status}: ${response.statusText}`
-      };
+      return { error: await errorMessageFrom(response) };
     }
 
     const data = await parseResponse<T>(response);
@@ -618,12 +625,7 @@ export async function apiDelete<T>(
     const response = await apiFetch(defaultConfig.baseUrl + endpoint, options);
 
     if (!response.ok) {
-      const errorData = await parseResponse<{ message?: string }>(response);
-      return {
-        error:
-          errorData.message ||
-          `HTTP ${response.status}: ${response.statusText}`
-      };
+      return { error: await errorMessageFrom(response) };
     }
 
     const data = await parseResponse<T>(response);
@@ -654,17 +656,7 @@ export async function apiPostMultipart<T>(
     });
 
     if (!response.ok) {
-      const errorData = await parseResponse<{ message?: unknown; error?: unknown }>(response);
-      // An error envelope may carry `error: true` alongside the real text in
-      // `message`, so only a string is usable as the message itself.
-      const fromError = typeof errorData.error === 'string' ? errorData.error : '';
-      const fromMessage = typeof errorData.message === 'string' ? errorData.message : '';
-      return {
-        error:
-          fromError ||
-          fromMessage ||
-          `HTTP ${response.status}: ${response.statusText}`
-      };
+      return { error: await errorMessageFrom(response) };
     }
 
     const data = await parseResponse<T>(response);
@@ -704,12 +696,7 @@ export async function apiPostForm<T>(
     });
 
     if (!response.ok) {
-      const errorData = await parseResponse<{ message?: string }>(response);
-      return {
-        error:
-          errorData.message ||
-          `HTTP ${response.status}: ${response.statusText}`
-      };
+      return { error: await errorMessageFrom(response) };
     }
 
     const respData = await parseResponse<T>(response);

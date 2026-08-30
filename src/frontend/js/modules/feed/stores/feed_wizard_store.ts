@@ -12,6 +12,7 @@ import Alpine from 'alpinejs';
 import type {
   FeedWizardStoreState,
   WizardConfig,
+  FeedPreview,
   SelectionItem,
   XPathOption,
   AdvancedXPathOption,
@@ -75,6 +76,9 @@ function createFeedWizardStore(): FeedWizardStoreState {
     feedItems: [],
     selectedFeedIndex: 0,
     editFeedId: null,
+    articleSources: [],
+    redirect: '',
+    articleHtml: {},
 
     // === XPath Selections ===
     articleSelectors: [],
@@ -110,6 +114,7 @@ function createFeedWizardStore(): FeedWizardStoreState {
       if (config.selectedFeedIndex !== undefined) this.selectedFeedIndex = config.selectedFeedIndex;
       if (config.editFeedId !== undefined) this.editFeedId = config.editFeedId;
       if (config.articleSelector !== undefined) this.articleSelector = config.articleSelector;
+      if (config.articleSources !== undefined) this.articleSources = config.articleSources;
 
       // Settings
       if (config.settings) {
@@ -310,6 +315,65 @@ function createFeedWizardStore(): FeedWizardStoreState {
     },
 
     /**
+     * Move to another step of the wizard.
+     *
+     * The steps were four page loads until #262; they are four panels of one
+     * page now, so moving between them is a state change rather than a POST.
+     */
+    goToStep(step: 1 | 2 | 3 | 4): void {
+      this.currentStep = step;
+    },
+
+    /**
+     * Take on a feed the preview endpoint just described.
+     *
+     * Anything derived from the previous feed goes: the selectors point at
+     * elements of an article that is no longer on screen, and the cached
+     * article HTML belongs to the old feed's indices.
+     */
+    setFeedPreview(preview: FeedPreview): void {
+      this.feedTitle = preview.title;
+      this.feedText = preview.articleSource;
+      this.detectedFeed = preview.articleSource || 'Webpage Link';
+      this.articleSources = preview.articleSources;
+      this.feedItems = preview.items.map(item => ({
+        ...item,
+        hostStatus: '-',
+        hasHtml: false
+      }));
+      this.selectedFeedIndex = 0;
+      this.articleHtml = {};
+      this.articleSelectors = [];
+      this.filterSelectors = [];
+      this.articleSelector = '';
+      this.currentXPath = '';
+      this.markActionOptions = [];
+    },
+
+    /**
+     * Remember an article's HTML so re-entering a step does not refetch it.
+     */
+    setArticleHtml(index: number, html: string): void {
+      this.articleHtml = { ...this.articleHtml, [index]: html };
+      this.feedItems = this.feedItems.map(item =>
+        item.index === index ? { ...item, hasHtml: true } : item
+      );
+    },
+
+    /**
+     * Mark a host with '-', '☆' or '★'.
+     *
+     * The mark is the user's own note about which sources are worth reading;
+     * it is never saved, so it lives no longer than the wizard does.
+     */
+    setHostMark(host: string, mark: string): void {
+      if (!host) return;
+      this.feedItems = this.feedItems.map(item =>
+        item.host === host ? { ...item, hostStatus: mark } : item
+      );
+    },
+
+    /**
      * Check if wizard can proceed to next step.
      */
     canProceed(): boolean {
@@ -342,6 +406,9 @@ function createFeedWizardStore(): FeedWizardStoreState {
       this.feedItems = [];
       this.selectedFeedIndex = 0;
       this.editFeedId = null;
+      this.articleSources = [];
+      this.redirect = '';
+      this.articleHtml = {};
       this.articleSelectors = [];
       this.filterSelectors = [];
       this.articleSelector = '';

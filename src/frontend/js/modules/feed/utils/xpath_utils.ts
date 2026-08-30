@@ -441,46 +441,6 @@ export function hasClassInAncestry(element: HTMLElement, className: string): boo
   return false;
 }
 
-/**
- * Parse HTML content from a selection item's innerHTML.
- *
- * The selection list items contain XPath expressions with delete buttons.
- * This extracts just the XPath text.
- *
- * @param listItemHtml - innerHTML of a selection list item
- * @returns The XPath expression text
- */
-export function parseXPathFromListItem(listItemHtml: string): string {
-  // Remove the delete button span and extract text
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = listItemHtml;
-
-  // Remove delete_selection spans
-  tempDiv.querySelectorAll('.delete_selection').forEach(el => el.remove());
-
-  return tempDiv.textContent?.trim() ?? '';
-}
-
-/**
- * Parse existing selection list into XPath array.
- *
- * @param listElement - The ol/ul element containing selection items
- * @returns Array of XPath expressions
- */
-export function parseSelectionList(listElement: HTMLElement | null): string[] {
-  if (!listElement) return [];
-
-  const xpaths: string[] = [];
-  listElement.querySelectorAll('li').forEach(li => {
-    const xpath = parseXPathFromListItem(li.innerHTML);
-    if (xpath) {
-      xpaths.push(xpath);
-    }
-  });
-
-  return xpaths;
-}
-
 // Export functions to window for backward compatibility with PHP views
 declare global {
   interface Window {

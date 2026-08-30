@@ -513,6 +513,26 @@ class TermCrudApiHandler
             }
 
             $langId = (int) $textData['TxLgID'];
+
+            // The caller passes no wordId when the reader believes the word is
+            // unknown, but the reader reads that from the occurrence table. A
+            // term created without linking its occurrences — every term a
+            // dictionary import creates — is invisible there while still
+            // occupying (WoTextLC, WoLgID). Reported as new, the form would
+            // POST /terms/full and collide with the unique index (issue #283).
+            // Resolve the term by what identifies it, so the form opens on the
+            // row that exists and saves through the update path.
+            $wordAtPosition = $this->linkingService->getWordAtPosition($textId, $position);
+            if ($wordAtPosition !== null) {
+                $existingId = $this->findTermIdByText(
+                    $langId,
+                    mb_strtolower($wordAtPosition, 'UTF-8')
+                );
+                if ($existingId !== null) {
+                    $wordId = $existingId;
+                    $hasWordId = true;
+                }
+            }
         }
 
         // Get language settings
@@ -637,6 +657,29 @@ class TermCrudApiHandler
     }
 
     /**
+     * The ID of the term this language already holds for `$termlc`, if any.
+     *
+     * Looks the term up by the pair `words` is unique on. The reader's notion
+     * of a new word comes from `word_occurrences` and can be stale, so it is
+     * not usable as an existence check.
+     *
+     * @param int    $langId Language ID
+     * @param string $termlc Lowercased term text
+     *
+     * @return int|null Existing word ID, or null when the term is genuinely new
+     */
+    private function findTermIdByText(int $langId, string $termlc): ?int
+    {
+        $existing = QueryBuilder::table('words')
+            ->select(['WoID'])
+            ->where('WoTextLC', '=', $termlc)
+            ->where('WoLgID', '=', $langId)
+            ->firstPrepared();
+
+        return $existing === null ? null : (int) $existing['WoID'];
+    }
+
+    /**
      * Get similar terms for the edit form.
      *
      * @param int      $langId    Language ID
@@ -715,6 +758,17 @@ class TermCrudApiHandler
         // Validate status
         if (!TermStatusService::isValidStatus($status)) {
             return ['error' => 'Status must be 1-5, 98, or 99'];
+        }
+
+        // getTermForEdit() now routes the form to the update path when the term
+        // already exists, so the caller reaching here with one is either an API
+        // client of its own or a form loaded before the term appeared. Creating
+        // is still the wrong verb for it — a plain INSERT would fail on the
+        // unique index (issue #283) — so hand it to the update path, which
+        // takes the same payload.
+        $existingId = $this->findTermIdByText($langId, $textLc);
+        if ($existingId !== null) {
+            return $this->updateTermFull($existingId, $data);
         }
 
         $translation = trim((string)($data['translation'] ?? ''));
@@ -878,6 +932,12 @@ class TermCrudApiHandler
             . UserScopedQuery::forTablePrepared('words', $bindings),
             [$text, $translation, $romanization, $sentence, $notes, $lemma, $lemmaLc, $status, $termId]
         );
+
+        // A term whose occurrences were never linked stays invisible to the
+        // reader however often it is edited, so saving one is the moment to
+        // repair it (issue #283). Re-pointing occurrences that already carry
+        // this WoID costs nothing and changes nothing.
+        $this->linkingService->linkToTextItems($termId, (int) $existing['WoLgID'], $textLc);
 
         // Save tags if provided
         $tags = [];

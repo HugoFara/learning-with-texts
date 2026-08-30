@@ -13,9 +13,7 @@ import {
   generateMarkActionOptions,
   generateAdvancedXPathOptions,
   xpathToCssSelector,
-  hasClassInAncestry,
-  parseXPathFromListItem,
-  parseSelectionList
+  hasClassInAncestry
 } from '../../../../src/frontend/js/modules/feed/utils/xpath_utils';
 
 describe('feeds/utils/xpath_utils.ts', () => {
@@ -416,60 +414,6 @@ describe('feeds/utils/xpath_utils.ts', () => {
       const el = document.getElementById('child') as HTMLElement;
 
       expect(hasClassInAncestry(el, 'target')).toBe(false);
-    });
-  });
-
-  // ===========================================================================
-  // parseXPathFromListItem Tests
-  // ===========================================================================
-
-  describe('parseXPathFromListItem', () => {
-    it('extracts xpath from list item HTML', () => {
-      const html = '//div[@class="test"]<span class="delete_selection">X</span>';
-
-      const result = parseXPathFromListItem(html);
-
-      expect(result).toBe('//div[@class="test"]');
-    });
-
-    it('handles empty input', () => {
-      expect(parseXPathFromListItem('')).toBe('');
-    });
-
-    it('removes multiple delete buttons', () => {
-      const html = '<span class="delete_selection">X</span>//div<span class="delete_selection">Y</span>';
-
-      const result = parseXPathFromListItem(html);
-
-      expect(result).toBe('//div');
-    });
-  });
-
-  // ===========================================================================
-  // parseSelectionList Tests
-  // ===========================================================================
-
-  describe('parseSelectionList', () => {
-    it('returns empty array for null input', () => {
-      expect(parseSelectionList(null)).toEqual([]);
-    });
-
-    it('extracts xpaths from list items', () => {
-      const ul = document.createElement('ul');
-      ul.innerHTML = '<li>//div</li><li>//span</li>';
-
-      const result = parseSelectionList(ul);
-
-      expect(result).toEqual(['//div', '//span']);
-    });
-
-    it('filters out empty items', () => {
-      const ul = document.createElement('ul');
-      ul.innerHTML = '<li>//div</li><li></li><li>//span</li>';
-
-      const result = parseSelectionList(ul);
-
-      expect(result).toEqual(['//div', '//span']);
     });
   });
 });

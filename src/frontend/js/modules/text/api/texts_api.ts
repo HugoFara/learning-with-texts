@@ -173,6 +173,28 @@ export interface TextDisplayMode {
 /**
  * Text creation request.
  */
+/** One tallied term: [term, occurrences, translation]. */
+export type TextCheckWordEntry = [string, number, string];
+
+/** One tallied non-word: [text, occurrences]. */
+export type TextCheckNonWordEntry = [string, number];
+
+/**
+ * What the parser made of a text, from `POST /texts/check`.
+ *
+ * `warning` is a ParseCoverage verdict — 'ok', 'no_words' or
+ * 'almost_no_words'.
+ */
+export interface TextCheckReport {
+  preview: string;
+  sentences: string[];
+  words: TextCheckWordEntry[];
+  nonWords: TextCheckNonWordEntry[];
+  multiWords: TextCheckWordEntry[];
+  rtlScript: boolean;
+  warning: string;
+}
+
 export interface TextCreateRequest {
   title: string;
   langId: number;
@@ -346,6 +368,44 @@ export const TextsApi = {
     data: TextCreateRequest
   ): Promise<ApiResponse<TextSaveResponse>> {
     return apiPut<TextSaveResponse>(`/texts/${textId}`, {
+      title: data.title,
+      language_id: data.langId,
+      text: data.text,
+      source_uri: data.sourceUri,
+      audio_uri: data.audioUri,
+      tags: data.tags
+    });
+  },
+
+  /**
+   * Parse a text and report on it without saving.
+   *
+   * @param langId Language to parse under
+   * @param text   Text content to check
+   * @returns Promise with the parse report or error
+   */
+  async check(langId: number, text: string): Promise<ApiResponse<TextCheckReport>> {
+    return apiPost<TextCheckReport>('/texts/check', {
+      language_id: langId,
+      text
+    });
+  },
+
+  /**
+   * Update an archived text.
+   *
+   * Archived texts carry no sentences or word occurrences, so unlike
+   * {@link update} this saves the row without reparsing it.
+   *
+   * @param textId Archived text ID to update
+   * @param data   Text fields
+   * @returns Promise with the saved text ID or error
+   */
+  async updateArchived(
+    textId: number,
+    data: TextCreateRequest
+  ): Promise<ApiResponse<TextSaveResponse>> {
+    return apiPut<TextSaveResponse>(`/texts/archived/${textId}`, {
       title: data.title,
       language_id: data.langId,
       text: data.text,

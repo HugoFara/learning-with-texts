@@ -1,376 +1,282 @@
 /**
- * Tests for feed_wizard_step2.ts - Feed wizard step 2 (article selection)
+ * Tests for feed_wizard_step2.ts - picking the article section.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-// Mock Alpine.js
-vi.mock('alpinejs', () => ({
-  default: {
-    data: vi.fn()
-  }
-}));
-
-// Create shared mock store
-const mockStore = {
-  configure: vi.fn(),
-  articleSelectors: [],
-  markActionOptions: [],
-  currentXPath: '',
-  isMinimized: false,
-  selectionMode: 'smart' as 'smart' | 'all' | 'adv',
-  hideImages: true,
-  setCurrentXPath: vi.fn(),
-  setMarkActionOptions: vi.fn(),
-  addSelector: vi.fn(),
-  removeSelector: vi.fn(),
-  highlightSelector: vi.fn(),
-  clearHighlight: vi.fn(),
-  buildSelectorsString: vi.fn(() => '//article'),
-  openAdvanced: vi.fn(),
-  closeAdvanced: vi.fn(),
-  customXPath: '',
-  customXPathValid: false
-};
-
-// Mock feed_wizard_store
-vi.mock('../../../src/frontend/js/modules/feed/stores/feed_wizard_store', () => ({
-  getFeedWizardStore: vi.fn(() => mockStore)
-}));
-
-// Mock highlight_service
-vi.mock('../../../src/frontend/js/modules/feed/services/highlight_service', () => ({
-  getHighlightService: vi.fn(() => ({
+const { stores, highlight } = vi.hoisted(() => ({
+  stores: {} as Record<string, unknown>,
+  highlight: {
     clearAll: vi.fn(),
     clearMarking: vi.fn(),
     clearSelections: vi.fn(),
     clearHighlighting: vi.fn(),
     applySelections: vi.fn(),
+    applyArticleSectionFilter: vi.fn(),
     highlightListItem: vi.fn(),
     markElements: vi.fn(),
     toggleImages: vi.fn(),
     updateLastMargin: vi.fn()
-  })),
+  }
+}));
+
+vi.mock('alpinejs', () => ({
+  default: {
+    data: vi.fn(),
+    store: vi.fn((name: string, value?: unknown) => {
+      if (value !== undefined) stores[name] = value;
+      return stores[name];
+    })
+  }
+}));
+
+vi.mock('../../../src/frontend/js/shared/api/client', () => ({
+  apiGet: vi.fn(),
+  apiPost: vi.fn(),
+  apiPut: vi.fn(),
+  apiDelete: vi.fn()
+}));
+
+vi.mock('../../../src/frontend/js/modules/feed/services/highlight_service', () => ({
+  getHighlightService: vi.fn(() => highlight),
   initHighlightService: vi.fn()
 }));
 
-// Mock xpath_utils
-vi.mock('../../../src/frontend/js/modules/feed/utils/xpath_utils', () => ({
-  xpathQuery: vi.fn(() => []),
-  generateMarkActionOptions: vi.fn(() => []),
-  generateAdvancedXPathOptions: vi.fn(() => []),
-  getAncestorsAndSelf: vi.fn(() => []),
-  parseSelectionList: vi.fn(() => [])
-}));
-
 import Alpine from 'alpinejs';
-import { feedWizardStep2Data, initFeedWizardStep2Alpine, type Step2Config } from '../../../src/frontend/js/modules/feed/components/feed_wizard_step2';
+import { apiPost } from '../../../src/frontend/js/shared/api/client';
+import { getFeedWizardStore } from '../../../src/frontend/js/modules/feed/stores/feed_wizard_store';
+import {
+  feedWizardStep2Data,
+  initFeedWizardStep2Alpine
+} from '../../../src/frontend/js/modules/feed/components/feed_wizard_step2';
+
+/** Put a two-article feed in the store, as step 1 would have. */
+function seedFeed(): void {
+  const store = getFeedWizardStore();
+  store.reset();
+  store.rssUrl = 'https://example.com/feed.xml';
+  store.setFeedPreview({
+    title: 'Le Monde',
+    articleSource: '',
+    articleSources: ['description', 'encoded'],
+    items: [
+      { index: 0, title: 'One', link: 'https://a.example/1', host: 'a.example' },
+      { index: 1, title: 'Two', link: 'https://b.example/2', host: 'b.example' }
+    ]
+  });
+  store.goToStep(2);
+}
+
+/** Answer every article fetch with the given HTML. */
+function articleResponds(html: string): void {
+  vi.mocked(apiPost).mockResolvedValue({
+    data: { success: true, html },
+    error: null
+  } as never);
+}
 
 describe('feed_wizard_step2.ts', () => {
   beforeEach(() => {
-    document.body.innerHTML = '';
     vi.clearAllMocks();
-    mockStore.configure.mockClear();
-    mockStore.articleSelectors = [];
-    mockStore.currentXPath = '';
-    mockStore.isMinimized = false;
-    mockStore.selectionMode = 'smart';
-    mockStore.hideImages = true;
+    document.body.innerHTML = '<p id="lwt_last"></p><div id="lwt_article"></div>';
+    seedFeed();
+    Object.defineProperty(window, 'location', { value: { href: '' }, writable: true });
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
-    document.body.innerHTML = '';
   });
 
-  // ===========================================================================
-  // feedWizardStep2Data Factory Tests
-  // ===========================================================================
-
-  describe('feedWizardStep2Data', () => {
-    it('creates component with default values when no config', () => {
+  describe('seeding from the store', () => {
+    it('starts with the feed step 1 read', () => {
       const component = feedWizardStep2Data();
 
-      expect(component.config).toBeDefined();
-      expect(component.settingsOpen).toBe(false);
-      expect(component.feedName).toBe('');
-      expect(component.articleSource).toBe('');
-      expect(component.selectedFeedIndex).toBe(0);
-      expect(component.hostStatus).toBe('-');
+      expect(component.feedName).toBe('Le Monde');
+      expect(component.rssUrl).toBe('https://example.com/feed.xml');
+      expect(component.feedItems).toHaveLength(2);
+      expect(component.articleSources).toEqual(['description', 'encoded']);
     });
 
-    it('reads config from script tag', () => {
-      const config: Step2Config = {
-        rssUrl: 'https://example.com/feed.xml',
-        feedTitle: 'Test Feed',
-        feedText: 'body',
-        detectedFeed: 'RSS 2.0',
-        feedItems: [{ title: 'Article 1', link: 'http://example.com/1' }],
-        selectedFeedIndex: 2,
-        articleTags: '',
-        settings: { selectionMode: 'all', hideImages: false, isMinimized: true },
-        editFeedId: 5,
-        articleSources: ['body', 'article'],
-        multipleHosts: true
-      };
-      document.body.innerHTML = `
-        <script id="wizard-step2-config" type="application/json">
-          ${JSON.stringify(config)}
-        </script>
-      `;
-
-      const component = feedWizardStep2Data();
-
-      expect(component.feedName).toBe('Test Feed');
-      expect(component.articleSource).toBe('body');
-      expect(component.selectedFeedIndex).toBe(2);
+    it('notices a feed whose articles come from more than one host', () => {
+      expect(feedWizardStep2Data().multipleHosts).toBe(true);
     });
 
-    it('handles invalid JSON config gracefully', () => {
-      document.body.innerHTML = `
-        <script id="wizard-step2-config" type="application/json">
-          { invalid json }
-        </script>
-      `;
+    it('reports a single-host feed as such', () => {
+      const store = getFeedWizardStore();
+      store.feedItems = store.feedItems.filter(item => item.index === 0);
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      const component = feedWizardStep2Data();
-
-      expect(component.feedName).toBe('');
-      expect(consoleSpy).toHaveBeenCalled();
+      expect(feedWizardStep2Data().multipleHosts).toBe(false);
     });
   });
 
-  // ===========================================================================
-  // Computed Properties Tests
-  // ===========================================================================
-
-  describe('computed properties', () => {
-    it('canProceed returns false when no selectors', () => {
-      mockStore.articleSelectors = [];
-
+  describe('init', () => {
+    it('puts the article on the page', async () => {
+      articleResponds('<p>Bonjour</p>');
       const component = feedWizardStep2Data();
+
+      component.init();
+      await vi.waitFor(() => expect(component.loadingArticle).toBe(false));
+
+      expect(document.getElementById('lwt_article')?.innerHTML).toBe('<p>Bonjour</p>');
+      expect(highlight.toggleImages).toHaveBeenCalledWith(true);
+    });
+
+    it('reports an article it could not fetch', async () => {
+      vi.mocked(apiPost).mockResolvedValue({
+        data: { success: false, error: 'Fetch failed' },
+        error: null
+      } as never);
+      const component = feedWizardStep2Data();
+
+      component.init();
+      await vi.waitFor(() => expect(component.loadingArticle).toBe(false));
+
+      expect(component.hasArticleError()).toBe(true);
+      expect(component.articleError).toBe('Fetch failed');
+    });
+  });
+
+  describe('changing what is shown', () => {
+    it('fetches the newly selected article', async () => {
+      articleResponds('<p>Two</p>');
+      const component = feedWizardStep2Data();
+      component.selectedFeedIndex = 1;
+
+      component.changeSelectedFeed();
+      await vi.waitFor(() => expect(component.loadingArticle).toBe(false));
+
+      expect(getFeedWizardStore().selectedFeedIndex).toBe(1);
+      expect(vi.mocked(apiPost).mock.calls[0][1]).toMatchObject({ index: 1 });
+    });
+
+    it('drops every cached article when the body source changes', async () => {
+      articleResponds('<p>Bonjour</p>');
+      const component = feedWizardStep2Data();
+      component.init();
+      await vi.waitFor(() => expect(component.loadingArticle).toBe(false));
+
+      component.articleSource = 'description';
+      component.changeArticleSection();
+      await vi.waitFor(() => expect(component.loadingArticle).toBe(false));
+
+      expect(getFeedWizardStore().feedText).toBe('description');
+      expect(apiPost).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(apiPost).mock.calls[1][1]).toMatchObject({ article_source: 'description' });
+    });
+
+    it('marks every article of the same host', () => {
+      const component = feedWizardStep2Data();
+      component.hostStatus = '★';
+
+      component.changeHostStatus();
+
+      expect(getFeedWizardStore().feedItems[0].hostStatus).toBe('★');
+      expect(getFeedWizardStore().feedItems[1].hostStatus).toBe('-');
+    });
+  });
+
+  describe('navigation', () => {
+    it('refuses to go on before anything is picked', () => {
+      const component = feedWizardStep2Data();
+
+      expect(component.canProceed).toBe(false);
+      component.goNext();
+
+      expect(getFeedWizardStore().currentStep).toBe(2);
+    });
+
+    it('refuses to go on without a name', () => {
+      getFeedWizardStore().addSelector('//article', 'article');
+      const component = feedWizardStep2Data();
+      component.feedName = '  ';
 
       expect(component.canProceed).toBe(false);
     });
 
-    it('canProceed returns true when selectors exist', () => {
-      mockStore.articleSelectors = [{ id: '1', xpath: '//p', isHighlighted: false }];
-
+    it('carries the picked section into step 3', () => {
+      getFeedWizardStore().addSelector('//article', 'article');
+      getFeedWizardStore().addSelector('//main', 'article');
       const component = feedWizardStep2Data();
+      component.feedName = 'Renamed';
 
-      expect(component.canProceed).toBe(true);
-    });
-
-    it('articleSelectors returns store selectors', () => {
-      mockStore.articleSelectors = [{ id: '1', xpath: '//p', isHighlighted: false }];
-
-      const component = feedWizardStep2Data();
-
-      expect(component.articleSelectors).toEqual(mockStore.articleSelectors);
-    });
-
-    it('currentXPath returns store value', () => {
-      mockStore.currentXPath = '//div[@class="content"]';
-
-      const component = feedWizardStep2Data();
-
-      expect(component.currentXPath).toBe('//div[@class="content"]');
-    });
-
-    it('isMinimized returns store value', () => {
-      mockStore.isMinimized = true;
-
-      const component = feedWizardStep2Data();
-
-      expect(component.isMinimized).toBe(true);
-    });
-
-    it('selectionMode maps smart to 0', () => {
-      mockStore.selectionMode = 'smart';
-
-      const component = feedWizardStep2Data();
-
-      expect(component.selectionMode).toBe('0');
-    });
-
-    it('selectionMode maps all correctly', () => {
-      mockStore.selectionMode = 'all';
-
-      const component = feedWizardStep2Data();
-
-      expect(component.selectionMode).toBe('all');
-    });
-
-    it('selectionMode maps adv correctly', () => {
-      mockStore.selectionMode = 'adv';
-
-      const component = feedWizardStep2Data();
-
-      expect(component.selectionMode).toBe('adv');
-    });
-  });
-
-  // ===========================================================================
-  // Action Methods Tests
-  // ===========================================================================
-
-  describe('action methods', () => {
-    it('deleteSelector calls store removeSelector', () => {
-      const component = feedWizardStep2Data();
-
-      component.deleteSelector('selector-1');
-
-      expect(mockStore.removeSelector).toHaveBeenCalledWith('selector-1', 'article');
-    });
-
-    it('toggleSelectorHighlight toggles highlight', () => {
-      mockStore.articleSelectors = [{ id: '1', xpath: '//p', isHighlighted: false }];
-
-      const component = feedWizardStep2Data();
-      component.toggleSelectorHighlight('1');
-
-      expect(mockStore.highlightSelector).toHaveBeenCalledWith('1');
-    });
-
-    it('toggleSelectorHighlight clears highlight when already highlighted', () => {
-      mockStore.articleSelectors = [{ id: '1', xpath: '//p', isHighlighted: true }];
-
-      const component = feedWizardStep2Data();
-      component.toggleSelectorHighlight('1');
-
-      expect(mockStore.clearHighlight).toHaveBeenCalled();
-    });
-
-    it('toggleMinimize toggles isMinimized', () => {
-      mockStore.isMinimized = false;
-
-      const component = feedWizardStep2Data();
-      component.toggleMinimize();
-
-      expect(mockStore.isMinimized).toBe(true);
-    });
-
-    it('changeSelectMode clears marking', () => {
-      const component = feedWizardStep2Data();
-      component.changeSelectMode();
-
-      expect(mockStore.setCurrentXPath).toHaveBeenCalledWith('');
-      expect(mockStore.setMarkActionOptions).toHaveBeenCalledWith([]);
-    });
-  });
-
-  // ===========================================================================
-  // Navigation Tests
-  // ===========================================================================
-
-  describe('navigation', () => {
-    it('goBack navigates to step 1', () => {
-      const originalLocation = window.location;
-      delete (window as { location?: Location }).location;
-      window.location = { href: '' } as Location;
-
-      const component = feedWizardStep2Data();
-      component.goBack();
-
-      expect(window.location.href).toContain('/feeds/new');
-
-      window.location = originalLocation;
-    });
-
-    it('cancel navigates to feeds edit with del_wiz', () => {
-      const originalLocation = window.location;
-      delete (window as { location?: Location }).location;
-      window.location = { href: '' } as Location;
-
-      const component = feedWizardStep2Data();
-      component.cancel();
-
-      expect(window.location.href).toBe('/feeds/edit?del_wiz=1');
-
-      window.location = originalLocation;
-    });
-
-    it('goNext submits form', () => {
-      document.body.innerHTML = `
-        <form name="lwt_form1">
-          <input type="hidden" name="html" value="" />
-          <input type="hidden" name="step" value="2" />
-          <input type="hidden" name="article_tags" value="" disabled />
-        </form>
-      `;
-
-      const form = document.querySelector('form')!;
-      const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
-
-      const component = feedWizardStep2Data();
       component.goNext();
 
-      expect(submitSpy).toHaveBeenCalled();
+      const store = getFeedWizardStore();
+      expect(store.currentStep).toBe(3);
+      expect(store.feedTitle).toBe('Renamed');
+      expect(store.articleSelector).toBe('//article | //main');
+    });
+
+    it('goes back to step 1', () => {
+      feedWizardStep2Data().goBack();
+
+      expect(getFeedWizardStore().currentStep).toBe(1);
+    });
+
+    it('cancels to the feed manager', () => {
+      feedWizardStep2Data().cancel();
+
+      expect(window.location.href).toBe('/feeds/manage');
     });
   });
 
-  // ===========================================================================
-  // Event Handlers Tests
-  // ===========================================================================
-
-  describe('event handlers', () => {
-    it('handleMarkActionChange updates currentXPath', () => {
+  describe('picking', () => {
+    it('adds the current XPath to the article list', () => {
       const component = feedWizardStep2Data();
-      const event = { target: { value: '//div' } } as unknown as Event;
+      getFeedWizardStore().setCurrentXPath('//article');
 
-      component.handleMarkActionChange(event);
+      component.getSelection();
 
-      expect(mockStore.setCurrentXPath).toHaveBeenCalledWith('//div');
+      expect(getFeedWizardStore().articleSelectors.map(s => s.xpath)).toEqual(['//article']);
     });
 
-    it('handleContentClick does nothing without target', () => {
-      const component = feedWizardStep2Data();
-      const event = { target: null } as unknown as MouseEvent;
+    it('ignores a Get with nothing marked', () => {
+      feedWizardStep2Data().getSelection();
 
-      expect(() => component.handleContentClick(event)).not.toThrow();
+      expect(getFeedWizardStore().articleSelectors).toEqual([]);
+    });
+
+    it('removes a picked selector', () => {
+      const store = getFeedWizardStore();
+      store.addSelector('//article', 'article');
+      const id = store.articleSelectors[0].id;
+
+      feedWizardStep2Data().deleteSelector(id);
+
+      expect(store.articleSelectors).toEqual([]);
+    });
+
+    it('marks the element the dropdown names', () => {
+      const component = feedWizardStep2Data();
+      const select = document.createElement('select');
+      const option = document.createElement('option');
+      option.value = '//main';
+      select.appendChild(option);
+      select.value = '//main';
+
+      component.handleMarkActionChange({ target: select } as unknown as Event);
+
+      expect(getFeedWizardStore().currentXPath).toBe('//main');
+      expect(highlight.markElements).toHaveBeenCalledWith('//main');
     });
   });
 
-  // ===========================================================================
-  // Advanced Mode Tests
-  // ===========================================================================
+  it('unbinds its article listener when the step is left', async () => {
+    articleResponds('<p>Bonjour</p>');
+    const component = feedWizardStep2Data();
+    component.init();
+    await vi.waitFor(() => expect(component.loadingArticle).toBe(false));
+    const spy = vi.spyOn(component, 'handleContentClick');
 
-  describe('advanced mode', () => {
-    it('cancelAdvanced closes advanced panel', () => {
-      const component = feedWizardStep2Data();
-      component.cancelAdvanced();
+    component.destroy();
+    document.getElementById('lwt_article')?.dispatchEvent(new MouseEvent('click'));
 
-      expect(mockStore.closeAdvanced).toHaveBeenCalled();
-    });
-
-    it('selectAdvancedOption sets custom xpath', () => {
-      const component = feedWizardStep2Data();
-      component.selectAdvancedOption('//custom/xpath');
-
-      expect(mockStore.customXPath).toBe('//custom/xpath');
-    });
+    expect(spy).not.toHaveBeenCalled();
+    expect(highlight.clearAll).toHaveBeenCalled();
   });
 
-  // ===========================================================================
-  // initFeedWizardStep2Alpine Tests
-  // ===========================================================================
+  it('registers itself with Alpine', () => {
+    initFeedWizardStep2Alpine();
 
-  describe('initFeedWizardStep2Alpine', () => {
-    it('registers feedWizardStep2 component with Alpine', () => {
-      initFeedWizardStep2Alpine();
-
-      expect(Alpine.data).toHaveBeenCalledWith('feedWizardStep2', feedWizardStep2Data);
-    });
-  });
-
-  // ===========================================================================
-  // Global Window Exposure Tests
-  // ===========================================================================
-
-  describe('global window exposure', () => {
-    it('exposes feedWizardStep2Data on window', () => {
-      expect(typeof window.feedWizardStep2Data).toBe('function');
-    });
+    expect(Alpine.data).toHaveBeenCalledWith('feedWizardStep2', feedWizardStep2Data);
   });
 });

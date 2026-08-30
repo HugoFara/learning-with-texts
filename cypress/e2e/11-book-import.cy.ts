@@ -99,7 +99,8 @@ describe('EPUB Import', () => {
         body: {},
         failOnStatusCode: false
       }).then((response) => {
-        expect(response.status).to.eq(200);
+        // A rejected write reports a 4xx, not a 200 carrying an error body.
+        expect(response.status).to.eq(400);
         expect(response.body).to.have.property('success', false);
         expect(response.body).to.have.property('error').that.is.a('string');
       });

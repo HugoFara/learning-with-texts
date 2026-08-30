@@ -135,7 +135,7 @@ sudo systemctl restart httpd  # or nginx</code></pre>
 </div>
 </template>
 
-<form enctype="multipart/form-data" class="validate" method="post"
+<form enctype="multipart/form-data" class="validate"
       x-show="!isDone" @submit.prevent="submit"<?php echo $formStyle; ?>>
     <?php echo FormHelper::csrfField(); ?>
 

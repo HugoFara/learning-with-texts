@@ -233,6 +233,44 @@ class Migrations
      */
     private static function addMissingForeignKeys(array $keys): int
     {
+        // Rows a missing constraint would have prevented are already in the
+        // database — that is the whole premise of repairing an install that
+        // lost its keys. InnoDB validates existing rows when a constraint is
+        // added, so with checks on it refuses the very keys most worth putting
+        // back, and the failure is only logged: the constraint is quietly lost.
+        //
+        // update() and Restore both happen to set this already, so the repair
+        // worked from there and nowhere else. Establish it here instead of
+        // depending on the caller, since the caller cannot know it is needed.
+        $checksWereOn = ((int) Connection::preparedFetchValue(
+            'SELECT @@FOREIGN_KEY_CHECKS AS value'
+        )) === 1;
+        if ($checksWereOn) {
+            Connection::execute('SET FOREIGN_KEY_CHECKS = 0');
+        }
+
+        try {
+            return self::addForeignKeysUnchecked($keys);
+        } finally {
+            if ($checksWereOn) {
+                Connection::execute('SET FOREIGN_KEY_CHECKS = 1');
+            }
+        }
+    }
+
+    /**
+     * Add the absent constraints, assuming FK checks are already off.
+     *
+     * @param array<array{
+     *     name: string, table: string, columns: array<string>,
+     *     refTable: string, refColumns: array<string>,
+     *     onUpdate: string, onDelete: string
+     * }> $keys Foreign keys to add if missing
+     *
+     * @return int How many were added
+     */
+    private static function addForeignKeysUnchecked(array $keys): int
+    {
         $existing = [];
         foreach (self::captureForeignKeys() as $key) {
             $existing[$key['table'] . '.' . $key['name']] = true;
@@ -537,6 +575,36 @@ class Migrations
             substr($sql_line, strlen($matches[0]));
         }
         return $sql_line;
+    }
+
+    /**
+     * Give a word count to the terms that never got one.
+     *
+     * WoWordCount = 0 means "not counted yet", not a count: the reader's
+     * parse-time linking asks for WoWordCount = 1 and expression matching asks
+     * for > 1, so a term sitting at 0 is matched by neither and stays invisible
+     * however many times its text is reparsed. A dictionary import used to
+     * leave every term it created in that state (issue #283); the import fixes
+     * its own rows now, and this repairs the installs that already ran it.
+     *
+     * Only rows still at 0 are visited, so this costs an indexed lookup on an
+     * install with nothing to fix.
+     *
+     * Failures are logged rather than raised. The count is derived from each
+     * language's parsing rules, which for a MeCab language means running MeCab
+     * — and an upgrade must not fail because an external tokenizer is missing
+     * from the machine (issue #275 was a whole class of that). A term left at
+     * 0 is no worse off than before the attempt.
+     *
+     * @return void
+     */
+    private static function computeMissingWordCounts(): void
+    {
+        try {
+            Maintenance::initWordCount();
+        } catch (\Throwable $e) {
+            error_log('Could not compute missing word counts: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -1106,6 +1174,8 @@ class Migrations
                 // request probes for before naming it in SQL.
                 Connection::forgetTableCache();
             }
+
+            self::computeMissingWordCounts();
         }
 
         if ($needsVersionUpdate) {

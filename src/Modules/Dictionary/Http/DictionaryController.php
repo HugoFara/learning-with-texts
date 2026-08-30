@@ -71,9 +71,6 @@ class DictionaryController extends BaseController
         $langName = $this->languageFacade->getLanguageName($langId);
         PageLayoutHelper::renderPageStart($langName . ' - Local Dictionaries', true);
 
-        // Handle form submissions
-        $this->handleFormSubmissions($langId);
-
         // The dictionary table is fetched by the dictionaryList component from
         // GET /local-dictionaries; only the lookup mode is still rendered here.
         $localDictMode = $this->dictionaryFacade->getLocalDictMode($langId);
@@ -265,48 +262,6 @@ class DictionaryController extends BaseController
             echo json_encode($result);
         } catch (RuntimeException $e) {
             echo json_encode(['error' => $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Handle form submissions on the index page.
-     *
-     * @param int $langId Language ID
-     *
-     * @return void
-     */
-    private function handleFormSubmissions(int $langId): void
-    {
-        // Handle quick create
-        if ($this->isPost() && $this->hasParam('create_dictionary')) {
-            $name = $this->param('dict_name');
-            if (!empty($name)) {
-                $this->dictionaryFacade->create($langId, $name, 'csv');
-            }
-        }
-
-        // Handle quick delete
-        if ($this->isPost() && $this->hasParam('delete_dictionary')) {
-            $dictId = $this->paramInt('dict_id');
-            if ($dictId !== null && $dictId > 0) {
-                $this->dictionaryFacade->delete($dictId);
-            }
-        }
-
-        // Handle enable/disable toggle
-        if ($this->isPost() && $this->hasParam('toggle_enabled')) {
-            $dictId = $this->paramInt('dict_id');
-            if ($dictId !== null) {
-                $dict = $this->dictionaryFacade->getById($dictId);
-                if ($dict !== null) {
-                    if ($dict->isEnabled()) {
-                        $dict->disable();
-                    } else {
-                        $dict->enable();
-                    }
-                    $this->dictionaryFacade->update($dict);
-                }
-            }
         }
     }
 

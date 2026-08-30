@@ -352,7 +352,13 @@ The version must be updated in these files before tagging a release:
 | --- | --- |
 | `src/Shared/Infrastructure/ApplicationInfo.php` | `VERSION` constant (e.g. `'3.0.2-fork'`) and `RELEASE_DATE` |
 | `package.json` | `version` field (without `-fork` suffix, e.g. `"3.0.2"`) |
+| `package-lock.json` | Root `version` and `packages."".version` — both mirror `package.json` |
 | `CHANGELOG.md` | Move `[Unreleased]` items to a new version section with the release date |
+
+Bump the two npm files with `npm version <x.y.z> --no-git-tag-version`, which
+writes both at once. Hand-editing `package.json` alone leaves the lock stale until
+the next `npm install` happens to rewrite it — that is how 3.2.2, 3.3.0 and 3.5.0
+shipped with a lock file naming an older version.
 
 `ApplicationInfo.php` is the **authoritative** version — it's what the app displays. Always update it.
 
