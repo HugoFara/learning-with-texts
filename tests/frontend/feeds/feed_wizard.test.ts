@@ -147,6 +147,22 @@ describe('feed_wizard.ts', () => {
       expect(getFeedWizardStore().editFeedId).toBe(7);
     });
 
+    it('takes the language the navbar is on', () => {
+      withConfig({ currentLanguageId: 4, currentLanguageName: 'French' });
+
+      feedWizardData().init();
+
+      expect(getFeedWizardStore().feedOptions.languageId).toBe(4);
+    });
+
+    it('leaves the language unset when none is current', () => {
+      withConfig({ currentLanguageId: 0 });
+
+      feedWizardData().init();
+
+      expect(getFeedWizardStore().feedOptions.languageId).toBeNull();
+    });
+
     it('reports a feed it could not reopen', async () => {
       withConfig({ editFeedId: 7 });
       vi.mocked(apiGet).mockResolvedValue({ data: null, error: 'Feed not found' } as never);

@@ -87,20 +87,25 @@ $helpLabel = __('feed.edit_help');
     </div>
 
     <div class="box">
-        <!-- Language -->
+        <!-- Language. Shown, not asked: the navbar is what picks a language,
+             and this feed keeps the one it was saved with. The id still rides
+             along in a hidden field, which is where the form reads it from. -->
         <div class="field">
-            <label class="label" for="NfLgID"><?php echo __e('feed.edit_label_language'); ?></label>
+            <label class="label"><?php echo __e('feed.edit_label_language'); ?></label>
             <div class="control">
-                <div class="select is-fullwidth">
-                    <select name="NfLgID" id="NfLgID">
-                        <?php foreach ($languages as $lang) : ?>
-                            <?php $selected = ($feed['NfLgID'] === $lang['LgID']) ? ' selected' : ''; ?>
-                            <option value="<?php echo $lang['LgID']; ?>"<?php echo $selected; ?>>
-                            <?php echo htmlspecialchars($lang['LgName'], ENT_QUOTES, 'UTF-8'); ?>
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+                <input type="hidden" name="NfLgID" id="NfLgID" value="<?php echo $feed['NfLgID']; ?>" />
+                <span class="tag is-info is-light">
+                    <?php
+                    $feedLanguageName = '';
+                    foreach ($languages as $lang) {
+                        if ($feed['NfLgID'] === $lang['LgID']) {
+                            $feedLanguageName = $lang['LgName'];
+                            break;
+                        }
+                    }
+                    echo htmlspecialchars($feedLanguageName, ENT_QUOTES, 'UTF-8');
+                    ?>
+                </span>
             </div>
         </div>
 

@@ -17,6 +17,7 @@ import type { FeedWizardStoreState } from '../types/feed_wizard_types';
 import { getFeedWizardStore } from '../stores/feed_wizard_store';
 import { saveFeed } from '../api/save_feed';
 import { openFeed } from '../services/wizard_flow';
+import { hydrateStepIcons } from '../services/step_icons';
 import {
   readWizardPageConfig,
   type CuratedFeedGroup,
@@ -52,6 +53,9 @@ export interface FeedWizardStep1Data {
   // Busy state, shared by both the curated add and the URL read
   saving: boolean;
   saveError: string;
+
+  // Lifecycle
+  init(): void;
 
   // Actions
   cancel(): void;
@@ -136,6 +140,10 @@ export function feedWizardStep1Data(): FeedWizardStep1Data {
 
     saving: false,
     saveError: '',
+
+    init(): void {
+      hydrateStepIcons();
+    },
 
     cancel(): void {
       window.location.href = '/feeds/manage';

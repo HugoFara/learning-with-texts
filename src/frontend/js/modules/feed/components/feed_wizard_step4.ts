@@ -17,12 +17,14 @@ import { getFeedWizardStore } from '../stores/feed_wizard_store';
 import { saveFeed } from '../api/save_feed';
 import { buildSectionTags } from '../utils/feed_selectors';
 import { readWizardPageConfig } from '../pages/feed_wizard_config';
+import { hydrateStepIcons } from '../services/step_icons';
 
 /**
  * Step 4 component data interface.
  */
 export interface FeedWizardStep4Data {
   languages: Array<{ id: number; name: string }>;
+  currentLanguageName: string;
 
   // Form data
   languageId: string;
@@ -52,6 +54,10 @@ export interface FeedWizardStep4Data {
   // Computed
   readonly store: FeedWizardStoreState;
   readonly isEditMode: boolean;
+  readonly languageName: string;
+
+  // Lifecycle
+  init(): void;
 
   // Actions
   submitLabel(): string;
@@ -68,9 +74,11 @@ export interface FeedWizardStep4Data {
 export function feedWizardStep4Data(): FeedWizardStep4Data {
   const store = getFeedWizardStore();
   const options = store.feedOptions;
+  const config = readWizardPageConfig();
 
   return {
-    languages: readWizardPageConfig().languages,
+    languages: config.languages,
+    currentLanguageName: config.currentLanguageName,
 
     // Form data — seeded from the store, which the earlier steps filled in.
     // The three selector fields stay editable: the wizard is a way to build
@@ -107,6 +115,22 @@ export function feedWizardStep4Data(): FeedWizardStep4Data {
 
     get isEditMode(): boolean {
       return this.store.editFeedId !== null;
+    },
+
+    /**
+     * The language this feed will be saved under, for display.
+     *
+     * Named rather than picked: the navbar chose it, and a reopened feed
+     * keeps whichever language it was saved with.
+     */
+    get languageName(): string {
+      const id = Number(this.languageId);
+      const match = this.languages.find(lang => lang.id === id);
+      return match?.name ?? this.currentLanguageName;
+    },
+
+    init(): void {
+      hydrateStepIcons();
     },
 
     submitLabel(): string {

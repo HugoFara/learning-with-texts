@@ -54,7 +54,11 @@ function seedFeed(): void {
 function withLanguages(): void {
   document.body.innerHTML =
     '<script type="application/json" id="feed-wizard-config">' +
-    JSON.stringify({ languages: [{ id: 3, name: 'French' }] }) +
+    JSON.stringify({
+      languages: [{ id: 3, name: 'French' }],
+      currentLanguageId: 3,
+      currentLanguageName: 'French'
+    }) +
     '</script>';
 }
 
@@ -89,8 +93,17 @@ describe('feed_wizard_step4.ts', () => {
       expect(feedWizardStep4Data().articleSection).toBe('redirect://a/@href | //article');
     });
 
-    it('offers the languages the page carries', () => {
-      expect(feedWizardStep4Data().languages).toEqual([{ id: 3, name: 'French' }]);
+    it('names the language rather than asking for one', () => {
+      expect(feedWizardStep4Data().languageName).toBe('French');
+    });
+
+    it('names the navbar language for a feed with none of its own', () => {
+      getFeedWizardStore().feedOptions = {
+        ...getFeedWizardStore().feedOptions,
+        languageId: null
+      };
+
+      expect(feedWizardStep4Data().languageName).toBe('French');
     });
   });
 

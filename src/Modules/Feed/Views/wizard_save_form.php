@@ -28,29 +28,17 @@ use Lwt\Shared\UI\Helpers\IconHelper;
 ?>
 <form class="validate" @submit="handleSubmit($event)">
     <div class="box">
-        <!-- Language -->
+        <!-- Language. Shown, not asked: the navbar picked it, and a reopened
+             feed keeps the one it was saved with (#262). -->
         <div class="field is-horizontal">
             <div class="field-label is-normal">
                 <label class="label"><?php echo __e('feed.wizard.step4.language'); ?></label>
             </div>
             <div class="field-body">
-                <div class="field has-addons">
-                    <div class="control is-expanded">
-                        <div class="select is-fullwidth">
-                            <select name="NfLgID" x-model="languageId" required class="notempty">
-                                <option value=""><?php echo __e('feed.wizard.step4.select_placeholder'); ?></option>
-                                <template x-for="lang in languages" :key="lang.id">
-                                    <option :value="lang.id" x-text="lang.name"></option>
-                                </template>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="control">
-                        <span class="icon has-text-danger"
-                              title="<?php echo __e('feed.wizard.common.field_required'); ?>">
-                            <?php echo IconHelper::render('asterisk', ['alt' => __('feed.wizard.common.required')]); ?>
-                        </span>
-                    </div>
+                <div class="field">
+                    <p class="control">
+                        <span class="tag is-info is-light" x-text="languageName"></span>
+                    </p>
                 </div>
             </div>
         </div>

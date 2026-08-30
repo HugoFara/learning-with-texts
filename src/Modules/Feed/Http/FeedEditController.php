@@ -49,6 +49,11 @@ class FeedEditController
      */
     public function spa(array $params): void
     {
+        // The manager lists the feeds of the language the navbar is on, so it
+        // needs to know which that is before it asks the API for them.
+        $currentLanguageId = CurrentLanguage::resolveId();
+        $currentLanguageName = $this->languageFacade->getLanguageName($currentLanguageId);
+
         PageLayoutHelper::renderPageStart('Feed Manager', true);
         /** @psalm-suppress UnresolvableInclude */
         include $this->viewPath . 'spa.php';

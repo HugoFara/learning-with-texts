@@ -106,25 +106,12 @@ function feedFilterComponent() {
       return getFeedManagerStore();
     },
 
-    get languages() {
-      return this.store.languages;
-    },
-
-    get filterLang() {
-      return this.store.filterLang;
-    },
-
     get sort() {
       return this.store.sort;
     },
 
     init(): void {
       this.localQuery = this.store.filterQuery;
-    },
-
-    setLang(langId: string): void {
-      const value = langId === '' ? '' : parseInt(langId, 10);
-      this.store.setFilterLang(value);
     },
 
     setSort(sort: string): void {
@@ -334,8 +321,10 @@ function feedFormComponent() {
       return this.store.editingFeed;
     },
 
-    get languages() {
-      return this.store.languages;
+    get languageName(): string {
+      const id = Number(this.store.editingFeed?.langId ?? 0);
+      const match = this.store.languages.find(lang => lang.id === id);
+      return match?.name ?? this.store.currentLanguageName;
     },
 
     get isSubmitting(): boolean {

@@ -262,6 +262,9 @@ describe('Feeds', () => {
       // Step 2: the article is on the page, and clicking it offers selectors.
       cy.wait('@article');
       cy.get('#lwt_article #body-text').should('be.visible');
+      // A step that mounts after the page's one icon pass still gets icons.
+      cy.get('.wizard-controls svg').should('exist');
+      cy.get('.wizard-controls i[data-lucide]').should('not.exist');
       cy.get('select[name="selected_feed"] option').should('have.length', 2);
       cy.get('#lwt_article #body-text').click();
       cy.get('select[name="mark_action"] option').should('have.length.greaterThan', 1);
@@ -277,7 +280,9 @@ describe('Feeds', () => {
       cy.get('#lwt_sel li').should('have.length', 0);
       cy.get('.wizard-controls').contains('button', 'Next').click();
 
-      // Step 4: the picked selectors arrive in the save form.
+      // Step 4: the picked selectors arrive in the save form, and the
+      // language is named rather than asked for.
+      cy.get('select[name="NfLgID"]').should('not.exist');
       cy.get('input[name="NfSourceURI"]').should('have.value', 'https://news.example/rss');
       cy.get('input[name="NfName"]').should('have.value', 'Example News');
       cy.get('input[name="NfArticleSectionTags"]').should('not.have.value', '');

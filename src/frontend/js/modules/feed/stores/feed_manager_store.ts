@@ -22,6 +22,35 @@ import type {
 } from '@modules/feed/api/feeds_api';
 import * as feedsApi from '@modules/feed/api/feeds_api';
 
+/**
+ * The navbar's language, as the manager page carries it.
+ */
+interface ManagerConfig {
+  currentLanguageId: number;
+  currentLanguageName: string;
+}
+
+/**
+ * Read the manager page's configuration.
+ */
+function readManagerConfig(): ManagerConfig {
+  const configEl = document.getElementById('feed-manager-config');
+  if (!configEl?.textContent) {
+    return { currentLanguageId: 0, currentLanguageName: '' };
+  }
+
+  try {
+    const parsed = JSON.parse(configEl.textContent) as Partial<ManagerConfig>;
+    return {
+      currentLanguageId: parsed.currentLanguageId ?? 0,
+      currentLanguageName: parsed.currentLanguageName ?? ''
+    };
+  } catch {
+    console.error('Failed to parse feed manager config');
+    return { currentLanguageId: 0, currentLanguageName: '' };
+  }
+}
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -81,6 +110,8 @@ export interface FeedManagerStoreState {
 
   // === Languages ===
   languages: Language[];
+  currentLanguageId: number;
+  currentLanguageName: string;
 
   // === Form ===
   editingFeed: Partial<FeedData> | null;
@@ -131,7 +162,6 @@ export interface FeedManagerStoreState {
   goToArticlesPage(page: number): Promise<void>;
 
   // Filters
-  setFilterLang(langId: number | ''): Promise<void>;
   setFilterQuery(query: string): Promise<void>;
   setSort(sort: number): Promise<void>;
   setArticlesQuery(query: string): Promise<void>;
@@ -184,6 +214,8 @@ function createFeedManagerStore(): FeedManagerStoreState {
 
     // === Languages ===
     languages: [],
+    currentLanguageId: 0,
+    currentLanguageName: '',
 
     // === Form ===
     editingFeed: null,
@@ -200,6 +232,15 @@ function createFeedManagerStore(): FeedManagerStoreState {
     // =========================================================================
 
     async init(): Promise<void> {
+      // Feeds belong to the language the navbar is on. Showing every
+      // language's feeds side by side, with a column and a filter of their
+      // own repeating what the navbar already says, made the list something
+      // to narrow down before it was useful.
+      const config = readManagerConfig();
+      this.currentLanguageId = config.currentLanguageId;
+      this.currentLanguageName = config.currentLanguageName;
+      this.filterLang = config.currentLanguageId || '';
+
       await this.loadFeeds();
     },
 
@@ -634,7 +675,7 @@ function createFeedManagerStore(): FeedManagerStoreState {
     showCreateForm(): void {
       this.viewMode = 'create';
       this.editingFeed = {
-        langId: this.languages[0]?.id || 0,
+        langId: this.currentLanguageId || this.languages[0]?.id || 0,
         name: '',
         sourceUri: '',
         articleSectionTags: '',
@@ -708,12 +749,6 @@ function createFeedManagerStore(): FeedManagerStoreState {
     // =========================================================================
     // Filters
     // =========================================================================
-
-    async setFilterLang(langId: number | ''): Promise<void> {
-      this.filterLang = langId;
-      this.feedsPagination.page = 1;
-      await this.loadFeeds();
-    },
 
     async setFilterQuery(query: string): Promise<void> {
       this.filterQuery = query;

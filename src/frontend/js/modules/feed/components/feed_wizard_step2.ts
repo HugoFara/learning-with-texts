@@ -18,6 +18,7 @@ import type { FeedWizardStoreState, FeedItem, XPathOption } from '../types/feed_
 import { getFeedWizardStore } from '../stores/feed_wizard_store';
 import { getHighlightService, initHighlightService } from '../services/highlight_service';
 import { showSelectedArticle, ARTICLE_CONTAINER_ID } from '../services/article_preview';
+import { hydrateStepIcons } from '../services/step_icons';
 import {
   xpathQuery,
   generateMarkActionOptions,
@@ -166,6 +167,7 @@ export function feedWizardStep2Data(): FeedWizardStep2Data {
     },
 
     init(): void {
+      hydrateStepIcons();
       initHighlightService();
       this.bindContentClickHandler();
       this.showArticle();

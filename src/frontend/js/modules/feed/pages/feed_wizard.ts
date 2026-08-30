@@ -82,6 +82,15 @@ export function feedWizardData(): FeedWizardData {
     init(): void {
       this.store.reset();
 
+      // The navbar's language is the one the user is working in, and the
+      // curated and manual paths have always saved feeds under it without
+      // asking. The wizard asked again on its last step; it takes the same
+      // answer now, and a reopened feed overrides it with its own.
+      this.store.feedOptions = {
+        ...this.store.feedOptions,
+        languageId: this.config.currentLanguageId || null
+      };
+
       if (this.config.editFeedId === null) {
         return;
       }
