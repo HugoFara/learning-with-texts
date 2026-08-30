@@ -118,7 +118,7 @@ function buildWordClasses(word: WordData, showAll: boolean): string {
  * Build data attributes for a word span.
  */
 function buildWordDataAttributes(word: WordData): Record<string, string> {
-  // Use underscore attributes to match PHP backend (TextReadingService)
+  // Underscore attributes are the historical LWT contract for word spans.
   // The multi-word selection code and other JS expects these underscore attributes
   const attrs: Record<string, string> = {
     'data_pos': String(word.position),

@@ -5,7 +5,7 @@
  *
  * HTTP controller for word review interface.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Review\Http
@@ -20,7 +20,6 @@ declare(strict_types=1);
 namespace Lwt\Modules\Review\Http;
 
 use Lwt\Shared\Http\BaseController;
-use Lwt\Shared\Infrastructure\Exception\ValidationException;
 use Lwt\Modules\Review\Application\ReviewFacade;
 use Lwt\Modules\Review\Infrastructure\SessionStateManager;
 use Lwt\Modules\Language\Application\LanguageFacade;
@@ -87,77 +86,6 @@ class ReviewController extends BaseController
 
         $this->renderReviewPage();
         return null;
-    }
-
-    /**
-     * Render review header frame.
-     *
-     * @param array $params Route parameters
-     *
-     * @return void
-     *
-     * @psalm-suppress UnusedVariable Variables are used in included view files
-     */
-    public function header(array $params): void
-    {
-        $langId = $this->param('lang') !== '' ? (int) $this->param('lang') : null;
-        $textId = $this->param('text') !== '' ? (int) $this->param('text') : null;
-        $selection = $this->param('selection') !== '' ? (int) $this->param('selection') : null;
-
-        // Get selection data from session criteria
-        $sessReviewSql = null;
-        if ($selection !== null && $this->sessionManager->hasCriteria()) {
-            $sessReviewSql = $this->sessionManager->getSelectionString();
-        }
-
-        $testData = $this->reviewFacade->getReviewDataFromParams(
-            $selection,
-            $sessReviewSql,
-            $langId,
-            $textId
-        );
-
-        if ($testData === null) {
-            throw ValidationException::forField(
-                'parameters',
-                'Review header requires valid lang, text, or selection parameter'
-            )->setHttpStatusCode(400);
-        }
-
-        $languageName = $this->reviewFacade->getL2LanguageName(
-            $langId,
-            $textId,
-            $selection,
-            $sessReviewSql
-        );
-
-        // Initialize session
-        $dueCount = (int) ($testData['counts']['due'] ?? 0);
-        $this->reviewFacade->initializeReviewSession($dueCount);
-
-        // Pre-compute service output for view
-        $navLinksHtml = ($textId !== null)
-            ? (new \Lwt\Modules\Text\Application\Services\TextNavigationService())
-                ->getPreviousAndNextTextLinks($textId, '/review?text=', false, '')
-            : '';
-        $annotationLinkHtml = ($textId !== null)
-            ? (new \Lwt\Modules\Text\Application\Services\AnnotationService())->getAnnotationLink($textId)
-            : '';
-
-        // Render header views
-        include __DIR__ . '/../Views/header.php';
-
-        // Prepare variables for header content
-        /** @var mixed $titleRaw */
-        $titleRaw = $testData['title'] ?? '';
-        $title = is_string($titleRaw) ? $titleRaw : '';
-        /** @var mixed $propertyRaw */
-        $propertyRaw = $testData['property'] ?? '';
-        $property = is_string($propertyRaw) ? $propertyRaw : '';
-        $totalDue = $dueCount;
-        $totalCount = (int) ($testData['counts']['total'] ?? 0);
-
-        include __DIR__ . '/../Views/header_content.php';
     }
 
     /**
