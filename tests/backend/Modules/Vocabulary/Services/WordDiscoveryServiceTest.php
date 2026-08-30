@@ -54,14 +54,14 @@ class WordDiscoveryServiceTest extends TestCase
         if (self::$dbConnected) {
             // Create a test language if it doesn't exist
             $existingLang = Connection::fetchValue(
-                "SELECT LgID AS value FROM " . Globals::table('languages') . " WHERE LgName = 'TestLanguage' LIMIT 1"
+                "SELECT LgID AS value FROM languages WHERE LgName = 'TestLanguage' LIMIT 1"
             );
 
             if ($existingLang) {
                 self::$testLangId = (int)$existingLang;
             } else {
                 Connection::query(
-                    "INSERT INTO " . Globals::table('languages') .
+                    "INSERT INTO languages" .
                     " (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
                     "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
                     "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
@@ -82,9 +82,9 @@ class WordDiscoveryServiceTest extends TestCase
         }
 
         // Clean up test words
-        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE WoLgID = " . self::$testLangId);
+        Connection::query("DELETE FROM words WHERE WoLgID = " . self::$testLangId);
         // Clean up test language
-        Connection::query("DELETE FROM " . Globals::table('languages') . " WHERE LgID = " . self::$testLangId);
+        Connection::query("DELETE FROM languages WHERE LgID = " . self::$testLangId);
     }
 
     protected function setUp(): void
@@ -103,19 +103,19 @@ class WordDiscoveryServiceTest extends TestCase
         // words, so removing the parents before them would be rejected.
         foreach (self::$createdTextIds as $textId) {
             Connection::query(
-                "DELETE FROM " . Globals::table('word_occurrences') . " WHERE Ti2TxID = " . $textId
+                "DELETE FROM word_occurrences WHERE Ti2TxID = " . $textId
             );
             Connection::query(
-                "DELETE FROM " . Globals::table('sentences') . " WHERE SeTxID = " . $textId
+                "DELETE FROM sentences WHERE SeTxID = " . $textId
             );
             Connection::query(
-                "DELETE FROM " . Globals::table('texts') . " WHERE TxID = " . $textId
+                "DELETE FROM texts WHERE TxID = " . $textId
             );
         }
         self::$createdTextIds = [];
 
         // Clean up test words after each test
-        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE WoText LIKE 'test%'");
+        Connection::query("DELETE FROM words WHERE WoText LIKE 'test%'");
     }
 
     // ===== setStatus() tests =====
@@ -280,7 +280,7 @@ class WordDiscoveryServiceTest extends TestCase
         $this->assertSame(
             '99',
             (string) Connection::fetchValue(
-                "SELECT WoStatus AS value FROM " . Globals::table('words')
+                "SELECT WoStatus AS value FROM " . 'words'
                 . " WHERE WoID = " . $fixture['wordId']
             )
         );
@@ -289,7 +289,7 @@ class WordDiscoveryServiceTest extends TestCase
         $this->assertSame(
             (string) $fixture['wordId'],
             (string) Connection::fetchValue(
-                "SELECT Ti2WoID AS value FROM " . Globals::table('word_occurrences')
+                "SELECT Ti2WoID AS value FROM " . 'word_occurrences'
                 . " WHERE Ti2TxID = " . $fixture['textId'] . " AND Ti2Order = 1"
             )
         );
@@ -314,7 +314,7 @@ class WordDiscoveryServiceTest extends TestCase
         $this->assertSame(
             (string) $result['id'],
             (string) Connection::fetchValue(
-                "SELECT Ti2WoID AS value FROM " . Globals::table('word_occurrences')
+                "SELECT Ti2WoID AS value FROM " . 'word_occurrences'
                 . " WHERE Ti2TxID = " . $fixture['textId'] . " AND Ti2Order = 1"
             )
         );
@@ -331,10 +331,10 @@ class WordDiscoveryServiceTest extends TestCase
      */
     private function createUnlinkedOccurrence(string $term, bool $withTerm = true): array
     {
-        $words = Globals::table('words');
-        $texts = Globals::table('texts');
-        $sentences = Globals::table('sentences');
-        $occurrences = Globals::table('word_occurrences');
+        $words = 'words';
+        $texts = 'texts';
+        $sentences = 'sentences';
+        $occurrences = 'word_occurrences';
         $lang = self::$testLangId;
 
         Connection::query(
@@ -383,7 +383,7 @@ class WordDiscoveryServiceTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $words = Globals::table('words');
+        $words = 'words';
         $lang = self::$testLangId;
         Connection::query(
             "INSERT INTO $words (WoLgID, WoText, WoTextLC, WoStatus, WoWordCount, WoStatusChanged)

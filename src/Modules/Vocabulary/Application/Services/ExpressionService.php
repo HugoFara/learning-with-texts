@@ -3,7 +3,7 @@
 /**
  * Expression Service - Multi-word expression handling
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Vocabulary\Application\Services
@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Vocabulary\Application\Services;
 
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Shared\Infrastructure\Utilities\StringUtils;
 use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Shared\Infrastructure\Database\Escaping;

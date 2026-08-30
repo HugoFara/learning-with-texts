@@ -4,7 +4,7 @@
  * \file
  * \brief Session bootstrap class - handles PHP session initialization.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Shared\Infrastructure\Bootstrap
@@ -137,7 +137,8 @@ class SessionBootstrap
      */
     public static function bootstrap(): void
     {
-        self::setErrorReporting(Globals::isErrorDisplayEnabled());
+        // Errors are logged, never displayed: output would corrupt HTML and API responses.
+        self::setErrorReporting(false);
         self::setConfigurationOptions();
         // Start a PHP session if not one already exists
         if (\session_id() == '') {

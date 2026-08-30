@@ -4,7 +4,7 @@
  * \file
  * \brief Database connection wrapper class.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Database
  * @package  Lwt
@@ -19,14 +19,13 @@ declare(strict_types=1);
 namespace Lwt\Shared\Infrastructure\Database;
 
 use Lwt\Shared\Infrastructure\Exception\DatabaseException;
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Shared\Infrastructure\Database\PreparedStatement;
 
 /**
  * Database connection wrapper providing a clean interface for database operations.
  *
  * This class wraps mysqli and provides methods for common database operations.
- * It uses Globals internally for backward compatibility.
+ * It is the single owner of the mysqli handle for the request.
  *
  * @since 3.0.0
  */
@@ -50,17 +49,24 @@ class Connection
      */
     public static function getInstance(): \mysqli
     {
-        // Always check Globals first to ensure we use the current connection
-        // This is important for tests that set connection via Globals::setDbConnection()
-        $globalConnection = Globals::getDbConnection();
-        if ($globalConnection !== null) {
-            self::$instance = $globalConnection;
-        }
-
         if (self::$instance === null) {
             throw new \RuntimeException('Database connection not initialized');
         }
 
+        return self::$instance;
+    }
+
+    /**
+     * Get the connection instance, or null when none has been established.
+     *
+     * Unlike getInstance(), this never throws — it is for callers that treat
+     * "no database yet" as an ordinary state (bootstrap, test skip guards)
+     * rather than an error.
+     *
+     * @return \mysqli|null The database connection, or null
+     */
+    public static function tryGetInstance(): ?\mysqli
+    {
         return self::$instance;
     }
 
@@ -88,7 +94,6 @@ class Connection
     public static function setInstance(\mysqli $connection): void
     {
         self::$instance = $connection;
-        Globals::setDbConnection($connection);
     }
 
     /**

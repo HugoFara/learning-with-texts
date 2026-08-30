@@ -20,7 +20,6 @@ namespace Lwt\Modules\Activity\Infrastructure;
 use Lwt\Modules\Activity\Domain\ActivityRepositoryInterface;
 use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Shared\Infrastructure\Database\UserScopedQuery;
-use Lwt\Shared\Infrastructure\Globals;
 
 /**
  * MySQL implementation of ActivityRepositoryInterface.
@@ -63,7 +62,7 @@ class MySqlActivityRepository implements ActivityRepositoryInterface
         $bindings = [$startDate, $endDate];
         $userScope = UserScopedQuery::forTablePrepared('activity_log', $bindings);
 
-        $tableName = Globals::table('activity_log');
+        $tableName = 'activity_log';
         $rows = Connection::preparedFetchAll(
             "SELECT AlDate, AlTermsCreated, AlTermsReviewed, AlTextsRead
              FROM {$tableName}
@@ -93,7 +92,7 @@ class MySqlActivityRepository implements ActivityRepositoryInterface
         $bindings = [];
         $userScope = UserScopedQuery::forTablePrepared('activity_log', $bindings);
 
-        $tableName = Globals::table('activity_log');
+        $tableName = 'activity_log';
         $rows = Connection::preparedFetchAll(
             "SELECT AlDate
              FROM {$tableName}
@@ -119,7 +118,7 @@ class MySqlActivityRepository implements ActivityRepositoryInterface
         $bindings = [];
         $userScope = UserScopedQuery::forTablePrepared('activity_log', $bindings);
 
-        $tableName = Globals::table('activity_log');
+        $tableName = 'activity_log';
         $row = Connection::preparedFetchOne(
             "SELECT AlTermsCreated, AlTermsReviewed, AlTextsRead
              FROM {$tableName}
@@ -150,7 +149,7 @@ class MySqlActivityRepository implements ActivityRepositoryInterface
      */
     private function incrementColumn(string $column, int $count): void
     {
-        $tableName = Globals::table('activity_log');
+        $tableName = 'activity_log';
         $userId = UserScopedQuery::getUserIdForInsert('activity_log');
 
         $bindings = [$userId, $count, $count];

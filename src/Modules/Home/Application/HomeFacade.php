@@ -3,7 +3,7 @@
 /**
  * Home Facade
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Home\Application
@@ -92,14 +92,8 @@ class HomeFacade
             'words', 'word_tag_map'
         ];
 
-        // Use Globals::table() to get properly prefixed table names
-        $prefixedTables = array_map(
-            fn($table) => Globals::table($table),
-            $tableNames
-        );
-
-        $placeholders = implode(', ', array_fill(0, count($prefixedTables), '?'));
-        $bindings = array_merge([$dbname], $prefixedTables);
+        $placeholders = implode(', ', array_fill(0, count($tableNames), '?'));
+        $bindings = array_merge([$dbname], $tableNames);
 
         /** @var mixed $sizeRaw */
         $sizeRaw = Connection::preparedFetchValue(

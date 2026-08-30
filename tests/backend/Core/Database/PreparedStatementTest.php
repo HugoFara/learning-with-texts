@@ -56,7 +56,7 @@ class PreparedStatementTest extends TestCase
 
     public function testPrepareCreatesStatement(): void
     {
-        $table = Globals::table('languages');
+        $table = 'languages';
         $stmt = Connection::prepare(
             "SELECT LgID FROM {$table} WHERE LgID = ?"
         );
@@ -66,7 +66,7 @@ class PreparedStatementTest extends TestCase
 
     public function testBindAndFetchOne(): void
     {
-        $table = Globals::table('languages');
+        $table = 'languages';
 
         // First, get an existing language ID
         $row = Connection::fetchOne(
@@ -91,7 +91,7 @@ class PreparedStatementTest extends TestCase
 
     public function testPreparedFetchAll(): void
     {
-        $table = Globals::table('languages');
+        $table = 'languages';
         $results = Connection::preparedFetchAll(
             "SELECT LgID FROM {$table} WHERE LgID > ?",
             [0]
@@ -102,7 +102,7 @@ class PreparedStatementTest extends TestCase
 
     public function testPreparedFetchValue(): void
     {
-        $table = Globals::table('languages');
+        $table = 'languages';
         $count = Connection::preparedFetchValue(
             "SELECT COUNT(*) AS value FROM {$table} WHERE LgID > ?",
             [0]
@@ -113,7 +113,7 @@ class PreparedStatementTest extends TestCase
 
     public function testBindWithMultipleTypes(): void
     {
-        $table = Globals::table('languages');
+        $table = 'languages';
         // Test binding string and int types
         $stmt = Connection::prepare(
             "SELECT LgID FROM {$table} WHERE LgID = ? AND LgName != ?"
@@ -127,7 +127,7 @@ class PreparedStatementTest extends TestCase
 
     public function testBindValues(): void
     {
-        $table = Globals::table('languages');
+        $table = 'languages';
         $stmt = Connection::prepare(
             "SELECT LgID FROM {$table} WHERE LgID = ? AND LgName != ?"
         );
@@ -196,7 +196,7 @@ class PreparedStatementTest extends TestCase
 
     public function testPreparedStatementWithNullValue(): void
     {
-        $table = Globals::table('languages');
+        $table = 'languages';
         // Test that null values are handled correctly
         $stmt = Connection::prepare(
             "SELECT LgID FROM {$table} WHERE LgID = ? OR ? IS NULL"
@@ -210,7 +210,7 @@ class PreparedStatementTest extends TestCase
 
     public function testPreparedStatementTypeInference(): void
     {
-        $table = Globals::table('languages');
+        $table = 'languages';
         $stmt = Connection::prepare(
             "SELECT LgID FROM {$table} WHERE LgID > ?"
         );

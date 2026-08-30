@@ -52,7 +52,7 @@ class SettingsTest extends TestCase
         }
 
         // Clean up test settings after each test
-        Connection::query("DELETE FROM " . Globals::table('settings') . " WHERE StKey LIKE 'test_%'");
+        Connection::query("DELETE FROM settings WHERE StKey LIKE 'test_%'");
     }
 
     // ===== getZeroOrOne() tests =====
@@ -160,7 +160,7 @@ class SettingsTest extends TestCase
         }
 
         // Directly insert value with whitespace to test trimming
-        $table = Globals::table('settings');
+        $table = 'settings';
         Connection::query("DELETE FROM " . $table . " WHERE StKey = 'test_whitespace'");
         Connection::query(
             "INSERT INTO " . $table . " (StKey, StValue) VALUES ('test_whitespace', '  value  ')"
@@ -178,7 +178,7 @@ class SettingsTest extends TestCase
 
         // Clean up any previously saved SQL injection key
         $injectionKey = "key'; DROP TABLE settings; --";
-        $table = Globals::table('settings');
+        $table = 'settings';
         Connection::query(
             "DELETE FROM " . $table . " WHERE StKey = " . Escaping::toSqlSyntax($injectionKey)
         );
@@ -188,7 +188,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('', $result, 'SQL injection key should return empty when not present');
 
         // More importantly, the settings table should still exist (not dropped)
-        $tableExists = mysqli_num_rows(Connection::query("SHOW TABLES LIKE '" . Globals::table('settings') . "'")) > 0;
+        $tableExists = mysqli_num_rows(Connection::query("SHOW TABLES LIKE 'settings'")) > 0;
         $this->assertTrue($tableExists, 'SQL injection should not drop the table');
     }
 
@@ -248,7 +248,7 @@ class SettingsTest extends TestCase
 
         // Use a different injection key that wasn't previously saved
         $injectionKey = "newkey'; DROP TABLE settings; --";
-        $table = Globals::table('settings');
+        $table = 'settings';
         Connection::query(
             "DELETE FROM " . $table . " WHERE StKey = " . Escaping::toSqlSyntax($injectionKey)
         );
@@ -257,7 +257,7 @@ class SettingsTest extends TestCase
         $this->assertEquals('', $result, 'SQL injection key should return empty when not present');
 
         // More importantly, the settings table should still exist (not dropped)
-        $tableExists = mysqli_num_rows(Connection::query("SHOW TABLES LIKE '" . Globals::table('settings') . "'")) > 0;
+        $tableExists = mysqli_num_rows(Connection::query("SHOW TABLES LIKE 'settings'")) > 0;
         $this->assertTrue($tableExists, 'SQL injection should not drop the table');
     }
 

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Lwt\Tests\Controllers;
 
 use Lwt\Controllers\ApiController;
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Shared\Infrastructure\Database\Connection;
 use PHPUnit\Framework\TestCase;
 
@@ -266,7 +265,7 @@ class ApiControllerTest extends TestCase
         }
 
         $sql = "SELECT WoID, WoText, WoTextLC, WoTranslation, WoStatus
-                FROM " . Globals::table('words') . " LIMIT 10";
+                FROM words LIMIT 10";
         $result = Connection::query($sql);
 
         $this->assertInstanceOf(\mysqli_result::class, $result);
@@ -280,7 +279,7 @@ class ApiControllerTest extends TestCase
         }
 
         $sql = "SELECT TxID, TxLgID, TxTitle, TxSourceURI
-                FROM " . Globals::table('texts') . " LIMIT 10";
+                FROM texts LIMIT 10";
         $result = Connection::query($sql);
 
         $this->assertInstanceOf(\mysqli_result::class, $result);
@@ -294,7 +293,7 @@ class ApiControllerTest extends TestCase
         }
 
         $sql = "SELECT LgID, LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI
-                FROM " . Globals::table('languages') . " LIMIT 10";
+                FROM languages LIMIT 10";
         $result = Connection::query($sql);
 
         $this->assertInstanceOf(\mysqli_result::class, $result);
@@ -307,7 +306,7 @@ class ApiControllerTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $sql = "SELECT StKey, StValue FROM " . Globals::table('settings') . " LIMIT 10";
+        $sql = "SELECT StKey, StValue FROM settings LIMIT 10";
         $result = Connection::query($sql);
 
         $this->assertInstanceOf(\mysqli_result::class, $result);

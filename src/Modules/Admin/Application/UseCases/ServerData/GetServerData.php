@@ -3,7 +3,7 @@
 /**
  * Get Server Data Use Case
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Admin\Application\UseCases\ServerData
@@ -94,13 +94,8 @@ class GetServerData
             'words', 'word_tag_map'
         ];
 
-        $prefixedTables = array_map(
-            fn($table) => Globals::table($table),
-            $tableNames
-        );
-
-        $placeholders = implode(', ', array_fill(0, count($prefixedTables), '?'));
-        $bindings = array_merge([$dbname], $prefixedTables);
+        $placeholders = implode(', ', array_fill(0, count($tableNames), '?'));
+        $bindings = array_merge([$dbname], $tableNames);
 
         /** @var float|int|string|null $temp_size */
         $temp_size = Connection::preparedFetchValue(

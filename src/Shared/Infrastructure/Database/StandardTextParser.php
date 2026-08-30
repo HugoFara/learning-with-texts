@@ -4,7 +4,7 @@
  * \file
  * \brief Standard (non-Japanese) text parsing with sentence splitting.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Database
  * @package  Lwt
@@ -18,7 +18,6 @@ declare(strict_types=1);
 
 namespace Lwt\Shared\Infrastructure\Database;
 
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Shared\Infrastructure\Utilities\StringUtils;
 use Lwt\Modules\Language\Application\Services\TextParsingService;
 

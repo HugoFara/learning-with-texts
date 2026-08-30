@@ -51,11 +51,11 @@ class TextParsingTest extends TestCase
 
     private static function createTestLanguage(): void
     {
-        $word_occurrences = Globals::table('word_occurrences');
-        $languages = Globals::table('languages');
-        $sentences = Globals::table('sentences');
-        $texts = Globals::table('texts');
-        $words = Globals::table('words');
+        $word_occurrences = 'word_occurrences';
+        $languages = 'languages';
+        $sentences = 'sentences';
+        $texts = 'texts';
+        $words = 'words';
 
         // Clean up any existing test language first
         $langName = 'Test TextParsing Language';
@@ -100,11 +100,11 @@ class TextParsingTest extends TestCase
         }
 
         if (self::$testLanguageId) {
-            $word_occurrences = Globals::table('word_occurrences');
-            $sentences = Globals::table('sentences');
-            $texts = Globals::table('texts');
-            $words = Globals::table('words');
-            $languages = Globals::table('languages');
+            $word_occurrences = 'word_occurrences';
+            $sentences = 'sentences';
+            $texts = 'texts';
+            $words = 'words';
+            $languages = 'languages';
 
             // Clean up any test texts and associated data
             Connection::query("DELETE FROM $word_occurrences WHERE Ti2LgID = " . self::$testLanguageId);
@@ -330,9 +330,9 @@ class TextParsingTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $texts = Globals::table('texts');
-        $sentences = Globals::table('sentences');
-        $word_occurrences = Globals::table('word_occurrences');
+        $texts = 'texts';
+        $sentences = 'sentences';
+        $word_occurrences = 'word_occurrences';
 
         // Create a test text
         $sql = "INSERT INTO $texts (TxLgID, TxTitle, TxText, TxAudioURI)
@@ -436,9 +436,9 @@ class TextParsingTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $texts = Globals::table('texts');
-        $sentences = Globals::table('sentences');
-        $word_occurrences = Globals::table('word_occurrences');
+        $texts = 'texts';
+        $sentences = 'sentences';
+        $word_occurrences = 'word_occurrences';
 
         // Test text WITHOUT punctuation
         $sql = "INSERT INTO $texts (TxLgID, TxTitle, TxText, TxAudioURI)
@@ -513,7 +513,7 @@ class TextParsingTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $languages = Globals::table('languages');
+        $languages = 'languages';
 
         // Create language with character substitutions
         $sql = "INSERT INTO $languages (
@@ -548,7 +548,7 @@ class TextParsingTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $languages = Globals::table('languages');
+        $languages = 'languages';
 
         // Create language with split each char enabled
         $sql = "INSERT INTO $languages (
@@ -582,7 +582,7 @@ class TextParsingTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $languages = Globals::table('languages');
+        $languages = 'languages';
 
         // Create RTL language
         $sql = "INSERT INTO $languages (
@@ -778,10 +778,10 @@ class TextParsingTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $texts = Globals::table('texts');
-        $sentences = Globals::table('sentences');
-        $word_occurrences = Globals::table('word_occurrences');
-        $words = Globals::table('words');
+        $texts = 'texts';
+        $sentences = 'sentences';
+        $word_occurrences = 'word_occurrences';
+        $words = 'words';
 
         // Create a multi-word expression (lowercase to match parsed text)
         $sql = "INSERT INTO $words (WoLgID, WoText, WoTextLC, WoTranslation, WoStatus, WoWordCount)
@@ -862,7 +862,7 @@ class TextParsingTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $words = Globals::table('words');
+        $words = 'words';
 
         // Create a known word
         $sql = "INSERT INTO $words (WoLgID, WoText, WoTextLC, WoTranslation, WoStatus, WoWordCount)
@@ -886,9 +886,9 @@ class TextParsingTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $texts = Globals::table('texts');
-        $sentences = Globals::table('sentences');
-        $word_occurrences = Globals::table('word_occurrences');
+        $texts = 'texts';
+        $sentences = 'sentences';
+        $word_occurrences = 'word_occurrences';
 
         // Create a test text with multiple sentences
         $sql = "INSERT INTO $texts (TxLgID, TxTitle, TxText, TxAudioURI)
