@@ -9,6 +9,19 @@ ones are marked like "v1.0.0-fork".
 
 ### Fixed
 
+* **Dictionary-imported terms are visible to the reader** (#283). Importing a
+  dictionary created one term per entry but never linked them to the words in
+  your texts. The reader decides a word is unknown from that link rather than
+  from whether the term exists, so imported terms stayed invisible: the word
+  kept its unmarked colour, and marking it known failed — HTTP 500 from the
+  term form, and silently nothing from the status shortcut. Since an import
+  covers essentially the whole language, this affected more or less every word
+  in a text. The import now links what it creates, a migration repairs the
+  terms already imported, and adding a term that turns out to exist updates it
+  instead of failing. Imported terms are also given the word count they were
+  missing, without which every text added after an import came back unmarked
+  all over again.
+
 * **A failed API write no longer reports success** (#284). Handlers signal
   failure by returning an `error` payload rather than by throwing, and the
   routers passed that straight to `Response::success()` — so the request came

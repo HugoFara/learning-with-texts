@@ -70,7 +70,8 @@ class OwnerlessTableWriteTest extends TestCase
         'src/Modules/Vocabulary/Application/Services/WordBulkService.php' =>
             'deleteMultiple() narrows through filterOwnedWordIds()',
         'src/Modules/Dictionary/Application/Services/LocalDictionaryService.php' =>
-            'entry writes call assertOwnsDictionary()',
+            'entry writes call assertOwnsDictionary(); linkOccurrencesForLanguage() '
+            . 'joins on Ti2LgID = WoLgID and a language row has one owner',
         'src/Modules/Text/Application/UseCases/DeleteText.php' =>
             'cascades from a text resolved through the user-scoped texts table',
         'src/Modules/Text/Application/UseCases/ArchiveText.php' =>
