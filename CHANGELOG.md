@@ -7,6 +7,8 @@ ones are marked like "v1.0.0-fork".
 
 ## [Unreleased]
 
+## [3.6.0-fork] - 2026-08-30
+
 ### Added
 
 * **Locale completion is documented and visible**. The translation badges the
@@ -15,6 +17,44 @@ ones are marked like "v1.0.0-fork".
   a Translations section carrying the badge for each of the nine locales,
   alongside how to check completion locally and how to fill in or add a
   language.
+
+* **The API reads and writes what the forms used to post** (#262, #266). Five
+  endpoints replace same-origin form POSTs: `POST /api/v1/texts/check` reports
+  what the parser made of a text without saving it,
+  `POST /api/v1/feeds/wizard/preview` and `.../article` read an RSS feed and one
+  of its articles, `PUT /api/v1/texts/archived/{id}` saves an archived text, and
+  local dictionaries are created through `/api/v1/local-dictionaries`. Each
+  answers with data, so the interface works against a configurable API base URL
+  rather than the page origin.
+
+### Changed
+
+* **The feed wizard is one page** (#262, #266). Its four steps were four POSTs,
+  each render rebuilding the parsed feed, the fetched article and the picked
+  selectors out of `$_SESSION` and the previous page's markup. They are panels
+  of one page now: the article is fetched once and shared between the steps that
+  need it rather than re-fetched on every hop, and reopening a saved feed is a
+  plain `GET /feeds/wizard?edit_feed={id}`.
+
+* **Checking a text no longer discards what you were editing** (#262, #266). The
+  check page and the editor's **Check** button both posted a form and got back a
+  whole server-rendered document, so checking from the editor threw away
+  everything else in it. The report is fetched and rendered in place now, and
+  built as text nodes rather than injected markup.
+
+* **The feed wizard and manager follow the navbar's language** (#262, #266). The
+  wizard's last step and the manager's feed form asked for the language again,
+  though the navbar had already been asked and the wizard's other paths had
+  always saved under it without asking. All three take that answer and show it
+  now; a feed being edited keeps whichever language it was saved with, and the
+  feed list's language column and filter go with the question.
+
+* **Dependencies move up within their existing ranges**. Notably Alpine 3.15 to
+  3.17, Lucide 1.28 to 1.37 and Vite 8.2.0 to 8.2.2 on the frontend, Guzzle
+  7.15.2 to 7.15.5 and Symfony Console 7.4.15 to 7.4.17 on the backend. No
+  constraint in `package.json` or `composer.json` was widened. The frontend is
+  built from the lock file when the image is built, so these are the versions
+  the release actually ships.
 
 ### Fixed
 
@@ -48,6 +88,38 @@ ones are marked like "v1.0.0-fork".
   looked for `message` on a failed request, while the API sends `error` — so
   even a well-formed error was shown as a bare "HTTP 400: Bad Request". It now
   reads both.
+
+* **Restoring a foreign key no longer fails on the rows it exists to prevent**.
+  `addMissingForeignKeys()` adds a constraint with a plain `ALTER TABLE`, which
+  makes InnoDB validate the rows already there — and an install is missing a
+  constraint precisely because it spent time without one, so those rows exist.
+  InnoDB answered errno 1452 and refused the keys most worth putting back, and
+  the failure was only logged, so the constraint was lost without anything
+  saying so. It worked wherever it was actually reached, because every caller
+  happened to set `FOREIGN_KEY_CHECKS = 0` around its own migration run; the
+  repair establishes that itself now instead of inheriting it from whichever
+  caller is on the stack.
+
+* **The feed wizard's step icons appear** (#262, #266). `IconHelper` emits
+  placeholders for a script to replace, and that pass ran once on
+  `alpine:initialized` — enough when each step was a page load, not enough now
+  that a step's markup enters the DOM as the user reaches it.
+
+### Security
+
+* **Creating a local dictionary checks that the language is yours** (#262). The
+  dictionary index's quick-create form passed the URL's language id straight to
+  `DictionaryFacade::create()`, while the API path it sat beside gated the same
+  call through `languageBelongsToCurrentUser()`. `LdLgID` carries no foreign
+  key, so on a multi-user install a POST naming another user's language id
+  planted a dictionary row pinned to their language. Create goes through the API
+  now, which removes the unguarded path rather than duplicating the guard.
+
+* **The `nanoid` advisory is closed** (GHSA-2v37-7h3g-55p8). Versions below
+  3.3.18 can loop indefinitely when a custom generator is asked for a size of
+  zero. It reached the project through the Vite build chain rather than
+  anything the application serves, so nothing was exposed at runtime, but the
+  build no longer pulls a flagged version.
 
 ## [3.5.0-fork] - 2026-08-27
 
