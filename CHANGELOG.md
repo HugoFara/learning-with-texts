@@ -7,7 +7,22 @@ ones are marked like "v1.0.0-fork".
 
 ## [Unreleased]
 
+### Added
+
+* **Locale completion is documented and visible**. The translation badges the
+  `Locale completion` workflow has been publishing to the `badges` branch were
+  not referenced anywhere, so nothing displayed them. `CONTRIBUTING.md` now has
+  a Translations section carrying the badge for each of the nine locales,
+  alongside how to check completion locally and how to fill in or add a
+  language.
+
 ### Fixed
+
+* **Whole-number locale percentages are no longer mangled**. The badge writer
+  trimmed trailing zeros off the plain string form of the percentage, which ate
+  significant digits: 100% was published as "1%", and 90% would have been "9%".
+  Only percentages ending in a zero were affected, so the fault sat unnoticed
+  behind the 99.7% shared by every translated locale, visible on English alone.
 
 * **Dictionary-imported terms are visible to the reader** (#283). Importing a
   dictionary created one term per entry but never linked them to the words in
