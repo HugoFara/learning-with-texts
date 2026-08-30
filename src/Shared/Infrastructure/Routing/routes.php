@@ -487,11 +487,6 @@ function registerRoutes(Router $router): void
         'Lwt\\Modules\\Dictionary\\Http\\DictionaryController@index',
         AUTH_MIDDLEWARE
     );
-    $router->post(
-        '/languages/{id:int}/dictionaries',
-        'Lwt\\Modules\\Dictionary\\Http\\DictionaryController@index',
-        AUTH_MIDDLEWARE
-    );
     $router->get(
         '/languages/{id:int}/dictionaries/import',
         'Lwt\\Modules\\Dictionary\\Http\\DictionaryController@import',

@@ -1,8 +1,8 @@
 /**
  * Local dictionary list — renders from `GET /local-dictionaries`.
  *
- * Replaces the server-rendered table and the two same-origin form POSTs it
- * used for enable/disable and delete, both of which now go through the API.
+ * Replaces the server-rendered table and the same-origin form POSTs it used
+ * for create, enable/disable and delete, all of which now go through the API.
  *
  * @license Unlicense <http://unlicense.org/>
  * @since   3.4.0
@@ -22,8 +22,11 @@ export interface DictionaryListData {
   isLoading: boolean;
   error: string;
   busyId: number;
+  newName: string;
+  isCreating: boolean;
   init(): Promise<void>;
   load(): Promise<void>;
+  create(): Promise<void>;
   toggle(dict: LocalDictionary): Promise<void>;
   confirmDelete(dict: LocalDictionary): Promise<void>;
   descriptionOf(dict: LocalDictionary): string;
@@ -67,6 +70,8 @@ export function dictionaryListData(): DictionaryListData {
     isLoading: true,
     error: '',
     busyId: 0,
+    newName: '',
+    isCreating: false,
 
     async init() {
       await this.load();
@@ -86,6 +91,36 @@ export function dictionaryListData(): DictionaryListData {
       }
 
       this.dictionaries = response.data.dictionaries ?? [];
+    },
+
+    async create() {
+      const name = this.newName.trim();
+      if (name === '' || this.isCreating) {
+        return;
+      }
+
+      this.isCreating = true;
+      this.error = '';
+
+      const response = await LocalDictionariesApi.create(this.languageId, name);
+      this.isCreating = false;
+
+      if (response.error || response.data?.success === false) {
+        this.error = response.error || response.data?.error || '';
+        return;
+      }
+
+      this.newName = '';
+
+      // The endpoint echoes the row back, so append it rather than refetching
+      // the whole list.
+      const created = response.data?.dictionary;
+      if (created) {
+        this.dictionaries = [...this.dictionaries, created];
+        return;
+      }
+
+      await this.load();
     },
 
     async toggle(dict: LocalDictionary) {

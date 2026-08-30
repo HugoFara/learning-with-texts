@@ -125,7 +125,7 @@ class DictionaryControllerTest extends TestCase
     public function classHasRequiredPrivateMethods(): void
     {
         $reflection = new ReflectionClass(DictionaryController::class);
-        $expectedPrivate = ['handleFormSubmissions', 'getImportOptions'];
+        $expectedPrivate = ['getImportOptions'];
 
         foreach ($expectedPrivate as $methodName) {
             $this->assertTrue(
@@ -188,17 +188,6 @@ class DictionaryControllerTest extends TestCase
                 "Method $methodName should return void"
             );
         }
-    }
-
-    #[Test]
-    public function handleFormSubmissionsAcceptsIntParameter(): void
-    {
-        $method = new ReflectionMethod(DictionaryController::class, 'handleFormSubmissions');
-        $params = $method->getParameters();
-
-        $this->assertCount(1, $params);
-        $this->assertSame('langId', $params[0]->getName());
-        $this->assertSame('int', $params[0]->getType()->getName());
     }
 
     #[Test]
