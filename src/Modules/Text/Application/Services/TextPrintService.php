@@ -462,7 +462,10 @@ class TextPrintService
     /**
      * Get annotated text items formatted for API response.
      *
-     * Parses the stored annotation string into structured data.
+     * Parses the stored annotation string into structured data. Romanizations
+     * are resolved for the whole text in one query rather than per term — the
+     * annotated view renders every word at once, so a lookup per item would be
+     * hundreds of round trips on a normal text.
      *
      * @param int $textId Text ID
      *
@@ -486,13 +489,24 @@ class TextPrintService
         if ($items === false) {
             return null;
         }
-        $parsed = [];
 
+        $rows = [];
         foreach ($items as $item) {
             $vals = preg_split('/[\t]/u', $item);
-            if ($vals === false) {
+            // A row needs at least an order and a term. Splitting the stored
+            // annotation on newlines yields a blank entry for any trailing or
+            // repeated newline, and those would otherwise come back as words
+            // with empty text and render as empty <ruby> elements.
+            if ($vals === false || count($vals) < 2) {
                 continue;
             }
+            $rows[] = $vals;
+        }
+
+        $romanizations = $this->romanizationsForRows($rows);
+        $parsed = [];
+
+        foreach ($rows as $vals) {
             $order = isset($vals[0]) ? (int) $vals[0] : -1;
             $text = $vals[1] ?? '';
             $wordId = (isset($vals[2]) && ctype_digit($vals[2])) ? (int) $vals[2] : null;
@@ -509,11 +523,44 @@ class TextPrintService
                 'text' => $text,
                 'wordId' => $wordId,
                 'translation' => $translation,
+                'romanization' => $wordId === null ? '' : ($romanizations[$wordId] ?? ''),
                 'isWord' => $order > -1
             ];
         }
 
         return $parsed;
+    }
+
+    /**
+     * Look up the romanization of every word referenced by the parsed rows.
+     *
+     * @param array<int, array<int, string>> $rows Tab-split annotation rows
+     *
+     * @return array<int, string> Romanization keyed by word ID
+     */
+    private function romanizationsForRows(array $rows): array
+    {
+        $wordIds = [];
+        foreach ($rows as $vals) {
+            if (isset($vals[2]) && ctype_digit($vals[2])) {
+                $wordIds[(int) $vals[2]] = true;
+            }
+        }
+        if ($wordIds === []) {
+            return [];
+        }
+
+        $records = QueryBuilder::table('words')
+            ->select(['WoID', 'WoRomanization'])
+            ->whereIn('WoID', array_keys($wordIds))
+            ->getPrepared();
+
+        $byId = [];
+        foreach ($records as $record) {
+            $byId[(int) $record['WoID']] = (string) ($record['WoRomanization'] ?? '');
+        }
+
+        return $byId;
     }
 
     // ===========================
