@@ -2,13 +2,13 @@
 
 /**
  * \file
- * \brief Centralized global state management for LWT.
+ * \brief Request-scoped application context for LWT.
  *
- * This class provides a clear, type-safe way to access application-wide
- * global variables. It replaces scattered `global $var` declarations
- * with explicit method calls.
+ * Holds the state that is genuinely per-request and needed almost
+ * everywhere: which database is in use, and who is asking. It replaces
+ * the scattered `global $var` declarations this codebase used to carry.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt
@@ -22,13 +22,18 @@ declare(strict_types=1);
 
 namespace Lwt\Shared\Infrastructure;
 
+use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Shared\Infrastructure\Exception\AuthException;
 
 /**
- * Centralized management of LWT global variables.
+ * Request-scoped application context.
  *
- * This class encapsulates all global state used throughout LWT,
- * making dependencies explicit and easier to track.
+ * Two things live here. The database handle and name are a convenience
+ * facade over Connection, which owns the mysqli resource. The user
+ * context (id, admin flag, multi-user mode) is load-bearing: QueryBuilder
+ * reads it to scope every query to the current user, so a repository that
+ * looks unscoped is in fact filtered. Clear it and queries stop being
+ * fenced — treat setCurrentUserId() as a security boundary, not a setting.
  *
  * Usage:
  * ```php
@@ -52,32 +57,11 @@ use Lwt\Shared\Infrastructure\Exception\AuthException;
 class Globals
 {
     /**
-     * Database connection object
-     *
-     * @var \mysqli|null
-     */
-    private static ?\mysqli $dbConnection = null;
-
-    /**
-     * Whether error display is enabled
-     *
-     * @var bool
-     */
-    private static bool $errorDisplayEnabled = false;
-
-    /**
      * Database name
      *
      * @var string
      */
     private static string $databaseName = '';
-
-    /**
-     * Whether globals have been initialized
-     *
-     * @var bool
-     */
-    private static bool $initialized = false;
 
     /**
      * Current authenticated user ID
@@ -112,25 +96,6 @@ class Globals
     private static ?bool $backupRestoreEnabled = null;
 
     /**
-     * Initialize all global variables.
-     *
-     * This should be called once during application bootstrap.
-     *
-     * @return void
-     */
-    public static function initialize(): void
-    {
-        if (self::$initialized) {
-            return;
-        }
-
-        // All settings default to off
-        self::$errorDisplayEnabled = false;
-
-        self::$initialized = true;
-    }
-
-    /**
      * Set the database connection.
      *
      * @param \mysqli $connection The mysqli connection object
@@ -139,7 +104,7 @@ class Globals
      */
     public static function setDbConnection(\mysqli $connection): void
     {
-        self::$dbConnection = $connection;
+        Connection::setInstance($connection);
     }
 
     /**
@@ -149,7 +114,7 @@ class Globals
      */
     public static function getDbConnection(): ?\mysqli
     {
-        return self::$dbConnection;
+        return Connection::tryGetInstance();
     }
 
     /**
@@ -172,70 +137,6 @@ class Globals
     public static function getDatabaseName(): string
     {
         return self::$databaseName;
-    }
-
-    /**
-     * Enable or disable error display.
-     *
-     * @param bool $enabled True to enable error display
-     *
-     * @return void
-     */
-    public static function setErrorDisplay(bool $enabled): void
-    {
-        self::$errorDisplayEnabled = $enabled;
-    }
-
-    /**
-     * Check if error display is enabled.
-     *
-     * @return bool True if error display is on
-     */
-    public static function isErrorDisplayEnabled(): bool
-    {
-        return self::$errorDisplayEnabled;
-    }
-
-    /**
-     * Get a table name.
-     *
-     * Convenience method to get a full table name.
-     *
-     * @param string $tableName The base table name (e.g., 'words')
-     *
-     * @return string The table name
-     */
-    public static function table(string $tableName): string
-    {
-        return $tableName;
-    }
-
-    /**
-     * Get a query builder instance for a table.
-     *
-     * Convenience method to start building a database query.
-     *
-     * Usage:
-     * ```php
-     * // SELECT query
-     * $words = Globals::query('words')
-     *     ->where('WoLgID', '=', 1)
-     *     ->get();
-     *
-     * // INSERT query
-     * Globals::query('words')
-     *     ->insert(['WoText' => 'hello', 'WoLgID' => 1]);
-     * ```
-     *
-     * @param string $tableName The base table name (e.g., 'words')
-     *
-     * @return \Lwt\Shared\Infrastructure\Database\QueryBuilder
-     *
-     * @since 3.0.0
-     */
-    public static function query(string $tableName): \Lwt\Shared\Infrastructure\Database\QueryBuilder
-    {
-        return \Lwt\Shared\Infrastructure\Database\QueryBuilder::table($tableName);
     }
 
     // =========================================================================
@@ -446,10 +347,8 @@ class Globals
      */
     public static function reset(): void
     {
-        self::$dbConnection = null;
-        self::$errorDisplayEnabled = false;
+        Connection::reset();
         self::$databaseName = '';
-        self::$initialized = false;
         self::$currentUserId = null;
         self::$multiUserEnabled = false;
         self::$currentUserIsAdmin = false;

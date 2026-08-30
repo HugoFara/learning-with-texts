@@ -9,7 +9,7 @@
  * Variables expected:
  * - $config: array - Review configuration (from ReviewController)
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Views
  * @package  Lwt
@@ -17,6 +17,8 @@
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lwt/developer/api
  * @since    3.0.0
+ *
+ * @var array $config
  */
 
 declare(strict_types=1);
@@ -25,6 +27,13 @@ namespace Lwt\Views\Review;
 
 use Lwt\Shared\Infrastructure\Utilities\StringUtils;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
+
+// Type-safe variable extraction from controller context
+/**
+ * @var array $configTyped
+*/
+$configTyped = $config;
 
 ?>
 <!-- Main navigation -->
@@ -64,6 +73,4 @@ use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 </audio>
 
 <!-- Review configuration -->
-<script type="application/json" id="review-config"><?php
-    echo json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP);
-?></script>
+<?php ConfigIsland::render('review-config', $configTyped); ?>

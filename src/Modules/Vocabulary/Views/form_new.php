@@ -12,7 +12,7 @@
  * - $dictLinksHtml: string - Dictionary links HTML
  * - $wordTagsHtml: string - Word tags HTML
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views
@@ -31,6 +31,7 @@ namespace Lwt\Views\Word;
 use Lwt\Shared\UI\Helpers\SelectOptionsBuilder;
 use Lwt\Shared\UI\Helpers\IconHelper;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 // Type assertions for variables passed from controller
 assert(is_int($lang));
@@ -57,12 +58,10 @@ $phNotes = htmlspecialchars(__('vocabulary.form.placeholder_notes'), ENT_QUOTES,
 
 ?>
 
-<script type="application/json" id="new-term-config">
-<?php echo json_encode([
+<?php ConfigIsland::render('new-term-config', [
     'languageId' => $lang,
     'textId' => $textId,
-], JSON_HEX_TAG | JSON_HEX_AMP); ?>
-</script>
+]); ?>
 
 <form name="newword" class="validate" data-lwt-clear-frame="true"
       x-data="newTermForm" @submit.prevent="save()">

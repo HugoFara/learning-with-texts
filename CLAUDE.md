@@ -51,7 +51,7 @@ The `.env` file contains:
 docker compose up                # Start app at http://localhost:8010/
 
 # PHP built-in server (for development)
-php -S localhost:8000            # Start at http://localhost:8000/
+npm run serve                    # PHP dev server at http://localhost:8000/
 ```
 
 ### Testing
@@ -62,7 +62,7 @@ composer test                    # Run PHPUnit tests with coverage
 composer test:no-coverage        # Run PHPUnit tests without coverage (faster)
 
 # Run a single test file
-./vendor/bin/phpunit tests/backend/Services/TextServiceTest.php
+./vendor/bin/phpunit tests/backend/Modules/Text/Http/TextControllerTest.php
 
 # Run a specific test method
 ./vendor/bin/phpunit --filter testMethodName
@@ -78,7 +78,7 @@ npm test                         # Run all frontend tests
 npm run test:watch               # Watch mode for frontend tests
 npm run test:coverage            # Run with coverage
 
-# E2E tests (requires server on localhost:8000)
+# E2E tests (requires `npm run serve` in another terminal)
 npm run e2e                      # Run Cypress E2E tests
 npm run cy:open                  # Interactive Cypress test runner
 ```
@@ -95,10 +95,14 @@ if (!defined('LWT_TEST_DB_AVAILABLE') || !LWT_TEST_DB_AVAILABLE) {
 
 Prefer mocking or restructuring code to avoid DB calls in unit tests. Use the skip guard only when static/global DB calls cannot be avoided (e.g., deeply nested static method calls).
 
+Always serve the app with `npm run serve`, not a bare `php -S`: the built-in
+server is single-request unless `PHP_CLI_SERVER_WORKERS` is set, so one slow
+request blocks the rest and Cypress times out on pages that are only queued.
+
 **When to run E2E tests:** Run `npm run e2e` after making changes to:
 
-- Routes or URL handling (`src/backend/Router/`)
-- Controllers (`src/backend/Controllers/`)
+- Routes or URL handling (`src/Shared/Infrastructure/Routing/`)
+- Controllers (`src/Modules/*/Http/`)
 - Form handling or navigation
 - REST API endpoints
 - Fix the test failures, even if they are unrelated to the current changes.
@@ -148,23 +152,26 @@ composer clean-doc               # Clear all generated documentation
 
 ### Request Flow (v3 Front Controller)
 
-All requests route through `index.php` → `Router` → `Controller` → `Service` → `View`:
+All requests route through `index.php` → `Router` → `Controller` → `Application layer` → `View`:
 
 1. `index.php` bootstraps the application and invokes the Router
-2. `src/backend/Router/routes.php` maps URLs to controller methods
-3. Controllers in `src/backend/Controllers/` handle request/response
-4. Services in `src/backend/Services/` contain business logic
-5. Views in `src/backend/Views/` render HTML output
+2. `src/Shared/Infrastructure/Routing/routes.php` maps URLs to controller methods
+3. Controllers in `src/Modules/[Module]/Http/` handle request/response
+4. Use cases and services in `src/Modules/[Module]/Application/` hold business logic
+5. Views in `src/Modules/[Module]/Views/` render the page shell
 
-### Dual Codebase: Legacy vs Modules
+### Module Architecture
 
-The codebase has two parallel structures. New feature work should target `src/Modules/` when the relevant module exists; `src/backend/` is the legacy layer being incrementally migrated.
+Feature work lives in `src/Modules/`. The old `src/backend/` MVC layer has been
+migrated out: what remains there is the REST API (`Api/V1/`), `Application.php`
+and a single `ApiController`. There is no `src/backend/Services/` or
+`src/backend/Views/` any more, and no `global $var` anywhere in `src/`.
 
-- **`src/Modules/`** — New modular architecture with bounded contexts, DI containers, and repository pattern
-- **`src/backend/`** — Legacy MVC layer (Controllers/Services/Views) still handling most routes
-- **`src/Shared/`** — Cross-cutting infrastructure used by both (Database, Http, Container, UI helpers)
+- **`src/Modules/`** — Bounded contexts with DI service providers and the repository pattern
+- **`src/Shared/`** — Cross-cutting infrastructure (Database, Http, Routing, Container, UI helpers)
+- **`src/backend/`** — REST API surface plus the application entry point
 
-Both share the `Lwt\` PSR-4 root, with explicit mappings: `Lwt\` → `src/backend/`, `Lwt\Shared\` → `src/Shared/`, `Lwt\Modules\` → `src/Modules/`.
+All share the `Lwt\` PSR-4 root, with explicit mappings: `Lwt\` → `src/backend/`, `Lwt\Shared\` → `src/Shared/`, `Lwt\Modules\` → `src/Modules/`.
 
 ### Key Directories
 
@@ -177,12 +184,17 @@ src/Shared/                          # Cross-cutting infrastructure
 │   └── Globals.php                  # Type-safe global state access
 ├── Domain/
 │   └── ValueObjects/                # UserId (cross-module identity)
+├── I18n/                            # Translator and locale loading
+├── Http/                            # BaseController, AbstractCrudController
 └── UI/
-    ├── Helpers/                     # FormHelper, IconHelper, PageLayoutHelper, etc.
+    ├── Helpers/                     # FormHelper, IconHelper, PageLayoutHelper,
+    │                                #   ConfigIsland, etc.
     └── Assets/                      # ViteHelper
 
 src/Modules/                         # Feature modules (bounded contexts)
+├── Activity/                        # Streaks, activity log, dashboard stats
 ├── Admin/                           # Admin/settings module
+├── Book/                            # Multi-chapter books and EPUB import
 ├── Dictionary/                      # Dictionary lookup/translation module
 ├── Feed/                            # RSS feed module
 ├── Home/                            # Home page/dashboard module
@@ -201,22 +213,21 @@ src/Modules/                         # Feature modules (bounded contexts)
 ├── Views/                           # Module-specific view templates
 └── [Module]ServiceProvider.php      # DI container registration
 
-src/backend/                         # Legacy MVC (being migrated to src/Modules/)
-├── Controllers/                     # MVC Controllers
-├── Services/                        # Business logic layer
-├── Views/                           # PHP templates organized by feature
-├── Router/                          # URL routing (Router.php, routes.php)
-├── Api/V1/                          # REST API handlers
-│   ├── Handlers/                    # Endpoint handlers by resource
-│   ├── ApiV1.php                    # Main API router
-│   └── Endpoints.php                # Endpoint registry
-└── View/Helper/                     # StatusHelper (business logic dependency)
+src/backend/                         # REST API and entry point
+├── Application.php                  # Application bootstrap
+├── Controllers/ApiController.php    # API entry controller
+└── Api/V1/                          # REST API handlers
+    ├── Handlers/                    # Endpoint handlers by resource
+    ├── ApiV1.php                    # Main API router
+    └── Endpoints.php                # Endpoint registry
 
 src/frontend/
 ├── js/                              # TypeScript source (built with Vite)
-│   ├── main.ts                      # Entry point
-│   ├── types/                       # TypeScript declarations
-│   └── *.ts                         # Feature modules
+│   ├── main.ts                      # Entry point + lazy module map
+│   ├── modules/<feature>/           # Per-feature pages, components, stores
+│   ├── shared/                      # api, stores, i18n, utils, components
+│   ├── home/ media/ dictionaries/   # Cross-cutting page bundles
+│   └── types/                       # TypeScript declarations
 └── css/
     ├── base/                        # Core styles
     └── themes/                      # Theme overrides
@@ -227,38 +238,51 @@ src/frontend/
 Key tables (InnoDB engine):
 
 - `languages` - Language configurations (parsing rules, dictionaries)
-- `texts` / `archivedtexts` - User texts for reading
+- `texts` - User texts for reading; archived ones carry a `TxArchivedAt` timestamp
+  (the separate `archivedtexts` table was merged away by migration)
 - `words` - User vocabulary with status tracking
 - `sentences` - Parsed sentences from texts
-- `textitems2` - Word occurrences linking words to sentences
+- `word_occurrences` - Word occurrences linking words to sentences (formerly `textitems2`)
 - `settings` - Application settings (key-value pairs)
+- `books` / `activity_log` / `term_schedule` / `local_dictionaries` - Books, activity
+  tracking, review scheduling and offline dictionaries
 
 **Word Status Values:** 1-5 (learning stages), 98 (ignored), 99 (well-known)
 
-### Global State Access
+### Request Context (`Globals`)
 
-Use `Lwt\Shared\Infrastructure\Globals` class instead of PHP globals:
+`Lwt\Shared\Infrastructure\Globals` holds the per-request state that is needed
+almost everywhere. It is deliberately small; do not add to it.
 
 ```php
 use Lwt\Shared\Infrastructure\Globals;
+use Lwt\Shared\Infrastructure\Database\QueryBuilder;
 
-// Database operations
-$db = Globals::getDbConnection();
-$tableName = Globals::table('words');  // Returns table name
+// Database (a thin facade over Connection, which owns the handle)
+$db = Globals::getDbConnection();      // null when not yet connected
+$name = Globals::getDatabaseName();
 
-// Query builder
-$words = Globals::query('words')->where('WoLgID', '=', 1)->get();
+// Query builder — call QueryBuilder directly
+$words = QueryBuilder::table('words')->where('WoLgID', '=', 1)->get();
 
 // User context (for multi-user mode)
 $userId = Globals::getCurrentUserId();
-$userId = Globals::requireUserId();  // Throws if not authenticated
+$userId = Globals::requireUserId();    // Throws if not authenticated
 ```
+
+**The user context is a security boundary, not a setting.** `QueryBuilder`
+reads `getCurrentUserId()` / `isMultiUserEnabled()` / `isCurrentUserAdmin()` to
+scope every query, so a repository that *looks* unscoped is in fact filtered.
+This is also why unit tests that reach a static DB call need the skip guard.
+
+Table names are plain strings — there is no prefix mechanism, so write
+`QueryBuilder::table('words')` and `'DELETE FROM words'` directly.
 
 ### REST API
 
 Base URL: `/api/v1` (also supports legacy `/api.php/v1`)
 
-Key endpoint groups (see `src/backend/Api/V1/Endpoints.php` for full list):
+Key endpoint groups (see `src/backend/Api/V1/Endpoints.php` for the full list):
 
 - `languages` - Language CRUD and definitions
 - `texts` - Text management and statistics
@@ -272,18 +296,20 @@ Key endpoint groups (see `src/backend/Api/V1/Endpoints.php` for full list):
 
 ### Creating New Features
 
-1. **Add route** in `src/backend/Router/routes.php`
-2. **Create/extend controller** in `src/backend/Controllers/`
-3. **Extract business logic** to `src/backend/Services/`
-4. **Create view templates** in `src/backend/Views/[Feature]/`
+1. **Add route** in `src/Shared/Infrastructure/Routing/routes.php`
+2. **Create/extend controller** in `src/Modules/[Module]/Http/`
+3. **Put business logic** in `src/Modules/[Module]/Application/` (use cases and services)
+4. **Add the view shell** in `src/Modules/[Module]/Views/`, seeding it with
+   `ConfigIsland::render()` and letting an Alpine component fetch from `/api/v1`
+5. **Register services** in `src/Modules/[Module]/[Module]ServiceProvider.php`
 
 ### Modifying PHP Code
 
 - Controllers extend `BaseController` which provides helper methods for input validation, rendering, and database access
 - Use prepared statements for database queries: `Connection::preparedFetchAll($sql, [$param1, $param2])`
 - For IN clauses with arrays of IDs: `Connection::buildPreparedInClause($ids, $bindings)` returns `(?,?,?)` and appends values to `$bindings`; returns `(NULL)` for empty arrays
-- Use `Globals::table('tablename')` for table names
-- Use `getSettingWithDefault()` for application settings
+- Write table names as plain strings; there is no prefix helper
+- Use `Settings::getWithDefault('key')` (`Lwt\Shared\Infrastructure\Database\Settings`) for application settings
 - Use `InputValidator` for request parameter validation (accessed via `$this->param()`, `$this->paramInt()` in controllers)
 - Use `forTablePrepared()` instead of legacy `forTable()` for parameterized queries in module code
 
@@ -295,17 +321,18 @@ Key endpoint groups (see `src/backend/Api/V1/Endpoints.php` for full list):
 
 ### Modifying TypeScript
 
-1. Edit files in `src/frontend/js/*.ts`
+1. Edit files under `src/frontend/js/`
 2. Run `npm run dev` for HMR during development
 3. Run `npm run typecheck` before committing
 4. Run `npm run build` to generate production bundles
 
-Key modules:
+Layout:
 
-- `pgm.ts` - Main program logic and utilities
-- `text_events.ts` - Text reading interface
-- `audio_controller.ts` - Audio playback
-- `translation_api.ts` - Translation integration
+- `main.ts` - Entry point; lazily imports a feature bundle based on the
+  `<meta name="lwt-modules">` tag the server emits
+- `modules/<feature>/` - `pages/`, `components/`, `stores/`, `services/` per module
+- `shared/` - `api/` clients, `stores/`, `i18n/`, `utils/`, `components/`
+- `media/`, `home/`, `dictionaries/` - Cross-cutting page bundles
 
 ### Alpine.js (CSP Build)
 
@@ -322,9 +349,52 @@ This project uses `@alpinejs/csp` (aliased in `vite.config.ts`), which **cannot 
 - Register components via `Alpine.data('name', () => ({ ... }))` in TypeScript
 - Use `x-data="name"` (no parentheses) in HTML
 - Move all logic into component methods: `@click="increment()"`, `@change="updateMode($event)"`
-- Pass config from PHP via `<script type="application/json" id="config-id">` and read it in the component's `init()` method
+- Pass config from PHP through a config island (below), read in `init()`
 
 **Known violations:** Some older views (e.g., `edit_form.php`) still use inline `x-data` object literals and simple inline assignments like `@click="importMode = 'file'"`. These work at runtime because `@alpinejs/csp` actually supports simple property assignments and ternaries — it only breaks on complex expressions like function calls or array methods. New code should still follow the strict pattern above (registered components), but be aware that existing inline patterns may not cause errors.
+
+### Config Islands (PHP → JS)
+
+Because the CSP build cannot evaluate inline expressions, server values reach a
+page as a JSON blob rather than through `x-data`. There is exactly one emitter
+and one reader; do not hand-roll either.
+
+PHP side — `Lwt\Shared\UI\Helpers\ConfigIsland`:
+
+```php
+use Lwt\Shared\UI\Helpers\ConfigIsland;
+
+ConfigIsland::render('book-list-config', [
+    'languageId' => $languageId,
+    'page' => $page,
+]);
+```
+
+TypeScript side — `shared/utils/page_config`:
+
+```ts
+import { readPageConfig, hasPageConfig } from '@shared/utils/page_config';
+
+const config = readPageConfig<BookListConfig>('book-list-config', {
+  languageId: 0,
+  page: 1
+});
+```
+
+`readPageConfig` never throws: a missing element, empty blob or malformed JSON
+all fall back to the defaults you pass, so a bad blob cannot kill the component
+during `init()`. Values are merged shallowly over the defaults and `null` counts
+as absent. Use `hasPageConfig()` when the island's *absence* is meaningful (for
+example "this is not my page").
+
+`ConfigIsland` applies the escaping flags centrally — that is what stops a value
+containing `</script>` from breaking out of the element. Two tests in
+`tests/backend/Core/JsonScriptBlockEscapingTest.php` pin this: one checks the
+emitter neutralises a hostile payload, the other that no file outside
+`ConfigIsland` emits `<script type="application/json" id=` itself.
+
+Page-wide values (base path, CSRF token, active locale, i18n strings) come from
+`<meta>` tags and the `lwt-i18n` island written by `PageLayoutHelper`.
 
 ### Creating/Editing Themes
 
@@ -336,7 +406,9 @@ This project uses `@alpinejs/csp` (aliased in `vite.config.ts`), which **cannot 
 
 - **Character Encoding:** UTF-8 throughout
 - **Namespaces:** PSR-4 autoloading with `Lwt\` prefix
-- **ID Columns:** `LgID` (language), `TxID`/`AtID` (text/archived), `WoID` (word)
+- **PHP Floor:** 8.2. New file docblocks say `PHP version 8.2`; don't
+  reintroduce a lower number when copying an existing header.
+- **ID Columns:** `LgID` (language), `TxID` (text), `WoID` (word), `BkID` (book), `TgID` (tag)
 - **Database Queries:** Always use prepared statements (`Connection::preparedFetchAll()`, `preparedExecute()`, `preparedFetchValue()`). Never interpolate variables into SQL strings. Use `buildPreparedInClause()` for IN clauses.
 - **Test Namespaces:** `Lwt\Tests\` maps to `tests/backend/`
 

@@ -210,12 +210,19 @@ LWT uses [Cypress](https://www.cypress.io/) for end-to-end testing. E2E tests ve
 
 ### Running E2E Tests
 
-Make sure the development server is running on `http://localhost:8000`, then:
+Start the development server, then run the suite against it:
 
 ```bash
+npm run serve        # PHP dev server on http://localhost:8000
 npm run e2e          # Run all E2E tests headlessly
 npx cypress open     # Open Cypress interactive UI
 ```
+
+Use `npm run serve` rather than a bare `php -S`. The built-in server handles
+one request at a time unless `PHP_CLI_SERVER_WORKERS` is set, so a single slow
+request — importing a text, or fetching a book to preview its difficulty —
+stalls every other request behind it. Cypress then times out on pages that are
+merely queued, and the failures look like application bugs.
 
 ### Test Structure
 

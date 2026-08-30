@@ -6,7 +6,6 @@ namespace Lwt\Tests\Api\V1\Handlers;
 
 use Lwt\Modules\Admin\Application\AdminFacade;
 use Lwt\Modules\Admin\Http\AdminApiHandler;
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Shared\Infrastructure\Database\Connection;
 use PHPUnit\Framework\TestCase;
 

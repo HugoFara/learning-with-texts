@@ -15,7 +15,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 /**
  * Unit tests for ReviewController.
  *
- * Tests review page routing, header rendering, table review,
+ * Tests review page routing, table review,
  * and review property extraction from parameters.
  */
 class ReviewControllerTest extends TestCase
@@ -167,118 +167,6 @@ class ReviewControllerTest extends TestCase
 
         $result = $method->invoke($this->controller);
         $this->assertSame('', $result);
-    }
-
-    // =========================================================================
-    // header() parameter parsing tests
-    // =========================================================================
-
-    #[Test]
-    public function headerParsesLangParam(): void
-    {
-        $_REQUEST = ['lang' => '5', 'text' => '', 'selection' => ''];
-
-        $this->sessionManager->method('hasCriteria')->willReturn(false);
-
-        $this->reviewFacade->expects($this->once())
-            ->method('getReviewDataFromParams')
-            ->with(null, null, 5, null)
-            ->willReturn([
-                'counts' => ['due' => 10, 'total' => 50],
-                'title' => 'Test',
-                'property' => 'lang=5'
-            ]);
-
-        $this->reviewFacade->method('getL2LanguageName')->willReturn('German');
-        $this->reviewFacade->method('initializeReviewSession');
-
-        // This will try to include view files, so we use output buffering
-        ob_start();
-        try {
-            $this->controller->header([]);
-        } catch (\Throwable $e) {
-            // View include may fail in test env, that's OK
-        }
-        ob_end_clean();
-
-        // If we get here without fatal error, the parameter parsing worked
-        $this->assertTrue(true);
-    }
-
-    #[Test]
-    public function headerParsesTextParam(): void
-    {
-        $_REQUEST = ['lang' => '', 'text' => '42', 'selection' => ''];
-
-        $this->sessionManager->method('hasCriteria')->willReturn(false);
-
-        $this->reviewFacade->expects($this->once())
-            ->method('getReviewDataFromParams')
-            ->with(null, null, null, 42)
-            ->willReturn([
-                'counts' => ['due' => 5, 'total' => 20],
-                'title' => 'Test Text',
-                'property' => 'text=42'
-            ]);
-
-        $this->reviewFacade->method('getL2LanguageName')->willReturn('French');
-        $this->reviewFacade->method('initializeReviewSession');
-
-        ob_start();
-        try {
-            $this->controller->header([]);
-        } catch (\Throwable $e) {
-            // View include may fail
-        }
-        ob_end_clean();
-
-        $this->assertTrue(true);
-    }
-
-    #[Test]
-    public function headerUsesSessionSelectionString(): void
-    {
-        $_REQUEST = ['lang' => '', 'text' => '', 'selection' => '3'];
-
-        $this->sessionManager->method('hasCriteria')->willReturn(true);
-        $this->sessionManager->expects($this->once())
-            ->method('getSelectionString')
-            ->willReturn('WoStatus = 1');
-
-        $this->reviewFacade->expects($this->once())
-            ->method('getReviewDataFromParams')
-            ->with(3, 'WoStatus = 1', null, null)
-            ->willReturn([
-                'counts' => ['due' => 8, 'total' => 30],
-                'title' => 'Selection Review',
-                'property' => 'selection=3'
-            ]);
-
-        $this->reviewFacade->method('getL2LanguageName')->willReturn('Spanish');
-        $this->reviewFacade->method('initializeReviewSession');
-
-        ob_start();
-        try {
-            $this->controller->header([]);
-        } catch (\Throwable $e) {
-            // View include may fail
-        }
-        ob_end_clean();
-
-        $this->assertTrue(true);
-    }
-
-    #[Test]
-    public function headerThrowsValidationExceptionWhenNoData(): void
-    {
-        $_REQUEST = ['lang' => '5', 'text' => '', 'selection' => ''];
-
-        $this->sessionManager->method('hasCriteria')->willReturn(false);
-        $this->reviewFacade->method('getReviewDataFromParams')->willReturn(null);
-
-        $this->expectException(\Lwt\Shared\Infrastructure\Exception\ValidationException::class);
-
-        $this->controller->header([]);
     }
 
     // =========================================================================

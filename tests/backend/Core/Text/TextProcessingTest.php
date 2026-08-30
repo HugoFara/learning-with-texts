@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Lwt\Tests\Core\Text;
 
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Shared\Infrastructure\Database\Connection;
 use PHPUnit\Framework\TestCase;
 use Lwt\Shared\Infrastructure\Utilities\StringUtils;

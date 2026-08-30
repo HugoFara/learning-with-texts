@@ -3,7 +3,7 @@
 /**
  * Create Book From Texts Use Case
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Book\Application\UseCases
@@ -25,7 +25,6 @@ use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Shared\Infrastructure\Database\TextParsing;
 use Lwt\Modules\Text\Domain\Text;
 use Lwt\Modules\Text\Domain\TextRepositoryInterface;
-use Lwt\Shared\Infrastructure\Globals;
 use RuntimeException;
 
 /**
@@ -237,7 +236,7 @@ class CreateBookFromTexts
     ): void {
         $bindings = [$bookId, $chapterNum, $chapterTitle, $textId];
         Connection::preparedExecute(
-            "UPDATE " . Globals::table('texts') .
+            "UPDATE texts" .
             " SET TxBkID = ?, TxChapterNum = ?, TxChapterTitle = ? WHERE TxID = ?",
             $bindings
         );
@@ -254,7 +253,7 @@ class CreateBookFromTexts
         foreach ($tagIds as $tagId) {
             $bindings = [$textId, $tagId];
             Connection::preparedExecute(
-                "INSERT IGNORE INTO " . Globals::table('text_tag_map') .
+                "INSERT IGNORE INTO text_tag_map" .
                 " (TtTxID, TtT2ID) VALUES (?, ?)",
                 $bindings
             );

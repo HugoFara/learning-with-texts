@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Lwt\Tests\Core\Http;
 
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Shared\Infrastructure\Http\UrlUtilities;
 use PHPUnit\Framework\TestCase;
 

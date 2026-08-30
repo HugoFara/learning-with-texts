@@ -14,7 +14,7 @@ declare(strict_types=1);
  * - $title: string - Text title (optional)
  * - $sourceUri: string|null - Source URI (optional)
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Views
  * @package  Lwt
@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace Lwt\Views\Text;
 
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 // Type-safe variable extraction from controller context
 assert(is_int($textId));
@@ -333,10 +334,7 @@ assert(is_string($title));
 }
 </style>
 
-<script type="application/json" id="text-reader-config"><?php echo json_encode(
-    [
+<?php ConfigIsland::render('text-reader-config', [
     'textId' => $textId,
     'langId' => $langId,
-    ],
-    JSON_HEX_TAG | JSON_HEX_AMP
-); ?></script>
+    ]); ?>

@@ -57,14 +57,14 @@ class TextControllerReadTest extends TestCase
         if (self::$dbConnected) {
             // Create a test language
             $existingLang = Connection::fetchValue(
-                "SELECT LgID AS value FROM " . Globals::table('languages') .
+                "SELECT LgID AS value FROM languages" .
                 " WHERE LgName = 'ReadControllerTestLang' LIMIT 1"
             );
 
             if ($existingLang) {
                 self::$testLangId = (int)$existingLang;
             } else {
-                $sql = "INSERT INTO " . Globals::table('languages') .
+                $sql = "INSERT INTO languages" .
                     " (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
                     "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, " .
                     "LgExceptionsSplitSentences, LgRegexpWordCharacters, LgRemoveSpaces, " .
@@ -81,7 +81,7 @@ class TextControllerReadTest extends TestCase
             // Create first test text
             $annotatedText = "-1\t.\n0\tTest\t\t*\n0\ttext\t\ttranslation";
             Connection::query(
-                "INSERT INTO " . Globals::table('texts') . " (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, " .
+                "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, " .
                 "TxSourceURI, TxAudioPosition, TxPosition) " .
                 "VALUES (" . self::$testLangId . ", 'ReadControllerTestText', 'Test text.', " .
                 "'" . mysqli_real_escape_string(Globals::getDbConnection(), $annotatedText) . "', " .
@@ -93,7 +93,7 @@ class TextControllerReadTest extends TestCase
 
             // Create second test text (for navigation tests)
             Connection::query(
-                "INSERT INTO " . Globals::table('texts') . " (TxLgID, TxTitle, TxText, TxAnnotatedText) " .
+                "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText) " .
                 "VALUES (" . self::$testLangId . ", 'ReadControllerTestText2', 'Second test.', '')"
             );
             self::$testText2Id = (int)Connection::fetchValue(
@@ -111,19 +111,19 @@ class TextControllerReadTest extends TestCase
         // Clean up test data
         $textIds = self::$testTextId . ", " . self::$testText2Id;
         Connection::query(
-            "DELETE FROM " . Globals::table('word_occurrences') .
+            "DELETE FROM word_occurrences" .
             " WHERE Ti2TxID IN (" . $textIds . ")"
         );
         Connection::query(
-            "DELETE FROM " . Globals::table('sentences') .
+            "DELETE FROM sentences" .
             " WHERE SeTxID IN (" . $textIds . ")"
         );
         Connection::query(
-            "DELETE FROM " . Globals::table('texts') .
+            "DELETE FROM texts" .
             " WHERE TxID IN (" . $textIds . ")"
         );
         Connection::query(
-            "DELETE FROM " . Globals::table('languages') .
+            "DELETE FROM languages" .
             " WHERE LgName = 'ReadControllerTestLang'"
         );
     }
@@ -454,7 +454,7 @@ class TextControllerReadTest extends TestCase
 
         // Create RTL language
         Connection::query(
-            "INSERT INTO " . Globals::table('languages') . " (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
+            "INSERT INTO languages (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
             "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
             "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
             "VALUES ('ReadTestRTLLang', 'http://rtl.test/###', '', '', " .
@@ -464,7 +464,7 @@ class TextControllerReadTest extends TestCase
 
         // Create text with RTL language
         Connection::query(
-            "INSERT INTO " . Globals::table('texts') . " (TxLgID, TxTitle, TxText, TxAnnotatedText) " .
+            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText) " .
             "VALUES (" . $rtlLangId . ", 'RTL Test', 'RTL content.', '')"
         );
         $rtlTextId = (int)Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
@@ -476,8 +476,8 @@ class TextControllerReadTest extends TestCase
         $this->assertEquals(1, (int)$langSettings['LgRightToLeft']);
 
         // Cleanup
-        Connection::query("DELETE FROM " . Globals::table('texts') . " WHERE TxID = " . $rtlTextId);
-        Connection::query("DELETE FROM " . Globals::table('languages') . " WHERE LgID = " . $rtlLangId);
+        Connection::query("DELETE FROM texts WHERE TxID = " . $rtlTextId);
+        Connection::query("DELETE FROM languages WHERE LgID = " . $rtlLangId);
     }
 
     // ===== Edge case tests =====

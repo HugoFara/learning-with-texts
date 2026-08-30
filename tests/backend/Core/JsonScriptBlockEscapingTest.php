@@ -4,7 +4,7 @@
  * Codebase invariant: JSON embedded in a page must not be able to close its
  * own <script> block.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Tests
  * @package  Lwt
@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Lwt\Tests\Core;
 
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -24,9 +25,11 @@ use RecursiveIteratorIterator;
  * user-controlled field closes a `<script type="application/json">` config
  * block early and everything after it is parsed as markup.
  *
- * The codebase standardises on `JSON_HEX_TAG | JSON_HEX_AMP` for these blocks.
- * Individual sites have drifted from that more than once, so this test asserts
- * the invariant across the whole tree instead of per call site.
+ * Config blocks are therefore emitted only by ConfigIsland, which applies the
+ * escaping flags centrally. These tests pin both halves of that: the emitter
+ * really does neutralise a hostile payload, and no view has gone back to
+ * hand-rolling its own block. Individual sites drifted more than once while the
+ * flags were per call site, which is what the single emitter exists to stop.
  */
 final class JsonScriptBlockEscapingTest extends TestCase
 {
@@ -96,6 +99,60 @@ final class JsonScriptBlockEscapingTest extends TestCase
     }
 
     /**
+     * The single sanctioned emitter neutralises a payload that tries to close
+     * its own script element.
+     *
+     * Asserted through the rendered output rather than by reading the flag
+     * constant, so the guarantee survives any future change of flags.
+     */
+    public function testConfigIslandNeutralisesScriptClosingPayload(): void
+    {
+        $html = ConfigIsland::html('hostile-config', [
+            'title' => '</script><script>alert(1)</script>',
+            'note' => '<img src=x onerror=alert(1)>',
+        ]);
+
+        // Exactly one closing tag: the element's own terminator.
+        $this->assertSame(1, substr_count($html, '</script>'));
+        $this->assertStringNotContainsString('<script>alert', $html);
+        $this->assertStringNotContainsString('<img', $html);
+
+        // The payload survives intact once the browser JSON-parses it.
+        $json = substr($html, (int) strpos($html, '>') + 1, -strlen('</script>'));
+        /** @var array{title: string, note: string} $decoded */
+        $decoded = json_decode($json, true);
+        $this->assertSame('</script><script>alert(1)</script>', $decoded['title']);
+    }
+
+    /**
+     * Views do not hand-roll config blocks; they go through ConfigIsland.
+     */
+    public function testConfigBlocksAreEmittedOnlyByConfigIsland(): void
+    {
+        $offenders = [];
+
+        foreach ($this->sourceFiles() as $path) {
+            if (basename($path) === 'ConfigIsland.php') {
+                continue;
+            }
+            $source = file_get_contents($path);
+            if ($source === false) {
+                continue;
+            }
+            if (preg_match('/<script type="application\/json" id=/', $source) === 1) {
+                $offenders[] = str_replace(dirname(__DIR__, 3) . '/', '', $path);
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $offenders,
+            "Config blocks must be rendered with ConfigIsland::render()/html().\n"
+            . "Hand-rolled in:\n  " . implode("\n  ", $offenders)
+        );
+    }
+
+    /**
      * Every json_encode feeding a <script> block sets JSON_HEX_TAG.
      */
     public function testJsonInScriptBlocksEscapesAngleBrackets(): void
@@ -103,6 +160,11 @@ final class JsonScriptBlockEscapingTest extends TestCase
         $offenders = [];
 
         foreach ($this->sourceFiles() as $path) {
+            // The emitter passes its flags via a constant, and is covered
+            // behaviourally by testConfigIslandNeutralisesScriptClosingPayload().
+            if (basename($path) === 'ConfigIsland.php') {
+                continue;
+            }
             $source = file_get_contents($path);
             if ($source === false) {
                 continue;

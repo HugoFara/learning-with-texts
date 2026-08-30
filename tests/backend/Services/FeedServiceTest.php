@@ -50,7 +50,7 @@ class FeedServiceTest extends TestCase
 
         if (self::$dbConnected) {
             // Create a test language if it doesn't exist
-            $langTable = Globals::table('languages');
+            $langTable = 'languages';
             $existingLang = Connection::fetchValue(
                 "SELECT LgID AS value FROM $langTable WHERE LgName = 'FeedServiceTestLang' LIMIT 1"
             );
@@ -79,9 +79,9 @@ class FeedServiceTest extends TestCase
         }
 
         // Clean up test feeds and feed_links
-        $feedLinksTable = Globals::table('feed_links');
-        $newsFeedsTable = Globals::table('news_feeds');
-        $langTable = Globals::table('languages');
+        $feedLinksTable = 'feed_links';
+        $newsFeedsTable = 'news_feeds';
+        $langTable = 'languages';
         Connection::query(
             "DELETE FROM $feedLinksTable WHERE FlNfID IN " .
             "(SELECT NfID FROM $newsFeedsTable WHERE NfName LIKE 'Test Feed%')"
@@ -108,8 +108,8 @@ class FeedServiceTest extends TestCase
         }
 
         // Clean up test feeds after each test
-        $feedLinksTable = Globals::table('feed_links');
-        $newsFeedsTable = Globals::table('news_feeds');
+        $feedLinksTable = 'feed_links';
+        $newsFeedsTable = 'news_feeds';
         Connection::query(
             "DELETE FROM $feedLinksTable WHERE FlNfID IN " .
             "(SELECT NfID FROM $newsFeedsTable WHERE NfName LIKE 'Test Feed%')"
@@ -313,7 +313,7 @@ class FeedServiceTest extends TestCase
         ]);
 
         // Add a feedlink (article) to the feed
-        $feedLinksTable = Globals::table('feed_links');
+        $feedLinksTable = 'feed_links';
         $timestamp = time();
         Connection::execute(
             "INSERT INTO $feedLinksTable (FlNfID, FlTitle, FlLink, FlDescription, FlDate)
@@ -323,7 +323,7 @@ class FeedServiceTest extends TestCase
 
         // Verify article exists
         $count = (int)Connection::fetchValue(
-            "SELECT COUNT(*) AS value FROM " . Globals::table('feed_links') . " WHERE FlNfID = $feedId"
+            "SELECT COUNT(*) AS value FROM feed_links WHERE FlNfID = $feedId"
         );
         $this->assertEquals(1, $count);
 
@@ -627,14 +627,14 @@ class FeedServiceTest extends TestCase
         // Add articles
         for ($i = 1; $i <= 3; $i++) {
             Connection::execute(
-                "INSERT INTO " . Globals::table('feed_links') . " (FlNfID, FlTitle, FlLink, FlDescription, FlDate)
+                "INSERT INTO feed_links (FlNfID, FlTitle, FlLink, FlDescription, FlDate)
                  VALUES ($feedId, 'Article $i', 'https://example.com/art$i', 'Desc', FROM_UNIXTIME(" . time() . "))"
             );
         }
 
         // Verify articles exist
         $count = (int)Connection::fetchValue(
-            "SELECT COUNT(*) AS value FROM " . Globals::table('feed_links') . " WHERE FlNfID = $feedId"
+            "SELECT COUNT(*) AS value FROM feed_links WHERE FlNfID = $feedId"
         );
         $this->assertEquals(3, $count);
 
@@ -644,7 +644,7 @@ class FeedServiceTest extends TestCase
 
         // Verify articles are gone
         $count = (int)Connection::fetchValue(
-            "SELECT COUNT(*) AS value FROM " . Globals::table('feed_links') . " WHERE FlNfID = $feedId"
+            "SELECT COUNT(*) AS value FROM feed_links WHERE FlNfID = $feedId"
         );
         $this->assertEquals(0, $count);
 
@@ -670,7 +670,7 @@ class FeedServiceTest extends TestCase
         ]);
 
         // Add article with space prefix (unloadable)
-        $feedLinksTable = Globals::table('feed_links');
+        $feedLinksTable = 'feed_links';
         $timestamp = time();
         Connection::execute(
             "INSERT INTO $feedLinksTable (FlNfID, FlTitle, FlLink, FlDescription, FlDate)
@@ -684,7 +684,7 @@ class FeedServiceTest extends TestCase
 
         // Verify link is trimmed
         $link = Connection::fetchValue(
-            "SELECT FlLink AS value FROM " . Globals::table('feed_links') . " WHERE FlNfID = $feedId"
+            "SELECT FlLink AS value FROM feed_links WHERE FlNfID = $feedId"
         );
         $this->assertEquals('https://example.com/unloadable', $link);
     }

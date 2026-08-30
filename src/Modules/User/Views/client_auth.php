@@ -13,7 +13,7 @@
  * Strings are intentionally inline English for now; client-side i18n is a
  * separate roadmap item (Phase 1).
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\User\Views
@@ -25,6 +25,8 @@
 declare(strict_types=1);
 
 namespace Lwt\Modules\User\Views;
+
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 ?>
 <div class="container">
@@ -282,6 +284,4 @@ namespace Lwt\Modules\User\Views;
     </div>
 </div>
 
-<script type="application/json" id="client-auth-config">
-{}
-</script>
+<?php ConfigIsland::render('client-auth-config', []); ?>

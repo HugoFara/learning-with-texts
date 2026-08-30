@@ -11,6 +11,7 @@
 
 import Alpine from 'alpinejs';
 import { t } from '@shared/i18n/translator';
+import { readPageConfig } from '@shared/utils/page_config';
 import {
   TagsApi,
   type TagRecord,
@@ -67,22 +68,15 @@ export interface TagListAppData {
 
 /** Read the scaffold's config blob. */
 function readConfig(): TagListConfig {
-  const el = document.getElementById('tag-list-config');
-  if (el) {
-    try {
-      const parsed = JSON.parse(el.textContent || '{}');
-      return {
-        type: parsed.type === 'text' ? 'text' : 'term',
-        isTextTag: Boolean(parsed.isTextTag),
-        query: String(parsed.query || ''),
-        sort: Number(parsed.sort) || 1,
-        page: Number(parsed.page) || 1
-      };
-    } catch {
-      // Malformed blob: fall through to term-tag defaults.
-    }
-  }
-  return { type: 'term', isTextTag: false, query: '', sort: 1, page: 1 };
+  const cfg = readPageConfig<TagListConfig>('tag-list-config', {
+    type: 'term',
+    isTextTag: false,
+    query: '',
+    sort: 1,
+    page: 1
+  });
+  // Anything but an explicit 'text' means the term-tag list.
+  return { ...cfg, type: cfg.type === 'text' ? 'text' : 'term' };
 }
 
 /**

@@ -10,7 +10,7 @@
  * - $isNew: bool true if creating new language
  * - $parserInfo: array parser info from ParserRegistry::getParserInfo()
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Language\Views
@@ -28,6 +28,7 @@ namespace Lwt\Modules\Language\Views;
 
 use Lwt\Shared\UI\Helpers\IconHelper;
 use Lwt\Shared\Infrastructure\Language\LanguagePresets;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 // Type assertions for view variables
 assert(is_object($language));
@@ -54,16 +55,14 @@ $langId = isset($language->id) ? (int)$language->id : null;
 $importMoreTitle = htmlspecialchars(__('language.form.import_more_entries'), ENT_QUOTES, 'UTF-8');
 
 ?>
-<script type="application/json" id="language-form-config">
-<?php echo json_encode([
+<?php ConfigIsland::render('language-form-config', [
     'languageId' => $langId,
     'isNew' => $isNew,
     'sourceLg' => $sourceLg,
     'targetLg' => $targetLg,
     'languageDefs' => LanguagePresets::getAll(),
     'allLanguages' => $allLanguages
-], JSON_HEX_TAG | JSON_HEX_AMP); ?>
-</script>
+]); ?>
 
 <form class="validate"
       name="lg_form"

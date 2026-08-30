@@ -26,7 +26,6 @@ class AuthMiddlewareTest extends TestCase
 
         // Reset Globals
         Globals::reset();
-        Globals::initialize();
 
         // Ensure session is started for tests
         if (session_status() === PHP_SESSION_NONE) {

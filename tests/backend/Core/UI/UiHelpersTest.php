@@ -24,7 +24,6 @@ final class UiHelpersTest extends TestCase
             . '/../../../../src/Shared/Infrastructure/ApplicationInfo.php';
         require_once __DIR__
             . '/../../../../src/Shared/UI/Helpers/PageLayoutHelper.php';
-        Globals::initialize();
     }
 
     protected function setUp(): void
