@@ -51,7 +51,7 @@ The `.env` file contains:
 docker compose up                # Start app at http://localhost:8010/
 
 # PHP built-in server (for development)
-php -S localhost:8000            # Start at http://localhost:8000/
+npm run serve                    # PHP dev server at http://localhost:8000/
 ```
 
 ### Testing
@@ -78,7 +78,7 @@ npm test                         # Run all frontend tests
 npm run test:watch               # Watch mode for frontend tests
 npm run test:coverage            # Run with coverage
 
-# E2E tests (requires server on localhost:8000)
+# E2E tests (requires `npm run serve` in another terminal)
 npm run e2e                      # Run Cypress E2E tests
 npm run cy:open                  # Interactive Cypress test runner
 ```
@@ -94,6 +94,10 @@ if (!defined('LWT_TEST_DB_AVAILABLE') || !LWT_TEST_DB_AVAILABLE) {
 ```
 
 Prefer mocking or restructuring code to avoid DB calls in unit tests. Use the skip guard only when static/global DB calls cannot be avoided (e.g., deeply nested static method calls).
+
+Always serve the app with `npm run serve`, not a bare `php -S`: the built-in
+server is single-request unless `PHP_CLI_SERVER_WORKERS` is set, so one slow
+request blocks the rest and Cypress times out on pages that are only queued.
 
 **When to run E2E tests:** Run `npm run e2e` after making changes to:
 
