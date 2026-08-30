@@ -1784,12 +1784,6 @@ Feed Wizard UI (RSS feed import interface)
   z-index: 200;
 }
 
-/* Feed wizard step 3 config (hidden data element) */
-#wizard-step3-config
-{
-  display: none;
-}
-
 /* Feed wizard selection list and table */
 #lwt_sel,
 #lwt_container .tab2
@@ -1826,12 +1820,6 @@ Feed Wizard UI (RSS feed import interface)
   position: absolute;
   right: 10px;
   top: 10px;
-}
-
-/* Feed wizard step 4 config (hidden data element) */
-#wizard-step4-config
-{
-  display: none;
 }
 
 /* Feed form input fields */

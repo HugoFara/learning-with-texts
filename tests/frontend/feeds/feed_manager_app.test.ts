@@ -21,14 +21,16 @@ const mockStore = {
   articlesPagination: { page: 1, totalPages: 1 },
   isLoadingArticles: false,
   selectedArticleIds: [],
-  languages: [],
-  filterLang: '',
+  languages: [] as Array<{ id: number; name: string }>,
+  currentLanguageId: 0,
+  currentLanguageName: '',
+  filterLang: '' as number | '',
   filterQuery: '',
   sort: 0,
   articlesSort: 0,
   articlesQuery: '',
   viewMode: 'list',
-  editingFeed: null,
+  editingFeed: null as { langId?: number; name?: string } | null,
   isSubmitting: false,
   notifications: [],
   toggleFeedSelection: vi.fn(),
@@ -48,7 +50,6 @@ const mockStore = {
   deleteAllArticles: vi.fn(),
   resetErrorArticles: vi.fn(),
   goToArticlesPage: vi.fn(),
-  setFilterLang: vi.fn(),
   setSort: vi.fn(),
   setFilterQuery: vi.fn(),
   setArticlesSort: vi.fn(),
@@ -92,7 +93,6 @@ describe('feed_manager_app.ts', () => {
     mockStore.toggleAllArticles.mockClear();
     mockStore.showList.mockClear();
     mockStore.goToArticlesPage.mockClear();
-    mockStore.setFilterLang.mockClear();
     mockStore.setSort.mockClear();
     mockStore.setFilterQuery.mockClear();
     mockStore.setArticlesSort.mockClear();
@@ -273,27 +273,8 @@ describe('feed_manager_app.ts', () => {
       expect(component.localQuery).toBe('');
     });
 
-    it('gets languages from store', () => {
-      const component = feedFilterComponent() as { languages: unknown[] };
-
-      expect(Array.isArray(component.languages)).toBe(true);
-    });
-
-    it('setLang calls store setFilterLang with parsed value', () => {
-      const component = feedFilterComponent() as { setLang: (id: string) => void };
-
-      component.setLang('5');
-
-      expect(mockStore.setFilterLang).toHaveBeenCalledWith(5);
-    });
-
-    it('setLang with empty string sets empty filter', () => {
-      const component = feedFilterComponent() as { setLang: (id: string) => void };
-
-      component.setLang('');
-
-      expect(mockStore.setFilterLang).toHaveBeenCalledWith('');
-    });
+    // The filter bar carries no language control: the navbar is the one
+    // that picks a language, and the store filters on it.
 
     it('setSort calls store setSort with parsed value', () => {
       const component = feedFilterComponent() as { setSort: (sort: string) => void };
@@ -492,10 +473,21 @@ describe('feed_manager_app.ts', () => {
       expect(mockStore.showList).toHaveBeenCalled();
     });
 
-    it('gets languages from store', () => {
-      const component = feedFormComponent() as { languages: unknown[] };
+    it('names the language of the feed being edited', () => {
+      mockStore.languages = [{ id: 3, name: 'French' }];
+      mockStore.editingFeed = { langId: 3, name: 'Le Monde' };
+      const component = feedFormComponent() as { languageName: string };
 
-      expect(Array.isArray(component.languages)).toBe(true);
+      expect(component.languageName).toBe('French');
+    });
+
+    it('falls back to the navbar language for a feed with none yet', () => {
+      mockStore.languages = [];
+      mockStore.editingFeed = { langId: 0, name: '' };
+      mockStore.currentLanguageName = 'German';
+      const component = feedFormComponent() as { languageName: string };
+
+      expect(component.languageName).toBe('German');
     });
   });
 

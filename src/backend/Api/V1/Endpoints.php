@@ -104,6 +104,8 @@ class Endpoints
         'feeds/articles/import' => ['POST'],
         'feeds/articles/extract' => ['POST'],
         'feeds/articles/create-texts' => ['POST'],
+        'feeds/wizard/preview' => ['POST'],
+        'feeds/wizard/article' => ['POST'],
         // A URL carrying an ID (books/12/progress) never matches a key here
         // exactly, so getMethodsForEndpoint() falls back to the first segment.
         // The bare 'books' entry therefore has to permit every method any

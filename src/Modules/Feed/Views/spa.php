@@ -26,7 +26,12 @@ namespace Lwt\Views\Feed;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 use Lwt\Shared\UI\Helpers\IconHelper;
 
+$managerConfig = json_encode([
+    'currentLanguageId' => $currentLanguageId ?? 0,
+    'currentLanguageName' => $currentLanguageName ?? '',
+], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT);
 ?>
+<script type="application/json" id="feed-manager-config"><?php echo $managerConfig; ?></script>
 
 <!-- Notifications -->
 <div
@@ -75,27 +80,6 @@ use Lwt\Shared\UI\Helpers\IconHelper;
             <!-- Filter bar -->
             <div x-data="feedFilter()" class="box mb-4">
                 <div class="columns is-multiline is-vcentered">
-                    <!-- Language filter -->
-                    <div class="column is-narrow">
-                        <div class="field has-addons">
-                            <div class="control">
-                                <span class="button is-static is-small">
-                                    <?php echo __e('feed.spa_filter_language'); ?>
-                                </span>
-                            </div>
-                            <div class="control">
-                                <div class="select is-small">
-                                    <select :value="filterLang" @change="setLang($event.target.value)">
-                                        <option value=""><?php echo __e('feed.spa_filter_all_languages'); ?></option>
-                                        <template x-for="lang in languages" :key="lang.id">
-                                            <option :value="lang.id" x-text="lang.name"></option>
-                                        </template>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Sort -->
                     <div class="column is-narrow">
                         <div class="field has-addons">
@@ -172,7 +156,6 @@ use Lwt\Shared\UI\Helpers\IconHelper;
                                     <input type="checkbox" :checked="allSelected" @change="toggleAll()">
                                 </th>
                                 <th><?php echo __e('feed.spa_col_name'); ?></th>
-                                <th><?php echo __e('feed.spa_col_language'); ?></th>
                                 <th class="has-text-centered"><?php echo __e('feed.spa_col_articles'); ?></th>
                                 <th><?php echo __e('feed.spa_col_last_update'); ?></th>
                                 <th style="width: 200px;"><?php echo __e('feed.spa_col_actions'); ?></th>
@@ -189,7 +172,6 @@ use Lwt\Shared\UI\Helpers\IconHelper;
                                         <a href="#" @click.prevent="viewArticles(feed)" x-text="feed.name"
                                            class="has-text-weight-semibold"></a>
                                     </td>
-                                    <td x-text="feed.langName"></td>
                                     <td class="has-text-centered">
                                         <span class="tag" x-text="feed.articleCount"></span>
                                     </td>
@@ -607,18 +589,12 @@ use Lwt\Shared\UI\Helpers\IconHelper;
             <!-- Form -->
             <div class="box">
                 <form @submit.prevent="submit()">
-                    <!-- Language -->
+                    <!-- Language. Shown, not asked: the navbar picked it, and
+                         an existing feed keeps the one it was saved with. -->
                     <div class="field">
                         <label class="label"><?php echo __e('feed.spa_form_language'); ?></label>
                         <div class="control">
-                            <div class="select">
-                                <select x-model.number="feed.langId" required>
-                                    <option value=""><?php echo __e('feed.spa_form_select_language'); ?></option>
-                                    <template x-for="lang in languages" :key="lang.id">
-                                        <option :value="lang.id" x-text="lang.name"></option>
-                                    </template>
-                                </select>
-                            </div>
+                            <span class="tag is-info is-light" x-text="languageName"></span>
                         </div>
                     </div>
 

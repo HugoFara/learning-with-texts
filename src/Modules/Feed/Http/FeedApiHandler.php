@@ -7,6 +7,7 @@
  * - FeedCrudApiHandler: feed CRUD operations (list, get, create, update, delete)
  * - FeedArticleApiHandler: article management (list, delete, import, reset errors)
  * - FeedLoadApiHandler: feed loading, parsing, and auto-update
+ * - FeedWizardApiHandler: feed and article previews for the wizard
  *
  * PHP version 8.1
  *
@@ -32,7 +33,7 @@ use Lwt\Modules\Feed\Application\FeedFacade;
  * API handler for feed-related operations.
  *
  * Delegates to FeedCrudApiHandler, FeedArticleApiHandler,
- * and FeedLoadApiHandler for actual logic.
+ * FeedLoadApiHandler and FeedWizardApiHandler for actual logic.
  *
  * @since 3.0.0
  */
@@ -43,12 +44,14 @@ class FeedApiHandler implements ApiRoutableInterface
     private FeedCrudApiHandler $crud;
     private FeedArticleApiHandler $article;
     private FeedLoadApiHandler $load;
+    private FeedWizardApiHandler $wizard;
 
     public function __construct(FeedFacade $feedFacade)
     {
         $this->crud = new FeedCrudApiHandler($feedFacade);
         $this->article = new FeedArticleApiHandler($feedFacade);
         $this->load = new FeedLoadApiHandler($feedFacade);
+        $this->wizard = new FeedWizardApiHandler($feedFacade);
     }
 
     // =========================================================================
@@ -476,6 +479,12 @@ class FeedApiHandler implements ApiRoutableInterface
         if ($frag1 === 'articles' && $frag2 === 'create-texts') {
             return Response::success($this->article->createTextsFromEdited($params));
         }
+        if ($frag1 === 'wizard' && $frag2 === 'preview') {
+            return Response::success($this->wizard->previewFeed($params));
+        }
+        if ($frag1 === 'wizard' && $frag2 === 'article') {
+            return Response::success($this->wizard->previewArticle($params));
+        }
         if ($frag1 === '') {
             return Response::success($this->crud->formatCreateFeed($params));
         }
@@ -490,7 +499,7 @@ class FeedApiHandler implements ApiRoutableInterface
 
         return Response::error(
             'Expected "articles/import", "articles/extract", "articles/create-texts", '
-            . 'feed data, or "{id}/load"',
+            . '"wizard/preview", "wizard/article", feed data, or "{id}/load"',
             404
         );
     }

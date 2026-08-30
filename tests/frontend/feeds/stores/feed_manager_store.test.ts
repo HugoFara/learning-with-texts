@@ -159,6 +159,60 @@ describe('feeds/stores/feed_manager_store.ts', () => {
 
       expect(mockGetFeeds).toHaveBeenCalled();
     });
+
+    it('narrows the list to the language the navbar is on', async () => {
+      document.body.innerHTML =
+        '<script type="application/json" id="feed-manager-config">' +
+        '{"currentLanguageId":4,"currentLanguageName":"French"}</script>';
+      mockGetFeeds.mockResolvedValue({
+        data: {
+          feeds: [],
+          pagination: { page: 1, per_page: 50, total: 0, total_pages: 0 },
+          languages: []
+        }
+      });
+
+      await store.init();
+
+      expect(store.filterLang).toBe(4);
+      expect(store.currentLanguageName).toBe('French');
+      expect(mockGetFeeds).toHaveBeenCalledWith(expect.objectContaining({ lang: 4 }));
+    });
+
+    it('falls back to every language when no language is current', async () => {
+      document.body.innerHTML = '';
+      mockGetFeeds.mockResolvedValue({
+        data: {
+          feeds: [],
+          pagination: { page: 1, per_page: 50, total: 0, total_pages: 0 },
+          languages: []
+        }
+      });
+
+      await store.init();
+
+      expect(store.filterLang).toBe('');
+    });
+  });
+
+  describe('showCreateForm', () => {
+    it('starts a new feed in the language the navbar is on', async () => {
+      document.body.innerHTML =
+        '<script type="application/json" id="feed-manager-config">' +
+        '{"currentLanguageId":4,"currentLanguageName":"French"}</script>';
+      mockGetFeeds.mockResolvedValue({
+        data: {
+          feeds: [],
+          pagination: { page: 1, per_page: 50, total: 0, total_pages: 0 },
+          languages: [{ id: 9, name: 'German' }]
+        }
+      });
+      await store.init();
+
+      store.showCreateForm();
+
+      expect(store.editingFeed?.langId).toBe(4);
+    });
   });
 
   // ===========================================================================
@@ -1179,24 +1233,6 @@ describe('feeds/stores/feed_manager_store.ts', () => {
   // ===========================================================================
   // Filter Tests
   // ===========================================================================
-
-  describe('setFilterLang', () => {
-    it('sets filter language and reloads', async () => {
-      mockGetFeeds.mockResolvedValue({
-        data: {
-          feeds: [],
-          pagination: { page: 1, per_page: 50, total: 0, total_pages: 0 },
-          languages: []
-        }
-      });
-
-      await store.setFilterLang(2);
-
-      expect(store.filterLang).toBe(2);
-      expect(store.feedsPagination.page).toBe(1);
-      expect(mockGetFeeds).toHaveBeenCalled();
-    });
-  });
 
   describe('setFilterQuery', () => {
     it('sets filter query and reloads', async () => {

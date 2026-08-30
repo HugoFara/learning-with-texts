@@ -451,10 +451,11 @@ function registerRoutes(Router $router): void
     // Edit feeds (legacy route - handles query params)
     $router->registerWithMiddleware('/feeds/edit', 'Lwt\\Modules\\Feed\\Http\\FeedController@edit', AUTH_MIDDLEWARE);
 
-    // Feed wizard
-    $router->registerWithMiddleware(
+    // Feed wizard. GET only: the wizard is one page that reads and saves
+    // through /api/v1 rather than four pages posting back here (#262).
+    $router->get(
         '/feeds/wizard',
-        'Lwt\\Modules\\Feed\\Http\\FeedWizardController@wizard',
+        'Lwt\\Modules\\Feed\\Http\\FeedController@wizard',
         AUTH_MIDDLEWARE
     );
 
