@@ -10,7 +10,7 @@
  * - $autoUpdateInterval: string|null auto-update interval value
  * - $autoUpdateUnit: string|null auto-update unit (h/d/w)
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views
@@ -26,6 +26,7 @@ namespace Lwt\Views\Feed;
 
 use Lwt\Shared\UI\Helpers\IconHelper;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 /**
  * @var array{NfID: int|null, NfLgID: int, NfName: string, NfSourceURI: string,
@@ -58,8 +59,7 @@ $helpLabel = __('feed.edit_help');
 
 <?php echo PageLayoutHelper::buildActionCard($actions); ?>
 
-<script type="application/json" id="feed-form-config">
-<?php echo json_encode([
+<?php ConfigIsland::render('feed-form-config', [
     'feedId' => (int)$feed['NfID'],
     'editText' => isset($options['edit_text']),
     'autoUpdate' => $autoUpdateInterval !== null,
@@ -75,8 +75,7 @@ $helpLabel = __('feed.edit_help');
     'tagValue' => $options['tag'] ?? '',
     'articleSource' => isset($options['article_source']),
     'articleSourceValue' => $options['article_source'] ?? '',
-], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT); ?>
-</script>
+]); ?>
 <!-- Saves through PUT /api/v1/feeds/{id} (#262), so the form carries no action. -->
 <form class="validate"
       x-data="feedForm()"

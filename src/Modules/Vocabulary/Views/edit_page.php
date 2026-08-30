@@ -14,7 +14,7 @@
  * - $wordId: int|null - Term ID, or null when creating from a text position
  * - $returnUrl: string - Where to go once editing finishes
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Vocabulary\Views
@@ -28,6 +28,8 @@ declare(strict_types=1);
 
 namespace Lwt\Views\Word;
 
+use Lwt\Shared\UI\Helpers\ConfigIsland;
+
 // Type assertions for variables passed from controller
 assert(is_int($textId));
 assert(is_int($position));
@@ -35,14 +37,12 @@ assert($wordId === null || is_int($wordId));
 assert(is_string($returnUrl));
 
 ?>
-<script type="application/json" id="term-edit-page-config">
-<?php echo json_encode([
+<?php ConfigIsland::render('term-edit-page-config', [
     'textId' => $textId,
     'position' => $position,
     'wordId' => $wordId,
     'returnUrl' => $returnUrl,
-], JSON_HEX_TAG | JSON_HEX_AMP); ?>
-</script>
+]); ?>
 
 <div class="container" style="max-width: 640px;" x-data="termEditPage">
     <h2 class="title is-4" x-text="title"></h2>

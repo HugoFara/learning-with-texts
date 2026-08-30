@@ -7,7 +7,7 @@
  * - $textId: int - Archived text ID (same as TxID, but with TxArchivedAt IS NOT NULL)
  * - $record: array - Archived text record with keys: TxLgID, TxTitle, TxText, TxAudioURI, TxSourceURI, annotlen
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views
@@ -25,6 +25,7 @@ namespace Lwt\Views\Text;
 
 use Lwt\Shared\UI\Helpers\IconHelper;
 use Lwt\Shared\UI\Helpers\SearchableSelectHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 // Type-safe variable extraction from controller context
 /**
@@ -48,9 +49,7 @@ $languagesTyped = $languages;
 ?>
 <h2 class="title is-4"><?= __e('text.edit.heading_archived') ?></h2>
 
-<script type="application/json" id="archived-text-config"><?php
-echo json_encode(['textId' => $textIdTyped], JSON_HEX_TAG | JSON_HEX_AMP);
-?></script>
+<?php ConfigIsland::render('archived-text-config', ['textId' => $textIdTyped]); ?>
 
 <!--
     Saving goes through PUT /api/v1/texts/archived/{id} (#262), so the form

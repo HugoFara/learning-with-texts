@@ -9,7 +9,7 @@
  * - $languageDefsJson: string JSON-encoded language definitions
  * - $languagePresetsArray: array language presets for searchable select
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Language\Views
@@ -25,6 +25,7 @@ namespace Lwt\Modules\Language\Views;
 
 use Lwt\Shared\UI\Helpers\IconHelper;
 use Lwt\Shared\UI\Helpers\SearchableSelectHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 // Type assertions for view variables
 assert(is_string($languageDefsJson));
@@ -40,9 +41,7 @@ assert(is_array($languagePresetsArray));
  * @var string $currentNativeLanguage
  */
 ?>
-<script type="application/json" id="language-wizard-config">
-<?php echo json_encode(['languageDefs' => json_decode($languageDefsJson, true)], JSON_HEX_TAG | JSON_HEX_AMP); ?>
-</script>
+<?php ConfigIsland::render('language-wizard-config', ['languageDefs' => json_decode($languageDefsJson, true)]); ?>
 
 <section class="section py-5">
     <div class="container" style="max-width: 400px;">

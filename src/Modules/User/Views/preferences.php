@@ -8,10 +8,10 @@
  *
  * Variables expected:
  * - $settings: array of current user preference values
- * - $currentLanguageCode: string JSON-encoded language code for TTS
+ * - $currentLanguageCode: string Language code for TTS
  * - $languageOptions: string HTML options for language select
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\User\Views
@@ -28,10 +28,11 @@ namespace Lwt\Modules\User\Views;
 use Lwt\Shared\UI\Helpers\SelectOptionsBuilder;
 use Lwt\Shared\UI\Helpers\IconHelper;
 use Lwt\Shared\UI\Helpers\FormHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 /**
  * @var array<string, string> $settings Current user preference values
- * @var string $currentLanguageCode Current language code for TTS (already JSON-encoded)
+ * @var string $currentLanguageCode Current language code for TTS
  * @var string $languageOptions HTML options for language select
  * @var array<int, array{
  *     name: string,
@@ -675,9 +676,10 @@ use Lwt\Shared\UI\Helpers\FormHelper;
             <hr class="my-4">
 
             <!-- Browser Voice Settings - Alpine.js Component -->
-            <script type="application/json" id="tts-settings-config">
-                {"currentLanguageCode": <?php echo $currentLanguageCode; ?>}
-            </script>
+            <?php ConfigIsland::render(
+                'tts-settings-config',
+                ['currentLanguageCode' => $currentLanguageCode]
+            ); ?>
             <div x-data="ttsSettingsApp"
                  @submit.window="saveSettings()">
 

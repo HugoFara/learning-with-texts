@@ -20,7 +20,7 @@
  * - $enrichUrl: string - AJAX endpoint for enrichment
  * - $csrfToken: string - CSRF token
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views\Word
@@ -38,6 +38,7 @@ use Lwt\Shared\Infrastructure\Database\Settings;
 use Lwt\Shared\UI\Helpers\SelectOptionsBuilder;
 use Lwt\Shared\UI\Helpers\IconHelper;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 // Type assertions for variables passed from controller
 assert($currentLanguage === null || is_int($currentLanguage) || is_string($currentLanguage));
@@ -54,11 +55,6 @@ assert(is_array($languages));
 if (!isset($curatedDictionaries)) {
     $curatedDictionaries = [];
 }
-$curatedDictionariesJson = json_encode(
-    $curatedDictionaries,
-    JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT
-);
-
 if (!isset($activeTab)) {
     $activeTab = 'frequency';
 }
@@ -81,8 +77,7 @@ $actions = [
 echo PageLayoutHelper::buildActionCard($actions);
 ?>
 
-<script type="application/json" id="word-upload-page-config"><?php echo json_encode(
-    [
+<?php ConfigIsland::render('word-upload-page-config', [
         'activeTab' => $activeTab ?: 'frequency',
         'currentLanguageId' => $langId,
         'currentLanguageName' => $currentLanguageName,
@@ -90,10 +85,8 @@ echo PageLayoutHelper::buildActionCard($actions);
         'importUrl' => $importUrl,
         'enrichUrl' => $enrichUrl,
         'csrfToken' => $csrfToken,
-    ],
-    JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT
-); ?></script>
-<script type="application/json" id="curated-dictionaries-config"><?php echo $curatedDictionariesJson; ?></script>
+    ]); ?>
+<?php ConfigIsland::render('curated-dictionaries-config', $curatedDictionaries); ?>
 <div x-data="wordUploadPageApp">
 
 <!-- ==================== MAIN TABS ==================== -->

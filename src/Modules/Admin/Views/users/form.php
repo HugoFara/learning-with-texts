@@ -11,7 +11,7 @@
  * - $isEdit: bool
  * - $user: User|null (only its ID is read; the values come from the API)
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views\Admin
@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace Lwt\Views\Admin;
 
 use Lwt\Shared\UI\Helpers\IconHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 /** @var bool $isEdit */
 $isEdit = $isEdit ?? false;
@@ -46,12 +47,10 @@ $pwPlaceholder = htmlspecialchars(
     'UTF-8'
 );
 ?>
-<script type="application/json" id="user-form-config">
-<?php echo json_encode([
+<?php ConfigIsland::render('user-form-config', [
     'isEdit' => $isEdit,
     'userId' => $userId,
-], JSON_HEX_TAG | JSON_HEX_AMP); ?>
-</script>
+]); ?>
 
 <div class="container" x-data="userForm">
     <div class="box">

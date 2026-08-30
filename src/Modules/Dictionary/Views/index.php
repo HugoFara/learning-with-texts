@@ -12,7 +12,7 @@
  * - $localDictMode: int (0-3)
  * - $languages: array of languages for dropdown
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Dictionary\Views
@@ -28,6 +28,7 @@ namespace Lwt\Modules\Dictionary\Views;
 
 use Lwt\Shared\UI\Helpers\IconHelper;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 /**
  * @var int $langId
@@ -118,9 +119,7 @@ echo PageLayoutHelper::buildActionCard([
     </p>
 </div>
 
-<script type="application/json" id="dictionary-list-config"><?php
-echo json_encode(['languageId' => $langId], JSON_HEX_TAG | JSON_HEX_AMP);
-?></script>
+<?php ConfigIsland::render('dictionary-list-config', ['languageId' => $langId]); ?>
 
 <div x-data="dictionaryList" x-init="init()">
 

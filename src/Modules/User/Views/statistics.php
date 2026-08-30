@@ -9,7 +9,7 @@
  * - $intensityStats: array with 'languages' and 'totals' keys
  * - $frequencyStats: array with 'languages' and 'totals' keys
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views
@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace Lwt\Modules\User\Views;
 
 use Lwt\Shared\UI\Helpers\IconHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 /**
  * @var array{
@@ -144,12 +145,8 @@ $t = static fn(string $key): string => htmlspecialchars(__('user.' . $key), ENT_
 
 <div x-data="statisticsApp()">
     <!-- Hidden data elements for Chart.js initialization -->
-    <script type="application/json" id="statistics-intensity-data">
-    <?php echo json_encode(['languages' => $intensityChartData], JSON_HEX_TAG | JSON_HEX_AMP); ?>
-    </script>
-    <script type="application/json" id="statistics-frequency-data">
-    <?php echo json_encode(['totals' => $frequencyChartTotals], JSON_HEX_TAG | JSON_HEX_AMP); ?>
-    </script>
+    <?php ConfigIsland::render('statistics-intensity-data', ['languages' => $intensityChartData]); ?>
+    <?php ConfigIsland::render('statistics-frequency-data', ['totals' => $frequencyChartTotals]); ?>
 
     <!-- Learning Intensity Section -->
     <section class="box mb-4" x-data="{ open: true }">

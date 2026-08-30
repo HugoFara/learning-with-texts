@@ -35,6 +35,7 @@ import {
 } from '@shared/api/client';
 import { solveAltcha } from '@shared/altcha/solve_altcha';
 import { url } from '@shared/utils/url';
+import { readPageConfig } from '@shared/utils/page_config';
 
 interface VersionResponse {
   version?: string;
@@ -87,23 +88,10 @@ interface ClientAuthData {
  * `<script type="application/json" id="client-auth-config">`.
  */
 function readConfig(): { defaultServer: string; homeUrl: string } {
-  const el = document.getElementById('client-auth-config');
-  const fallback = { defaultServer: '', homeUrl: url('/') };
-  if (!el || !el.textContent) {
-    return fallback;
-  }
-  try {
-    const parsed = JSON.parse(el.textContent) as {
-      defaultServer?: string;
-      homeUrl?: string;
-    };
-    return {
-      defaultServer: parsed.defaultServer ?? '',
-      homeUrl: parsed.homeUrl ?? fallback.homeUrl
-    };
-  } catch {
-    return fallback;
-  }
+  return readPageConfig('client-auth-config', {
+    defaultServer: '',
+    homeUrl: url('/')
+  });
 }
 
 /**

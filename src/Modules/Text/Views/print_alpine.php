@@ -37,6 +37,7 @@ use Lwt\Shared\UI\Helpers\SelectOptionsBuilder;
 use Lwt\Shared\UI\Helpers\FormHelper;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 use Lwt\Shared\UI\Helpers\IconHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 // Type-safe variable extraction from controller context
 assert(is_int($textId));
@@ -321,13 +322,10 @@ $hasAnnotation = $viewData['hasAnnotation'];
 </div>
 
 <!-- Config for Alpine -->
-<script type="application/json" id="print-config"><?php echo json_encode(
-    [
+<?php ConfigIsland::render('print-config', [
     'textId' => $textId,
     'mode' => $mode,
     'savedAnn' => $savedAnn,
     'savedStatus' => $savedStatus,
     'savedPlacement' => $savedPlacement
-    ],
-    JSON_HEX_TAG | JSON_HEX_AMP
-); ?></script>
+    ]); ?>

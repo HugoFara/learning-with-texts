@@ -825,9 +825,7 @@ HTML;
             return '';
         }
 
-        return '<script type="application/json" id="lwt-i18n">'
-            . json_encode($prefixed, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG)
-            . '</script>';
+        return ConfigIsland::html('lwt-i18n', $prefixed);
     }
 
     /**

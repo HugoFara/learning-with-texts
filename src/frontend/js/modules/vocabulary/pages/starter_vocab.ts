@@ -10,6 +10,7 @@
 
 import Alpine from 'alpinejs';
 import { apiPost } from '@shared/api/client';
+import { readPageConfig } from '@shared/utils/page_config';
 
 interface StarterVocabConfig {
   importUrl: string;
@@ -65,14 +66,14 @@ interface DictMessage {
 }
 
 function readConfig(): StarterVocabConfig {
-  const el = document.getElementById('starter-vocab-config');
-  if (el) {
-    return JSON.parse(el.textContent || '{}');
-  }
-  return {
-    importUrl: '', enrichUrl: '', csrfToken: '', langId: 0,
-    curatedDictionaries: [], isAvailable: false,
-  };
+  return readPageConfig<StarterVocabConfig>('starter-vocab-config', {
+    importUrl: '',
+    enrichUrl: '',
+    csrfToken: '',
+    langId: 0,
+    curatedDictionaries: [],
+    isAvailable: false
+  });
 }
 
 Alpine.data('starterVocab', () => {
