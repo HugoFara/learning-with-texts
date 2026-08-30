@@ -227,6 +227,12 @@ npm run dev                # Development server with HMR
 npm run build:all          # Production build
 ```
 
+### Translations
+
+LWT is available in nine languages. Translations live in `locale/<code>/` and fall
+back to English key by key, so a partial contribution is welcome — see
+[Translations](CONTRIBUTING.md#translations) for current completion and how to help.
+
 ### Branch Strategy
 
 | Branch | Purpose |
@@ -234,6 +240,7 @@ npm run build:all          # Production build
 | `main` | Stable releases |
 | `develop` | Development and testing |
 | `official` | Tracks official LWT releases |
+| `badges` | Generated locale-completion badges (do not edit by hand) |
 
 ## Alternatives
 

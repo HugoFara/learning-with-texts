@@ -295,6 +295,51 @@ You can use it through `php tools/phpDocumentor` if installed with [Phive](https
 Code documentation for JavaScript is available at `docs/js/` is is generated thourgh [JSDoc](https://jsdoc.app/).
 The JSDoc configuration file is `jsdoc.json`.
 
+## Translations
+
+LWT ships nine locales. English is the reference: every other locale is measured
+against it, and the badges below are refreshed automatically whenever `main` moves.
+
+| Language | Code | Completion |
+| --- | --- | --- |
+| German | `de` | ![locale de](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FHugoFara%2Flwt%2Fbadges%2Flocale-de.json) |
+| English | `en` | ![locale en](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FHugoFara%2Flwt%2Fbadges%2Flocale-en.json) |
+| Spanish | `es` | ![locale es](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FHugoFara%2Flwt%2Fbadges%2Flocale-es.json) |
+| French | `fr` | ![locale fr](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FHugoFara%2Flwt%2Fbadges%2Flocale-fr.json) |
+| Italian | `it` | ![locale it](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FHugoFara%2Flwt%2Fbadges%2Flocale-it.json) |
+| Japanese | `ja` | ![locale ja](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FHugoFara%2Flwt%2Fbadges%2Flocale-ja.json) |
+| Portuguese | `pt` | ![locale pt](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FHugoFara%2Flwt%2Fbadges%2Flocale-pt.json) |
+| Russian | `ru` | ![locale ru](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FHugoFara%2Flwt%2Fbadges%2Flocale-ru.json) |
+| Chinese | `zh` | ![locale zh](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FHugoFara%2Flwt%2Fbadges%2Flocale-zh.json) |
+
+### Checking Completion
+
+```bash
+php bin/check-locales.php                # Human-readable table
+php bin/check-locales.php --json         # Machine-readable output
+php bin/check-locales.php --fail-under=90  # Exit 1 if a locale drops below 90%
+```
+
+The same script runs in CI on every push and pull request, so a missing key shows
+up in the `Locale completion` workflow before it reaches a reader.
+
+### Improving a Translation
+
+Translations live in `locale/<code>/`, split into one JSON file per area
+(`common.json`, `vocabulary.json`, `review.json`, and so on). Each file maps a
+key to the translated string, and the key set in `locale/en/` is authoritative.
+
+To fill in a gap, find the key in the English file, copy it into the matching
+file for your language, and translate the value. Keys absent from a locale fall
+back to English at runtime, so a partial translation is safe to submit — there is
+no need to complete a file before opening a pull request.
+
+### Adding a New Language
+
+Create `locale/<code>/` and copy the namespace files you intend to translate from
+`locale/en/`. The new locale is picked up automatically by the checker; add a row
+to the table above and the badge will appear once your change reaches `main`.
+
 ## New Version
 
 LWT-fork follows a strict procedure for new versions.

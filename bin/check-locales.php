@@ -134,7 +134,9 @@ if ($badgesDir !== null) {
         $badge = [
             'schemaVersion' => 1,
             'label' => 'locale ' . $locale,
-            'message' => rtrim(rtrim((string)$percent, '0'), '.') . '%',
+            // number_format() guarantees the decimal point, so trimming
+            // trailing zeros cannot eat a significant one (100.0 -> "1").
+            'message' => rtrim(rtrim(number_format($percent, 1, '.', ''), '0'), '.') . '%',
             'color' => $color,
         ];
         file_put_contents(
