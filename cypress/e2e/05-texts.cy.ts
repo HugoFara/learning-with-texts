@@ -190,20 +190,53 @@ describe('Texts Management', () => {
     });
 
     /**
-     * "Check" is the one button still posting the form: it asks for a
-     * server-rendered parsing report instead of saving.
+     * "Check" asks the API how the text parses and renders the report in
+     * place, without saving and without leaving the editor.
      */
-    it('should still render the server-side check report', () => {
+    it('should render the check report without leaving the editor', () => {
       cy.visit('/texts/1/edit');
       cy.get('body').then(($body) => {
         if ($body.text().includes('not found')) return;
 
-        cy.get('button[name="op"][value="Check"]').click();
+        cy.intercept('POST', '**/api/v1/texts/check').as('checkText');
+        cy.contains('button', 'Check').click();
+        cy.wait('@checkText').its('response.statusCode').should('eq', 200);
 
         // The report is the parse of the text: its sentences and its terms.
-        cy.contains('h4', /sentences/i).should('exist');
-        cy.get('[data-action="history-back"]').should('exist');
+        cy.get('#check_text').should('be.visible');
+        cy.get('#check_text ol li').should('have.length.greaterThan', 0);
+        cy.get('#check_text .wordlist li').should('have.length.greaterThan', 0);
+
+        // The editor is still there, with its text intact.
+        cy.url().should('include', '/texts/1/edit');
+        cy.get('textarea[name="TxText"]').should('exist');
       });
+    });
+  });
+
+  describe('Check Text', () => {
+    it('should report how a pasted text parses', () => {
+      cy.visit('/text/check');
+
+      cy.intercept('POST', '**/api/v1/texts/check').as('checkText');
+      // Language 1 is the seeded Latin-script language, as elsewhere in this spec.
+      cy.get('select[name="TxLgID"]').select('1');
+      cy.get('textarea[name="TxText"]').type('Bonjour Manon. Ca va bien?');
+      cy.get('button[type="submit"]').click();
+
+      cy.wait('@checkText').its('response.statusCode').should('eq', 200);
+
+      cy.get('#check_text').should('be.visible');
+      // How many sentences depends on the language's split rules, so assert
+      // that the report has them rather than how many.
+      cy.get('#check_text ol li').should('have.length.greaterThan', 0);
+      cy.get('#check_text .wordlist li').should('have.length.greaterThan', 0);
+      cy.get('#check_text .nonwordlist').should('exist');
+      cy.get('#check_text').should('contain.text', 'Bonjour');
+
+      // Nothing was saved: the form is still the form.
+      cy.url().should('include', '/text/check');
+      cy.get('textarea[name="TxText"]').should('have.value', 'Bonjour Manon. Ca va bien?');
     });
   });
 

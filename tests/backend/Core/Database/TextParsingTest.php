@@ -126,16 +126,6 @@ class TextParsingTest extends TestCase
         return $result;
     }
 
-    /**
-     * Helper to call parseAndDisplayPreview() with output buffering
-     */
-    private function callParseAndDisplayPreview(string $text, int $lid): void
-    {
-        ob_start();
-        TextParsing::parseAndDisplayPreview($text, $lid);
-        ob_end_clean();
-    }
-
     // ===== splitIntoSentences() tests =====
 
     public function testSplitIntoSentencesBasicText(): void
@@ -306,9 +296,9 @@ class TextParsingTest extends TestCase
         $this->assertNotEmpty($result);
     }
 
-    // ===== parseAndDisplayPreview() tests =====
+    // ===== checkTextReport() tests =====
 
-    public function testParseAndDisplayPreviewSplitMode(): void
+    public function testCheckTextReportSplitMode(): void
     {
         if (!self::$dbConnected) {
             $this->markTestSkipped('Database connection required');
@@ -321,19 +311,15 @@ class TextParsingTest extends TestCase
         $this->assertNotEmpty($result);
     }
 
-    public function testParseAndDisplayPreviewCheckMode(): void
+    public function testCheckTextReportPreviewsTheText(): void
     {
         if (!self::$dbConnected) {
             $this->markTestSkipped('Database connection required');
         }
 
-        $text = "Test sentence.";
+        $report = TextParsing::checkTextReport("Test sentence.", self::$testLanguageId);
 
-        ob_start();
-        TextParsing::parseAndDisplayPreview($text, self::$testLanguageId);
-        $output = ob_get_clean();
-
-        $this->assertStringContainsString('Test sentence', $output, 'Output should contain the text');
+        $this->assertStringContainsString('Test sentence', $report['preview']);
     }
 
     // ===== parseAndSave() tests =====
@@ -771,9 +757,9 @@ class TextParsingTest extends TestCase
         TextParsing::parseAndSave("Test text.", 99999, 1);
     }
 
-    // ===== parseAndDisplayPreview() error handling tests =====
+    // ===== checkTextReport() error handling tests =====
 
-    public function testParseAndDisplayPreviewThrowsForInvalidLanguage(): void
+    public function testCheckTextReportThrowsForInvalidLanguage(): void
     {
         if (!self::$dbConnected) {
             $this->markTestSkipped('Database connection required');
@@ -781,12 +767,7 @@ class TextParsingTest extends TestCase
 
         $this->expectException(\Lwt\Shared\Infrastructure\Exception\DatabaseException::class);
 
-        ob_start();
-        try {
-            TextParsing::parseAndDisplayPreview("Test text.", 99999);
-        } finally {
-            ob_end_clean();
-        }
+        TextParsing::checkTextReport("Test text.", 99999);
     }
 
     // ===== Multi-word expression tests =====
@@ -931,36 +912,34 @@ class TextParsingTest extends TestCase
         Connection::query("DELETE FROM $texts WHERE TxID = $textId");
     }
 
-    public function testParseAndDisplayPreviewOutputsHtml(): void
+    public function testCheckTextReportSplitsSentences(): void
     {
         if (!self::$dbConnected) {
             $this->markTestSkipped('Database connection required');
         }
 
-        ob_start();
-        TextParsing::parseAndDisplayPreview("Test sentence one. Test sentence two.", self::$testLanguageId);
-        $output = ob_get_clean();
+        $report = TextParsing::checkTextReport(
+            "Test sentence one. Test sentence two.",
+            self::$testLanguageId
+        );
 
-        // Should output HTML structure
-        $this->assertStringContainsString('<h4>', $output);
-        $this->assertStringContainsString('Sentences', $output);
-        $this->assertStringContainsString('<ol>', $output);
-        $this->assertStringContainsString('<li>', $output);
+        $this->assertCount(2, $report['sentences']);
+        $this->assertStringContainsString('Test sentence one', $report['sentences'][0]);
     }
 
-    public function testParseAndDisplayPreviewOutputsJson(): void
+    public function testCheckTextReportTalliesWordsAndVerdict(): void
     {
         if (!self::$dbConnected) {
             $this->markTestSkipped('Database connection required');
         }
 
-        ob_start();
-        TextParsing::parseAndDisplayPreview("Hello world.", self::$testLanguageId);
-        $output = ob_get_clean();
+        $report = TextParsing::checkTextReport("Hello world.", self::$testLanguageId);
 
-        // Should output JSON config scripts
-        $this->assertStringContainsString('text-check-words-config', $output);
-        $this->assertStringContainsString('text-check-config', $output);
-        $this->assertStringContainsString('application/json', $output);
+        $this->assertSame(['hello', 'world'], array_column($report['words'], 0));
+        $this->assertSame([1, 1], array_column($report['words'], 1));
+        $this->assertIsArray($report['nonWords']);
+        $this->assertIsArray($report['multiWords']);
+        $this->assertIsBool($report['rtlScript']);
+        $this->assertSame('ok', $report['warning']);
     }
 }

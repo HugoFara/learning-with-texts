@@ -50,7 +50,6 @@ class JapaneseTextParser
     /**
      * The text as the preview shows it, with runs of whitespace collapsed.
      *
-     * The data behind {@see displayJapanesePreview()}.
      *
      * @param string $text Preprocessed text (substitutions applied)
      *
@@ -59,22 +58,6 @@ class JapaneseTextParser
     public static function previewText(string $text): string
     {
         return trim(preg_replace('/[ \t]+/u', ' ', $text) ?? $text);
-    }
-
-    /**
-     * Display preview HTML for Japanese text.
-     *
-     * @param string $text Preprocessed text
-     *
-     * @return void
-     */
-    public static function displayJapanesePreview(string $text): void
-    {
-        $text = preg_replace('/[ \t]+/u', ' ', $text) ?? $text;
-        $text = trim($text);
-        echo '<div id="check_text" style="margin-right:50px;">
-        <h2>Text</h2>
-        <p>' . str_replace("\n", "<br /><br />", \htmlspecialchars($text, ENT_QUOTES, 'UTF-8')) . '</p>';
     }
 
     /**

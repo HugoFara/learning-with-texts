@@ -57,50 +57,6 @@ class TextParsing
     }
 
     /**
-     * Parse text and display preview HTML for validation.
-     *
-     * Outputs HTML directly to show parsed sentences and word statistics.
-     *
-     * @param string $text Text to parse
-     * @param int    $lid  Language ID
-     *
-     * @return void
-     */
-    public static function parseAndDisplayPreview(string $text, int $lid): void
-    {
-        $record = QueryBuilder::table('languages')
-            ->select(['LgRightToLeft'])
-            ->where('LgID', '=', $lid)
-            ->firstPrepared();
-
-        if ($record === null) {
-            throw DatabaseException::recordNotFound('languages', 'LgID', $lid);
-        }
-        $rtlScript = (bool)$record['LgRightToLeft'];
-
-        $pre = self::preprocess($text, $lid);
-        if ($pre === null) {
-            return;
-        }
-        [$ptext, $isMecab, $record] = $pre;
-
-        // Preview HTML is shown before word splitting.
-        $tokens = self::tokenizeWithOptedInParser($ptext, $record);
-        if ($tokens !== null) {
-            StandardTextParser::echoPreview($ptext, $lid);
-        } elseif ($isMecab) {
-            JapaneseTextParser::displayJapanesePreview($ptext);
-            $tokens = JapaneseTextParser::tokenize($ptext);
-        } else {
-            StandardTextParser::echoPreview($ptext, $lid);
-            $tokens = StandardTextParser::tokenize($ptext, $lid);
-        }
-
-        TokenPersistence::echoCheckValid($tokens, $lid);
-        TokenPersistence::echoStatistics($tokens, $lid, $rtlScript);
-    }
-
-    /**
      * Parse text and save to database.
      *
      * @param string $text   Text to parse

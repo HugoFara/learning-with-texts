@@ -210,49 +210,24 @@ class JapaneseTextParserTest extends TestCase
     }
 
     // =========================================================================
-    // displayJapanesePreview (output tests)
+    // previewText
     // =========================================================================
 
     #[Test]
-    public function displayJapanesePreviewOutputsCheckTextDiv(): void
+    public function previewTextCollapsesWhitespace(): void
     {
-        ob_start();
-        JapaneseTextParser::displayJapanesePreview('Test text');
-        $output = ob_get_clean();
-
-        $this->assertStringContainsString('<div id="check_text"', $output);
-        $this->assertStringContainsString('<h2>Text</h2>', $output);
-        $this->assertStringContainsString('Test text', $output);
+        $this->assertSame('Word1 Word2', JapaneseTextParser::previewText("Word1   \t   Word2"));
     }
 
     #[Test]
-    public function displayJapanesePreviewEscapesHtmlEntities(): void
+    public function previewTextTrimsSurroundingWhitespace(): void
     {
-        ob_start();
-        JapaneseTextParser::displayJapanesePreview('<script>alert("xss")</script>');
-        $output = ob_get_clean();
-
-        $this->assertStringNotContainsString('<script>', $output);
-        $this->assertStringContainsString('&lt;script&gt;', $output);
+        $this->assertSame('Text', JapaneseTextParser::previewText("  \t Text \t "));
     }
 
     #[Test]
-    public function displayJapanesePreviewReplacesNewlinesWithBrTags(): void
+    public function previewTextKeepsNewlinesForTheCallerToRender(): void
     {
-        ob_start();
-        JapaneseTextParser::displayJapanesePreview("Line one\nLine two");
-        $output = ob_get_clean();
-
-        $this->assertStringContainsString('<br /><br />', $output);
-    }
-
-    #[Test]
-    public function displayJapanesePreviewCollapsesWhitespace(): void
-    {
-        ob_start();
-        JapaneseTextParser::displayJapanesePreview("Word1   \t   Word2");
-        $output = ob_get_clean();
-
-        $this->assertStringContainsString('Word1 Word2', $output);
+        $this->assertSame("Line one\nLine two", JapaneseTextParser::previewText("Line one\nLine two"));
     }
 }

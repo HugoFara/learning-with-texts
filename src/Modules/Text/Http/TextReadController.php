@@ -202,30 +202,20 @@ class TextReadController extends BaseController
     {
         PageLayoutHelper::renderPageStart('Check a Text', true);
 
-        $op = $this->param('op');
-        if ($op === 'Check') {
-            echo '<p><input type="button" value="&lt;&lt; Back" data-action="history-back" /></p>';
-            $this->textService->checkText(
-                $this->param('TxText'),
-                $this->paramInt('TxLgID', 0) ?? 0
-            );
-            echo '<p><input type="button" value="&lt;&lt; Back" data-action="history-back" /></p>';
-        } else {
-            $languageData = [];
-            $translateUris = $this->textService->getLanguageTranslateUris();
-            foreach ($translateUris as $lgId => $uri) {
-                $languageData[$lgId] = \Lwt\Shared\Infrastructure\Http\UrlUtilities::langFromDict($uri);
-            }
-            $languageFacade = new \Lwt\Modules\Language\Application\LanguageFacade();
-            $languages = $languageFacade->getLanguagesForSelect();
-            $languagesOption = \Lwt\Shared\UI\Helpers\SelectOptionsBuilder::forLanguages(
-                $languages,
-                Settings::get('currentlanguage'),
-                '[Choose...]'
-            );
-
-            include self::MODULE_VIEWS . '/check_form.php';
+        $languageData = [];
+        $translateUris = $this->textService->getLanguageTranslateUris();
+        foreach ($translateUris as $lgId => $uri) {
+            $languageData[$lgId] = \Lwt\Shared\Infrastructure\Http\UrlUtilities::langFromDict($uri);
         }
+        $languageFacade = new \Lwt\Modules\Language\Application\LanguageFacade();
+        $languages = $languageFacade->getLanguagesForSelect();
+        $languagesOption = \Lwt\Shared\UI\Helpers\SelectOptionsBuilder::forLanguages(
+            $languages,
+            Settings::get('currentlanguage'),
+            '[Choose...]'
+        );
+
+        include self::MODULE_VIEWS . '/check_form.php';
 
         PageLayoutHelper::renderPageEnd();
     }

@@ -223,63 +223,6 @@ class StandardTextParserTest extends TestCase
     }
 
     // =========================================================================
-    // displayStandardPreview (output tests)
-    // =========================================================================
-
-    #[Test]
-    public function displayStandardPreviewOutputsCheckTextDiv(): void
-    {
-        ob_start();
-        StandardTextParser::displayStandardPreview('Test text', false);
-        $output = ob_get_clean();
-
-        $this->assertStringContainsString('<div id="check_text"', $output);
-        $this->assertStringContainsString('<h4>Text</h4>', $output);
-        $this->assertStringContainsString('Test text', $output);
-    }
-
-    #[Test]
-    public function displayStandardPreviewSetsRtlDirAttribute(): void
-    {
-        ob_start();
-        StandardTextParser::displayStandardPreview('Arabic text', true);
-        $output = ob_get_clean();
-
-        $this->assertStringContainsString('dir="rtl"', $output);
-    }
-
-    #[Test]
-    public function displayStandardPreviewOmitsRtlDirWhenFalse(): void
-    {
-        ob_start();
-        StandardTextParser::displayStandardPreview('Latin text', false);
-        $output = ob_get_clean();
-
-        $this->assertStringNotContainsString('dir="rtl"', $output);
-    }
-
-    #[Test]
-    public function displayStandardPreviewEscapesHtmlEntities(): void
-    {
-        ob_start();
-        StandardTextParser::displayStandardPreview('<b>bold</b>', false);
-        $output = ob_get_clean();
-
-        $this->assertStringNotContainsString('<b>', $output);
-        $this->assertStringContainsString('&lt;b&gt;', $output);
-    }
-
-    #[Test]
-    public function displayStandardPreviewReplacesPilcrowWithBrTags(): void
-    {
-        ob_start();
-        StandardTextParser::displayStandardPreview("Para one\xC2\xB6Para two", false);
-        $output = ob_get_clean();
-
-        $this->assertStringContainsString('<br /><br />', $output);
-    }
-
-    // =========================================================================
     // getLanguageSettings (requires DB)
     // =========================================================================
 

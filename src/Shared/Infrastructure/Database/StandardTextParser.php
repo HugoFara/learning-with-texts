@@ -172,23 +172,6 @@ class StandardTextParser
     }
 
     /**
-     * Display preview HTML for standard text.
-     *
-     * @param string $text      Preprocessed text (after initial transformations)
-     * @param bool   $rtlScript Whether text is right-to-left
-     *
-     * @return void
-     */
-    public static function displayStandardPreview(string $text, bool $rtlScript): void
-    {
-        echo "<div id=\"check_text\" style=\"margin-right:50px;\">
-        <h4>Text</h4>
-        <p " . ($rtlScript ? 'dir="rtl"' : '') . ">" .
-        str_replace("\xC2\xB6", "<br /><br />", \htmlspecialchars($text, ENT_QUOTES, 'UTF-8')) .
-        "</p>";
-    }
-
-    /**
      * Build the tab-delimited token blob from preprocessed text.
      *
      * Produces one line per token as "<wordcount>\t<term>", where a term
@@ -325,8 +308,8 @@ class StandardTextParser
     /**
      * The text as the preview shows it, before word splitting.
      *
-     * The data behind {@see displayStandardPreview()}: paragraph breaks are
-     * still carried by the "\xC2\xB6" marker, which the caller renders.
+     * Paragraph breaks are still carried by the "\xC2\xB6" marker, which the
+     * caller renders.
      *
      * @param string $text Preprocessed text (substitutions applied)
      * @param int    $lid  Language ID
@@ -341,23 +324,5 @@ class StandardTextParser
         }
 
         return self::applyInitialTransformations($text, $settings['splitEachChar']);
-    }
-
-    /**
-     * Echo the preview HTML for a (character-substituted) standard text.
-     *
-     * @param string $text Preprocessed text (character substitutions applied)
-     * @param int    $lid  Language ID
-     *
-     * @return void
-     */
-    public static function echoPreview(string $text, int $lid): void
-    {
-        $settings = self::getLanguageSettings($lid);
-        if ($settings === null) {
-            return;
-        }
-        $text = self::applyInitialTransformations($text, $settings['splitEachChar']);
-        self::displayStandardPreview($text, (bool)$settings['rtlScript']);
     }
 }
