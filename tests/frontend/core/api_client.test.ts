@@ -734,4 +734,88 @@ describe('core/api_client.ts', () => {
       expect(result.error).toBeDefined();
     });
   });
+  // ===========================================================================
+  // Error message extraction (issue #284)
+  // ===========================================================================
+
+  describe('error message extraction', () => {
+    it('reads the message from an "error" key', async () => {
+      // Response::error() emits {error: "..."}, and every wrapper used to look
+      // only at "message" — so a correctly-formed error arrived as the bare
+      // status line and the real reason never reached the UI.
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        text: () => Promise.resolve('{"error": "Duplicate entry"}')
+      });
+
+      const result = await apiPost('/terms/quick', {});
+
+      expect(result.error).toBe('Duplicate entry');
+      expect(result.data).toBeUndefined();
+    });
+
+    it('reads the message from a handler payload promoted to 400', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        text: () =>
+          Promise.resolve('{"success": false, "error": "No entries found"}')
+      });
+
+      const result = await apiPost('/local-dictionaries/import-curated', {});
+
+      expect(result.error).toBe('No entries found');
+    });
+
+    it('prefers "message" when "error" is a bare flag', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        text: () => Promise.resolve('{"error": true, "message": "Boom"}')
+      });
+
+      const result = await apiGet('/test');
+
+      expect(result.error).toBe('Boom');
+    });
+
+    it('falls back to the status line when neither key is a string', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 403,
+        statusText: 'Forbidden',
+        text: () => Promise.resolve('{"error": {"nested": "shape"}}')
+      });
+
+      const result = await apiGet('/test');
+
+      expect(result.error).toBe('HTTP 403: Forbidden');
+    });
+
+    it('applies to every verb', async () => {
+      const body = '{"error": "Nope"}';
+      for (const call of [
+        () => apiGet('/t'),
+        () => apiPost('/t', {}),
+        () => apiPut('/t', {}),
+        () => apiDelete('/t'),
+        () => apiPostForm('/t', {})
+      ]) {
+        mockFetch.mockResolvedValue({
+          ok: false,
+          status: 400,
+          statusText: 'Bad Request',
+          text: () => Promise.resolve(body)
+        });
+
+        const result = await call();
+
+        expect(result.error).toBe('Nope');
+      }
+    });
+  });
 });
