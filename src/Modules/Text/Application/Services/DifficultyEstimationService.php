@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Text\Application\Services;
 
+use Lwt\Shared\Infrastructure\Cache\FileCache;
 use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Shared\Infrastructure\Database\QueryBuilder;
 use Lwt\Shared\Infrastructure\Database\UserScopedQuery;
@@ -46,6 +47,15 @@ class DifficultyEstimationService
      * Maximum number of words to sample for accurate coverage.
      */
     private const SAMPLE_WORD_COUNT = 2000;
+
+    /**
+     * How long a fetched source document stays cached, in seconds.
+     *
+     * Published books do not change, so this only needs to be short enough to
+     * recover from a truncated or mis-extracted fetch. A day matches the
+     * Gutenberg suggestion cache.
+     */
+    private const SOURCE_CACHE_TTL = 86400;
 
     /**
      * Maximum number of words per vocabulary lookup batch.
@@ -200,6 +210,37 @@ class DifficultyEstimationService
      * @return string|null Extracted text or null on fetch failure
      */
     private function fetchTextContent(string $url): ?string
+    {
+        // The download dominates this call — several seconds for a full book,
+        // against milliseconds for the tokenizing and vocabulary lookup that
+        // follow. The suggestion panels ask for a preview of every book they
+        // list, on every page load, so without this the same handful of books
+        // is refetched continuously and each request occupies a PHP worker for
+        // the duration. What is cached is the source document, which is the
+        // same for everyone; the coverage figures are still computed per user
+        // on top of it.
+        $cache = new FileCache('lwt_source_text_cache', self::SOURCE_CACHE_TTL);
+        $cached = $cache->get($url);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $text = $this->fetchTextContentUncached($url);
+        if ($text !== null && $text !== '') {
+            $cache->set($url, $text);
+        }
+
+        return $text;
+    }
+
+    /**
+     * Fetch and extract the text of a source document.
+     *
+     * @param string $url URL to fetch
+     *
+     * @return string|null Extracted text or null on failure
+     */
+    private function fetchTextContentUncached(string $url): ?string
     {
         if (str_contains($url, 'gutenberg.org')) {
             $client = new \Lwt\Shared\Infrastructure\Http\GutenbergClient();
