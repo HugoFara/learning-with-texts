@@ -6,7 +6,6 @@ namespace Lwt\Tests\Modules\Feed\Http;
 
 use Lwt\Modules\Feed\Application\FeedFacade;
 use Lwt\Modules\Feed\Http\FeedEditController;
-use Lwt\Modules\Feed\Infrastructure\FeedWizardSessionManager;
 use Lwt\Modules\Language\Application\LanguageFacade;
 use Lwt\Shared\Infrastructure\Http\FlashMessageService;
 use PHPUnit\Framework\Attributes\Test;
@@ -27,9 +26,6 @@ class FeedEditControllerTest extends TestCase
     /** @var LanguageFacade&MockObject */
     private LanguageFacade $languageFacade;
 
-    /** @var FeedWizardSessionManager&MockObject */
-    private FeedWizardSessionManager $wizardSession;
-
     /** @var FlashMessageService&MockObject */
     private FlashMessageService $flashService;
 
@@ -39,13 +35,11 @@ class FeedEditControllerTest extends TestCase
     {
         $this->feedFacade = $this->createMock(FeedFacade::class);
         $this->languageFacade = $this->createMock(LanguageFacade::class);
-        $this->wizardSession = $this->createMock(FeedWizardSessionManager::class);
         $this->flashService = $this->createMock(FlashMessageService::class);
 
         $this->controller = new FeedEditController(
             $this->feedFacade,
             $this->languageFacade,
-            $this->wizardSession,
             $this->flashService
         );
     }
@@ -61,7 +55,6 @@ class FeedEditControllerTest extends TestCase
             ->setConstructorArgs([
                 $this->feedFacade,
                 $this->languageFacade,
-                $this->wizardSession,
                 $this->flashService,
             ])
             ->onlyMethods(['redirect'])
@@ -109,14 +102,6 @@ class FeedEditControllerTest extends TestCase
     }
 
     #[Test]
-    public function constructorSetsWizardSessionProperty(): void
-    {
-        $reflection = new \ReflectionProperty(FeedEditController::class, 'wizardSession');
-
-        $this->assertSame($this->wizardSession, $reflection->getValue($this->controller));
-    }
-
-    #[Test]
     public function constructorSetsFlashServiceProperty(): void
     {
         $reflection = new \ReflectionProperty(FeedEditController::class, 'flashService');
@@ -134,15 +119,12 @@ class FeedEditControllerTest extends TestCase
     }
 
     #[Test]
-    public function constructorWithDefaultWizardAndFlash(): void
+    public function constructorWithDefaultFlash(): void
     {
         $controller = new FeedEditController(
             $this->feedFacade,
             $this->languageFacade
         );
-
-        $reflection = new \ReflectionProperty(FeedEditController::class, 'wizardSession');
-        $this->assertInstanceOf(FeedWizardSessionManager::class, $reflection->getValue($controller));
 
         $flashRef = new \ReflectionProperty(FeedEditController::class, 'flashService');
         $this->assertInstanceOf(FlashMessageService::class, $flashRef->getValue($controller));

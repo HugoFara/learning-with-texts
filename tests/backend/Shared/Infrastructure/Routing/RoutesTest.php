@@ -252,7 +252,7 @@ class RoutesTest extends TestCase
         return [
             'feeds index' => ['/feeds', 'Lwt\\Modules\\Feed\\Http\\FeedController@index'],
             'feeds edit' => ['/feeds/edit', 'Lwt\\Modules\\Feed\\Http\\FeedController@edit'],
-            'feeds wizard' => ['/feeds/wizard', 'Lwt\\Modules\\Feed\\Http\\FeedWizardController@wizard'],
+            'feeds wizard' => ['/feeds/wizard', 'Lwt\\Modules\\Feed\\Http\\FeedController@wizard'],
         ];
     }
 

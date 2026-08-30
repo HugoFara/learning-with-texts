@@ -1,8 +1,13 @@
 /**
  * Feed Wizard Step 3 Component - Filter Text.
  *
- * Alpine.js component for the feed wizard step 3 (filter selection).
- * Similar to step 2 but for selecting elements to filter out.
+ * The mirror of step 2: same picking, but every click names something to drop
+ * from the saved text rather than something to keep. Everything outside the
+ * article section step 2 picked is dimmed, so only the article itself is
+ * clickable.
+ *
+ * Like step 2, this used to read a PHP config blob rebuilt from `$_SESSION`
+ * and navigate by submitting a form to `/feeds/wizard` (#262, #266).
  *
  * @license Unlicense <http://unlicense.org/>
  * @since   3.0.0
@@ -12,44 +17,22 @@ import Alpine from 'alpinejs';
 import type { FeedWizardStoreState, FeedItem, XPathOption } from '../types/feed_wizard_types';
 import { getFeedWizardStore } from '../stores/feed_wizard_store';
 import { getHighlightService, initHighlightService } from '../services/highlight_service';
+import { showSelectedArticle, ARTICLE_CONTAINER_ID } from '../services/article_preview';
 import {
   xpathQuery,
   generateMarkActionOptions,
   generateAdvancedXPathOptions,
-  getAncestorsAndSelf,
-  parseSelectionList
+  getAncestorsAndSelf
 } from '../utils/xpath_utils';
-
-/**
- * Step 3 component configuration from PHP.
- */
-export interface Step3Config {
-  rssUrl: string;
-  feedTitle: string;
-  feedText: string;
-  articleSection: string;
-  articleSelector: string;
-  filterTags: string;
-  feedItems: FeedItem[];
-  selectedFeedIndex: number;
-  settings: {
-    selectionMode: string;
-    hideImages: boolean;
-    isMinimized: boolean;
-  };
-  editFeedId: number | null;
-  multipleHosts: boolean;
-}
 
 /**
  * Step 3 component data interface.
  */
 export interface FeedWizardStep3Data {
-  // Configuration
-  config: Step3Config;
-
   // UI state
   settingsOpen: boolean;
+  loadingArticle: boolean;
+  articleError: string;
 
   // Form data
   selectedFeedIndex: number;
@@ -57,6 +40,10 @@ export interface FeedWizardStep3Data {
 
   // Computed
   readonly store: FeedWizardStoreState;
+  readonly rssUrl: string;
+  readonly feedItems: FeedItem[];
+  readonly feedText: string;
+  readonly multipleHosts: boolean;
   readonly filterSelectors: Array<{ id: string; xpath: string; isHighlighted: boolean }>;
   readonly markActionOptions: XPathOption[];
   readonly currentXPath: string;
@@ -73,12 +60,14 @@ export interface FeedWizardStep3Data {
   handleMarkActionChange(event: Event): void;
 
   // Actions
+  hasArticleError(): boolean;
   filterSelection(): void;
   deleteSelector(id: string): void;
   toggleSelectorHighlight(id: string): void;
   changeSelectMode(): void;
   changeHideImages(): void;
   changeSelectedFeed(): void;
+  changeHostStatus(): void;
   toggleMinimize(): void;
   goBack(): void;
   goNext(): void;
@@ -86,10 +75,12 @@ export interface FeedWizardStep3Data {
 
   // Advanced mode
   openAdvancedMode(element: HTMLElement): void;
+  selectAdvancedOption(xpath: string): void;
   cancelAdvanced(): void;
   getAdvanced(): void;
 
   // Internal methods
+  showArticle(): void;
   bindContentClickHandler(): void;
   handleSelectedClick(target: HTMLElement): void;
   generateOptionsForElement(element: HTMLElement): void;
@@ -97,85 +88,41 @@ export interface FeedWizardStep3Data {
 }
 
 /**
- * Read configuration from JSON script tag.
- */
-function readConfig(): Step3Config {
-  const configEl = document.getElementById('wizard-step3-config');
-  if (!configEl) {
-    return {
-      rssUrl: '',
-      feedTitle: '',
-      feedText: '',
-      articleSection: '',
-      articleSelector: '',
-      filterTags: '',
-      feedItems: [],
-      selectedFeedIndex: 0,
-      settings: {
-        selectionMode: '0',
-        hideImages: true,
-        isMinimized: false
-      },
-      editFeedId: null,
-      multipleHosts: false
-    };
-  }
-
-  try {
-    return JSON.parse(configEl.textContent || '{}');
-  } catch {
-    console.error('Failed to parse wizard step 3 config');
-    return {
-      rssUrl: '',
-      feedTitle: '',
-      feedText: '',
-      articleSection: '',
-      articleSelector: '',
-      filterTags: '',
-      feedItems: [],
-      selectedFeedIndex: 0,
-      settings: {
-        selectionMode: '0',
-        hideImages: true,
-        isMinimized: false
-      },
-      editFeedId: null,
-      multipleHosts: false
-    };
-  }
-}
-
-/**
- * Map selection mode string to typed value.
- */
-function mapSelectionMode(mode: string): 'smart' | 'all' | 'adv' {
-  switch (mode) {
-    case 'all': return 'all';
-    case 'adv': return 'adv';
-    default: return 'smart';
-  }
-}
-
-/**
  * Feed wizard step 3 component factory.
  */
 export function feedWizardStep3Data(): FeedWizardStep3Data {
-  const config = readConfig();
+  const store = getFeedWizardStore();
   const highlightService = getHighlightService();
+  let clickHandler: ((event: Event) => void) | null = null;
 
   return {
-    // Configuration
-    config,
-
     // UI state
     settingsOpen: false,
+    loadingArticle: false,
+    articleError: '',
 
     // Form data
-    selectedFeedIndex: config.selectedFeedIndex || 0,
+    selectedFeedIndex: store.selectedFeedIndex,
     hostStatus: '-',
 
     get store(): FeedWizardStoreState {
       return getFeedWizardStore();
+    },
+
+    get rssUrl(): string {
+      return this.store.rssUrl;
+    },
+
+    get feedItems(): FeedItem[] {
+      return this.store.feedItems;
+    },
+
+    get feedText(): string {
+      return this.store.feedText;
+    },
+
+    get multipleHosts(): boolean {
+      return new Set(this.store.feedItems.map(item => item.host)).size > 1;
     },
 
     get filterSelectors() {
@@ -195,11 +142,7 @@ export function feedWizardStep3Data(): FeedWizardStep3Data {
     },
 
     get selectionMode(): string {
-      switch (this.store.selectionMode) {
-        case 'all': return 'all';
-        case 'adv': return 'adv';
-        default: return '0';
-      }
+      return this.store.selectionMode;
     },
 
     get hideImages(): boolean {
@@ -207,64 +150,56 @@ export function feedWizardStep3Data(): FeedWizardStep3Data {
     },
 
     init(): void {
-      // Initialize highlight service
       initHighlightService();
-
-      // Parse existing filter selectors from HTML if present
-      const existingFilters = parseSelectionList(document.getElementById('lwt_sel'));
-
-      // Configure store
-      this.store.configure({
-        step: 3,
-        rssUrl: this.config.rssUrl,
-        feedTitle: this.config.feedTitle,
-        feedText: this.config.feedText,
-        articleSelector: this.config.articleSelector,
-        feedItems: this.config.feedItems,
-        selectedFeedIndex: this.config.selectedFeedIndex,
-        editFeedId: this.config.editFeedId,
-        filterSelectors: existingFilters,
-        settings: {
-          selectionMode: mapSelectionMode(this.config.settings.selectionMode),
-          hideImages: this.config.settings.hideImages,
-          isMinimized: this.config.settings.isMinimized
-        }
-      });
-
-      // Apply article section filtering (dim elements outside article)
-      highlightService.applyArticleSectionFilter(this.config.articleSelector);
-
-      // Apply filter selections
-      this.updateHighlighting();
-
-      // Apply image visibility
-      highlightService.toggleImages(this.store.hideImages);
-
-      // Update last element margin
-      highlightService.updateLastMargin();
-
-      // Bind click handler to feed content
       this.bindContentClickHandler();
+      this.showArticle();
     },
 
     destroy(): void {
       highlightService.clearAll();
+
+      const host = document.getElementById(ARTICLE_CONTAINER_ID);
+      if (host && clickHandler) {
+        host.removeEventListener('click', clickHandler);
+      }
+      clickHandler = null;
+    },
+
+    hasArticleError(): boolean {
+      return this.articleError !== '';
     },
 
     /**
-     * Bind click handler to all feed content elements.
+     * Put the selected article on the page, dimmed outside the article section.
+     */
+    showArticle(): void {
+      if (this.loadingArticle) return;
+
+      this.articleError = '';
+      this.loadingArticle = true;
+
+      void showSelectedArticle(this.store).then((error) => {
+        this.loadingArticle = false;
+        this.articleError = error;
+        if (error !== '') return;
+
+        this.updateHighlighting();
+        highlightService.toggleImages(this.store.hideImages);
+        highlightService.updateLastMargin();
+      });
+    },
+
+    /**
+     * Listen for clicks anywhere in the article.
      */
     bindContentClickHandler(): void {
-      const lwtLast = document.getElementById('lwt_last');
-      if (!lwtLast) return;
+      const host = document.getElementById(ARTICLE_CONTAINER_ID);
+      if (!host) return;
 
-      let sibling = lwtLast.nextElementSibling;
-      while (sibling) {
-        sibling.addEventListener('click', (e: Event) => {
-          this.handleContentClick(e as MouseEvent);
-        });
-        sibling = sibling.nextElementSibling;
-      }
+      clickHandler = (event: Event) => {
+        this.handleContentClick(event as MouseEvent);
+      };
+      host.addEventListener('click', clickHandler);
     },
 
     handleContentClick(event: MouseEvent): void {
@@ -408,7 +343,7 @@ export function feedWizardStep3Data(): FeedWizardStep3Data {
       highlightService.clearHighlighting();
 
       // Re-apply article section filtering
-      highlightService.applyArticleSectionFilter(this.config.articleSelector);
+      highlightService.applyArticleSectionFilter(this.store.articleSelector);
 
       // Apply filter selections as selected (so they're visible)
       const xpaths = this.store.filterSelectors.map(s => s.xpath);
@@ -433,16 +368,15 @@ export function feedWizardStep3Data(): FeedWizardStep3Data {
     },
 
     changeSelectedFeed(): void {
-      // Submit form to reload with new feed item
-      const form = document.querySelector<HTMLFormElement>('form[name="lwt_form1"]');
-      const htmlInput = form?.querySelector<HTMLInputElement>('input[name="html"]');
-      const lwtSel = document.getElementById('lwt_sel');
+      this.store.selectedFeedIndex = Number(this.selectedFeedIndex) || 0;
+      this.showArticle();
+    },
 
-      if (htmlInput && lwtSel) {
-        htmlInput.value = lwtSel.innerHTML;
+    changeHostStatus(): void {
+      const item = this.store.feedItems[this.store.selectedFeedIndex];
+      if (item) {
+        this.store.setHostMark(item.host, this.hostStatus);
       }
-
-      form?.submit();
     },
 
     toggleMinimize(): void {
@@ -451,50 +385,15 @@ export function feedWizardStep3Data(): FeedWizardStep3Data {
     },
 
     goBack(): void {
-      // Go back to step 2, preserving filter selections
-      const lwtSel = document.getElementById('lwt_sel');
-      const maximInput = document.getElementById('maxim') as HTMLInputElement | null;
-
-      const url = '/feeds/wizard?step=2&article_tags=1' +
-        `&maxim=${encodeURIComponent(maximInput?.value || '')}` +
-        `&filter_tags=${encodeURIComponent(lwtSel?.innerHTML || '')}` +
-        `&select_mode=${encodeURIComponent(this.selectionMode)}` +
-        `&hide_images=${encodeURIComponent(this.hideImages ? 'yes' : 'no')}`;
-
-      window.location.href = url;
+      this.store.goToStep(2);
     },
 
     goNext(): void {
-      const form = document.querySelector<HTMLFormElement>('form[name="lwt_form1"]');
-      if (!form) return;
-
-      // Build combined XPath string for filters
-      const combinedXPath = this.store.buildSelectorsString('filter');
-
-      // Update hidden inputs
-      const htmlInput = form.querySelector<HTMLInputElement>('input[name="html"]');
-      if (htmlInput) {
-        htmlInput.value = combinedXPath;
-      }
-
-      // Update filter tags
-      const filterTagsInput = form.querySelector<HTMLInputElement>('input[name="filter_tags"]');
-      if (filterTagsInput) {
-        filterTagsInput.value = document.getElementById('lwt_sel')?.innerHTML || '';
-        filterTagsInput.disabled = false;
-      }
-
-      // Update step
-      const stepInput = form.querySelector<HTMLInputElement>('input[name="step"]');
-      if (stepInput) {
-        stepInput.value = '4';
-      }
-
-      form.submit();
+      this.store.goToStep(4);
     },
 
     cancel(): void {
-      window.location.href = '/feeds/edit?del_wiz=1';
+      window.location.href = '/feeds/manage';
     },
 
     // Advanced mode methods
@@ -507,6 +406,10 @@ export function feedWizardStep3Data(): FeedWizardStep3Data {
       this.store.openAdvanced(options);
       highlightService.clearMarking();
       highlightService.updateLastMargin();
+    },
+
+    selectAdvancedOption(xpath: string): void {
+      this.store.customXPath = xpath;
     },
 
     cancelAdvanced(): void {

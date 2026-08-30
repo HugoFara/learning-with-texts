@@ -1,39 +1,27 @@
 /**
  * Feed Wizard Step 4 Component - Edit Options.
  *
- * Alpine.js component for the feed wizard step 4 (final configuration).
- * Handles language selection, feed options, and form submission.
+ * The last step names the feed, picks its language and sets how it behaves,
+ * then saves through `POST /api/v1/feeds` (or `PUT` when reopening a saved
+ * feed). What it saves comes from the store rather than from a PHP config
+ * blob rebuilt from `$_SESSION` (#262, #266).
  *
  * @license Unlicense <http://unlicense.org/>
  * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';
-import type { FeedWizardStoreState, FeedOptions } from '../types/feed_wizard_types';
+import { t } from '@shared/i18n/translator';
+import type { FeedWizardStoreState } from '../types/feed_wizard_types';
 import { getFeedWizardStore } from '../stores/feed_wizard_store';
 import { saveFeed } from '../api/save_feed';
-
-/**
- * Step 4 component configuration from PHP.
- */
-export interface Step4Config {
-  editFeedId: number | null;
-  feedTitle: string;
-  rssUrl: string;
-  articleSection: string;
-  filterTags: string;
-  feedText: string;
-  langId: number | null;
-  options: Partial<FeedOptions>;
-  languages: Array<{ id: number; name: string }>;
-}
+import { buildSectionTags } from '../utils/feed_selectors';
+import { readWizardPageConfig } from '../pages/feed_wizard_config';
 
 /**
  * Step 4 component data interface.
  */
 export interface FeedWizardStep4Data {
-  // Configuration
-  config: Step4Config;
   languages: Array<{ id: number; name: string }>;
 
   // Form data
@@ -64,13 +52,9 @@ export interface FeedWizardStep4Data {
   // Computed
   readonly store: FeedWizardStoreState;
   readonly isEditMode: boolean;
-  readonly submitLabel: string;
-
-  // Lifecycle
-  init(): void;
 
   // Actions
-  toggleOption(option: string): void;
+  submitLabel(): string;
   buildOptionsString(): string;
   goBack(): void;
   hasSaveError(): boolean;
@@ -79,73 +63,40 @@ export interface FeedWizardStep4Data {
 }
 
 /**
- * Read configuration from JSON script tag.
- */
-function readConfig(): Step4Config {
-  const configEl = document.getElementById('wizard-step4-config');
-  if (!configEl) {
-    return {
-      editFeedId: null,
-      feedTitle: '',
-      rssUrl: '',
-      articleSection: '',
-      filterTags: '',
-      feedText: '',
-      langId: null,
-      options: {},
-      languages: []
-    };
-  }
-
-  try {
-    return JSON.parse(configEl.textContent || '{}');
-  } catch {
-    console.error('Failed to parse wizard step 4 config');
-    return {
-      editFeedId: null,
-      feedTitle: '',
-      rssUrl: '',
-      articleSection: '',
-      filterTags: '',
-      feedText: '',
-      langId: null,
-      options: {},
-      languages: []
-    };
-  }
-}
-
-/**
  * Feed wizard step 4 component factory.
  */
 export function feedWizardStep4Data(): FeedWizardStep4Data {
-  const config = readConfig();
+  const store = getFeedWizardStore();
+  const options = store.feedOptions;
 
   return {
-    // Configuration
-    config,
-    languages: config.languages || [],
+    languages: readWizardPageConfig().languages,
 
-    // Form data - initialized from config
-    languageId: config.langId?.toString() || '',
-    feedName: config.feedTitle || '',
-    sourceUri: config.rssUrl || '',
-    articleSection: config.articleSection || '',
-    filterTags: config.filterTags || '',
+    // Form data — seeded from the store, which the earlier steps filled in.
+    // The three selector fields stay editable: the wizard is a way to build
+    // them by pointing, not the only way to write them.
+    languageId: options.languageId !== null ? String(options.languageId) : '',
+    feedName: store.feedTitle,
+    sourceUri: store.rssUrl,
+    articleSection: buildSectionTags(
+      store.redirect,
+      store.articleSelectors.map(s => s.xpath)
+    ),
+    filterTags: store.buildSelectorsString('filter'),
 
-    // Options - initialized from config
-    editText: config.options?.editText || false,
-    autoUpdateEnabled: config.options?.autoUpdate?.enabled || false,
-    autoUpdateInterval: config.options?.autoUpdate?.interval?.toString() || '',
-    autoUpdateUnit: config.options?.autoUpdate?.unit || 'h',
-    maxLinksEnabled: config.options?.maxLinks?.enabled || false,
-    maxLinks: config.options?.maxLinks?.value?.toString() || '',
-    maxTextsEnabled: config.options?.maxTexts?.enabled || false,
-    maxTexts: config.options?.maxTexts?.value?.toString() || '',
-    charsetEnabled: config.options?.charset?.enabled || false,
-    charset: config.options?.charset?.value || '',
-    tagEnabled: config.options?.tag?.enabled || false,
-    tag: config.options?.tag?.value || '',
+    // Options
+    editText: options.editText,
+    autoUpdateEnabled: options.autoUpdate.enabled,
+    autoUpdateInterval: options.autoUpdate.interval !== null ? String(options.autoUpdate.interval) : '',
+    autoUpdateUnit: options.autoUpdate.unit,
+    maxLinksEnabled: options.maxLinks.enabled,
+    maxLinks: options.maxLinks.value !== null ? String(options.maxLinks.value) : '',
+    maxTextsEnabled: options.maxTexts.enabled,
+    maxTexts: options.maxTexts.value !== null ? String(options.maxTexts.value) : '',
+    charsetEnabled: options.charset.enabled,
+    charset: options.charset.value,
+    tagEnabled: options.tag.enabled,
+    tag: options.tag.value,
 
     saving: false,
     saveError: '',
@@ -155,63 +106,14 @@ export function feedWizardStep4Data(): FeedWizardStep4Data {
     },
 
     get isEditMode(): boolean {
-      return this.config.editFeedId !== null;
+      return this.store.editFeedId !== null;
     },
 
-    get submitLabel(): string {
-      return this.isEditMode ? 'Update' : 'Save';
-    },
-
-    init(): void {
-      // Configure store
-      this.store.configure({
-        step: 4,
-        rssUrl: this.config.rssUrl,
-        feedTitle: this.config.feedTitle,
-        feedText: this.config.feedText,
-        editFeedId: this.config.editFeedId,
-        options: {
-          languageId: config.langId,
-          editText: this.editText,
-          autoUpdate: {
-            enabled: this.autoUpdateEnabled,
-            interval: this.autoUpdateInterval ? parseInt(this.autoUpdateInterval, 10) : null,
-            unit: this.autoUpdateUnit as 'h' | 'd' | 'w'
-          },
-          maxLinks: {
-            enabled: this.maxLinksEnabled,
-            value: this.maxLinks ? parseInt(this.maxLinks, 10) : null
-          },
-          maxTexts: {
-            enabled: this.maxTextsEnabled,
-            value: this.maxTexts ? parseInt(this.maxTexts, 10) : null
-          },
-          charset: {
-            enabled: this.charsetEnabled,
-            value: this.charset
-          },
-          tag: {
-            enabled: this.tagEnabled,
-            value: this.tag
-          }
-        }
-      });
-    },
-
-    toggleOption(option: string): void {
-      switch (option) {
-        case 'autoUpdate':
-          // Enable/disable associated inputs based on checkbox
-          break;
-        case 'maxLinks':
-          break;
-        case 'maxTexts':
-          break;
-        case 'charset':
-          break;
-        case 'tag':
-          break;
+    submitLabel(): string {
+      if (this.saving) {
+        return t('feed.wizard.step4.saving');
       }
+      return this.isEditMode ? t('feed.wizard.step4.update') : t('feed.wizard.step4.save');
     },
 
     buildOptionsString(): string {
@@ -241,20 +143,21 @@ export function feedWizardStep4Data(): FeedWizardStep4Data {
         parts.push(`tag=${this.tag}`);
       }
 
-      // Add article source if set
-      if (this.config.feedText) {
-        parts.push(`article_source=${this.config.feedText}`);
+      // Where the article body is read from, when not the linked page
+      if (this.store.feedText) {
+        parts.push(`article_source=${this.store.feedText}`);
       }
 
       return parts.join(',');
     },
 
     goBack(): void {
-      const optionsStr = this.buildOptionsString();
-      const url = `/feeds/wizard?step=3&NfOptions=${encodeURIComponent(optionsStr)}` +
-        `&NfLgID=${encodeURIComponent(this.languageId)}` +
-        `&NfName=${encodeURIComponent(this.feedName)}`;
-      window.location.href = url;
+      this.store.feedTitle = this.feedName;
+      this.store.feedOptions = {
+        ...this.store.feedOptions,
+        languageId: Number(this.languageId) || null
+      };
+      this.store.goToStep(3);
     },
 
     hasSaveError(): boolean {
@@ -289,7 +192,7 @@ export function feedWizardStep4Data(): FeedWizardStep4Data {
         options: this.buildOptionsString()
       };
 
-      void saveFeed(data, this.config.editFeedId).then((result) => {
+      void saveFeed(data, this.store.editFeedId).then((result) => {
         if (result.feedId === null) {
           this.saveError = result.error;
           this.saving = false;
@@ -301,7 +204,7 @@ export function feedWizardStep4Data(): FeedWizardStep4Data {
     },
 
     cancel(): void {
-      window.location.href = '/feeds/edit?del_wiz=1';
+      window.location.href = '/feeds/manage';
     }
   };
 }

@@ -108,6 +108,20 @@ export interface FeedOptions {
 }
 
 /**
+ * A feed's articles and how its body is carried, as the preview reports them.
+ */
+export interface FeedPreview {
+  /** Feed title */
+  title: string;
+  /** Feed element carrying the body inline, or '' for the linked page */
+  articleSource: string;
+  /** Inline sources this feed offers */
+  articleSources: string[];
+  /** The feed's articles */
+  items: Array<{ index: number; title: string; link: string; host: string }>;
+}
+
+/**
  * Configuration passed from PHP to Alpine components via JSON script tag.
  */
 export interface WizardConfig {
@@ -192,6 +206,12 @@ export interface FeedWizardStoreState {
   selectedFeedIndex: number;
   /** Feed ID when editing existing feed */
   editFeedId: number | null;
+  /** Inline article sources this feed offers */
+  articleSources: string[];
+  /** `redirect:<xpath>` hop selector, for feeds whose links are indirect */
+  redirect: string;
+  /** Fetched article HTML, keyed by the article's index in the feed */
+  articleHtml: Record<number, string>;
 
   // === XPath Selections ===
   /** Article section selectors (step 2) */
@@ -252,6 +272,14 @@ export interface FeedWizardStoreState {
   buildSelectorsString(type: 'article' | 'filter'): string;
   /** Build options string for step 4 form submission */
   buildOptionsString(): string;
+  /** Move to another step of the wizard */
+  goToStep(step: 1 | 2 | 3 | 4): void;
+  /** Take on a feed the preview endpoint just described */
+  setFeedPreview(preview: FeedPreview): void;
+  /** Remember an article's HTML so re-entering a step does not refetch it */
+  setArticleHtml(index: number, html: string): void;
+  /** Mark a host with '-', '☆' or '★' */
+  setHostMark(host: string, mark: string): void;
   /** Check if wizard can proceed to next step */
   canProceed(): boolean;
   /** Reset store to initial state */

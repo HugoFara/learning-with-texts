@@ -40,7 +40,7 @@ use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 $actions = [
     ['url' => '/feeds/manage', 'label' => __('feed.edit_action_feeds'), 'icon' => 'list'],
     [
-        'url' => '/feeds/wizard?step=2&edit_feed=' . (int)$feed['NfID'],
+        'url' => '/feeds/wizard?edit_feed=' . (int)$feed['NfID'],
         'label' => __('feed.edit_action_wizard'),
         'icon' => 'wand-2',
         'class' => 'is-info'

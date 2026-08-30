@@ -1,60 +1,36 @@
 /**
  * Feed Wizard Step 1 Component - Choose How to Add a Feed.
  *
- * Alpine.js component for the feed wizard step 1 with three paths:
- * 1. Browse curated sources
- * 2. Enter feed URL (guided wizard)
- * 3. Manual setup
+ * Three ways in: pick from the curated registry, type a feed URL and let the
+ * wizard walk the article, or fill every field by hand. The first and third
+ * save straight through `POST /api/v1/feeds`; the second used to post to
+ * `/feeds/wizard` and now reads the feed through the API and moves the wizard
+ * on to step 2 in place (#262, #266).
  *
  * @license Unlicense <http://unlicense.org/>
  * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';
+import { t } from '@shared/i18n/translator';
 import type { FeedWizardStoreState } from '../types/feed_wizard_types';
 import { getFeedWizardStore } from '../stores/feed_wizard_store';
 import { saveFeed } from '../api/save_feed';
+import { openFeed } from '../services/wizard_flow';
+import {
+  readWizardPageConfig,
+  type CuratedFeedGroup,
+  type CuratedSource,
+  type FeedWizardPageConfig
+} from '../pages/feed_wizard_config';
 
-/**
- * A curated feed source entry.
- */
-interface CuratedSource {
-  name: string;
-  url: string;
-  articleSectionTags: string;
-  filterTags: string;
-  options: string;
-  category: string;
-  level: string;
-}
-
-/**
- * A curated feed language group.
- */
-interface CuratedFeedGroup {
-  language: string;
-  languageName: string;
-  sources: CuratedSource[];
-}
-
-/**
- * Step 1 component configuration from PHP.
- */
-export interface Step1Config {
-  rssUrl: string;
-  hasError: boolean;
-  editFeedId: number | null;
-  languages: Array<{ id: number; name: string }>;
-  curatedFeeds: CuratedFeedGroup[];
-  currentLanguageId: number;
-  currentLanguageName: string;
-}
+export type { CuratedFeedGroup, CuratedSource };
 
 /**
  * Step 1 component data interface.
  */
 export interface FeedWizardStep1Data {
-  config: Step1Config;
+  config: FeedWizardPageConfig;
 
   // Tab state
   activeTab: 'browse' | 'wizard' | 'manual';
@@ -73,54 +49,24 @@ export interface FeedWizardStep1Data {
   curatedFeeds: CuratedFeedGroup[];
   readonly filteredCuratedFeeds: CuratedFeedGroup[];
 
-  // Save state
+  // Busy state, shared by both the curated add and the URL read
   saving: boolean;
   saveError: string;
-
-  // Lifecycle
-  init(): void;
 
   // Actions
   cancel(): void;
   hasSaveError(): boolean;
+  nextLabel(): string;
+  openWizard(): void;
   addSelectedFeeds(): void;
   addCuratedFeed(source: CuratedSource): void;
-
-}
-
-/**
- * Read configuration from JSON script tag.
- */
-function readConfig(): Step1Config {
-  const configEl = document.getElementById('wizard-step1-config');
-  const defaults: Step1Config = {
-    rssUrl: '',
-    hasError: false,
-    editFeedId: null,
-    languages: [],
-    curatedFeeds: [],
-    currentLanguageId: 0,
-    currentLanguageName: ''
-  };
-
-  if (!configEl) {
-    return defaults;
-  }
-
-  try {
-    const parsed = JSON.parse(configEl.textContent || '{}');
-    return { ...defaults, ...parsed };
-  } catch {
-    console.error('Failed to parse wizard step 1 config');
-    return defaults;
-  }
 }
 
 /**
  * Feed wizard step 1 component factory.
  */
 export function feedWizardStep1Data(): FeedWizardStep1Data {
-  const config = readConfig();
+  const config = readWizardPageConfig();
 
   return {
     config,
@@ -129,7 +75,7 @@ export function feedWizardStep1Data(): FeedWizardStep1Data {
     activeTab: config.curatedFeeds.length > 0 ? 'browse' : 'wizard',
 
     // Wizard tab
-    rssUrl: config.rssUrl || '',
+    rssUrl: '',
 
     get store(): FeedWizardStoreState {
       return getFeedWizardStore();
@@ -191,22 +137,34 @@ export function feedWizardStep1Data(): FeedWizardStep1Data {
     saving: false,
     saveError: '',
 
-    init(): void {
-      // Configure store for step 1
-      this.store.configure({
-        step: 1,
-        rssUrl: this.config.rssUrl,
-        editFeedId: this.config.editFeedId
-      });
-
-      // If there was an error, switch to wizard tab
-      if (this.config.hasError) {
-        this.activeTab = 'wizard';
-      }
-    },
-
     cancel(): void {
       window.location.href = '/feeds/manage';
+    },
+
+    hasSaveError(): boolean {
+      return this.saveError !== '';
+    },
+
+    nextLabel(): string {
+      return this.saving ? t('feed.wizard.reading_feed') : t('feed.wizard.step1.next');
+    },
+
+    /**
+     * Read the typed feed and hand the wizard over to step 2.
+     *
+     * The button used to submit a form to `/feeds/wizard`, which parsed the
+     * feed into the session and re-rendered the whole page as step 2.
+     */
+    openWizard(): void {
+      if (this.saving || !this.isValidUrl) return;
+
+      this.saveError = '';
+      this.saving = true;
+
+      void openFeed(this.store, this.rssUrl).then((error) => {
+        this.saving = false;
+        this.saveError = error;
+      });
     },
 
     addSelectedFeeds(): void {
@@ -220,10 +178,6 @@ export function feedWizardStep1Data(): FeedWizardStep1Data {
           return;
         }
       }
-    },
-
-    hasSaveError(): boolean {
-      return this.saveError !== '';
     },
 
     /**

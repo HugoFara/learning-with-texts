@@ -1,12 +1,17 @@
 /**
- * Tests for feed_wizard_step4.ts - Feed wizard step 4 (final configuration)
+ * Tests for feed_wizard_step4.ts - naming the feed and saving it.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-// Mock Alpine.js
+const { stores } = vi.hoisted(() => ({ stores: {} as Record<string, unknown> }));
+
 vi.mock('alpinejs', () => ({
   default: {
-    data: vi.fn()
+    data: vi.fn(),
+    store: vi.fn((name: string, value?: unknown) => {
+      if (value !== undefined) stores[name] = value;
+      return stores[name];
+    })
   }
 }));
 
@@ -17,419 +22,221 @@ vi.mock('../../../src/frontend/js/shared/api/client', () => ({
   apiDelete: vi.fn()
 }));
 
-// Create shared mock store
-const mockStore = {
-  configure: vi.fn(),
-  reset: vi.fn()
-};
-
-// Mock feed_wizard_store
-vi.mock('../../../src/frontend/js/modules/feed/stores/feed_wizard_store', () => ({
-  getFeedWizardStore: vi.fn(() => mockStore)
-}));
-
 import Alpine from 'alpinejs';
-import { feedWizardStep4Data, initFeedWizardStep4Alpine, type Step4Config } from '../../../src/frontend/js/modules/feed/components/feed_wizard_step4';
 import { apiPost, apiPut } from '../../../src/frontend/js/shared/api/client';
+import { getFeedWizardStore } from '../../../src/frontend/js/modules/feed/stores/feed_wizard_store';
+import {
+  feedWizardStep4Data,
+  initFeedWizardStep4Alpine
+} from '../../../src/frontend/js/modules/feed/components/feed_wizard_step4';
+
+/** Put the store where step 3 would have left it. */
+function seedFeed(): void {
+  const store = getFeedWizardStore();
+  store.reset();
+  store.rssUrl = 'https://example.com/feed.xml';
+  store.feedTitle = 'Le Monde';
+  store.feedText = 'description';
+  store.configure({
+    articleSelectors: ['//article'],
+    filterSelectors: ['//aside', '//footer']
+  });
+  store.feedOptions = {
+    ...store.feedOptions,
+    languageId: 3,
+    editText: true,
+    maxLinks: { enabled: true, value: 20 }
+  };
+  store.goToStep(4);
+}
+
+/** Put the page config on the page. */
+function withLanguages(): void {
+  document.body.innerHTML =
+    '<script type="application/json" id="feed-wizard-config">' +
+    JSON.stringify({ languages: [{ id: 3, name: 'French' }] }) +
+    '</script>';
+}
 
 describe('feed_wizard_step4.ts', () => {
   beforeEach(() => {
-    document.body.innerHTML = '';
     vi.clearAllMocks();
-    mockStore.configure.mockClear();
+    withLanguages();
+    seedFeed();
+    Object.defineProperty(window, 'location', { value: { href: '' }, writable: true });
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
-    document.body.innerHTML = '';
   });
 
-  // ===========================================================================
-  // feedWizardStep4Data Factory Tests
-  // ===========================================================================
-
-  describe('feedWizardStep4Data', () => {
-    it('creates component with default values when no config', () => {
+  describe('seeding from the store', () => {
+    it('starts with what the earlier steps picked', () => {
       const component = feedWizardStep4Data();
 
-      expect(component.config).toBeDefined();
-      expect(component.languageId).toBe('');
-      expect(component.feedName).toBe('');
-      expect(component.sourceUri).toBe('');
-      expect(component.languages).toEqual([]);
-    });
-
-    it('reads config from script tag', () => {
-      const config: Step4Config = {
-        editFeedId: 5,
-        feedTitle: 'Test Feed',
-        rssUrl: 'https://example.com/feed.xml',
-        articleSection: '//article',
-        filterTags: '',
-        feedText: 'body',
-        langId: 2,
-        options: { editText: true },
-        languages: [{ id: 1, name: 'English' }, { id: 2, name: 'German' }]
-      };
-      document.body.innerHTML = `
-        <script id="wizard-step4-config" type="application/json">
-          ${JSON.stringify(config)}
-        </script>
-      `;
-
-      const component = feedWizardStep4Data();
-
-      expect(component.feedName).toBe('Test Feed');
+      expect(component.feedName).toBe('Le Monde');
       expect(component.sourceUri).toBe('https://example.com/feed.xml');
-      expect(component.languageId).toBe('2');
-      expect(component.languages).toHaveLength(2);
+      expect(component.articleSection).toBe('//article');
+      expect(component.filterTags).toBe('//aside | //footer');
+      expect(component.languageId).toBe('3');
       expect(component.editText).toBe(true);
+      expect(component.maxLinks).toBe('20');
     });
 
-    it('handles invalid JSON config gracefully', () => {
-      document.body.innerHTML = `
-        <script id="wizard-step4-config" type="application/json">
-          { invalid json }
-        </script>
-      `;
+    it('puts the redirect hop back at the head of the article section', () => {
+      getFeedWizardStore().redirect = 'redirect://a/@href';
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      expect(feedWizardStep4Data().articleSection).toBe('redirect://a/@href | //article');
+    });
 
-      const component = feedWizardStep4Data();
-
-      expect(component.feedName).toBe('');
-      expect(consoleSpy).toHaveBeenCalled();
+    it('offers the languages the page carries', () => {
+      expect(feedWizardStep4Data().languages).toEqual([{ id: 3, name: 'French' }]);
     });
   });
 
-  // ===========================================================================
-  // isEditMode and submitLabel Tests
-  // ===========================================================================
-
-  describe('isEditMode and submitLabel', () => {
-    it('returns false for new feed', () => {
+  describe('buildOptionsString', () => {
+    it('writes only the options that are on', () => {
       const component = feedWizardStep4Data();
 
-      expect(component.isEditMode).toBe(false);
-      expect(component.submitLabel).toBe('Save');
+      expect(component.buildOptionsString())
+        .toBe('edit_text=1,max_links=20,article_source=description');
     });
 
-    it('returns true when editFeedId is set', () => {
-      const config: Step4Config = {
-        editFeedId: 10,
-        feedTitle: '',
-        rssUrl: '',
-        articleSection: '',
-        filterTags: '',
-        feedText: '',
-        langId: null,
-        options: {},
-        languages: []
-      };
-      document.body.innerHTML = `
-        <script id="wizard-step4-config" type="application/json">
-          ${JSON.stringify(config)}
-        </script>
-      `;
-
-      const component = feedWizardStep4Data();
-
-      expect(component.isEditMode).toBe(true);
-      expect(component.submitLabel).toBe('Update');
-    });
-  });
-
-  // ===========================================================================
-  // init() Tests
-  // ===========================================================================
-
-  describe('init()', () => {
-    it('configures store with step 4', () => {
-      const component = feedWizardStep4Data();
-
-      component.init();
-
-      expect(mockStore.configure).toHaveBeenCalledWith(
-        expect.objectContaining({
-          step: 4
-        })
-      );
-    });
-  });
-
-  // ===========================================================================
-  // toggleOption() Tests
-  // ===========================================================================
-
-  describe('toggleOption()', () => {
-    it('handles autoUpdate option', () => {
-      const component = feedWizardStep4Data();
-
-      expect(() => component.toggleOption('autoUpdate')).not.toThrow();
-    });
-
-    it('handles maxLinks option', () => {
-      const component = feedWizardStep4Data();
-
-      expect(() => component.toggleOption('maxLinks')).not.toThrow();
-    });
-
-    it('handles maxTexts option', () => {
-      const component = feedWizardStep4Data();
-
-      expect(() => component.toggleOption('maxTexts')).not.toThrow();
-    });
-
-    it('handles charset option', () => {
-      const component = feedWizardStep4Data();
-
-      expect(() => component.toggleOption('charset')).not.toThrow();
-    });
-
-    it('handles tag option', () => {
-      const component = feedWizardStep4Data();
-
-      expect(() => component.toggleOption('tag')).not.toThrow();
-    });
-  });
-
-  // ===========================================================================
-  // buildOptionsString() Tests
-  // ===========================================================================
-
-  describe('buildOptionsString()', () => {
-    it('returns empty string when no options enabled', () => {
-      const component = feedWizardStep4Data();
-
-      expect(component.buildOptionsString()).toBe('');
-    });
-
-    it('includes edit_text when enabled', () => {
-      const component = feedWizardStep4Data();
-      component.editText = true;
-
-      expect(component.buildOptionsString()).toContain('edit_text=1');
-    });
-
-    it('includes autoupdate with interval and unit', () => {
+    it('writes an auto-update interval with its unit', () => {
       const component = feedWizardStep4Data();
       component.autoUpdateEnabled = true;
-      component.autoUpdateInterval = '24';
-      component.autoUpdateUnit = 'h';
+      component.autoUpdateInterval = '12';
+      component.autoUpdateUnit = 'd';
 
-      expect(component.buildOptionsString()).toContain('autoupdate=24h');
+      expect(component.buildOptionsString()).toContain('autoupdate=12d');
     });
 
-    it('includes max_links when enabled', () => {
-      const component = feedWizardStep4Data();
-      component.maxLinksEnabled = true;
-      component.maxLinks = '50';
-
-      expect(component.buildOptionsString()).toContain('max_links=50');
-    });
-
-    it('includes max_texts when enabled', () => {
-      const component = feedWizardStep4Data();
-      component.maxTextsEnabled = true;
-      component.maxTexts = '100';
-
-      expect(component.buildOptionsString()).toContain('max_texts=100');
-    });
-
-    it('includes charset when enabled', () => {
+    it('leaves out an enabled option with no value', () => {
       const component = feedWizardStep4Data();
       component.charsetEnabled = true;
-      component.charset = 'UTF-8';
+      component.charset = '';
 
-      expect(component.buildOptionsString()).toContain('charset=UTF-8');
-    });
-
-    it('includes tag when enabled', () => {
-      const component = feedWizardStep4Data();
-      component.tagEnabled = true;
-      component.tag = 'news';
-
-      expect(component.buildOptionsString()).toContain('tag=news');
-    });
-
-    it('builds multiple options comma-separated', () => {
-      const component = feedWizardStep4Data();
-      component.editText = true;
-      component.maxLinksEnabled = true;
-      component.maxLinks = '25';
-
-      const result = component.buildOptionsString();
-      expect(result).toContain('edit_text=1');
-      expect(result).toContain('max_links=25');
-      expect(result).toContain(',');
+      expect(component.buildOptionsString()).not.toContain('charset');
     });
   });
 
-  // ===========================================================================
-  // goBack() Tests
-  // ===========================================================================
+  describe('handleSubmit', () => {
+    const event = { preventDefault: vi.fn() } as unknown as Event;
 
-  describe('goBack()', () => {
-    it('navigates to step 3 with options', () => {
-      const originalLocation = window.location;
-      delete (window as { location?: Location }).location;
-      window.location = { href: '' } as Location;
-
+    it('creates a new feed through the API', async () => {
+      vi.mocked(apiPost).mockResolvedValue({
+        data: { success: true, feed: { id: 11 } },
+        error: null
+      } as never);
       const component = feedWizardStep4Data();
-      component.languageId = '2';
-      component.feedName = 'Test';
-      component.goBack();
 
-      expect(window.location.href).toContain('/feeds/wizard?step=3');
-      expect(window.location.href).toContain('NfLgID=2');
-      expect(window.location.href).toContain('NfName=Test');
+      component.handleSubmit(event);
+      await vi.waitFor(() => expect(window.location.href).toBe('/feeds/manage'));
 
-      window.location = originalLocation;
-    });
-  });
-
-  // ===========================================================================
-  // handleSubmit() Tests
-  // ===========================================================================
-
-  describe('handleSubmit()', () => {
-    /**
-     * A submit event whose default the component is expected to prevent.
-     */
-    function submitEvent(): Event {
-      return { preventDefault: vi.fn(), target: document.createElement('form') } as unknown as Event;
-    }
-
-    /**
-     * Put a step 4 config on the page.
-     */
-    function withConfig(overrides: Partial<Step4Config> = {}): void {
-      const config: Step4Config = {
-        editFeedId: null,
-        feedTitle: 'Tagesschau',
-        rssUrl: 'https://example.com/rss',
-        articleSection: '//div',
-        filterTags: '',
-        feedText: '',
-        langId: 2,
-        options: {},
-        languages: [],
-        ...overrides
-      };
-      document.body.innerHTML = `
-        <script id="wizard-step4-config" type="application/json">
-          ${JSON.stringify(config)}
-        </script>
-      `;
-    }
-
-    /**
-     * The wizard's last step used to post to /feeds/edit, which has 302'd to
-     * the manager SPA since the server-rendered feeds list was retired — so
-     * finishing the wizard saved nothing at all. It creates through the API
-     * now.
-     */
-    it('creates the feed through POST', async () => {
-      vi.mocked(apiPost).mockResolvedValue({ data: { success: true, feed: { id: 7 } } });
-      withConfig();
-
-      const component = feedWizardStep4Data();
-      component.editText = true;
-      component.handleSubmit(submitEvent());
-      await vi.waitFor(() => expect(apiPost).toHaveBeenCalled());
-
-      expect(apiPost).toHaveBeenCalledWith('/feeds', expect.objectContaining({
-        langId: 2,
-        name: 'Tagesschau',
-        sourceUri: 'https://example.com/rss',
-        articleSectionTags: '//div'
-      }));
-      const payload = vi.mocked(apiPost).mock.calls[0][1] as { options: string };
-      expect(payload.options).toContain('edit_text=1');
+      expect(apiPost).toHaveBeenCalledWith('/feeds', {
+        langId: 3,
+        name: 'Le Monde',
+        sourceUri: 'https://example.com/feed.xml',
+        articleSectionTags: '//article',
+        filterTags: '//aside | //footer',
+        options: 'edit_text=1,max_links=20,article_source=description'
+      });
     });
 
-    it('updates through PUT in edit mode', async () => {
-      vi.mocked(apiPut).mockResolvedValue({ data: { success: true, feed: { id: 5 } } });
-      withConfig({ editFeedId: 5 });
-
+    it('updates the feed it reopened', async () => {
+      getFeedWizardStore().editFeedId = 11;
+      vi.mocked(apiPut).mockResolvedValue({
+        data: { success: true, feed: { id: 11 } },
+        error: null
+      } as never);
       const component = feedWizardStep4Data();
-      component.handleSubmit(submitEvent());
-      await vi.waitFor(() => expect(apiPut).toHaveBeenCalled());
 
-      expect(apiPut).toHaveBeenCalledWith('/feeds/5', expect.any(Object));
+      component.handleSubmit(event);
+      await vi.waitFor(() => expect(window.location.href).toBe('/feeds/manage'));
+
+      expect(apiPut).toHaveBeenCalledWith('/feeds/11', expect.objectContaining({ langId: 3 }));
       expect(apiPost).not.toHaveBeenCalled();
     });
 
-    it('prevents the browser from posting the form', () => {
-      withConfig();
-      const event = submitEvent();
-
-      feedWizardStep4Data().handleSubmit(event);
-
-      expect(event.preventDefault).toHaveBeenCalled();
-    });
-
-    it('shows the API error and stays on the step', async () => {
-      vi.mocked(apiPost).mockResolvedValue({ error: 'Language not found or access denied' });
-      withConfig();
-
+    it('shows the API error instead of navigating', async () => {
+      vi.mocked(apiPost).mockResolvedValue({
+        data: { success: false, error: 'Language is required' },
+        error: null
+      } as never);
       const component = feedWizardStep4Data();
-      component.handleSubmit(submitEvent());
-      await vi.waitFor(() => expect(component.hasSaveError()).toBe(true));
 
-      expect(component.saveError).toBe('Language not found or access denied');
-      expect(component.saving).toBe(false);
+      component.handleSubmit(event);
+      await vi.waitFor(() => expect(component.saving).toBe(false));
+
+      expect(component.hasSaveError()).toBe(true);
+      expect(component.saveError).toBe('Language is required');
+      expect(window.location.href).toBe('');
     });
 
     it('refuses a feed with no language chosen', async () => {
-      withConfig({ langId: null });
-
       const component = feedWizardStep4Data();
-      component.handleSubmit(submitEvent());
-      await vi.waitFor(() => expect(component.hasSaveError()).toBe(true));
+      component.languageId = '';
+
+      component.handleSubmit(event);
+      await vi.waitFor(() => expect(component.saving).toBe(false));
+
+      expect(apiPost).not.toHaveBeenCalled();
+      expect(component.hasSaveError()).toBe(true);
+    });
+
+    it('does nothing while a save is already in flight', () => {
+      const component = feedWizardStep4Data();
+      component.saving = true;
+
+      component.handleSubmit(event);
 
       expect(apiPost).not.toHaveBeenCalled();
     });
   });
 
-  // ===========================================================================
-  // cancel() Tests
-  // ===========================================================================
-
-  describe('cancel()', () => {
-    it('navigates to feeds edit page with del_wiz', () => {
-      const originalLocation = window.location;
-      delete (window as { location?: Location }).location;
-      window.location = { href: '' } as Location;
-
+  describe('navigation', () => {
+    it('carries the edited name and language back to step 3', () => {
       const component = feedWizardStep4Data();
-      component.cancel();
+      component.feedName = 'Renamed';
+      component.languageId = '5';
 
-      expect(window.location.href).toBe('/feeds/edit?del_wiz=1');
+      component.goBack();
 
-      window.location = originalLocation;
+      const store = getFeedWizardStore();
+      expect(store.currentStep).toBe(3);
+      expect(store.feedTitle).toBe('Renamed');
+      expect(store.feedOptions.languageId).toBe(5);
+    });
+
+    it('cancels to the feed manager', () => {
+      feedWizardStep4Data().cancel();
+
+      expect(window.location.href).toBe('/feeds/manage');
     });
   });
 
-  // ===========================================================================
-  // initFeedWizardStep4Alpine Tests
-  // ===========================================================================
+  describe('submitLabel', () => {
+    it('offers to save a new feed', () => {
+      expect(feedWizardStep4Data().submitLabel()).toBe('Save');
+    });
 
-  describe('initFeedWizardStep4Alpine', () => {
-    it('registers feedWizardStep4 component with Alpine', () => {
-      initFeedWizardStep4Alpine();
+    it('offers to update a reopened one', () => {
+      getFeedWizardStore().editFeedId = 11;
 
-      expect(Alpine.data).toHaveBeenCalledWith('feedWizardStep4', feedWizardStep4Data);
+      expect(feedWizardStep4Data().submitLabel()).toBe('Update');
+    });
+
+    it('says so while saving', () => {
+      const component = feedWizardStep4Data();
+      component.saving = true;
+
+      expect(component.submitLabel()).toBe('Saving…');
     });
   });
 
-  // ===========================================================================
-  // Global Window Exposure Tests
-  // ===========================================================================
+  it('registers itself with Alpine', () => {
+    initFeedWizardStep4Alpine();
 
-  describe('global window exposure', () => {
-    it('exposes feedWizardStep4Data on window', () => {
-      expect(typeof window.feedWizardStep4Data).toBe('function');
-    });
+    expect(Alpine.data).toHaveBeenCalledWith('feedWizardStep4', feedWizardStep4Data);
   });
 });

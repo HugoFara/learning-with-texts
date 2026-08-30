@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Lwt\Modules\Feed\Http;
 
 use Lwt\Modules\Feed\Application\FeedFacade;
-use Lwt\Modules\Feed\Infrastructure\FeedWizardSessionManager;
 use Lwt\Modules\Language\Application\LanguageFacade;
 use Lwt\Shared\Infrastructure\Http\FlashMessageService;
 use Lwt\Shared\Infrastructure\Http\InputValidator;
@@ -26,19 +25,16 @@ class FeedEditController
     private string $viewPath;
     private FeedFacade $feedFacade;
     private LanguageFacade $languageFacade;
-    private FeedWizardSessionManager $wizardSession;
     private FlashMessageService $flashService;
 
     public function __construct(
         FeedFacade $feedFacade,
         LanguageFacade $languageFacade,
-        ?FeedWizardSessionManager $wizardSession = null,
         ?FlashMessageService $flashService = null
     ) {
         $this->viewPath = __DIR__ . '/../Views/';
         $this->feedFacade = $feedFacade;
         $this->languageFacade = $languageFacade;
-        $this->wizardSession = $wizardSession ?? new FeedWizardSessionManager();
         $this->flashService = $flashService ?? new FlashMessageService();
     }
 
@@ -60,16 +56,15 @@ class FeedEditController
     }
 
     /**
-     * New feed form (wizard with 3 tabs: Browse, URL Wizard, Manual).
+     * The feed wizard, whichever way the user came in.
      *
-     * Route: GET /feeds/new
+     * Route: GET /feeds/new, and GET /feeds/wizard for the links that still
+     * name it — including `?edit_feed={id}`, which reopens a saved feed.
      *
-     * Renders the scaffold only. The Browse and Manual tabs save through
-     * POST /api/v1/feeds (#262), which is also the only path that checks the
+     * Renders the scaffold only. Every path through the wizard reads and
+     * saves through /api/v1, which is also the only path that checks the
      * submitted NfLgID belongs to the caller — the save branch that used to
-     * live here passed it straight to the facade. The URL Wizard tab still
-     * posts to /feeds/wizard, which drives a server-side session state machine
-     * rather than saving a feed.
+     * live here passed it straight to the facade (#262).
      *
      * @param array<string, string> $params Route parameters
      *
@@ -77,11 +72,6 @@ class FeedEditController
      */
     public function newFeed(array $params): void
     {
-        // Clear wizard session if exists (must be before any output)
-        if ($this->wizardSession->exists()) {
-            $this->wizardSession->clear();
-        }
-
         PageLayoutHelper::renderPageStart('Add a Feed', true);
 
         $this->showNewForm();
@@ -157,7 +147,7 @@ class FeedEditController
     }
 
     /**
-     * Show the new feed form (wizard step 1 with 3 tabs).
+     * Show the wizard page.
      *
      * @return void
      *
@@ -165,9 +155,9 @@ class FeedEditController
      */
     private function showNewForm(): void
     {
-        $errorMessage = InputValidator::has('err') ? true : null;
-        $rssUrl = null;
-        $editFeedId = null;
+        // Reopening a saved feed is a GET with the feed's id; the page loads
+        // the feed itself from /api/v1/feeds/{id}, so only the id is passed.
+        $editFeedId = InputValidator::getInt('edit_feed');
         $languages = $this->languageFacade->getLanguagesForSelect();
         $curatedFeeds = $this->loadCuratedFeeds();
         // Resolves the unset-'currentlanguage' case centrally; without a
@@ -176,7 +166,7 @@ class FeedEditController
         $currentLanguageId = CurrentLanguage::resolveId();
         $currentLanguageName = $this->languageFacade->getLanguageName($currentLanguageId);
 
-        include $this->viewPath . 'wizard_step1.php';
+        include $this->viewPath . 'wizard.php';
     }
 
     /**
