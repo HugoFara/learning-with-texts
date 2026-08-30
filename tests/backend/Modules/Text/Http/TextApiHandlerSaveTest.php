@@ -150,6 +150,34 @@ class TextApiHandlerSaveTest extends TestCase
     }
 
     /**
+     * POST /texts/check reports on a text without saving it, and validates
+     * what it needs before reaching the language lookup.
+     */
+    public function testCheckRejectsMissingText(): void
+    {
+        $res = $this->handler->routePost(['texts', 'check'], ['language_id' => 1]);
+
+        $this->assertSame(400, $res->getStatusCode());
+        $this->assertSame(['error' => 'text is required'], $res->getData());
+    }
+
+    public function testCheckRejectsWhitespaceOnlyText(): void
+    {
+        $res = $this->handler->routePost(['texts', 'check'], ['text' => " \n ", 'language_id' => 1]);
+
+        $this->assertSame(400, $res->getStatusCode());
+        $this->assertSame(['error' => 'text is required'], $res->getData());
+    }
+
+    public function testCheckRejectsMissingLanguage(): void
+    {
+        $res = $this->handler->routePost(['texts', 'check'], ['text' => 'Ein Text.']);
+
+        $this->assertSame(400, $res->getStatusCode());
+        $this->assertSame(['error' => 'language_id is required'], $res->getData());
+    }
+
+    /**
      * The archived save validates its payload the way the active save does.
      */
     public function testArchivedUpdateRejectsMissingTitle(): void

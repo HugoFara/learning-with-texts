@@ -254,6 +254,109 @@ final class TokenPersistence
         echo '</script>';
     }
 
+    /**
+     * Build the check-a-text report as data.
+     *
+     * The data behind what `echoCheckValid()` and `echoStatistics()` used to
+     * print straight into the page: the sentence split, the word/expression/
+     * non-word tallies and the parse-coverage verdict (#262, #266).
+     *
+     * Values are returned raw. The caller renders them — the client builds
+     * text nodes rather than markup — so nothing is HTML-escaped here.
+     *
+     * @param ParsedToken[] $tokens    Tokens for the whole text
+     * @param int           $lid       Language ID
+     * @param bool          $rtlScript Whether the language is right-to-left
+     *
+     * @return array{sentences: list<string>, words: list<array{0: string, 1: int, 2: string}>,
+     *         nonWords: list<array{0: string, 1: int}>,
+     *         multiWords: list<array{0: string, 1: int, 2: string}>,
+     *         rtlScript: bool, warning: string}
+     */
+    public static function report(array $tokens, int $lid, bool $rtlScript): array
+    {
+        $bySentence = self::groupBySentence($tokens);
+
+        $sentences = [];
+        foreach ($bySentence as $sTokens) {
+            $sentences[] = self::sentenceText($sTokens);
+        }
+
+        $wordCounts = [];
+        $nonWordCounts = [];
+        $characters = 0;
+        foreach ($tokens as $t) {
+            $characters += \mb_strlen($t->text, 'UTF-8');
+            $lc = self::lc($t->text);
+            if ($t->wordCount === 1) {
+                $wordCounts[$lc] = ($wordCounts[$lc] ?? 0) + 1;
+            } else {
+                $nonWordCounts[$lc] = ($nonWordCounts[$lc] ?? 0) + 1;
+            }
+        }
+
+        $single = self::singleWordTerms($lid, array_keys($wordCounts));
+
+        // The tallies are keyed by the term itself, and PHP turns a numeric
+        // key into an int — a text containing "42" would otherwise report a
+        // number where every other term reports a string. Cast on the way out.
+        $words = [];
+        foreach ($wordCounts as $lc => $cnt) {
+            /** @psalm-suppress RedundantCast, RedundantCastGivenDocblockType */
+            $words[] = [(string) $lc, $cnt, (string) ($single[$lc]['tr'] ?? '')];
+        }
+
+        $nonWords = [];
+        foreach ($nonWordCounts as $lc => $cnt) {
+            /** @psalm-suppress RedundantCast */
+            $nonWords[] = [(string) $lc, $cnt];
+        }
+
+        return [
+            'sentences' => $sentences,
+            'words' => $words,
+            'nonWords' => $nonWords,
+            'multiWords' => self::multiWordOccurrences($bySentence, $lid),
+            'rtlScript' => $rtlScript,
+            'warning' => ParseCoverage::assess(array_sum($wordCounts), $characters),
+        ];
+    }
+
+    /**
+     * Tally the multi-word terms occurring in a parsed text.
+     *
+     * @param array<int, list<ParsedToken>> $bySentence Tokens grouped by sentence
+     * @param int                           $lid        Language ID
+     *
+     * @return list<array{0: string, 1: int, 2: string}> [term, occurrences, translation]
+     */
+    private static function multiWordOccurrences(array $bySentence, int $lid): array
+    {
+        $mwTerms = self::multiWordTerms($lid);
+        $occ = self::detectMultiWords($bySentence, $mwTerms);
+
+        $idInfo = [];
+        foreach ($mwTerms as $terms) {
+            foreach ($terms as $info) {
+                $idInfo[$info['id']] = $info;
+            }
+        }
+
+        $byWo = [];
+        foreach ($occ as $o) {
+            $byWo[$o['id']] = ($byWo[$o['id']] ?? 0) + 1;
+        }
+
+        $mw = [];
+        foreach ($byWo as $id => $cnt) {
+            $info = $idInfo[$id] ?? ['text' => '', 'tr' => ''];
+            $mw[] = [self::lc($info['text']), $cnt, $info['tr']];
+        }
+        \usort($mw, fn(array $a, array $b): int => \strcmp((string) $a[0], (string) $b[0]));
+
+        return $mw;
+    }
+
     // =========================================================================
     // Internal helpers
     // =========================================================================

@@ -323,6 +323,27 @@ class StandardTextParser
     }
 
     /**
+     * The text as the preview shows it, before word splitting.
+     *
+     * The data behind {@see displayStandardPreview()}: paragraph breaks are
+     * still carried by the "\xC2\xB6" marker, which the caller renders.
+     *
+     * @param string $text Preprocessed text (substitutions applied)
+     * @param int    $lid  Language ID
+     *
+     * @return string|null Preview text, or null if the language is unknown
+     */
+    public static function previewText(string $text, int $lid): ?string
+    {
+        $settings = self::getLanguageSettings($lid);
+        if ($settings === null) {
+            return null;
+        }
+
+        return self::applyInitialTransformations($text, $settings['splitEachChar']);
+    }
+
+    /**
      * Echo the preview HTML for a (character-substituted) standard text.
      *
      * @param string $text Preprocessed text (character substitutions applied)

@@ -727,6 +727,23 @@ class TextFacade
     }
 
     /**
+     * Build the "check a text" report as data, without saving.
+     *
+     * @param string $text Text to check
+     * @param int    $lgId Language ID
+     *
+     * @return array{preview: string, sentences: list<string>,
+     *         words: list<array{0: string, 1: int, 2: string}>,
+     *         nonWords: list<array{0: string, 1: int}>,
+     *         multiWords: list<array{0: string, 1: int, 2: string}>,
+     *         rtlScript: bool, warning: string}
+     */
+    public function checkTextReport(string $text, int $lgId): array
+    {
+        return TextParsing::checkTextReport($text, $lgId);
+    }
+
+    /**
      * Get text data for text content display.
      *
      * @param int $textId Text ID

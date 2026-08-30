@@ -38,6 +38,7 @@ use Lwt\Shared\Http\ApiRoutableTrait;
 use Lwt\Shared\Infrastructure\Database\QueryBuilder;
 use Lwt\Shared\Infrastructure\Http\GutenbergClient;
 use Lwt\Shared\Infrastructure\Http\JsonResponse;
+use Lwt\Shared\Infrastructure\Utilities\StringUtils;
 use Lwt\Api\V1\Response;
 
 /**
@@ -322,6 +323,10 @@ class TextApiHandler implements ApiRoutableInterface
             return $this->handleExtractEpubUrl($params);
         }
 
+        if ($frag1 === 'check') {
+            return $this->handleCheckText($params);
+        }
+
         if ($frag1 === '') {
             return $this->handleSaveText(0, $params);
         }
@@ -471,6 +476,46 @@ class TextApiHandler implements ApiRoutableInterface
             'bookId' => null,
             'message' => $result['message'],
         ]);
+    }
+
+    /**
+     * Handle POST /texts/check.
+     *
+     * Parses a text and reports what the parser made of it — the sentence
+     * split, the word/expression/non-word tallies and the coverage verdict —
+     * without saving anything. The JSON counterpart of the `op=Check` form
+     * POST, which answered with a server-rendered report page (#262, #266).
+     *
+     * @param array<string, mixed> $params Request body
+     */
+    private function handleCheckText(array $params): JsonResponse
+    {
+        $text = (string) ($params['text'] ?? '');
+        if (trim($text) === '') {
+            return Response::error('text is required', 400);
+        }
+
+        $languageId = (int) ($params['language_id'] ?? 0);
+        if ($languageId <= 0) {
+            return Response::error('language_id is required', 400);
+        }
+        // languages is user-scoped, so somebody else's language finds nothing.
+        $ownsLanguage = QueryBuilder::table('languages')
+            ->where('LgID', '=', $languageId)
+            ->existsPrepared();
+        if (!$ownsLanguage) {
+            return Response::error('Language not found', 404);
+        }
+
+        $facade = Container::getInstance()->getTyped(TextFacade::class);
+
+        if (!$facade->validateTextLength($text)) {
+            return Response::error(__('text.flash.text_too_long'), 422);
+        }
+
+        return Response::success(
+            $facade->checkTextReport(StringUtils::removeSoftHyphens($text), $languageId)
+        );
     }
 
     /**

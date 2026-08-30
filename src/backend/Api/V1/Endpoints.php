@@ -85,6 +85,7 @@ class Endpoints
         'word-families' => ['GET'],
         'word-families/stats' => ['GET'],
         'texts' => ['GET', 'POST', 'PUT'],
+        'texts/check' => ['POST'],
         'texts/extract-url' => ['POST'],
         'texts/extract-epub-url' => ['POST'],
         'texts/gutenberg-suggestions' => ['GET'],

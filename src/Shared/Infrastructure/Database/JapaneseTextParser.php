@@ -48,6 +48,20 @@ class JapaneseTextParser
     }
 
     /**
+     * The text as the preview shows it, with runs of whitespace collapsed.
+     *
+     * The data behind {@see displayJapanesePreview()}.
+     *
+     * @param string $text Preprocessed text (substitutions applied)
+     *
+     * @return string Preview text
+     */
+    public static function previewText(string $text): string
+    {
+        return trim(preg_replace('/[ \t]+/u', ' ', $text) ?? $text);
+    }
+
+    /**
      * Display preview HTML for Japanese text.
      *
      * @param string $text Preprocessed text
