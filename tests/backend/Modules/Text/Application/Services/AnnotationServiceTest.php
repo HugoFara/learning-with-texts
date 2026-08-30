@@ -6,7 +6,7 @@
  * Tests annotation processing, term formatting, JSON conversion,
  * and edge cases. Only tests methods that can run without database access.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Text\Application\Services

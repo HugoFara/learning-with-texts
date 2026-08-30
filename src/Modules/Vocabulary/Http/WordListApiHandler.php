@@ -5,7 +5,7 @@
  *
  * Handles API operations for word list display, filtering, and bulk operations.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Vocabulary\Http

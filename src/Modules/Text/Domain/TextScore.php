@@ -6,7 +6,7 @@
  * Represents the difficulty/comprehensibility score for a text
  * based on the user's vocabulary knowledge.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Text\Domain

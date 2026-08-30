@@ -6,7 +6,7 @@
  * Downloads curated dictionary archives from verified URLs,
  * extracts them, and imports entries via the existing import pipeline.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Dictionary\Application\Services

@@ -10,7 +10,7 @@
  * - $rtl: Whether the language is right-to-left
  * - $recno: Number of records imported
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views\Word

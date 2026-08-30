@@ -3,7 +3,7 @@
 /**
  * LemmatizerFactory for creating lemmatizer instances.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Application
  * @package  Lwt

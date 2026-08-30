@@ -20,7 +20,7 @@
  *   1 = one or more locales below threshold
  *   2 = locale/en/ missing or unreadable
  *
- * PHP version 8.1
+ * PHP version 8.2
  */
 
 declare(strict_types=1);

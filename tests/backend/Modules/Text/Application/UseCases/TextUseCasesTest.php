@@ -7,7 +7,7 @@
  * use cases. Pure logic methods are tested directly; methods that rely
  * on static database calls are tested for structure and contracts only.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Text\Application\UseCases

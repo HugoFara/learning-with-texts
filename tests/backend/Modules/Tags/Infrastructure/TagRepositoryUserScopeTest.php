@@ -13,7 +13,7 @@
  * `ReflectionMethod::getFileName()` + offsets and asserts the
  * scope helper is invoked.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Tags\Infrastructure

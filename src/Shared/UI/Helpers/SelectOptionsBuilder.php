@@ -4,7 +4,7 @@
  * \file
  * \brief Builder for HTML select option elements.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category View
  * @package  Lwt

@@ -6,7 +6,7 @@
  * Tests SRT and VTT parsing, format detection, validation,
  * and edge cases for subtitle file processing.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Text\Application\Services

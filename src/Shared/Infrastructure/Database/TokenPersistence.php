@@ -4,7 +4,7 @@
  * \file
  * \brief Persist parsed tokens as sentences and word occurrences (pure PHP).
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Database
  * @package  Lwt

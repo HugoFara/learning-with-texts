@@ -9,7 +9,7 @@
  * - $dictionary: LocalDictionary entity or null
  * - $dictionaries: array of LocalDictionary entities for this language
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Dictionary\Views

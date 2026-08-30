@@ -9,7 +9,7 @@
  * type contracts, and empty-input behavior. Integration tests with a
  * real database are needed for full query coverage.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Text\Application\Services

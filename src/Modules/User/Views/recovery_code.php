@@ -8,7 +8,7 @@
  * - $recoveryContext: string 'register' (after sign-up) or 'reset' (after a
  *                            recovery-code reset). Controls the wording.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\User\Views

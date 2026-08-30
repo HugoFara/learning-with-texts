@@ -5,7 +5,7 @@
  *
  * Calculates how readable a text is for a user based on their vocabulary knowledge.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Text\Application\Services

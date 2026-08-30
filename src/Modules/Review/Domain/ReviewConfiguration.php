@@ -5,7 +5,7 @@
  *
  * Represents the configuration for a review session.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Review\Domain

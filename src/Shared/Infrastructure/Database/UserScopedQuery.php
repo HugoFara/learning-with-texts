@@ -4,7 +4,7 @@
  * \file
  * \brief Helper for adding user scope to raw SQL queries.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Database
  * @package  Lwt

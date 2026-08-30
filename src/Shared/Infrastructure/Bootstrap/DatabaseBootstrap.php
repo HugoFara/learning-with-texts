@@ -4,7 +4,7 @@
  * \file
  * \brief Database bootstrap class - establishes connection and initializes globals.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Database
  * @package  Lwt\Shared\Infrastructure\Bootstrap

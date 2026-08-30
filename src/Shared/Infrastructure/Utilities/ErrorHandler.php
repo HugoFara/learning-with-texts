@@ -6,7 +6,7 @@
  *
  * Functions for displaying errors and handling fatal conditions.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt

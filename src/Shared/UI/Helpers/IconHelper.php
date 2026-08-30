@@ -7,7 +7,7 @@
  * This file provides methods to render modern SVG icons using the Lucide
  * icon library, replacing legacy PNG icons from the Fugue icon set.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category View
  * @package  Lwt

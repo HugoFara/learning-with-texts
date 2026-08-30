@@ -12,7 +12,7 @@
  *   php scripts/list-routes.php --json   # Output as JSON
  *   php scripts/list-routes.php --cypress # Output as Cypress-compatible TypeScript
  *
- * PHP version 8.1
+ * PHP version 8.2
  */
 
 // Parse the routes file directly using regex instead of executing it

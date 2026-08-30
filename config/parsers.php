@@ -7,7 +7,7 @@
  * Only server administrators should modify this file. Never allow user input to determine
  * parser paths or arguments.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Configuration
  * @package  Lwt\Config

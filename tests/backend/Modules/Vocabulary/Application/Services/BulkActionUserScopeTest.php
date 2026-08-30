@@ -12,7 +12,7 @@
  * asserts `UserScopedQuery::forTablePrepared('words', ...)` is invoked
  * before the bulk SQL runs.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Vocabulary\Application\Services

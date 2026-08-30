@@ -3,7 +3,7 @@
 /**
  * Import Utilities - Shared helpers for term import operations
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Vocabulary\Application\Services

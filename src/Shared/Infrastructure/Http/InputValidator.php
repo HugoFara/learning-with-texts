@@ -6,7 +6,7 @@
  *
  * Provides type-safe methods for validating and extracting request parameters.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt

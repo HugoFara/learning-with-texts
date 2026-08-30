@@ -6,7 +6,7 @@
  * Fetches a URL, extracts the main text content (title + body),
  * and returns it in a structured format for text import.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Shared\Infrastructure\Http

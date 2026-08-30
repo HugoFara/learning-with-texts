@@ -7,7 +7,7 @@
  * extracts plain text with the Book module's EPUB parser, and rejects books
  * with too little readable text (GDL hosts many image-only picture books).
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Text\Application\Services

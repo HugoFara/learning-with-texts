@@ -3,7 +3,7 @@
 /**
  * API V1 Endpoints registry.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Api
  * @package  Lwt

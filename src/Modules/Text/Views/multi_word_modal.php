@@ -6,7 +6,7 @@
  * Displays multi-word expression form for creating/editing terms.
  * Works with the multiWordModal Alpine.js component and multiWordForm store.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Views
  * @package  Lwt

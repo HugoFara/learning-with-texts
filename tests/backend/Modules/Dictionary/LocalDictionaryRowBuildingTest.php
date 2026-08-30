@@ -10,7 +10,7 @@
  *
  * These exercise the pure decision step, so they need no database.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Dictionary

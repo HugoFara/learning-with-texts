@@ -4,7 +4,7 @@
  * \file
  * \brief Form helper utilities for generating HTML form attributes.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category View
  * @package  Lwt

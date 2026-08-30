@@ -7,7 +7,7 @@
  * idle for more than 30 seconds. Run this before tests to prevent blocking
  * from zombie connections left by interrupted test runs.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests

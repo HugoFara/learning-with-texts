@@ -6,7 +6,7 @@
  * Parses SRT and VTT subtitle files, extracting text content
  * and stripping timecodes for language learning purposes.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Text\Application\Services

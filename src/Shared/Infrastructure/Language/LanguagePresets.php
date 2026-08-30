@@ -6,7 +6,7 @@
  * This class replaces the legacy langdefs.php file and provides
  * access to predefined language configurations loaded from JSON.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Shared\Infrastructure\Language

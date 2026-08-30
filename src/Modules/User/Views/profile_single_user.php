@@ -6,7 +6,7 @@
  * Shown when multi-user mode is disabled. Provides navigation to
  * preferences and admin settings.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\User\Views

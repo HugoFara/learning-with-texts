@@ -6,7 +6,7 @@
  * This file provides SQL validation for backup restore operations
  * to prevent SQL injection and malicious queries.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Shared\Infrastructure\Database

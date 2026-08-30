@@ -10,7 +10,7 @@
  * - Text normalization for export (tabs, newlines, whitespace)
  * - Term masking in sentences for cloze deletion
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Vocabulary\Application\Services

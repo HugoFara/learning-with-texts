@@ -10,7 +10,7 @@ declare(strict_types=1);
  * - $textSize: int - Text size percentage
  * - $rtlScript: bool - Whether text is right-to-left
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views
