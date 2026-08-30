@@ -43,4 +43,5 @@ import './pages/file_import';
 import './pages/text_check_display';
 import './pages/text_check_form';
 import './pages/text_print_app';
+import './pages/text_display_app';
 import './pages/text_suggestions';
