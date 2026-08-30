@@ -18,7 +18,9 @@ ones are marked like "v1.0.0-fork".
   covers essentially the whole language, this affected more or less every word
   in a text. The import now links what it creates, a migration repairs the
   terms already imported, and adding a term that turns out to exist updates it
-  instead of failing.
+  instead of failing. Imported terms are also given the word count they were
+  missing, without which every text added after an import came back unmarked
+  all over again.
 
 * **A failed API write no longer reports success** (#284). Handlers signal
   failure by returning an `error` payload rather than by throwing, and the

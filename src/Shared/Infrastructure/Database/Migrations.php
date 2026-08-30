@@ -578,6 +578,36 @@ class Migrations
     }
 
     /**
+     * Give a word count to the terms that never got one.
+     *
+     * WoWordCount = 0 means "not counted yet", not a count: the reader's
+     * parse-time linking asks for WoWordCount = 1 and expression matching asks
+     * for > 1, so a term sitting at 0 is matched by neither and stays invisible
+     * however many times its text is reparsed. A dictionary import used to
+     * leave every term it created in that state (issue #283); the import fixes
+     * its own rows now, and this repairs the installs that already ran it.
+     *
+     * Only rows still at 0 are visited, so this costs an indexed lookup on an
+     * install with nothing to fix.
+     *
+     * Failures are logged rather than raised. The count is derived from each
+     * language's parsing rules, which for a MeCab language means running MeCab
+     * — and an upgrade must not fail because an external tokenizer is missing
+     * from the machine (issue #275 was a whole class of that). A term left at
+     * 0 is no worse off than before the attempt.
+     *
+     * @return void
+     */
+    private static function computeMissingWordCounts(): void
+    {
+        try {
+            Maintenance::initWordCount();
+        } catch (\Throwable $e) {
+            error_log('Could not compute missing word counts: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Reparse all texts in order.
      *
      * @return void
@@ -1144,6 +1174,8 @@ class Migrations
                 // request probes for before naming it in SQL.
                 Connection::forgetTableCache();
             }
+
+            self::computeMissingWordCounts();
         }
 
         if ($needsVersionUpdate) {

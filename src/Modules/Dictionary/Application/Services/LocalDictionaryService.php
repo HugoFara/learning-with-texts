@@ -21,6 +21,7 @@ use DateTimeImmutable;
 use Lwt\Modules\Dictionary\Domain\LocalDictionary;
 use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Shared\Infrastructure\Database\Connection;
+use Lwt\Shared\Infrastructure\Database\Maintenance;
 use Lwt\Shared\Infrastructure\Database\QueryBuilder;
 use Lwt\Shared\Infrastructure\Database\UserScopedQuery;
 
@@ -568,6 +569,16 @@ class LocalDictionaryService
                 WHERE le.LeLdID = ?";
 
         $created = Connection::preparedExecute($sql, $bindings);
+
+        // WoWordCount defaults to 0, which is this schema's "not counted yet"
+        // rather than a count. Nothing matches a term at 0: the reader's
+        // parse-time linking asks for WoWordCount = 1 and expression matching
+        // asks for > 1, so a term left at 0 is invisible to both and every
+        // text parsed after the import comes back unlinked -- issue #283
+        // repeating itself for each new text. The count cannot be worked out
+        // here because it depends on the language's parsing rules, so hand it
+        // to the routine that owns them; it only visits rows still at 0.
+        Maintenance::initWordCount();
 
         $this->linkOccurrencesForLanguage($languageId);
 

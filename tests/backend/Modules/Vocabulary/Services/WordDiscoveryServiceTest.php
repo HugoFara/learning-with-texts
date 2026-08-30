@@ -10,6 +10,7 @@ use Lwt\Modules\Vocabulary\Application\Services\WordDiscoveryService;
 use Lwt\Modules\Vocabulary\Application\Services\WordCrudService;
 use Lwt\Shared\Infrastructure\Database\Configuration;
 use Lwt\Shared\Infrastructure\Database\Connection;
+use Lwt\Shared\Infrastructure\Database\Maintenance;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -365,6 +366,52 @@ class WordDiscoveryServiceTest extends TestCase
         }
 
         return ['textId' => $textId, 'wordId' => $wordId];
+    }
+
+    /**
+     * The other half of #283: a term whose WoWordCount was never computed.
+     *
+     * 0 is this schema's "not counted yet", and nothing matches it — the
+     * reader's parse-time linking asks for WoWordCount = 1, expression
+     * matching asks for > 1. A term left at 0 therefore stays unlinked in
+     * every text parsed after it was created, however often the text is
+     * reparsed.
+     */
+    public function testTermsLeftUncountedAreMatchedByNeitherQuery(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $words = Globals::table('words');
+        $lang = self::$testLangId;
+        Connection::query(
+            "INSERT INTO $words (WoLgID, WoText, WoTextLC, WoStatus, WoWordCount, WoStatusChanged)
+             VALUES ($lang, 'testuncounted', 'testuncounted', 1, 0, NOW())"
+        );
+
+        $single = (int) Connection::fetchValue(
+            "SELECT COUNT(*) AS value FROM $words
+             WHERE WoLgID = $lang AND WoTextLC = 'testuncounted' AND WoWordCount = 1"
+        );
+        $multi = (int) Connection::fetchValue(
+            "SELECT COUNT(*) AS value FROM $words
+             WHERE WoLgID = $lang AND WoTextLC = 'testuncounted' AND WoWordCount > 1"
+        );
+
+        $this->assertSame(0, $single, 'a term at 0 is not a single-word term');
+        $this->assertSame(0, $multi, 'nor a multi-word one — it is matched by nothing');
+
+        Maintenance::initWordCount();
+
+        $this->assertSame(
+            '1',
+            (string) Connection::fetchValue(
+                "SELECT WoWordCount AS value FROM $words
+                 WHERE WoLgID = $lang AND WoTextLC = 'testuncounted'"
+            ),
+            'initWordCount() derives the count from the language rules'
+        );
     }
 
     // ===== Method Signature and Structure Tests (no DB required) =====

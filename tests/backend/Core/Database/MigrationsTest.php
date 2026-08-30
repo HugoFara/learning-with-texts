@@ -912,6 +912,34 @@ class MigrationsTest extends TestCase
         ];
     }
 
+    /**
+     * A term whose word count was never computed is repaired after a run.
+     *
+     * Dictionary imports left every term they created at WoWordCount = 0
+     * (issue #283), which is "not counted yet" rather than a count — matched
+     * by neither the reader's WoWordCount = 1 lookup nor expression matching's
+     * > 1. The import fixes its own rows now; this covers the installs that
+     * already ran it.
+     */
+    public function testAMigrationRunComputesMissingWordCounts(): void
+    {
+        $method = new \ReflectionMethod(Migrations::class, 'computeMissingWordCounts');
+        $this->assertTrue(
+            $method->isPrivate(),
+            'the repair is an internal step of the run, not a public entry point'
+        );
+
+        // It must survive a tokenizer that is not installed: an upgrade cannot
+        // be allowed to fail because MeCab is missing from the machine.
+        $source = file_get_contents(
+            __DIR__ . '/../../../../src/Shared/Infrastructure/Database/Migrations.php'
+        );
+        $this->assertIsString($source);
+        $body = substr($source, (int) strpos($source, 'function computeMissingWordCounts'));
+        $this->assertStringContainsString('catch (\Throwable $e)', $body);
+        $this->assertStringContainsString('Maintenance::initWordCount()', $body);
+    }
+
     public function testMigrationsOnlyRunOnce(): void
     {
         if (!self::$dbConnected) {

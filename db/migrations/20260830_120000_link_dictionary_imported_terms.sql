@@ -13,6 +13,13 @@
 -- The import links its own rows now. This repairs the installs that already
 -- ran it.
 --
+-- The terms themselves also need their WoWordCount, which those imports left
+-- at 0 -- "not counted yet" rather than a count, matched by neither the
+-- reader's WoWordCount = 1 lookup nor expression matching's > 1. That cannot
+-- be done here: the count comes from each language's parsing rules, MeCab
+-- included. Migrations::computeMissingWordCounts() runs after this file for
+-- exactly that reason.
+--
 -- Narrowed to languages that actually hold a local dictionary. The join cannot
 -- use an index -- word_occurrences has no lowercased column, so LOWER(Ti2Text)
 -- is computed per row -- and on a large install the unrestricted form would
