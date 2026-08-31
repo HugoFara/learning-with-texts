@@ -11,6 +11,7 @@
 import Alpine from 'alpinejs';
 import { initIcons } from '@shared/icons/lucide_icons';
 import { t } from '@shared/i18n/translator';
+import { statusName } from '@shared/stores/statuses';
 import { setLangAsync } from '@modules/language/stores/language_settings';
 import type { LanguageChangedEvent, TextStats } from '@modules/language/stores/language_settings';
 
@@ -369,7 +370,16 @@ export function homeData(): HomeData {
       const s98 = stats.s98 || 0;
       const s99 = stats.s99 || 0;
       const learning = s1 + s2 + s3 + s4;
-      return 'Unknown: ' + unknown + ', Learning: ' + learning + ', Learned: ' + s5 + ', Well-known: ' + s99 + ', Ignored: ' + s98;
+      // Localized through the shared store: these five labels used to be
+      // English string literals, so the tooltip stayed English whatever the
+      // user's locale.
+      return [
+        statusName(0) + ': ' + unknown,
+        statusName(1) + ': ' + learning,
+        statusName(5) + ': ' + s5,
+        statusName(99) + ': ' + s99,
+        statusName(98) + ': ' + s98
+      ].join(', ');
     }
   };
 }

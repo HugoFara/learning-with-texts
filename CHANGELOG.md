@@ -25,6 +25,32 @@ ones are marked like "v1.0.0-fork".
 
 ### Changed in Unreleased
 
+* **One status table for the frontend, and four fewer copies of it** (#238).
+  `shared/stores/statuses.ts` has been the intended single source of truth for
+  the word-status model since 3.2.2, but four components kept their own
+  status → Bulma-class mapping beside it, and they had drifted: status 3 was
+  `is-info` in the word popover and `is-warning` in the word list, and status 99
+  was `is-success is-light`, `is-success` and `is-info` in three different
+  places. They now all read `statusTagClass()`, so the word list's colours for
+  statuses 2, 3 and 99 change to match everywhere else.
+
+* **Status labels in the popover, the multi-word modal and the home tooltip are
+  translated** (#238). All three built their labels from hardcoded English
+  string literals, so "Learning (1)", "Well Known" and the reading-progress
+  tooltip stayed English whatever locale the user had chosen. They now come
+  from the shared store, which resolves the same `common.status_*` keys PHP
+  does.
+
+* **The admin statistics chart is painted in the reader's own colours** (#238).
+  It carried a private palette commented as "matching LWT's existing status
+  styles", which it had stopped doing: those were the old 2.x pastels while the
+  reading view moved to a saturated palette, so the same status was one colour
+  in a text and another in the chart, and a user reading in Dark got light-mode
+  pastels either way. Colours now resolve from the `--lwt-status*` custom
+  properties the text itself is painted with, so themes apply. Its dataset
+  labels also stop calling status 1 "Unknown" — an unknown word is one not in
+  the vocabulary at all; a status-1 word is one being learnt.
+
 * **The `MECAB` magic word has one reader instead of twelve** (#288).
   `LgRegexpWordCharacters` is the field that should hold a word-characters
   regex; historically it could instead hold the literal `MECAB`, saying two

@@ -625,9 +625,11 @@ describe('word_edit_form.ts', () => {
       expect(component.getStatusClass(5)).toBe('is-success');
     });
 
-    it('returns is-success for status 99 (well known)', () => {
+    it('returns is-success is-light for status 99 (well known)', () => {
+      // The shared store distinguishes well-known from learned; this file used
+      // to give both the same class (#238).
       const component = wordEditFormData();
-      expect(component.getStatusClass(99)).toBe('is-success');
+      expect(component.getStatusClass(99)).toBe('is-success is-light');
     });
 
     it('returns is-light for status 98 (ignored)', () => {

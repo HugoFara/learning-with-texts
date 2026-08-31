@@ -448,36 +448,21 @@ describe('words/word_list_app.ts', () => {
       expect(data.formatScore(-10)).toBe('due');
     });
 
-    it('getStatusClass returns is-info for status 99', () => {
-      const data = wordListData();
-
-      expect(data.getStatusClass(99)).toBe('is-info');
-    });
-
-    it('getStatusClass returns is-light for status 98', () => {
-      const data = wordListData();
-
-      expect(data.getStatusClass(98)).toBe('is-light');
-    });
-
-    it('getStatusClass returns is-success for status >= 5', () => {
-      const data = wordListData();
-
-      expect(data.getStatusClass(5)).toBe('is-success');
-    });
-
-    it('getStatusClass returns is-warning for status 3-4', () => {
-      const data = wordListData();
-
-      expect(data.getStatusClass(3)).toBe('is-warning');
-      expect(data.getStatusClass(4)).toBe('is-warning');
-    });
-
-    it('getStatusClass returns is-danger for status < 3', () => {
+    // This list used to carry its own status→class mapping, and it disagreed
+    // with the three other copies in the codebase: 3 was is-warning here and
+    // is-info everywhere else, 99 was is-info here and a shade of is-success
+    // everywhere else (#238). It now defers to the shared store, so these
+    // assert the one canonical mapping.
+    it('getStatusClass matches the shared status store', () => {
       const data = wordListData();
 
       expect(data.getStatusClass(1)).toBe('is-danger');
-      expect(data.getStatusClass(2)).toBe('is-danger');
+      expect(data.getStatusClass(2)).toBe('is-warning');
+      expect(data.getStatusClass(3)).toBe('is-info');
+      expect(data.getStatusClass(4)).toBe('is-primary');
+      expect(data.getStatusClass(5)).toBe('is-success');
+      expect(data.getStatusClass(99)).toBe('is-success is-light');
+      expect(data.getStatusClass(98)).toBe('is-light');
     });
 
     it('getDisplayValue returns value or asterisk', () => {

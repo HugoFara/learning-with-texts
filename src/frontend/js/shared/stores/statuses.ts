@@ -30,6 +30,44 @@ export const STATUS_DISPLAY_ORDER: readonly number[] = [0, 1, 2, 3, 4, 5, 99, 98
  */
 export const TERM_STATUS_VALUES: readonly number[] = [1, 2, 3, 4, 5, 99, 98];
 
+/**
+ * Fallback colour per status, mirroring the `--lwt-status*` custom properties
+ * in `css/base/styles.css` and the `TermStatus::COLOURS` table in PHP.
+ *
+ * Only a fallback: {@link statusColour} prefers the live custom property, so a
+ * theme that repaints the reading view repaints anything reading colours from
+ * here along with it. These values are what to use when there is no document
+ * to ask -- under Vitest, or before styles have loaded.
+ */
+export const STATUS_COLOURS: Readonly<Record<number, string>> = {
+  0: '#5ABAFF',
+  1: '#E85A3C',
+  2: '#E8893C',
+  3: '#E8B83C',
+  4: '#E8E23C',
+  5: '#66CC66',
+  98: '#888888',
+  99: '#CCFFCC'
+};
+
+/**
+ * Bulma modifier class per status, for tags and buttons.
+ *
+ * One table because there were four, and they had drifted: status 3 was
+ * `is-info` in the popover and `is-warning` in the word list, and status 99 was
+ * `is-success is-light`, `is-success` and `is-info` in three different places.
+ * This is the majority reading of the three that agreed.
+ */
+const STATUS_TAG_CLASSES: Readonly<Record<number, string>> = {
+  1: 'is-danger',
+  2: 'is-warning',
+  3: 'is-info',
+  4: 'is-primary',
+  5: 'is-success',
+  98: 'is-light',
+  99: 'is-success is-light'
+};
+
 /** A status and its display metadata. */
 export interface StatusDefinition {
   value: number;
@@ -41,6 +79,10 @@ export interface StatusDefinition {
   abbr: string;
   /** Reading-view / chart CSS class, e.g. "status1". */
   cssClass: string;
+  /** Bulma modifier class for a tag or button, e.g. "is-danger". */
+  tagClass: string;
+  /** Resolved colour, from the active theme where one is readable. */
+  colour: string;
   /** Position in {@link STATUS_DISPLAY_ORDER} (0-based). */
   order: number;
 }
@@ -92,6 +134,43 @@ export function statusCssClass(value: number): string {
   return `status${value}`;
 }
 
+/**
+ * Bulma modifier class for a status tag or button.
+ *
+ * @param value Status value
+ */
+export function statusTagClass(value: number): string {
+  return STATUS_TAG_CLASSES[value] ?? '';
+}
+
+/**
+ * Colour for a status, following the active theme.
+ *
+ * Reads the `--lwt-status{n}` custom property the reading view is painted with,
+ * so a chart drawn from this matches the words on the page in whichever theme
+ * the user picked -- the admin statistics chart used to carry its own hardcoded
+ * palette and showed different colours from the text for the same status.
+ *
+ * Falls back to {@link STATUS_COLOURS} when there is no document to ask, and
+ * when the property resolves to `transparent`: the underline themes set that
+ * for statuses they do not fill, which is meaningful on a word and invisible on
+ * a chart.
+ *
+ * @param value Status value
+ */
+export function statusColour(value: number): string {
+  const fallback = STATUS_COLOURS[value] ?? '';
+  if (typeof document === 'undefined' || document.documentElement === null) {
+    return fallback;
+  }
+
+  const resolved = getComputedStyle(document.documentElement)
+    .getPropertyValue(`--lwt-status${value}`)
+    .trim();
+
+  return resolved === '' || resolved === 'transparent' ? fallback : resolved;
+}
+
 /** Whether a status counts as "known" (learned or well-known). */
 export function isKnownStatus(value: number): boolean {
   return value === 5 || value === 99;
@@ -119,6 +198,8 @@ export function getStatusDefinition(value: number): StatusDefinition {
     label: statusLabel(value),
     abbr: statusAbbr(value),
     cssClass: statusCssClass(value),
+    tagClass: statusTagClass(value),
+    colour: statusColour(value),
     order: STATUS_DISPLAY_ORDER.indexOf(value),
   };
 }
@@ -132,6 +213,40 @@ export function getStatusDefinition(value: number): StatusDefinition {
 export function getStatusDefinitions(includeUnknown = false): StatusDefinition[] {
   const order = includeUnknown ? STATUS_DISPLAY_ORDER : TERM_STATUS_VALUES;
   return order.map(getStatusDefinition);
+}
+
+/**
+ * The shape the status pickers render: a value, a label, something short to
+ * put on the button, and a Bulma modifier.
+ *
+ * Narrower than {@link StatusDefinition} on purpose -- it is what a template
+ * binds to, and two components had grown their own copy of it side by side.
+ */
+export interface StatusInfo {
+  value: number;
+  label: string;
+  abbr: string;
+  class: string;
+}
+
+/**
+ * Status options for a picker, in the order given.
+ *
+ * Built per call rather than held in a module constant, because labels come
+ * from the translator and it is not ready when a module is evaluated. The
+ * tables this replaces were module constants of hardcoded English, so every
+ * non-English user saw "Learning (1)" and "Well Known" whatever their locale.
+ *
+ * @param values Statuses to offer, in the order to offer them
+ */
+export function statusOptions(values: readonly number[]): StatusInfo[] {
+  return values.map((value) => ({
+    value,
+    label: statusLabel(value),
+    // 98 and 99 have no digit to abbreviate to, so their name stands in.
+    abbr: statusAbbr(value) || statusName(value),
+    class: statusTagClass(value)
+  }));
 }
 
 /**

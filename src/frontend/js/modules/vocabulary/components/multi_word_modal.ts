@@ -13,6 +13,7 @@ import type { MultiWordFormStoreState } from '../stores/multi_word_form_store';
 import { initIcons } from '@shared/icons/lucide_icons';
 import { trapFocus, releaseFocus } from '@shared/accessibility/focus_trap';
 import { announce } from '@shared/accessibility/aria_live';
+import { statusOptions, type StatusInfo } from '@shared/stores/statuses';
 import {
   computeModalPlacement,
   getRememberedModalAnchor,
@@ -21,25 +22,12 @@ import {
 } from './modal_placement';
 
 /**
- * Status display information.
+ * Statuses a multi-word expression can take: the learning stages only.
+ *
+ * 98 and 99 are manual flags rather than stages, and this form has never
+ * offered them.
  */
-interface StatusInfo {
-  value: number;
-  label: string;
-  abbr: string;
-  class: string;
-}
-
-/**
- * Status definitions for learning words (1-5 only for multi-words).
- */
-const STATUSES: StatusInfo[] = [
-  { value: 1, label: 'Learning (1)', abbr: '1', class: 'is-danger' },
-  { value: 2, label: 'Learning (2)', abbr: '2', class: 'is-warning' },
-  { value: 3, label: 'Learning (3)', abbr: '3', class: 'is-info' },
-  { value: 4, label: 'Learning (4)', abbr: '4', class: 'is-primary' },
-  { value: 5, label: 'Learned', abbr: '5', class: 'is-success' }
-];
+const MULTI_WORD_STATUSES: readonly number[] = [1, 2, 3, 4, 5];
 
 /**
  * Multi-word modal Alpine.js component interface.
@@ -151,7 +139,7 @@ export function multiWordModalData(): MultiWordModalData {
     },
 
     get statuses(): StatusInfo[] {
-      return STATUSES;
+      return statusOptions(MULTI_WORD_STATUSES);
     },
 
     // CSP-safe proxy properties — Alpine CSP build prohibits nested
@@ -273,7 +261,7 @@ export function multiWordModalData(): MultiWordModalData {
      * Get Bulma button class for a status.
      */
     getStatusButtonClass(status: number): string {
-      const statusInfo = STATUSES.find(s => s.value === status);
+      const statusInfo = statusOptions(MULTI_WORD_STATUSES).find(s => s.value === status);
       const base = 'button is-small';
       const colorClass = statusInfo?.class || '';
 

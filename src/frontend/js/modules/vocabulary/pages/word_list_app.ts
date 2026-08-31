@@ -15,6 +15,7 @@ import Alpine from 'alpinejs';
 import { initIcons } from '@shared/icons/lucide_icons';
 import { t } from '@shared/i18n/translator';
 import { getCsrfToken } from '@shared/api/client';
+import { statusTagClass } from '@shared/stores/statuses';
 import {
   WordsApi,
   type WordItem,
@@ -673,11 +674,7 @@ export function wordListData(): WordListData {
     },
 
     getStatusClass(status: number): string {
-      if (status === 99) return 'is-info';
-      if (status === 98) return 'is-light';
-      if (status >= 5) return 'is-success';
-      if (status >= 3) return 'is-warning';
-      return 'is-danger';
+      return statusTagClass(status);
     },
 
     statusDisplay(word: WordItem): string {
