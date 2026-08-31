@@ -23,7 +23,36 @@ ones are marked like "v1.0.0-fork".
   `PHP_CLI_SERVER_WORKERS` set. Use it instead of a bare `php -S`, which serves
   one request at a time.
 
+### Fixed in Unreleased
+
+* **The Anki .apkg import page loads again** (#266). `/vocabulary/apkg/import`
+  returned a 500 from the 3.6.0 release onwards: the router auto-wires the
+  controller, and one interface in its dependency graph
+  (`SchedulerInterface`) was never bound, so the container threw before the
+  page began. Nothing caught it — the unit tests build the controller directly
+  with their own services, which is exactly the step that was failing, and no
+  end-to-end test visited the route. It is now bound, there is an end-to-end
+  test for both Anki import pages, and the container no longer turns an
+  optional dependency into a required one: a constructor parameter written as
+  `?Foo $foo = null` falls back to its default when the container cannot
+  resolve it, instead of taking the whole page down.
+
+* **The Anki import forms send a CSRF token the middleware reads** (#266).
+  Both pages emitted the field as `csrf_token`; `CsrfMiddleware` only ever
+  looks for `_csrf_token`. They now use `FormHelper::csrfField()`, which is
+  the one place that knows the name.
+
 ### Changed in Unreleased
+
+* **The Anki import pages are views, and are translated** (#266). Both
+  `/vocabulary/anki-deck/import` and `/vocabulary/apkg/import` were built
+  entirely from `echo` statements inside their controllers — forms, `<select>`
+  loops, result tables and all — with no view file at all. Neither had a
+  single `__()` call, so every label was hardcoded English for all nine
+  shipped locales. The markup now lives in `Views/`, every string resolves
+  through the translator, and the controllers do request parsing and nothing
+  else. The status names in the deck-import form and its summary come from
+  `TermStatus`, so they match the rest of the app.
 
 * **One status table for the frontend, and four fewer copies of it** (#238).
   `shared/stores/statuses.ts` has been the intended single source of truth for
