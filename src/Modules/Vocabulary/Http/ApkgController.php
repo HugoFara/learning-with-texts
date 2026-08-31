@@ -153,7 +153,25 @@ class ApkgController extends VocabularyBaseController
                 . '<li>Tag changes applied: ' . $result->tagsChanged . '</li>'
                 . '<li>Terms rescheduled from Anki: ' . $result->termsRescheduled . '</li>'
                 . '<li>Reviews replayed: ' . $result->reviewsApplied . '</li>'
+                . '<li>Due dates set by hand in Anki: ' . $result->dueDatesMoved . '</li>'
                 . '</ul></div>';
+
+            // A count of notes this page could do nothing with is not an
+            // answer -- the user still has words in the file that never
+            // reached their vocabulary, and no idea where to take them. Say
+            // where, and only when there are some.
+            if ($result->skippedUnknown > 0) {
+                echo '<div class="notification is-warning">'
+                    . '<strong>' . $result->skippedUnknown . ' note'
+                    . ($result->skippedUnknown === 1 ? ' was' : 's were')
+                    . ' not created by LWT, so nothing here matched'
+                    . ($result->skippedUnknown === 1 ? ' it' : ' them') . '.</strong> '
+                    . 'This page only updates terms LWT exported in the first place. To bring '
+                    . 'these in as new terms, use '
+                    . '<a href="/vocabulary/anki-deck/import">Import an Anki deck</a>, which asks '
+                    . 'which language they belong to.'
+                    . '</div>';
+            }
         }
 
         echo '<form method="post" enctype="multipart/form-data" action="/vocabulary/apkg/import">';
@@ -172,19 +190,31 @@ class ApkgController extends VocabularyBaseController
 
         echo '<p class="help mt-4">'
             . 'Notes from this file are matched to existing LWT terms by guid. '
-            . 'Translations, romanizations, notes, and tags are updated, and reviews you did in '
-            . 'Anki are replayed into this term\'s schedule. '
-            . 'Cards suspended in Anki demote learning-status terms to <em>Ignored</em>.'
+            . 'Translations, romanizations, notes, and tags are updated; reviews you did in '
+            . 'Anki are replayed into the term\'s schedule, and a due date you set by hand there '
+            . 'is kept. Cards suspended in Anki demote learning-status terms to <em>Ignored</em>. '
+            . 'Deleting a note in Anki does not delete the term here — an .apkg carries no '
+            . 'record of deletions, so a term missing from the file is left alone rather than '
+            . 'guessed at.'
             . '</p>';
 
-        // Both of Anki's defaults work against the round-trip, and both fail
-        // quietly: without the legacy format LWT reads a stub instead of the
-        // collection, and without scheduling the reviews never leave Anki.
-        // Verified against Anki 26.08.
+        // Anki's export and import defaults both work against the round-trip
+        // and both fail quietly, so the settings are named here in Anki's own
+        // wording rather than described. Verified against Anki 26.08.
+        //
+        // The legacy-format half only applies where PHP has no zstd: with the
+        // extension the compressed format reads fine, and telling people to
+        // change a setting they do not need to change is how advice stops
+        // being read.
+        $needsLegacyExport = !function_exists('zstd_uncompress');
         echo '<div class="notification is-warning is-light mt-4">'
-            . '<strong>Two settings to check in Anki before you export.</strong> Switch on '
-            . '<em>Support older Anki versions (slower/larger files)</em> — without it Anki writes a '
-            . 'compressed collection LWT cannot read — and <em>Include scheduling information</em>, '
+            . '<strong>Settings to check in Anki.</strong> '
+            . ($needsLegacyExport
+                ? 'When you export, switch on <em>Support older Anki versions (slower/larger '
+                    . 'files)</em> — without it Anki writes a compressed collection this server '
+                    . 'cannot read, because PHP here has no zstd extension — and keep '
+                    . '<em>Include scheduling information</em> on, '
+                : 'When you export, keep <em>Include scheduling information</em> switched on, ')
             . 'without which your reviews stay behind in Anki. '
             . 'Going the other way, tick <em>Import any learning progress</em> when you import an '
             . 'LWT deck into Anki, or Anki starts every card from scratch and discards the schedule '

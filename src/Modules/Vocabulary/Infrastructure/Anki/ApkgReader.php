@@ -16,7 +16,7 @@ use ZipArchive;
  * Resolves field positions by name from the note type definition rather than
  * hard-coded indexes, so .apkg files modified in Anki (where the user might
  * reorder fields) still parse correctly. Unknown notes (no LWT id field, or a
- * guid not in our prefix) are returned without an `lwtTermId`-assertable id —
+ * guid not in our prefix) are returned without an `lwtTermId`-assertable id --
  * the caller decides what to do with them.
  *
  * Scheduling comes back too (#264): a note whose card has left the new queue
@@ -25,15 +25,56 @@ use ZipArchive;
  * consumes, so what the writer puts into a file is what the reader takes out.
  *
  * One asymmetry is deliberate. `stability` and `difficulty` are 0.0 when the
- * collection states no FSRS memory state — an SM-2 collection, or one whose
+ * collection states no FSRS memory state -- an SM-2 collection, or one whose
  * owner has FSRS switched off. FSRS clamps stability to >= 0.001 and difficulty
  * to [1, 10], so zero is unreachable as a real value and cannot be mistaken for
  * one. {@see \Lwt\Modules\Vocabulary\Application\Services\Anki\ApkgImportService}
  * never reads those fields anyway: it replays the review history through LWT's
  * own scheduler rather than trusting a number computed elsewhere.
+ *
+ * **Two collection layouts.** An .apkg holds its collection under one of three
+ * names, and the name says both how it is compressed and which schema it uses
+ * (upstream `rslib/src/import_export/package/meta.rs`): `collection.anki2` and
+ * `collection.anki21` are plain SQLite at schema 11, `collection.anki21b` is a
+ * zstd stream wrapping SQLite at schema 18. Schema 15 moved note types out of
+ * the `col.models` JSON blob into real `notetypes`/`fields` tables, so the
+ * field-name lookup has to follow `col.ver` rather than assume either. Both are
+ * read here; what changes between them is only where those two things live.
+ *
+ * **What an .apkg cannot say.** It carries no record of deletions. Anki's
+ * exporter builds a *new minimal collection* and inserts only the notes the
+ * search gathered (`rslib/src/import_export/package/apkg/export.rs`), so the
+ * `graves` table that records deleted note ids inside a live collection is
+ * never written to the file. A term the user deleted in Anki is therefore
+ * indistinguishable here from one that was simply not exported, and LWT does
+ * not guess between them: imports never delete terms.
  */
 final class ApkgReader
 {
+    /**
+     * The zstd-compressed, schema-18 collection current Anki writes by default.
+     */
+    private const MODERN_COLLECTION = 'collection.anki21b';
+
+    /**
+     * Plain-SQLite collection names, newest layout first.
+     */
+    private const LEGACY_COLLECTIONS = ['collection.anki21', 'collection.anki2'];
+
+    /**
+     * First schema version holding note types in tables instead of col.models.
+     */
+    private const SCHEMA_WITH_NOTETYPE_TABLES = 15;
+
+    /**
+     * `revlog.type` values that are not a grade the learner gave.
+     *
+     * 4 is Manual and 5 is Rescheduled (upstream `rslib/src/revlog/mod.rs`);
+     * both come from "Set due date" or "Forget" rather than from answering a
+     * card, and both carry `ease` 0.
+     */
+    private const REVLOG_MANUAL_KINDS = [4, 5];
+
     /**
      * @return list<ApkgNote>
      */
@@ -50,40 +91,10 @@ final class ApkgReader
             throw new RuntimeException("Could not open APKG: {$apkgPath}");
         }
 
-        // Anki's current export compresses the collection into
-        // collection.anki21b with zstd, and leaves collection.anki2 behind as a
-        // stub holding one note reading "Please update to the latest Anki
-        // version, then import the .colpkg/.apkg file again." Reading that stub
-        // succeeds, which is the problem: the import would report one
-        // unrecognised note and nothing else, and the user would be told their
-        // file imported fine. Refuse it by name instead, and say what to change
-        // -- the wording is Anki's own, from its export dialog.
-        if ($zip->locateName('collection.anki21b') !== false) {
+        try {
+            $contents = $this->extractCollection($zip);
+        } finally {
             $zip->close();
-            throw new RuntimeException(
-                'This .apkg uses Anki\'s newer compressed collection format, which LWT cannot read. '
-                . 'Export it from Anki again with "Support older Anki versions (slower/larger files)" '
-                . 'switched on, and keep "Include scheduling information" switched on so your reviews '
-                . 'come back with it.'
-            );
-        }
-
-        $collectionName = null;
-        foreach (['collection.anki21', 'collection.anki2'] as $candidate) {
-            if ($zip->locateName($candidate) !== false) {
-                $collectionName = $candidate;
-                break;
-            }
-        }
-        if ($collectionName === null) {
-            $zip->close();
-            throw new RuntimeException('No collection.anki21 or collection.anki2 found in APKG');
-        }
-
-        $contents = $zip->getFromName($collectionName);
-        $zip->close();
-        if ($contents === false) {
-            throw new RuntimeException("Failed to extract {$collectionName} from APKG");
         }
 
         $tmpDb = tempnam(sys_get_temp_dir(), 'lwt_apkg_read_');
@@ -100,6 +111,80 @@ final class ApkgReader
     }
 
     /**
+     * The collection database bytes, whichever layout the package uses.
+     *
+     * The modern name is tried first on purpose. A package written by current
+     * Anki holds *both*: the real collection in `collection.anki21b`, and a
+     * one-note stub in `collection.anki2` reading "Please update to the latest
+     * Anki version, then import the .colpkg/.apkg file again." Preferring the
+     * legacy name would read the stub, and the import would report one
+     * unrecognised note inside a success message -- which is exactly what it
+     * did before this looked for the modern name at all.
+     */
+    private function extractCollection(ZipArchive $zip): string
+    {
+        if ($zip->locateName(self::MODERN_COLLECTION) !== false) {
+            return $this->decompress($this->entry($zip, self::MODERN_COLLECTION));
+        }
+
+        foreach (self::LEGACY_COLLECTIONS as $candidate) {
+            if ($zip->locateName($candidate) !== false) {
+                return $this->entry($zip, $candidate);
+            }
+        }
+
+        throw new RuntimeException(
+            'No collection database found in this .apkg (looked for '
+            . self::MODERN_COLLECTION . ', ' . implode(', ', self::LEGACY_COLLECTIONS) . ').'
+        );
+    }
+
+    private function entry(ZipArchive $zip, string $name): string
+    {
+        $contents = $zip->getFromName($name);
+        if ($contents === false) {
+            throw new RuntimeException("Failed to extract {$name} from APKG");
+        }
+
+        return $contents;
+    }
+
+    /**
+     * Undo the zstd framing around a modern collection.
+     *
+     * PHP has no bundled zstd, so this needs ext-zstd. Without it the honest
+     * answer is to say so and name the export setting that avoids the format
+     * altogether -- the wording is Anki's own, from its export dialog. Shelling
+     * out to the `zstd` binary would be the obvious alternative and is not
+     * taken: this runs on an uploaded file, and no upload path should reach a
+     * shell.
+     */
+    private function decompress(string $compressed): string
+    {
+        if (!function_exists('zstd_uncompress')) {
+            throw new RuntimeException(
+                'This .apkg uses Anki\'s newer compressed collection format, which needs the '
+                . 'PHP zstd extension -- not installed on this server. Either install it '
+                . '(extension=zstd), or export from Anki again with "Support older Anki '
+                . 'versions (slower/larger files)" switched on. Either way keep "Include '
+                . 'scheduling information" switched on, so your reviews come back with it.'
+            );
+        }
+
+        /** @var callable(string): (string|false) $uncompress */
+        $uncompress = 'zstd_uncompress';
+        $plain = $uncompress($compressed);
+        if (!is_string($plain) || $plain === '') {
+            throw new RuntimeException(
+                'The compressed collection inside this .apkg could not be decompressed. '
+                . 'The file may be truncated or corrupt; try exporting it from Anki again.'
+            );
+        }
+
+        return $plain;
+    }
+
+    /**
      * @return list<ApkgNote>
      */
     private function readCollection(string $dbPath): array
@@ -108,7 +193,7 @@ final class ApkgReader
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-        $colStmt = $pdo->query('SELECT crt, models FROM col');
+        $colStmt = $pdo->query('SELECT crt, ver, models FROM col');
         if ($colStmt === false) {
             throw new RuntimeException('Could not read col');
         }
@@ -121,19 +206,15 @@ final class ApkgReader
         // ApkgWriter creates collections with would misdate every card in a
         // file that has been through Anki, which reissues `crt` on import.
         $creationTimestamp = isset($colRow['crt']) ? (int) $colRow['crt'] : 0;
-        $modelsJson = $colRow['models'] ?? null;
-        if (!is_string($modelsJson)) {
-            throw new RuntimeException('Missing col.models');
-        }
-        /** @var mixed $modelsDecoded */
-        $modelsDecoded = json_decode($modelsJson, true);
-        if (!is_array($modelsDecoded)) {
-            throw new RuntimeException('Could not decode col.models');
-        }
+        $schemaVersion = isset($colRow['ver']) ? (int) $colRow['ver'] : AnkiSchema::SCHEMA_VERSION;
 
-        $fieldOrdsByMid = $this->buildFieldOrdMap($modelsDecoded);
+        $fieldOrdsByMid = $schemaVersion >= self::SCHEMA_WITH_NOTETYPE_TABLES
+            ? $this->fieldOrdsFromTables($pdo)
+            : $this->fieldOrdsFromModels($colRow['models'] ?? null);
+
         $cardsByNote = $this->loadCards($pdo);
         $reviewsByCard = $this->loadReviews($pdo);
+        $manualByCard = $this->loadManualReschedules($pdo);
 
         $noteStmt = $pdo->query('SELECT id, guid, mid, tags, flds FROM notes');
         if ($noteStmt === false) {
@@ -164,7 +245,7 @@ final class ApkgReader
             $lwtId = ctype_digit($lwtIdField) ? (int) $lwtIdField : ($lwtIdFromGuid ?? 0);
 
             $noteId = isset($row['id']) ? (int) $row['id'] : 0;
-            $card = $cardsByNote[$noteId] ?? null;
+            $cards = $cardsByNote[$noteId] ?? [];
 
             $out[] = new ApkgNote(
                 lwtTermId: $lwtId,
@@ -173,25 +254,31 @@ final class ApkgReader
                 romanization: $get(AnkiSchema::FIELD_ROMANIZATION),
                 notes: $get(AnkiSchema::FIELD_NOTES),
                 tags: $this->decodeTags(isset($row['tags']) ? (string) $row['tags'] : ''),
-                suspended: $card !== null && $card['queue'] === -1,
-                schedule: $card === null
-                    ? null
-                    : $this->buildSchedule(
-                        $card,
-                        $reviewsByCard[$card['id']] ?? [],
-                        $creationTimestamp
-                    ),
+                suspended: $this->allSuspended($cards),
+                schedule: $this->buildSchedule($cards, $reviewsByCard, $manualByCard, $creationTimestamp),
             );
         }
         return $out;
     }
 
     /**
-     * @param array<array-key, mixed> $models
+     * Field ordinals per note type, from the schema-11 `col.models` JSON blob.
+     *
+     * @param mixed $modelsJson The `col.models` column
+     *
      * @return array<int, array<string, int>>
      */
-    private function buildFieldOrdMap(array $models): array
+    private function fieldOrdsFromModels(mixed $modelsJson): array
     {
+        if (!is_string($modelsJson)) {
+            throw new RuntimeException('Missing col.models');
+        }
+        /** @var mixed $models */
+        $models = json_decode($modelsJson, true);
+        if (!is_array($models)) {
+            throw new RuntimeException('Could not decode col.models');
+        }
+
         $out = [];
         foreach ($models as $mid => $model) {
             if (!is_array($model) || !isset($model['flds']) || !is_array($model['flds'])) {
@@ -211,17 +298,44 @@ final class ApkgReader
     }
 
     /**
-     * One card per note, with everything the schedule is built from.
+     * Field ordinals per note type, from the schema-15+ `fields` table.
+     *
+     * Only the name and ordinal are wanted, and both are plain columns. The
+     * rest of a field's definition sits in a protobuf `config` blob, which is
+     * why nothing here touches it.
+     *
+     * @return array<int, array<string, int>>
+     */
+    private function fieldOrdsFromTables(PDO $pdo): array
+    {
+        $stmt = $pdo->query('SELECT ntid, ord, name FROM fields');
+        if ($stmt === false) {
+            throw new RuntimeException('Could not read fields');
+        }
+
+        $out = [];
+        foreach ($stmt as $row) {
+            if (!is_array($row) || !isset($row['ntid'], $row['ord'], $row['name'])) {
+                continue;
+            }
+            $out[(int) $row['ntid']][(string) $row['name']] = (int) $row['ord'];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Every card of every note, ordered by template.
      *
      * A note type can have several templates and so several cards; LWT's has
-     * one, but a collection edited in Anki need not. Ordering by `ord` and
-     * keeping the first makes the choice deterministic rather than leaving it
-     * to SQLite's row order.
+     * one, but a collection edited in Anki need not. All of them are returned
+     * because all of them carry history: keeping only the first silently
+     * discarded whatever the learner did on a note's second card.
      *
-     * @return array<int, array{
-     *     id: int, queue: int, type: int, due: int,
+     * @return array<int, list<array{
+     *     id: int, ord: int, queue: int, type: int, due: int,
      *     ivl: int, reps: int, lapses: int, data: string
-     * }> Keyed by note id
+     * }>> Keyed by note id
      */
     private function loadCards(PDO $pdo): array
     {
@@ -239,11 +353,9 @@ final class ApkgReader
                 continue;
             }
             $noteId = isset($row['nid']) ? (int) $row['nid'] : 0;
-            if (isset($out[$noteId])) {
-                continue;
-            }
-            $out[$noteId] = [
+            $out[$noteId][] = [
                 'id' => isset($row['id']) ? (int) $row['id'] : 0,
+                'ord' => isset($row['ord']) ? (int) $row['ord'] : 0,
                 'queue' => isset($row['queue']) ? (int) $row['queue'] : 0,
                 'type' => isset($row['type']) ? (int) $row['type'] : 0,
                 'due' => isset($row['due']) ? (int) $row['due'] : 0,
@@ -262,7 +374,8 @@ final class ApkgReader
      *
      * `ease` outside 1..4 is not a grade: Anki writes `revlog` rows with ease 0
      * for a manual reschedule or a "set due date", which never happened to the
-     * learner and must not be replayed as if it had.
+     * learner and must not be replayed as if it had. Those rows are read
+     * separately by {@see loadManualReschedules()}.
      *
      * @return array<int, list<ApkgReview>> Keyed by card id
      */
@@ -297,39 +410,148 @@ final class ApkgReader
     }
 
     /**
-     * The scheduling state a card states, or null when it has none.
+     * When each card was last rescheduled by hand, if ever.
+     *
+     * "Set due date" and "Forget" are decisions about *when* a card should come
+     * back, not answers to it, so they cannot be replayed as grades -- there is
+     * no grade to replay. They are still the learner speaking, though, and
+     * dropping them was the last silent hole in the round trip: a card pushed
+     * six months out in Anki came back due tomorrow.
+     *
+     * @return array<int, DateTimeImmutable> Keyed by card id, newest kept
+     */
+    private function loadManualReschedules(PDO $pdo): array
+    {
+        $stmt = $pdo->query('SELECT id, cid, ease, type FROM revlog ORDER BY cid, id');
+        if ($stmt === false) {
+            throw new RuntimeException('Could not read revlog');
+        }
+
+        $out = [];
+        foreach ($stmt as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $ease = isset($row['ease']) ? (int) $row['ease'] : 0;
+            $kind = isset($row['type']) ? (int) $row['type'] : -1;
+            if ($ease !== 0 || !in_array($kind, self::REVLOG_MANUAL_KINDS, true)) {
+                continue;
+            }
+            $cardId = isset($row['cid']) ? (int) $row['cid'] : 0;
+            // Ordered by id, so the last row seen for a card is its newest.
+            $out[$cardId] = $this->fromMilliseconds(isset($row['id']) ? (int) $row['id'] : 0);
+        }
+
+        return $out;
+    }
+
+    /**
+     * Whether the note is suspended, which needs every card to be.
+     *
+     * A note with one card suspended and another still in the queue is still
+     * being studied, so it must not demote the LWT term to Ignored. A note
+     * with no cards at all is not suspended either -- there is nothing to
+     * suspend.
+     *
+     * @param list<array{
+     *     id: int, ord: int, queue: int, type: int, due: int,
+     *     ivl: int, reps: int, lapses: int, data: string
+     * }> $cards
+     */
+    private function allSuspended(array $cards): bool
+    {
+        if ($cards === []) {
+            return false;
+        }
+
+        foreach ($cards as $card) {
+            if ($card['queue'] !== -1) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * The scheduling state a note's cards state, or null when they have none.
      *
      * A card still in the new queue has never been answered: its `due` is a
-     * position in the new-card order, not a date, so there is no schedule to
-     * report. Everything else carries one, suspended cards included — a
-     * suspended card keeps the state it had, which is what lets unsuspending it
-     * resume rather than restart.
+     * position in the new-card order, not a date, so it contributes no
+     * schedule. Everything else does, suspended cards included -- a suspended
+     * card keeps the state it had, which is what lets unsuspending it resume
+     * rather than restart. If no card has left the new queue there is nothing
+     * to report and this returns null.
      *
-     * @param array{
-     *     id: int, queue: int, type: int, due: int,
+     * Across several cards the note's due date is the *earliest* of them --
+     * when the note next comes up -- while reps, lapses and the review history
+     * are the totals over all of them, since all of them are the same note
+     * being learnt. Memory state comes from whichever card set the due date,
+     * because stability and difficulty belong to a card and averaging two of
+     * them would describe neither.
+     *
+     * @param list<array{
+     *     id: int, ord: int, queue: int, type: int, due: int,
      *     ivl: int, reps: int, lapses: int, data: string
-     * }               $card    The note's card
-     * @param list<ApkgReview> $reviews Its review history, oldest first
-     * @param int              $crt     The collection's creation timestamp
+     * }>                                $cards        The note's cards
+     * @param array<int, list<ApkgReview>>   $reviewsByCard Grades, keyed by card id
+     * @param array<int, DateTimeImmutable>  $manualByCard  Manual reschedules by card id
+     * @param int                            $crt           Collection creation timestamp
      */
-    private function buildSchedule(array $card, array $reviews, int $crt): ?ApkgSchedule
-    {
-        $due = $this->cardDue($card['type'], $card['due'], $crt);
-        if ($due === null) {
+    private function buildSchedule(
+        array $cards,
+        array $reviewsByCard,
+        array $manualByCard,
+        int $crt
+    ): ?ApkgSchedule {
+        /** @var list<ApkgReview> $reviews */
+        $reviews = [];
+        $reps = 0;
+        $lapses = 0;
+        $due = null;
+        $primary = null;
+        $manual = null;
+
+        foreach ($cards as $card) {
+            $cardDue = $this->cardDue($card['type'], $card['due'], $crt);
+            if ($cardDue === null) {
+                continue;
+            }
+
+            foreach ($reviewsByCard[$card['id']] ?? [] as $review) {
+                $reviews[] = $review;
+            }
+            $cardManual = $manualByCard[$card['id']] ?? null;
+            if ($cardManual !== null && ($manual === null || $cardManual > $manual)) {
+                $manual = $cardManual;
+            }
+
+            $reps += max(0, $card['reps']);
+            $lapses += max(0, $card['lapses']);
+
+            if ($due === null || $cardDue < $due) {
+                $due = $cardDue;
+                $primary = $card;
+            }
+        }
+
+        if ($due === null || $primary === null) {
             return null;
         }
 
-        $memory = $this->memoryState($card['data']);
+        usort($reviews, static fn(ApkgReview $a, ApkgReview $b) => $a->reviewedAt <=> $b->reviewedAt);
+        $memory = $this->memoryState($primary['data']);
 
         return new ApkgSchedule(
             stability: $memory['s'],
             difficulty: $memory['d'],
             desiredRetention: $memory['dr'],
             due: $due,
-            intervalDays: $this->intervalDays($card['ivl']),
-            reps: max(0, $card['reps']),
-            lapses: max(0, $card['lapses']),
+            intervalDays: $this->intervalDays($primary['ivl']),
+            reps: $reps,
+            lapses: $lapses,
             reviews: $reviews,
+            manualRescheduledAt: $manual,
         );
     }
 
