@@ -12,6 +12,7 @@ use Lwt\Modules\Review\Infrastructure\MySqlTermScheduleRepository;
 use Lwt\Modules\Vocabulary\Domain\TermRepositoryInterface;
 use Lwt\Modules\Vocabulary\Infrastructure\Anki\ApkgNote;
 use Lwt\Modules\Vocabulary\Infrastructure\Anki\ApkgReview;
+use Lwt\Modules\Vocabulary\Infrastructure\Anki\ApkgSchedule;
 use Lwt\Modules\Vocabulary\Infrastructure\MySqlTermRepository;
 
 /**
@@ -66,55 +67,106 @@ final class ScheduleReplay
      *
      * @param list<ApkgNote> $notes Notes as read from the file
      *
-     * @return array{terms: int, reviews: int} Terms rescheduled, reviews applied
+     * @return array{terms: int, reviews: int, dueDatesMoved: int} Terms
+     *         rescheduled, reviews applied, due dates set by hand in Anki
      */
     public function apply(array $notes): array
     {
-        $byTerm = $this->reviewsByTerm($notes);
+        $byTerm = $this->schedulesByTerm($notes);
         if ($byTerm === []) {
-            return ['terms' => 0, 'reviews' => 0];
+            return ['terms' => 0, 'reviews' => 0, 'dueDatesMoved' => 0];
         }
 
         $states = $this->schedules->findMany(array_keys($byTerm));
 
         $termsRescheduled = 0;
         $reviewsApplied = 0;
-        foreach ($byTerm as $termId => $reviews) {
+        $dueDatesMoved = 0;
+        foreach ($byTerm as $termId => $schedule) {
             if (!$this->isSchedulable($termId)) {
                 continue;
             }
 
-            $applied = $this->replay($termId, $reviews, $states[$termId]?->lastReview ?? null);
-            if ($applied > 0) {
+            $since = $states[$termId]?->lastReview ?? null;
+            $applied = $this->replay($termId, $schedule->reviews, $since);
+            $moved = $this->applyManualDueDate($termId, $schedule, $since);
+
+            if ($applied > 0 || $moved) {
                 $termsRescheduled++;
-                $reviewsApplied += $applied;
             }
+            $reviewsApplied += $applied;
+            $dueDatesMoved += $moved ? 1 : 0;
         }
 
-        return ['terms' => $termsRescheduled, 'reviews' => $reviewsApplied];
+        return [
+            'terms' => $termsRescheduled,
+            'reviews' => $reviewsApplied,
+            'dueDatesMoved' => $dueDatesMoved,
+        ];
     }
 
     /**
-     * The review history in the file, keyed by LWT term id.
+     * The schedules in the file that say anything, keyed by LWT term id.
+     *
+     * A note whose card was never answered and never rescheduled by hand has
+     * nothing to bring back, so it is dropped here rather than checked for
+     * again at every step below.
      *
      * @param list<ApkgNote> $notes
      *
-     * @return array<int, list<ApkgReview>>
+     * @return array<int, ApkgSchedule>
      */
-    private function reviewsByTerm(array $notes): array
+    private function schedulesByTerm(array $notes): array
     {
         $byTerm = [];
         foreach ($notes as $note) {
             if ($note->lwtTermId <= 0 || $note->schedule === null) {
                 continue;
             }
-            if ($note->schedule->reviews === []) {
+            if ($note->schedule->reviews === [] && $note->schedule->manualRescheduledAt === null) {
                 continue;
             }
-            $byTerm[$note->lwtTermId] = $note->schedule->reviews;
+            $byTerm[$note->lwtTermId] = $note->schedule;
         }
 
         return $byTerm;
+    }
+
+    /**
+     * Honour a due date the learner set by hand in Anki.
+     *
+     * Only when it is newer than everything else known about the term: LWT's
+     * own last review, and every review in the file. Otherwise the card was
+     * answered after being rescheduled, and the answer already decided when it
+     * comes back.
+     *
+     * @param int                    $termId   Term to move
+     * @param ApkgSchedule           $schedule Its state in the file
+     * @param DateTimeImmutable|null $since    LWT's own last review, if any
+     *
+     * @return bool Whether the due date moved
+     */
+    private function applyManualDueDate(
+        int $termId,
+        ApkgSchedule $schedule,
+        ?DateTimeImmutable $since
+    ): bool {
+        $manual = $schedule->manualRescheduledAt;
+        if ($manual === null) {
+            return false;
+        }
+
+        if ($since !== null && $manual <= $since) {
+            return false;
+        }
+
+        foreach ($schedule->reviews as $review) {
+            if ($review->reviewedAt >= $manual) {
+                return false;
+            }
+        }
+
+        return $this->schedules->reschedule($termId, $schedule->due);
     }
 
     /**

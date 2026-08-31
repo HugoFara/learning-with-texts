@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Review\Domain;
 
+use DateTimeImmutable;
 use Lwt\Modules\Review\Domain\Scheduling\MemoryState;
 use Lwt\Modules\Review\Domain\Scheduling\Rating;
 use Lwt\Modules\Review\Domain\Scheduling\ReviewLogEntry;
@@ -40,6 +41,26 @@ interface TermScheduleRepositoryInterface
      * parameter optimisation.
      */
     public function saveReview(int $wordId, SchedulingResult $result, Rating $rating, int $stateBefore): void;
+
+    /**
+     * Move a term's due date without recording a review.
+     *
+     * This is the "set due date" case: the learner decided when the term
+     * should come back rather than earning the date by answering it. No
+     * `review_log` row is written, and stability and difficulty are left
+     * alone -- inventing a grade to justify the new date would poison the
+     * history any later parameter optimisation reads, and there is no grade to
+     * invent, because none was given.
+     *
+     * A term with no scheduling state yet gets one seeded from its legacy
+     * status first, so the date has something to sit on.
+     *
+     * @param int                $wordId Term to move
+     * @param DateTimeImmutable  $due    When it should next come up
+     *
+     * @return bool Whether the due date was stored
+     */
+    public function reschedule(int $wordId, DateTimeImmutable $due): bool;
 
     /**
      * Number of terms whose next review is due at or before now.

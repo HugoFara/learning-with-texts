@@ -18,7 +18,13 @@ use DateTimeImmutable;
 final class ApkgSchedule
 {
     /**
-     * @param list<ApkgReview> $reviews Review history, oldest first
+     * @param list<ApkgReview>       $reviews             Review history, oldest first
+     * @param DateTimeImmutable|null $manualRescheduledAt When the due date was
+     *        last set by hand rather than earned by answering the card --
+     *        Anki's "Set due date" and "Forget". Null when it never was. It is
+     *        a timestamp rather than a flag because the only useful question
+     *        about it is whether it happened *after* the state LWT already
+     *        holds; see {@see \Lwt\Modules\Vocabulary\Application\Services\Anki\ScheduleReplay}.
      */
     public function __construct(
         public readonly float $stability,
@@ -29,6 +35,7 @@ final class ApkgSchedule
         public readonly int $reps,
         public readonly int $lapses,
         public readonly array $reviews = [],
+        public readonly ?DateTimeImmutable $manualRescheduledAt = null,
     ) {
     }
 }

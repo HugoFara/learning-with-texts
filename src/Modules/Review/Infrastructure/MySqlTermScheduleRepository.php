@@ -147,6 +147,39 @@ final class MySqlTermScheduleRepository implements TermScheduleRepositoryInterfa
         );
     }
 
+    public function reschedule(int $wordId, DateTimeImmutable $due): bool
+    {
+        if (!ScheduleSql::hasScheduleTable()) {
+            return false;
+        }
+
+        // findOrSeed() applies the user scope itself and returns null for a
+        // term this user does not own, so it doubles as the ownership check.
+        $state = $this->findOrSeed($wordId);
+        if ($state === null) {
+            return false;
+        }
+
+        Connection::preparedExecute(
+            'INSERT INTO term_schedule
+                (TsWoID, TsStability, TsDifficulty, TsDue, TsLastReview, TsReps, TsLapses, TsState)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE TsDue = VALUES(TsDue)',
+            [
+                $wordId,
+                $state->stability,
+                $state->difficulty,
+                $due->format(self::DATETIME_FORMAT),
+                $state->lastReview?->format(self::DATETIME_FORMAT),
+                $state->reps,
+                $state->lapses,
+                $state->state->value,
+            ]
+        );
+
+        return true;
+    }
+
     public function countDue(?int $languageId = null): int
     {
         if (!ScheduleSql::hasScheduleTable()) {

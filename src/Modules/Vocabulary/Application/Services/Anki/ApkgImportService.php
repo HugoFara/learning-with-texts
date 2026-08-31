@@ -101,6 +101,7 @@ final class ApkgImportService
             tagsChanged: $tagsChanged,
             termsRescheduled: $replayed['terms'],
             reviewsApplied: $replayed['reviews'],
+            dueDatesMoved: $replayed['dueDatesMoved'],
         );
     }
 

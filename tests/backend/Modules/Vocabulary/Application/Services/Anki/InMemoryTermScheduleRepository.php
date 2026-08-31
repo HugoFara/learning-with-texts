@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Lwt\Tests\Modules\Vocabulary\Application\Services\Anki;
 
+use DateTimeImmutable;
 use Lwt\Modules\Review\Domain\Scheduling\MemoryState;
 use Lwt\Modules\Review\Domain\Scheduling\Rating;
 use Lwt\Modules\Review\Domain\Scheduling\ReviewLogEntry;
@@ -20,6 +21,9 @@ final class InMemoryTermScheduleRepository implements TermScheduleRepositoryInte
 
     /** @var list<array{wordId: int, result: SchedulingResult, rating: Rating, stateBefore: int}> */
     public array $saved = [];
+
+    /** @var list<array{wordId: int, due: DateTimeImmutable}> */
+    public array $rescheduled = [];
 
     public function find(int $wordId): ?MemoryState
     {
@@ -40,6 +44,27 @@ final class InMemoryTermScheduleRepository implements TermScheduleRepositoryInte
             'rating' => $rating,
             'stateBefore' => $stateBefore,
         ];
+    }
+
+    public function reschedule(int $wordId, DateTimeImmutable $due): bool
+    {
+        $state = $this->find($wordId);
+        if ($state === null) {
+            return false;
+        }
+
+        $this->states[$wordId] = new MemoryState(
+            stability: $state->stability,
+            difficulty: $state->difficulty,
+            due: $due,
+            lastReview: $state->lastReview,
+            reps: $state->reps,
+            lapses: $state->lapses,
+            state: $state->state,
+        );
+        $this->rescheduled[] = ['wordId' => $wordId, 'due' => $due];
+
+        return true;
     }
 
     public function countDue(?int $languageId = null): int

@@ -48,7 +48,7 @@ final class ScheduleReplayTest extends TestCase
             $this->review('2026-02-06 10:00:00', Rating::Easy),
         ])]);
 
-        self::assertSame(['terms' => 1, 'reviews' => 2], $result);
+        self::assertSame(['terms' => 1, 'reviews' => 2, 'dueDatesMoved' => 0], $result);
         self::assertCount(2, $this->schedules->saved);
         self::assertSame(Rating::Good, $this->schedules->saved[0]['rating']);
         self::assertSame(Rating::Easy, $this->schedules->saved[1]['rating']);
@@ -104,7 +104,7 @@ final class ScheduleReplayTest extends TestCase
             $this->review('2026-02-06 10:00:00', Rating::Easy),
         ])]);
 
-        self::assertSame(['terms' => 0, 'reviews' => 0], $result);
+        self::assertSame(['terms' => 0, 'reviews' => 0, 'dueDatesMoved' => 0], $result);
         self::assertSame([], $this->schedules->saved);
     }
 
@@ -119,7 +119,7 @@ final class ScheduleReplayTest extends TestCase
             $this->review('2026-02-14 10:00:00', Rating::Hard),
         ])]);
 
-        self::assertSame(['terms' => 1, 'reviews' => 1], $result);
+        self::assertSame(['terms' => 1, 'reviews' => 1, 'dueDatesMoved' => 0], $result);
         self::assertSame(Rating::Hard, $this->schedules->saved[0]['rating']);
     }
 
@@ -151,7 +151,7 @@ final class ScheduleReplayTest extends TestCase
             $this->note(2, [$this->review('2026-02-01 10:00:00', Rating::Good)]),
         ]);
 
-        self::assertSame(['terms' => 0, 'reviews' => 0], $result);
+        self::assertSame(['terms' => 0, 'reviews' => 0, 'dueDatesMoved' => 0], $result);
     }
 
     public function testATermThatNoLongerExistsIsSkipped(): void
@@ -160,7 +160,7 @@ final class ScheduleReplayTest extends TestCase
 
         $result = $replay->apply([$this->note(7, [$this->review('2026-02-01 10:00:00', Rating::Good)])]);
 
-        self::assertSame(['terms' => 0, 'reviews' => 0], $result);
+        self::assertSame(['terms' => 0, 'reviews' => 0, 'dueDatesMoved' => 0], $result);
     }
 
     public function testNotesWithoutHistoryChangeNothing(): void
@@ -170,7 +170,7 @@ final class ScheduleReplayTest extends TestCase
         $unscheduled = new ApkgNote(7, 'hola', 'hello', '', '', [], false);
         $result = $replay->apply([$unscheduled, $this->note(8, [])]);
 
-        self::assertSame(['terms' => 0, 'reviews' => 0], $result);
+        self::assertSame(['terms' => 0, 'reviews' => 0, 'dueDatesMoved' => 0], $result);
         self::assertSame([], $this->schedules->findMany([7, 8]));
     }
 
@@ -180,7 +180,91 @@ final class ScheduleReplayTest extends TestCase
 
         $result = $replay->apply([$this->note(0, [$this->review('2026-02-01 10:00:00', Rating::Good)])]);
 
-        self::assertSame(['terms' => 0, 'reviews' => 0], $result);
+        self::assertSame(['terms' => 0, 'reviews' => 0, 'dueDatesMoved' => 0], $result);
+    }
+
+    public function testADueDateSetByHandInAnkiIsHonoured(): void
+    {
+        // "Set due date" writes a revlog row with no grade on it. There is
+        // nothing to replay through the scheduler, but the learner still said
+        // when the term should come back, and before this it was thrown away.
+        $this->schedules->states[7] = $this->stateLastReviewedOn('2026-02-06 10:00:00');
+        $replay = $this->replayFor([7 => TermStatus::LEARNING_3]);
+
+        $result = $replay->apply([
+            $this->note(7, [], '2026-02-10 09:00:00', '2026-08-01 00:00:00'),
+        ]);
+
+        self::assertSame(['terms' => 1, 'reviews' => 0, 'dueDatesMoved' => 1], $result);
+        self::assertSame(
+            '2026-08-01 00:00:00',
+            $this->schedules->states[7]->due->format('Y-m-d H:i:s')
+        );
+        // No grade was given, so no review may be invented to explain the date.
+        self::assertSame([], $this->schedules->saved);
+    }
+
+    public function testAManualRescheduleLeavesTheMemoryStateAlone(): void
+    {
+        // Postponing a term is not evidence about how well it is known, so
+        // stability and difficulty must survive it untouched -- the next real
+        // review carries on from where the term already was.
+        $this->schedules->states[7] = $this->stateLastReviewedOn('2026-02-06 10:00:00');
+        $replay = $this->replayFor([7 => TermStatus::LEARNING_3]);
+
+        $replay->apply([$this->note(7, [], '2026-02-10 09:00:00', '2026-08-01 00:00:00')]);
+
+        self::assertSame(9.0, $this->schedules->states[7]->stability);
+        self::assertSame(5.0, $this->schedules->states[7]->difficulty);
+        self::assertSame(
+            '2026-02-06 10:00:00',
+            $this->schedules->states[7]->lastReview?->format('Y-m-d H:i:s')
+        );
+    }
+
+    public function testAnAnswerAfterTheRescheduleWins(): void
+    {
+        // A card pushed out and then actually answered has been answered. The
+        // answer decides when it comes back, so the older manual date must not
+        // overwrite what the replay just computed.
+        $replay = $this->replayFor([7 => TermStatus::LEARNING_3]);
+
+        $result = $replay->apply([
+            $this->note(
+                7,
+                [$this->review('2026-02-20 10:00:00', Rating::Good)],
+                '2026-02-10 09:00:00',
+                '2026-08-01 00:00:00'
+            ),
+        ]);
+
+        self::assertSame(['terms' => 1, 'reviews' => 1, 'dueDatesMoved' => 0], $result);
+        self::assertSame([], $this->schedules->rescheduled);
+    }
+
+    public function testARescheduleWeHaveAlreadySeenIsNotAppliedAgain(): void
+    {
+        // Same rule as reviews: an exported file carries our own state back
+        // out, so only what happened after the state we hold counts.
+        $this->schedules->states[7] = $this->stateLastReviewedOn('2026-02-06 10:00:00');
+        $replay = $this->replayFor([7 => TermStatus::LEARNING_3]);
+
+        $result = $replay->apply([
+            $this->note(7, [], '2026-02-01 09:00:00', '2026-08-01 00:00:00'),
+        ]);
+
+        self::assertSame(['terms' => 0, 'reviews' => 0, 'dueDatesMoved' => 0], $result);
+        self::assertSame([], $this->schedules->rescheduled);
+    }
+
+    public function testARescheduleOnAnIgnoredTermIsLeftAlone(): void
+    {
+        $replay = $this->replayFor([1 => TermStatus::IGNORED]);
+
+        $result = $replay->apply([$this->note(1, [], '2026-02-10 09:00:00')]);
+
+        self::assertSame(['terms' => 0, 'reviews' => 0, 'dueDatesMoved' => 0], $result);
+        self::assertSame([], $this->schedules->rescheduled);
     }
 
     /**
@@ -232,12 +316,18 @@ final class ScheduleReplayTest extends TestCase
     }
 
     /**
-     * A note carrying nothing but the review history under test.
+     * A note carrying nothing but the scheduling state under test.
      *
      * @param list<ApkgReview> $reviews
+     * @param string|null      $manualAt When the due date was last set by hand
+     * @param string           $due      The due date the file states
      */
-    private function note(int $termId, array $reviews): ApkgNote
-    {
+    private function note(
+        int $termId,
+        array $reviews,
+        ?string $manualAt = null,
+        string $due = '2026-03-01 00:00:00'
+    ): ApkgNote {
         return new ApkgNote(
             lwtTermId: $termId,
             term: 'hola',
@@ -250,11 +340,12 @@ final class ScheduleReplayTest extends TestCase
                 stability: 0.0,
                 difficulty: 0.0,
                 desiredRetention: 0.0,
-                due: new DateTimeImmutable('2026-03-01 00:00:00'),
+                due: new DateTimeImmutable($due),
                 intervalDays: 1,
                 reps: count($reviews),
                 lapses: 0,
                 reviews: $reviews,
+                manualRescheduledAt: $manualAt === null ? null : new DateTimeImmutable($manualAt),
             ),
         );
     }
