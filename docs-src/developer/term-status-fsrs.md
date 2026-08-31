@@ -257,6 +257,26 @@ endpoint was always fine.
   ease factor is Anki's default 2500, since LWT has never computed an SM-2
   ease and 0 would collapse the interval for anyone with FSRS off.
 
+- **Scheduling comes back too** (#264). The importer reads each card's `revlog`
+  and replays the grades through `Fsrs6Scheduler`, rather than copying the
+  card's `cards.data` memory state across. Copying would either mix Anki's FSRS
+  parameters with ours in one table, or — for an SM-2 collection — import a
+  memory state that nothing computed. `revlog` records what the learner did,
+  which is the durable half; replaying it keeps one model answering for the
+  whole vocabulary and works the same whether the collection used FSRS or not.
+
+  Only reviews later than LWT's own last review are replayed, which is the
+  entire conflict policy and needs no sync protocol: both sides timestamp their
+  reviews, so the merge is "apply what happened after the state we already hold,
+  in the order it happened". It has to be there anyway — an exported file
+  carries LWT's history back out with it, so replaying everything would apply
+  each review twice and collapse the interval. Two limits: comparison is at the
+  second precision `review_log` stores, so an Anki review in the same second as
+  ours is dropped (the safe way round); and an Anki review that predates our
+  last one is skipped rather than interleaved, since catching those means
+  rebuilding state from both histories. Ignored and well-known terms are left
+  alone — they were never in the queue.
+
 - **The legacy scoring is retired.** `SCORE_FORMULA_*`,
   `makeScoreRandomInsertUpdate()` and the three columns are gone, along with
   the daily UPDATE across the whole `words` table that kept them fresh. The

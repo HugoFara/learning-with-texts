@@ -53,6 +53,22 @@ ones are marked like "v1.0.0-fork".
   MeCab now always stays on the built-in pipeline, which is the one every
   install has been using.
 
+* **Reviews done in Anki come back** (#264). The `.apkg` exporter has carried
+  LWT's scheduling into Anki since 3.6.0, but the importer discarded everything
+  Anki sent back — study a deck there, re-import it, and none of it counted.
+  The importer now reads each card's `revlog` and replays the grades through
+  LWT's own scheduler, so the file path is a round-trip rather than a one-way
+  export. The card's own memory state is deliberately *not* copied: Anki
+  computes it with its own FSRS parameters, or with SM-2 and no memory state at
+  all, and `revlog` is the half that records what the learner actually did.
+
+  Only reviews later than LWT's own last review are replayed. That is the whole
+  conflict policy and it needs no sync protocol — both sides timestamp their
+  reviews, so the merge is "apply what happened after the state we already
+  hold, in the order it happened" — and it is what stops a re-import applying
+  each review a second time. The import summary now reports how many terms were
+  rescheduled and how many reviews were replayed.
+
 * **The `MECAB` magic word is now deprecated, and says so** (#288). It keeps
   working, but a reader that falls back to it logs a deprecation naming the
   language's field value and what to set instead. The notice fires only where

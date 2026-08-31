@@ -288,6 +288,194 @@ final class ApkgWriterReaderTest extends TestCase
         self::assertNotSame((int) $rows[0]['id'], (int) $rows[1]['id']);
     }
 
+    // =========================================================================
+    // Scheduling import (#264)
+    // =========================================================================
+
+    public function testAScheduleSurvivesTheRoundTrip(): void
+    {
+        $due = new DateTimeImmutable('2026-03-01 00:00:00');
+        $schedule = new ApkgSchedule(
+            stability: 12.3456,
+            difficulty: 5.5,
+            desiredRetention: 0.9,
+            due: $due,
+            intervalDays: 12,
+            reps: 4,
+            lapses: 1,
+        );
+
+        $note = $this->writeAndReadBack([$this->note(101, $schedule)])[0];
+
+        self::assertNotNull($note->schedule);
+        self::assertSame(12, $note->schedule->intervalDays);
+        self::assertSame(4, $note->schedule->reps);
+        self::assertSame(1, $note->schedule->lapses);
+        self::assertSame(12.3456, $note->schedule->stability);
+        self::assertSame(5.5, $note->schedule->difficulty);
+        self::assertSame(0.9, $note->schedule->desiredRetention);
+        // The writer stores due as a whole day number, so the time of day is
+        // not preserved; the day is.
+        self::assertSame(
+            $due->format('Y-m-d'),
+            $note->schedule->due->format('Y-m-d')
+        );
+    }
+
+    public function testReviewHistorySurvivesTheRoundTrip(): void
+    {
+        // The reviews are what the importer actually replays, so they are the
+        // part of the round-trip that has to be exact.
+        $schedule = new ApkgSchedule(
+            stability: 9.0,
+            difficulty: 5.0,
+            desiredRetention: 0.9,
+            due: new DateTimeImmutable('2026-03-10 00:00:00'),
+            intervalDays: 9,
+            reps: 2,
+            lapses: 0,
+            reviews: [
+                new ApkgReview(new DateTimeImmutable('2026-02-01 10:00:00'), 3, 4, 0),
+                new ApkgReview(new DateTimeImmutable('2026-02-05 10:00:00'), 4, 9, 4),
+            ],
+        );
+
+        $note = $this->writeAndReadBack([$this->note(101, $schedule)])[0];
+
+        self::assertNotNull($note->schedule);
+        self::assertCount(2, $note->schedule->reviews);
+
+        [$first, $second] = $note->schedule->reviews;
+        self::assertSame('2026-02-01 10:00:00', $first->reviewedAt->format('Y-m-d H:i:s'));
+        self::assertSame(3, $first->ease);
+        self::assertSame(4, $first->intervalDays);
+        self::assertSame(0, $first->lastIntervalDays);
+        self::assertSame('2026-02-05 10:00:00', $second->reviewedAt->format('Y-m-d H:i:s'));
+        self::assertSame(4, $second->ease);
+        self::assertSame(9, $second->intervalDays);
+        self::assertSame(4, $second->lastIntervalDays);
+    }
+
+    public function testAnUnscheduledNoteReadsBackWithNoSchedule(): void
+    {
+        // A new card's `due` is a position in the new-card order, not a date.
+        // Reading it as one would invent a schedule nobody set.
+        $note = $this->writeAndReadBack([$this->note(101, null)])[0];
+
+        self::assertNull($note->schedule);
+    }
+
+    public function testASuspendedNoteStillReadsBackItsSchedule(): void
+    {
+        $schedule = new ApkgSchedule(
+            stability: 3.0,
+            difficulty: 5.0,
+            desiredRetention: 0.9,
+            due: new DateTimeImmutable('2026-03-01 00:00:00'),
+            intervalDays: 3,
+            reps: 2,
+            lapses: 0,
+            reviews: [new ApkgReview(new DateTimeImmutable('2026-02-25 09:00:00'), 2, 3, 1)],
+        );
+
+        $note = $this->writeAndReadBack([$this->note(101, $schedule, suspended: true)])[0];
+
+        self::assertTrue($note->suspended);
+        self::assertNotNull($note->schedule);
+        self::assertCount(1, $note->schedule->reviews);
+    }
+
+    public function testACollectionWithoutFsrsStateReadsZeroedMemory(): void
+    {
+        // What an SM-2 collection, or one whose owner has FSRS switched off,
+        // looks like. Stability is clamped to >= 0.001 and difficulty to
+        // [1, 10] wherever either is real, so zero cannot be mistaken for a
+        // measured value — and the importer does not read these anyway.
+        $pdo = $this->collectionFor([$this->note(101, new ApkgSchedule(
+            stability: 5.0,
+            difficulty: 5.0,
+            desiredRetention: 0.9,
+            due: new DateTimeImmutable('2026-03-01 00:00:00'),
+            intervalDays: 5,
+            reps: 1,
+            lapses: 0,
+        ))]);
+        $pdo->exec("UPDATE cards SET data = ''");
+        unset($pdo);
+        $this->repackage();
+
+        $note = (new ApkgReader())->read($this->tmpFile)[0];
+
+        self::assertNotNull($note->schedule);
+        self::assertSame(0.0, $note->schedule->stability);
+        self::assertSame(0.0, $note->schedule->difficulty);
+        // Everything the file does state still comes through.
+        self::assertSame(5, $note->schedule->intervalDays);
+    }
+
+    public function testAManualRescheduleIsNotReadAsAReview(): void
+    {
+        // Anki writes a revlog row with ease 0 for "set due date" and other
+        // manual rescheduling. Replaying one as a grade would apply a review
+        // the learner never did — and Rating has no 0.
+        $pdo = $this->collectionFor([$this->note(101, new ApkgSchedule(
+            stability: 5.0,
+            difficulty: 5.0,
+            desiredRetention: 0.9,
+            due: new DateTimeImmutable('2026-03-01 00:00:00'),
+            intervalDays: 5,
+            reps: 1,
+            lapses: 0,
+            reviews: [new ApkgReview(new DateTimeImmutable('2026-02-24 09:00:00'), 3, 5, 1)],
+        ))]);
+        $cardId = (int) $pdo->query('SELECT id FROM cards')->fetchColumn();
+        $pdo->exec(
+            'INSERT INTO revlog (id, cid, usn, ease, ivl, lastIvl, factor, time, type) '
+            . 'VALUES (9999999999999, ' . $cardId . ', -1, 0, 5, 5, 0, 0, 4)'
+        );
+        unset($pdo);
+        $this->repackage();
+
+        $note = (new ApkgReader())->read($this->tmpFile)[0];
+
+        self::assertNotNull($note->schedule);
+        self::assertCount(1, $note->schedule->reviews);
+        self::assertSame(3, $note->schedule->reviews[0]->ease);
+    }
+
+    /**
+     * Write notes to an .apkg and read them straight back.
+     *
+     * @param non-empty-list<ApkgNote> $notes
+     *
+     * @return list<ApkgNote>
+     */
+    private function writeAndReadBack(array $notes): array
+    {
+        $this->tmpFile = $this->makeTmpPath();
+        (new ApkgWriter())->write($this->tmpFile, ApkgDeck::forLanguage(7, 'Spanish'), $notes);
+
+        return (new ApkgReader())->read($this->tmpFile);
+    }
+
+    /**
+     * Put the (edited) extracted collection back into the .apkg.
+     *
+     * collectionFor() unpacks the collection so a test can change it the way
+     * Anki would have; the reader reads the archive, so the edit has to go
+     * back in before it can see it.
+     */
+    private function repackage(): void
+    {
+        $zip = new ZipArchive();
+        self::assertTrue($zip->open($this->tmpFile) === true);
+        $sqlite = file_get_contents($this->extractedDb);
+        self::assertNotFalse($sqlite);
+        $zip->addFromString('collection.anki21', $sqlite);
+        $zip->addFromString('collection.anki2', $sqlite);
+        $zip->close();
+    }
+
     /**
      * Build a note, optionally scheduled.
      */

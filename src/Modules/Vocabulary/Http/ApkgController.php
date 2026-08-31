@@ -151,6 +151,8 @@ class ApkgController extends VocabularyBaseController
                 . '<li>Not created by LWT: ' . $result->skippedUnknown . '</li>'
                 . '<li>Demoted to Ignored from suspended: ' . $result->statusSetToIgnored . '</li>'
                 . '<li>Tag changes applied: ' . $result->tagsChanged . '</li>'
+                . '<li>Terms rescheduled from Anki: ' . $result->termsRescheduled . '</li>'
+                . '<li>Reviews replayed: ' . $result->reviewsApplied . '</li>'
                 . '</ul></div>';
         }
 
