@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace Lwt\Shared\Infrastructure\Database;
 
+use Lwt\Modules\Language\Domain\ParserSelection;
 use Lwt\Modules\Language\Domain\WordSpacing;
 use Lwt\Modules\Language\Domain\Parser\ParserConfig;
 use Lwt\Modules\Language\Infrastructure\Parser\ParserRegistry;
@@ -280,7 +281,6 @@ class TextParsing
             return null;
         }
 
-        $termchar = (string)$record['LgRegexpWordCharacters'];
         $replace = explode("|", (string) $record['LgCharacterSubstitutions']);
         $text = Escaping::prepareTextdata($text);
 
@@ -293,6 +293,6 @@ class TextParsing
             }
         }
 
-        return [$text, WordSpacing::usesMecabMagicWord($termchar), $record];
+        return [$text, ParserSelection::rowTokenizesWithMecab($record), $record];
     }
 }

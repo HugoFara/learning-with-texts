@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Text\Application\Services;
 
+use Lwt\Modules\Language\Domain\ParserSelection;
 use Lwt\Modules\Language\Domain\WordSpacing;
 use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Shared\Infrastructure\Utilities\StringUtils;
@@ -125,7 +126,7 @@ class SentenceService
     {
         $mecab_str = null;
         $record = QueryBuilder::table('languages')
-            ->select(['LgRegexpWordCharacters', 'LgRemoveSpaces'])
+            ->select(['LgRegexpWordCharacters', 'LgRemoveSpaces', 'LgParserType'])
             ->where('LgID', '=', $lid)
             ->firstPrepared();
         if ($record === null) {
@@ -134,7 +135,7 @@ class SentenceService
         $removeSpaces = (int)$record["LgRemoveSpaces"];
         $regexpWordChars = (string)($record["LgRegexpWordCharacters"] ?? '');
 
-        if (WordSpacing::usesMecabMagicWord($regexpWordChars)) {
+        if (ParserSelection::rowTokenizesWithMecab($record)) {
             $mecab_file = sys_get_temp_dir() . "/lwt_mecab_to_db.txt";
             $mecab_args = ' -F %m\\t%t\\t%h\\n -U %m\\t%t\\t%h\\n -E EOP\\t3\\t7\\n ';
             if (file_exists($mecab_file)) {
@@ -271,7 +272,7 @@ class SentenceService
             CONCAT(
                 '​', group_concat(Ti2Text ORDER BY Ti2Order asc SEPARATOR '​'), '​'
             ) AS SeText, Ti2TxID AS SeTxID, LgRegexpWordCharacters,
-            LgRemoveSpaces, LgSplitEachChar
+            LgRemoveSpaces, LgSplitEachChar, LgParserType
             FROM word_occurrences, languages
             WHERE Ti2LgID = LgID AND Ti2WordCount < 2 AND Ti2SeID = ?
             AND Ti2Text != '¶'",
@@ -286,9 +287,13 @@ class SentenceService
         $termchar = (string) $record["LgRegexpWordCharacters"];
         $seText = (string)($record["SeText"] ?? '');
 
+        // MeCab is asked for by name rather than by the marker in the
+        // word-characters field, which a migration replaces with a real regex.
+        // It stays its own arm of this test: a MeCab language can also split
+        // each character, and that combination falls out of the first arm (#288)
         if (
             ($removeSpaces && !$splitEachChar)
-            || WordSpacing::usesMecabMagicWord($termchar)
+            || ParserSelection::rowTokenizesWithMecab($record)
         ) {
             $text = $seText;
             $wordlcReplaced = preg_replace('/(.)/u', "$1[​]*", $wordlc);

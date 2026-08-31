@@ -37,6 +37,22 @@ ones are marked like "v1.0.0-fork".
   unchanged for every combination of the three signals; only the three
   mis-normalised sites move, and they move to what they meant.
 
+* **The `MECAB` magic word is retired from the database** (#288). A migration
+  gives its two jobs to the fields that mean them — `LgParserType = 'mecab'` and
+  `LgRemoveSpaces = 1` — and puts the Japanese preset's real regex back in
+  `LgRegexpWordCharacters`, so a migrated language ends up looking like a freshly
+  created one. Every reader moved to those fields first: clearing the marker
+  without that would have dropped Japanese onto the regex tokenizer, where the
+  text still opens and every word in it is wrong. Verified by parsing the same
+  Japanese text before and after the migration across all three legacy flag
+  combinations, with tokens, sentence split and phonetic reading unchanged.
+
+* **MeCab has one implementation again** (#288). `ParserRegistry` routed a
+  language naming `mecab` to `MecabParser`, a second tokenizer shelling out to
+  the same binary as the built-in `JapaneseTextParser` — and the two disagreed.
+  MeCab now always stays on the built-in pipeline, which is the one every
+  install has been using.
+
 * **The language form no longer offers to overwrite a working regex** (#288).
   The word-characters selector's "MeCab (recommended)" option wrote the literal
   `mecab` over whatever regex the field held — and it only appeared once a
@@ -78,6 +94,15 @@ ones are marked like "v1.0.0-fork".
   `QueryBuilder::table()`, and an error-display flag that was never switched on.
 
 ### Fixed in Unreleased
+
+* **Japanese from the language preset parsed into almost nothing** (#288).
+  `MecabParser` read MeCab's character-type column with the test inverted, so
+  every word came out a non-word and every `。` came out a word: a text of
+  twelve words parsed to three, and — since 3.7.0 knows how to say so — raised
+  the "almost none of this text could be turned into words" banner. It affected
+  any language that actually reached that parser, which is one created from the
+  Japanese preset, since the preset names `mecab` and carries a real regex. The
+  built-in tokenizer has always read the column correctly; this now agrees.
 
 * **A Japanese language spelled `MECAB` got no phonetic reading** (#288). Every
   reader of the magic word normalised before comparing except

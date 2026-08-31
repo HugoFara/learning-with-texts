@@ -235,23 +235,33 @@ class ParserRegistry
     }
 
     /**
-     * Whether a stored parser type only repeats the legacy flag beside it.
+     * Whether the built-in pipeline already covers this parser type.
      *
-     * The backfill wrote 'mecab' where the magic word was and 'character' where
-     * LgSplitEachChar was set, so those two combinations carry no more
-     * information than the flags do, and the built-in pipeline already acts on
-     * the flags. Anything else — jieba, an external tokenizer, or 'character'
-     * on a language whose split flag is off — could only have been chosen.
+     * The backfill wrote 'character' where LgSplitEachChar was set, so that
+     * combination carries no more information than the flag does, and the
+     * built-in pipeline already acts on the flag. Anything else — jieba, or an
+     * external tokenizer, or 'character' on a language whose split flag is off
+     * — could only have been chosen.
+     *
+     * **MeCab always belongs to the built-in pipeline.** LWT has shipped a
+     * MeCab tokenizer since long before this registry existed
+     * (`JapaneseTextParser`), and `MecabParser` is a second implementation of
+     * the same thing: both shell out to the same binary with the same format.
+     * Two implementations of one tokenizer can only drift, and they had —
+     * `MecabParser` classified every word as a non-word, and split one sentence
+     * more than the built-in one did off the trailing paragraph marker. Whether
+     * the type was derived from the magic word or chosen from the dropdown, the
+     * language wants MeCab, and there is one MeCab worth running (#288).
      *
      * @param string               $type Trimmed, non-empty LgParserType
      * @param array<string, mixed> $row  Database row with Lg* prefixed columns
      *
-     * @return bool True when the value is derived rather than chosen
+     * @return bool True when the built-in pipeline should handle it
      */
     private static function restatesALegacySignal(string $type, array $row): bool
     {
         if ($type === 'mecab') {
-            return WordSpacing::usesMecabMagicWord((string) ($row['LgRegexpWordCharacters'] ?? ''));
+            return true;
         }
 
         if ($type === 'character') {

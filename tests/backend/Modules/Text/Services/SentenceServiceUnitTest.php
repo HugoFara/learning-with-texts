@@ -161,9 +161,9 @@ class SentenceServiceUnitTest extends TestCase
     public function executeSentencesContainingWordQueryHandlesMecab(): void
     {
         $src = self::methodSource('executeSentencesContainingWordQuery');
-        // The magic word is recognised through WordSpacing now, so that the
-        // normalisation happens in one place rather than at each site (#288)
-        $this->assertStringContainsString('usesMecabMagicWord', $src);
+        // MeCab is chosen by parser type now, not by a marker in the
+        // word-characters field, which a migration replaces (#288)
+        $this->assertStringContainsString('rowTokenizesWithMecab', $src);
         $this->assertStringContainsString('getMecabPath', $src);
     }
 
@@ -234,7 +234,7 @@ class SentenceServiceUnitTest extends TestCase
     public function formatSentenceHandlesMecabLanguage(): void
     {
         $src = self::methodSource('formatSentence');
-        $this->assertStringContainsString('usesMecabMagicWord', $src);
+        $this->assertStringContainsString('rowTokenizesWithMecab', $src);
     }
 
     #[Test]

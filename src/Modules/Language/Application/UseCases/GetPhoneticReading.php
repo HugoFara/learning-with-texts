@@ -18,7 +18,7 @@ declare(strict_types=1);
 namespace Lwt\Modules\Language\Application\UseCases;
 
 use Lwt\Modules\Language\Domain\LanguageRepositoryInterface;
-use Lwt\Modules\Language\Domain\WordSpacing;
+use Lwt\Modules\Language\Domain\ParserSelection;
 use Lwt\Modules\Language\Infrastructure\MySqlLanguageRepository;
 use Lwt\Modules\Language\Application\Services\TextParsingService;
 
@@ -49,13 +49,18 @@ class GetPhoneticReading
      */
     public function execute(string $text, int $id): string
     {
-        $wordCharacters = $this->repository->getWordCharacters($id);
+        $language = $this->repository->find($id);
 
-        // For now we only support phonetic text with MeCab. Every other
-        // reader normalises before comparing; this one did not, so a field
-        // holding MECAB in any other casing silently returned the input
-        // unchanged (#288).
-        if (!WordSpacing::usesMecabMagicWord((string) $wordCharacters)) {
+        // For now we only support phonetic text with MeCab. This asked the
+        // word-characters field directly, and compared against lowercase
+        // "mecab" without normalising, so a field holding MECAB in any other
+        // casing silently returned the input unchanged. Asking the language
+        // which parser it uses answers both that and the migration that clears
+        // the marker out of the field entirely (#288).
+        if (
+            $language === null
+            || $language->getEffectiveParserType() !== ParserSelection::MECAB
+        ) {
             return $text;
         }
 

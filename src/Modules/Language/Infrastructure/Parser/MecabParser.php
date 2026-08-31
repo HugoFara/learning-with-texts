@@ -280,9 +280,20 @@ class MecabParser implements ParserInterface
             // Add to current sentence
             $currentSentenceParts[] = $term;
 
-            // Create token
-            // MeCab node types: 0=normal, 1=continuation, 2=end-of-line, 6/7/8=symbols/numbers
-            $tokenIsWord = !in_array($nodeType, ['2', '6', '7', '8']);
+            // Create token.
+            //
+            // %t is MeCab's character type, and 2/6/7/8 — kanji, hiragana,
+            // katakana and numerals — are what Japanese words are made of, so
+            // those are the words and everything else is punctuation or a
+            // symbol. $termType above already says this: 0 is a word, 1 is not,
+            // 2 is a sentence end. This recomputed it from $nodeType with the
+            // test the wrong way round, so every word came out a non-word and
+            // every 。 came out a word, and a language that actually reached
+            // this parser — one created from the Japanese preset, which names
+            // mecab and carries a real regex — parsed into almost nothing
+            // (#288). The built-in JapaneseTextParser has always read it as
+            // "$term_type == 0 ? 1 : 0"; agree with it.
+            $tokenIsWord = $termType === 0;
             $tokens[] = new Token(
                 $term,
                 $sentenceIndex,

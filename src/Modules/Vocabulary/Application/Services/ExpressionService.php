@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Vocabulary\Application\Services;
 
+use Lwt\Modules\Language\Domain\ParserSelection;
 use Lwt\Modules\Language\Domain\WordSpacing;
 use Lwt\Shared\Infrastructure\Utilities\StringUtils;
 use Lwt\Shared\Infrastructure\Database\Connection;
@@ -289,11 +290,14 @@ class ExpressionService
      */
     public function insertExpressions(string $textlc, int $lid, int $wid, int $len, int $mode): array|null
     {
-        $regexp = (string)(QueryBuilder::table('languages')
+        $language = QueryBuilder::table('languages')
+            ->select(['LgRegexpWordCharacters', 'LgParserType'])
             ->where('LgID', '=', $lid)
-            ->valuePrepared('LgRegexpWordCharacters') ?? '');
+            ->firstPrepared() ?? [];
+        $regexp = (string) ($language['LgRegexpWordCharacters'] ?? '');
+        $mecab = ParserSelection::rowTokenizesWithMecab($language);
 
-        if (WordSpacing::usesMecabMagicWord($regexp)) {
+        if ($mecab) {
             $occurrences = $this->findMecabExpression($textlc, $lid);
         } else {
             $occurrences = $this->findStandardExpression($textlc, $lid);
@@ -311,7 +315,7 @@ class ExpressionService
                     // sets this as text content, so markup would show verbatim.
                     $appendtext[$txId][$occ['position']] = "\u{00A0}$len\u{00A0}";
                 } else {
-                    if (WordSpacing::usesMecabMagicWord($regexp)) {
+                    if ($mecab) {
                         $appendtext[$txId][$occ['position']] = $occ['term'] ?? '';
                     } else {
                         $appendtext[$txId][$occ['position']] = $occ['term_display'] ?? $occ['term'] ?? '';
