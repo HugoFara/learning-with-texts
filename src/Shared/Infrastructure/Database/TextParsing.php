@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace Lwt\Shared\Infrastructure\Database;
 
+use Lwt\Modules\Language\Domain\WordSpacing;
 use Lwt\Modules\Language\Domain\Parser\ParserConfig;
 use Lwt\Modules\Language\Infrastructure\Parser\ParserRegistry;
 use Lwt\Shared\Infrastructure\Exception\DatabaseException;
@@ -292,6 +293,6 @@ class TextParsing
             }
         }
 
-        return [$text, 'MECAB' === strtoupper(trim($termchar)), $record];
+        return [$text, WordSpacing::usesMecabMagicWord($termchar), $record];
     }
 }

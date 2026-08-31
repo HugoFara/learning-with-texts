@@ -161,7 +161,9 @@ class SentenceServiceUnitTest extends TestCase
     public function executeSentencesContainingWordQueryHandlesMecab(): void
     {
         $src = self::methodSource('executeSentencesContainingWordQuery');
-        $this->assertStringContainsString('MECAB', $src);
+        // The magic word is recognised through WordSpacing now, so that the
+        // normalisation happens in one place rather than at each site (#288)
+        $this->assertStringContainsString('usesMecabMagicWord', $src);
         $this->assertStringContainsString('getMecabPath', $src);
     }
 
@@ -232,7 +234,7 @@ class SentenceServiceUnitTest extends TestCase
     public function formatSentenceHandlesMecabLanguage(): void
     {
         $src = self::methodSource('formatSentence');
-        $this->assertStringContainsString("'MECAB'", $src);
+        $this->assertStringContainsString('usesMecabMagicWord', $src);
     }
 
     #[Test]
@@ -339,7 +341,9 @@ class SentenceServiceUnitTest extends TestCase
     public function getSentenceTextChecksMecab(): void
     {
         $src = self::methodSource('getSentenceText');
-        $this->assertStringContainsString("'MECAB'", $src);
+        // Spacing is asked as a question about the language, not about what its
+        // word-characters field happens to contain (#288)
+        $this->assertStringContainsString('separatesWordsWithSpaces', $src);
     }
 
     // =========================================================================

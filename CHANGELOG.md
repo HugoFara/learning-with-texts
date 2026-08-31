@@ -25,6 +25,25 @@ ones are marked like "v1.0.0-fork".
 
 ### Changed in Unreleased
 
+* **The `MECAB` magic word has one reader instead of twelve** (#288).
+  `LgRegexpWordCharacters` is the field that should hold a word-characters
+  regex; historically it could instead hold the literal `MECAB`, saying two
+  unrelated things at once — *tokenize with MeCab*, and *this language has no
+  spaces between words*. `LgParserType` says the first properly, but nothing
+  said the second, so twelve sites spelled the comparison out by hand and three
+  of them got the normalisation wrong. `WordSpacing` now answers both questions,
+  and `SentenceService` asks whether a language separates its words with spaces
+  rather than what its word-characters field happens to contain. Behaviour is
+  unchanged for every combination of the three signals; only the three
+  mis-normalised sites move, and they move to what they meant.
+
+* **The language form no longer offers to overwrite a working regex** (#288).
+  The word-characters selector's "MeCab (recommended)" option wrote the literal
+  `mecab` over whatever regex the field held — and it only appeared once a
+  language was already named Japanese, by which point the parser dropdown had
+  the choice covered. Removing it stops new installs acquiring the magic word;
+  existing ones keep working, since every reader still accepts it.
+
 * **The annotated text view is rendered by the browser** (#302). `/text/{id}/display`
   was the last page building content in PHP. It now fetches
   `GET /api/v1/texts/{id}/annotation`, and three view files become one. The
@@ -59,6 +78,16 @@ ones are marked like "v1.0.0-fork".
   `QueryBuilder::table()`, and an error-display flag that was never switched on.
 
 ### Fixed in Unreleased
+
+* **A Japanese language spelled `MECAB` got no phonetic reading** (#288). Every
+  reader of the magic word normalised before comparing except
+  `GetPhoneticReading`, which tested `!== "mecab"` in lowercase, so an install
+  holding the marker in any other casing silently got its input back with no
+  error. `ExternalParser` had the mirror bug — it compared against uppercase
+  only, so the lowercase `mecab` the language form writes was taken for a
+  regex and compiled as the character class `[mecab]`, making exactly the
+  letters m, e, c, a and b the language's word characters. The reading-mode
+  choice in `LanguageApiHandler` had the lowercase version of the same bug.
 
 * **A text with no words was told its language was misconfigured** (#289). The
   "none of this text could be turned into words" banner had no minimum length,

@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace Lwt\Modules\Language\Application\UseCases;
 
 use Lwt\Modules\Language\Domain\LanguageRepositoryInterface;
+use Lwt\Modules\Language\Domain\WordSpacing;
 use Lwt\Modules\Language\Infrastructure\MySqlLanguageRepository;
 use Lwt\Modules\Language\Application\Services\TextParsingService;
 
@@ -50,8 +51,11 @@ class GetPhoneticReading
     {
         $wordCharacters = $this->repository->getWordCharacters($id);
 
-        // For now we only support phonetic text with MeCab
-        if ($wordCharacters !== "mecab") {
+        // For now we only support phonetic text with MeCab. Every other
+        // reader normalises before comparing; this one did not, so a field
+        // holding MECAB in any other casing silently returned the input
+        // unchanged (#288).
+        if (!WordSpacing::usesMecabMagicWord((string) $wordCharacters)) {
             return $text;
         }
 

@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Language\Http;
 
+use Lwt\Modules\Language\Domain\WordSpacing;
 use Lwt\Shared\Infrastructure\Database\QueryBuilder;
 use Lwt\Shared\Infrastructure\Database\Settings;
 use Lwt\Shared\Http\ApiRoutableInterface;
@@ -102,7 +103,7 @@ class LanguageApiHandler implements ApiRoutableInterface
             $readingMode = "piper";
         } elseif ($ttsVoiceApi !== '') {
             $readingMode = "external";
-        } elseif ($regexpWordChars === "mecab") {
+        } elseif (WordSpacing::usesMecabMagicWord($regexpWordChars)) {
             $readingMode = "internal";
         } else {
             $readingMode = "direct";

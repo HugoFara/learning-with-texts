@@ -99,22 +99,6 @@ export const languageForm = {
   },
 
   /**
-   * Check if language name has changed and update UI accordingly.
-   * Shows/hides the MeCab option for Japanese.
-   *
-   * @param value - The language name
-   */
-  checkLanguageChanged(value: string): void {
-    const lgForm = document.forms.namedItem('lg_form') as HTMLFormElement | null;
-    if (!lgForm) return;
-
-    const regexpAlt = lgForm.elements.namedItem('LgRegexpAlt') as HTMLSelectElement | null;
-    if (regexpAlt) {
-      regexpAlt.style.display = value === 'Japanese' ? 'block' : 'none';
-    }
-  },
-
-  /**
    * Handle multi-word translator selection change.
    *
    * @param value - The selected translator type
@@ -227,37 +211,6 @@ export const languageForm = {
   },
 
   /**
-   * Handle word character method selection change.
-   *
-   * @param value - The selected method ('regexp' or 'mecab')
-   */
-  wordCharChange(value: string): void {
-    const langDefs = this.langDefs || window.LANGDEFS;
-    const regex = langDefs[this.languageName]?.[3] || '';
-    const mecab = 'mecab';
-
-    let result: string | undefined;
-    switch (value) {
-      case 'regexp':
-        result = regex;
-        break;
-      case 'mecab':
-        result = mecab;
-        break;
-    }
-
-    if (result) {
-      const lgForm = document.forms.namedItem('lg_form') as HTMLFormElement | null;
-      if (lgForm) {
-        const regexpWordChars = lgForm.elements.namedItem('LgRegexpWordCharacters') as HTMLInputElement | null;
-        if (regexpWordChars) {
-          regexpWordChars.value = result;
-        }
-      }
-    }
-  },
-
-  /**
    * Handle popup checkbox state change.
    * Popup setting is now stored in the database, not in the URL.
    *
@@ -304,22 +257,6 @@ export const languageForm = {
         break;
     }
     typeSelect.value = finalValue;
-  },
-
-  /**
-   * Update the word character method select based on current value.
-   *
-   * @param method - The current method value
-   */
-  checkWordChar(method: string): void {
-    const methodOption = method === 'mecab' ? 'mecab' : 'regexp';
-    const lgForm = document.forms.namedItem('lg_form') as HTMLFormElement | null;
-    if (lgForm) {
-      const regexpAlt = lgForm.elements.namedItem('LgRegexpAlt') as HTMLSelectElement | null;
-      if (regexpAlt) {
-        regexpAlt.value = methodOption;
-      }
-    }
   },
 
   /**
@@ -409,15 +346,10 @@ export function checkTranslatorChanged(translatorInput: HTMLInputElement): void 
  * @param lgForm - The language form element
  */
 export function checkLanguageForm(lgForm: HTMLFormElement): void {
-  const lgName = lgForm.elements.namedItem('LgName') as HTMLInputElement | null;
   const lgDict1URI = lgForm.elements.namedItem('LgDict1URI') as HTMLInputElement | null;
   const lgDict2URI = lgForm.elements.namedItem('LgDict2URI') as HTMLInputElement | null;
   const lgGoogleTranslateURI = lgForm.elements.namedItem('LgGoogleTranslateURI') as HTMLInputElement | null;
-  const lgRegexpWordCharacters = lgForm.elements.namedItem('LgRegexpWordCharacters') as HTMLInputElement | null;
 
-  if (lgName) {
-    languageForm.checkLanguageChanged(lgName.value);
-  }
   if (lgDict1URI) {
     languageForm.checkDictionaryChanged();
   }
@@ -426,9 +358,6 @@ export function checkLanguageForm(lgForm: HTMLFormElement): void {
   }
   if (lgGoogleTranslateURI) {
     checkTranslatorChanged(lgGoogleTranslateURI);
-  }
-  if (lgRegexpWordCharacters) {
-    languageForm.checkWordChar(lgRegexpWordCharacters.value);
   }
 }
 
@@ -645,14 +574,6 @@ export function initLanguageForm(): void {
     return true;
   });
 
-  // Language name input
-  const lgName = lgForm.elements.namedItem('LgName') as HTMLInputElement | null;
-  if (lgName) {
-    lgName.addEventListener('input', function () {
-      languageForm.checkLanguageChanged(this.value);
-    });
-  }
-
   // Dictionary inputs
   const dictInputs = ['LgDict1URI', 'LgDict2URI'];
   dictInputs.forEach(name => {
@@ -696,14 +617,6 @@ export function initLanguageForm(): void {
   if (textSize) {
     textSize.addEventListener('change', function () {
       languageForm.changeLanguageTextSize(this.value);
-    });
-  }
-
-  // Word character method select
-  const regexpAlt = lgForm.elements.namedItem('LgRegexpAlt') as HTMLSelectElement | null;
-  if (regexpAlt) {
-    regexpAlt.addEventListener('change', function () {
-      languageForm.wordCharChange(this.value);
     });
   }
 

@@ -135,14 +135,6 @@ describe('language_wizard.ts', () => {
       expect(nameInput.value).toBe('French');
     });
 
-    it('calls checkLanguageChanged with the language name', () => {
-      const l2Select = document.getElementById('l2') as HTMLSelectElement;
-      l2Select.value = 'Japanese';
-
-      languageWizard.onL2Change();
-
-      expect(languageForm.checkLanguageChanged).toHaveBeenCalledWith('Japanese');
-    });
 
     it('sets source language code', () => {
       const l2Select = document.getElementById('l2') as HTMLSelectElement;

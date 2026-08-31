@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Language\Infrastructure\Parser;
 
+use Lwt\Modules\Language\Domain\WordSpacing;
 use Lwt\Modules\Language\Domain\Language;
 use Lwt\Modules\Language\Domain\Parser\ParserInterface;
 
@@ -250,7 +251,7 @@ class ParserRegistry
     private static function restatesALegacySignal(string $type, array $row): bool
     {
         if ($type === 'mecab') {
-            return strtoupper(trim((string) ($row['LgRegexpWordCharacters'] ?? ''))) === 'MECAB';
+            return WordSpacing::usesMecabMagicWord((string) ($row['LgRegexpWordCharacters'] ?? ''));
         }
 
         if ($type === 'character') {
@@ -279,8 +280,7 @@ class ParserRegistry
         }
 
         // Legacy detection: check magic word in regexpWordCharacters
-        $wordChars = strtoupper(trim($language->regexpWordCharacters()));
-        if ($wordChars === 'MECAB') {
+        if (WordSpacing::usesMecabMagicWord($language->regexpWordCharacters())) {
             return 'mecab';
         }
 
@@ -308,8 +308,7 @@ class ParserRegistry
         }
 
         // Legacy detection: check magic word
-        $wordChars = strtoupper(trim((string) ($row['LgRegexpWordCharacters'] ?? '')));
-        if ($wordChars === 'MECAB') {
+        if (WordSpacing::usesMecabMagicWord((string) ($row['LgRegexpWordCharacters'] ?? ''))) {
             return 'mecab';
         }
 

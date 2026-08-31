@@ -97,7 +97,6 @@ declare global {
     GGTRANSLATE: string;
     LIBRETRANSLATE: string;
     reloadDictURLs: (sourceLg: string, targetLg: string) => void;
-    checkLanguageChanged: (value: string) => void;
   }
 }
 
@@ -129,9 +128,6 @@ export const languageWizard = {
 
     // Set language name and trigger change event
     setInputValue('input[name="LgName"]', l2, true);
-
-    // Check for language-specific UI changes (e.g., Japanese regexp field)
-    languageForm.checkLanguageChanged(l2);
 
     // Set source language code
     setInputValue('input[name="LgSourceLang"]', learningLg[1]);

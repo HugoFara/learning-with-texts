@@ -431,7 +431,7 @@ class Language
         }
 
         // Legacy detection: check magic word in regexpWordCharacters
-        if (strtoupper(trim($this->regexpWordCharacters)) === 'MECAB') {
+        if (WordSpacing::usesMecabMagicWord($this->regexpWordCharacters)) {
             return 'mecab';
         }
 

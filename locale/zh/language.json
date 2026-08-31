@@ -86,8 +86,6 @@
     "form.regexp_split_sentences": "句子分割正则表达式",
     "form.exceptions_split_sentences": "句子分割例外",
     "form.regexp_word_characters": "单词字符正则表达式",
-    "form.regexp_alt_regexp": "正则表达式（演示）",
-    "form.regexp_alt_mecab": "MeCab（推荐）",
     "form.split_each_char": "将每个字符作为一个单词",
     "form.split_each_char_help": "适用于中文、日语等。",
     "form.remove_spaces": "删除空格",

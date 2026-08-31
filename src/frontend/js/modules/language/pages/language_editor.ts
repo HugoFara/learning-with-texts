@@ -78,7 +78,6 @@ export interface LanguageEditorData {
   save(): Promise<void>;
   toggleAdvanced(): void;
   onTranslatorChange(event: Event): void;
-  showJapaneseOptions(): boolean;
   isRegexParser(): boolean;
   isMecabParser(): boolean;
   textSizeStyle(): string;
@@ -202,10 +201,6 @@ export function languageEditorData(): LanguageEditorData {
     onTranslatorChange(event: Event): void {
       const select = event.target as HTMLSelectElement;
       this.showTranslatorKey = select.value === 'libretranslate';
-    },
-
-    showJapaneseOptions(): boolean {
-      return this.lang.name === 'Japanese';
     },
 
     isRegexParser(): boolean {

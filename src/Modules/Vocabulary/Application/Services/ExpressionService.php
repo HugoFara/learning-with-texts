@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Vocabulary\Application\Services;
 
+use Lwt\Modules\Language\Domain\WordSpacing;
 use Lwt\Shared\Infrastructure\Utilities\StringUtils;
 use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Shared\Infrastructure\Database\Escaping;
@@ -292,7 +293,7 @@ class ExpressionService
             ->where('LgID', '=', $lid)
             ->valuePrepared('LgRegexpWordCharacters') ?? '');
 
-        if ('MECAB' == strtoupper(trim($regexp))) {
+        if (WordSpacing::usesMecabMagicWord($regexp)) {
             $occurrences = $this->findMecabExpression($textlc, $lid);
         } else {
             $occurrences = $this->findStandardExpression($textlc, $lid);
@@ -310,7 +311,7 @@ class ExpressionService
                     // sets this as text content, so markup would show verbatim.
                     $appendtext[$txId][$occ['position']] = "\u{00A0}$len\u{00A0}";
                 } else {
-                    if ('MECAB' == strtoupper(trim($regexp))) {
+                    if (WordSpacing::usesMecabMagicWord($regexp)) {
                         $appendtext[$txId][$occ['position']] = $occ['term'] ?? '';
                     } else {
                         $appendtext[$txId][$occ['position']] = $occ['term_display'] ?? $occ['term'] ?? '';

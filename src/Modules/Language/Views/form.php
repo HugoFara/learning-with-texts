@@ -512,16 +512,6 @@ $importMoreTitle = htmlspecialchars(__('language.form.import_more_entries'), ENT
                             ); ?>"
                         >*</span>
                     </label>
-                    <div x-show="showJapaneseOptions()" x-transition class="field">
-                        <div class="control">
-                            <div class="select is-fullwidth">
-                                <select name="LgRegexpAlt">
-                                    <option value="regexp"><?php echo __('language.form.regexp_alt_regexp'); ?></option>
-                                    <option value="mecab"><?php echo __('language.form.regexp_alt_mecab'); ?></option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
                     <div class="control">
                         <input type="text"
                                class="input notempty checkoutsidebmp"

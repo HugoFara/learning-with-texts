@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Language\Infrastructure\Parser;
 
+use Lwt\Modules\Language\Domain\WordSpacing;
 use Lwt\Modules\Language\Domain\Parser\ExternalParserConfig;
 use Lwt\Modules\Language\Domain\Parser\ParserConfig;
 use Lwt\Modules\Language\Domain\Parser\ParserInterface;
@@ -548,7 +549,7 @@ class ExternalParser implements ParserInterface
 
         // Use word character regex from config if available
         $wordChars = $config->getRegexpWordCharacters();
-        if ($wordChars !== '' && $wordChars !== 'MECAB') {
+        if ($wordChars !== '' && !WordSpacing::usesMecabMagicWord($wordChars)) {
             // Check if token contains at least one word character
             $pattern = '/[' . $wordChars . ']/u';
             return (bool) preg_match($pattern, $token);
