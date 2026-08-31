@@ -400,4 +400,53 @@ class LanguageRepositoryTest extends TestCase
 
         $this->assertEquals('a-zA-Z', $result);
     }
+
+    // ===== findUsingDeprecatedMecabMarker() tests =====
+
+    public function testFindUsingDeprecatedMecabMarkerListsAffectedLanguages(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        // The migration clears the marker from every row it finds, so a row
+        // still holding one arrived after it ran — from an API client sending
+        // the literal, or an import from an older install. Those are what the
+        // Server Data panel has to name before the marker is removed (#288).
+        $marked = $this->createTestLanguageInDb('RepoTest_Mecab');
+        Connection::query(
+            "UPDATE languages SET LgRegexpWordCharacters = ' MeCab ' WHERE LgID = $marked"
+        );
+        $ordinary = $this->createTestLanguageInDb('RepoTest_Latin');
+
+        $found = $this->repository->findUsingDeprecatedMecabMarker();
+        $ids = array_column($found, 'id');
+
+        // Matched trimmed and case-folded, the way every reader matches it.
+        $this->assertContains($marked, $ids);
+        $this->assertNotContains($ordinary, $ids);
+        foreach ($found as $language) {
+            $this->assertArrayHasKey('name', $language);
+        }
+    }
+
+    public function testFindUsingDeprecatedMecabMarkerIsEmptyOnAMigratedDatabase(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        // What an upgraded install should look like: the marker is gone from
+        // the field and the parser type carries the choice instead.
+        $id = $this->createTestLanguageInDb('RepoTest_Migrated');
+        Connection::query(
+            "UPDATE languages SET LgParserType = 'mecab', LgRemoveSpaces = 1,
+                    LgRegexpWordCharacters = '\\x{4E00}-\\x{9FFF}'
+             WHERE LgID = $id"
+        );
+
+        $ids = array_column($this->repository->findUsingDeprecatedMecabMarker(), 'id');
+
+        $this->assertNotContains($id, $ids);
+    }
 }

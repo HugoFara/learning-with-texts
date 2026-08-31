@@ -301,6 +301,30 @@ class MySqlLanguageRepository implements LanguageRepositoryInterface
     /**
      * {@inheritdoc}
      */
+    public function findUsingDeprecatedMecabMarker(): array
+    {
+        // Matched the way every reader matches it -- trimmed and case-folded --
+        // so the panel cannot disagree with WordSpacing about which rows count.
+        $rows = $this->query()
+            ->select(['LgID', 'LgName'])
+            ->whereRaw("UPPER(TRIM(LgRegexpWordCharacters)) = ?", ['MECAB'])
+            ->orderBy('LgName')
+            ->getPrepared();
+
+        $languages = [];
+        foreach ($rows as $row) {
+            $languages[] = [
+                'id' => (int) $row['LgID'],
+                'name' => (string) $row['LgName'],
+            ];
+        }
+
+        return $languages;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function findEmptyLanguageId(): ?int
     {
         $row = $this->query()

@@ -22,6 +22,8 @@ use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Shared\Infrastructure\Database\Migrations;
 use Lwt\Shared\Infrastructure\Http\UrlUtilities;
+use Lwt\Modules\Language\Domain\LanguageRepositoryInterface;
+use Lwt\Modules\Language\Infrastructure\MySqlLanguageRepository;
 
 /**
  * Use case for getting server and database information.
@@ -32,14 +34,21 @@ class GetServerData
 {
     private string $serverSoftware;
 
+    private LanguageRepositoryInterface $languages;
+
     /**
      * Constructor.
      *
-     * @param string $serverSoftware Server software string (e.g. from $_SERVER['SERVER_SOFTWARE'])
+     * @param string                           $serverSoftware Server software string
+     *                                                         (e.g. from $_SERVER['SERVER_SOFTWARE'])
+     * @param LanguageRepositoryInterface|null $languages      Language repository
      */
-    public function __construct(string $serverSoftware = 'Unknown')
-    {
+    public function __construct(
+        string $serverSoftware = 'Unknown',
+        ?LanguageRepositoryInterface $languages = null
+    ) {
         $this->serverSoftware = $serverSoftware;
+        $this->languages = $languages ?? new MySqlLanguageRepository();
     }
 
     /**
@@ -55,7 +64,8 @@ class GetServerData
      *   lwt_version: string,
      *   server_location: string,
      *   failed_migrations: array<array{filename: string, attempts: int, error: string}>,
-     *   missing_foreign_keys: array<array{name: string, table: string}>
+     *   missing_foreign_keys: array<array{name: string, table: string}>,
+     *   deprecated_mecab_languages: array<array{id: int, name: string}>
      * }
      */
     public function execute(): array
@@ -76,6 +86,11 @@ class GetServerData
             // Constraints the schema declares but the database does not have:
             // writes that should be refused are being accepted (issue #273).
             'missing_foreign_keys' => Migrations::getMissingForeignKeys(),
+            // Languages whose word-characters field still holds the deprecated
+            // MECAB marker rather than a regex. The migration clears the ones
+            // an upgrade finds, so anything listed here arrived afterwards and
+            // stops working when the marker is removed (issue #288).
+            'deprecated_mecab_languages' => $this->languages->findUsingDeprecatedMecabMarker(),
         ];
     }
 

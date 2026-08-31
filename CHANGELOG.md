@@ -53,6 +53,23 @@ ones are marked like "v1.0.0-fork".
   MeCab now always stays on the built-in pipeline, which is the one every
   install has been using.
 
+* **The `MECAB` magic word is now deprecated, and says so** (#288). It keeps
+  working, but a reader that falls back to it logs a deprecation naming the
+  language's field value and what to set instead. The notice fires only where
+  the marker is *load-bearing* — a language carrying both the marker and a
+  `LgParserType` never consults it — so it means "removing the fallback would
+  change this install", which is what the removal will be decided on. It is
+  deduplicated per field value, because the spacing readers run once per
+  sentence and would otherwise bury the notice in its own output.
+
+* **Server Data lists languages still holding the marker** (#288), beside the
+  failed-migration and missing-foreign-key panels. The migration clears every
+  row an upgrade finds, so anything listed here was written afterwards — by an
+  API client sending the literal, or a language imported from an older install
+  — and needs re-saving. That page is what users paste into bug reports, which
+  is the half of the deprecation an install owner can actually act on; the log
+  line above is invisible unless someone goes looking for it.
+
 * **The language form no longer offers to overwrite a working regex** (#288).
   The word-characters selector's "MeCab (recommended)" option wrote the literal
   `mecab` over whatever regex the field held — and it only appeared once a

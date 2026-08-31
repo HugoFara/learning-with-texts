@@ -50,6 +50,8 @@
     "server_data_failed_migrations_attempts": "attempts",
     "server_data_missing_foreign_keys": "Missing foreign keys",
     "server_data_missing_foreign_keys_warning": "The database is missing foreign key constraints the schema declares, so writes that should be refused are being accepted. They are recreated automatically on the next upgrade; report this if it persists.",
+    "server_data_deprecated_mecab": "Languages using the deprecated MECAB marker",
+    "server_data_deprecated_mecab_warning": "These languages store the literal MECAB in their word-characters field instead of a regex. It still works, but support for it is removed in a future release. Open each language and save it to move the setting to the parser field, or set its parser to MeCab through the API.",
     "server_data_section_client_api": "Client API",
     "server_data_loading_api": "Loading API information...",
     "server_data_error_loading": "Error loading API information",
