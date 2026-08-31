@@ -210,14 +210,20 @@ class FeedEditController
         $feed = $this->feedFacade->getFeedById($feedId);
 
         if ($feed === null) {
-            echo '<div class="notification is-danger">' .
-                '<button class="delete" aria-label="close"></button>' .
-                'Feed not found.' .
-                '</div>';
+            $this->renderNotification(__('feed.edit_feed_not_found'));
             return;
         }
 
-        $languages = $this->feedFacade->getLanguages();
+        // The view showed the feed's language by scanning the whole list for a
+        // matching id. Looking a value up is not the view's job, and it only
+        // needed the list to do it, so the answer is resolved here instead.
+        $feedLanguageName = '';
+        foreach ($this->feedFacade->getLanguages() as $language) {
+            if ($feed['NfLgID'] === $language['LgID']) {
+                $feedLanguageName = (string) $language['LgName'];
+                break;
+            }
+        }
 
         // Parse options
         $options = $this->feedFacade->getFeedOption($feed['NfOptions'], '');

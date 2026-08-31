@@ -44,6 +44,17 @@ ones are marked like "v1.0.0-fork".
 
 ### Changed in Unreleased
 
+* **The feed editor's language name is resolved by its controller** (#266),
+  not by a loop in the view scanning every language for a matching id. The
+  feed controllers' hand-written notification markup also moved into one
+  `renderNotification()` on the shared trait, so "Feed not found" is
+  translated rather than an English literal in a controller.
+
+* **The audio player's skip intervals moved into its Alpine component**
+  (#266). The view rendered them with a PHP loop over a literal array — client
+  UI configuration built by the server, in a file whose own header says it
+  carries no data.
+
 * **The Anki import pages are views, and are translated** (#266). Both
   `/vocabulary/anki-deck/import` and `/vocabulary/apkg/import` were built
   entirely from `echo` statements inside their controllers — forms, `<select>`

@@ -94,11 +94,11 @@ use Lwt\Shared\UI\Helpers\IconHelper;
           </div>
           <div class="dropdown-menu" role="menu">
             <div class="dropdown-content">
-              <?php foreach ([1, 2, 3, 4, 5, 10, 15, 20, 25, 30] as $sec) : ?>
-              <a class="dropdown-item is-size-7"
-                 :class="{ 'is-active': skipSeconds === <?php echo $sec; ?> }"
-                 @click="setSkipSeconds(<?php echo $sec; ?>)"><?php echo $sec; ?>s</a>
-              <?php endforeach; ?>
+              <template x-for="sec in skipOptions" :key="sec">
+                <a :class="skipOptionClass(sec)"
+                   @click="setSkipSeconds(sec)"
+                   x-text="skipOptionLabel(sec)"></a>
+              </template>
             </div>
           </div>
         </div>
