@@ -443,6 +443,36 @@ final class ApkgWriterReaderTest extends TestCase
         self::assertSame(3, $note->schedule->reviews[0]->ease);
     }
 
+    public function testAModernAnkiPackageIsRefusedRatherThanMisread(): void
+    {
+        // Anki's current export compresses the collection into
+        // collection.anki21b and leaves collection.anki2 behind as a stub
+        // holding one "please update Anki" note. Reading that stub *succeeds*,
+        // which is the trap: the import would report one unrecognised note and
+        // call it a day, and the user would never learn their reviews had not
+        // arrived. Verified against a real file from Anki 26.08.
+        $this->tmpFile = $this->makeTmpPath();
+        (new ApkgWriter())->write(
+            $this->tmpFile,
+            ApkgDeck::forLanguage(1, 'English'),
+            [new ApkgNote(1, 'a', 'b', '', '', [], false)],
+        );
+
+        $zip = new ZipArchive();
+        self::assertTrue($zip->open($this->tmpFile) === true);
+        $stub = $zip->getFromName('collection.anki21');
+        self::assertNotFalse($stub);
+        $zip->deleteName('collection.anki21');
+        // Only the name matters here; the reader must refuse before it looks.
+        $zip->addFromString('collection.anki21b', "\x28\xb5\x2f\xfd compressed");
+        $zip->addFromString('collection.anki2', $stub);
+        $zip->close();
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessageMatches('/Support older Anki versions/');
+        (new ApkgReader())->read($this->tmpFile);
+    }
+
     /**
      * Write notes to an .apkg and read them straight back.
      *

@@ -53,6 +53,15 @@ ones are marked like "v1.0.0-fork".
   MeCab now always stays on the built-in pipeline, which is the one every
   install has been using.
 
+* **An .apkg from a current Anki is refused instead of silently half-read**
+  (#264). Anki's export writes the collection zstd-compressed as
+  `collection.anki21b` unless *Support older Anki versions* is switched on, and
+  leaves `collection.anki2` behind as a stub holding a single "please update
+  Anki" note. LWT read that stub quite happily, reported one unrecognised note,
+  and told the user the import had succeeded. It now refuses the file and names
+  the two settings to change. Found by running the round-trip against real Anki
+  (pylib 26.08.1) rather than against our own reader.
+
 * **Reviews done in Anki come back** (#264). The `.apkg` exporter has carried
   LWT's scheduling into Anki since 3.6.0, but the importer discarded everything
   Anki sent back — study a deck there, re-import it, and none of it counted.

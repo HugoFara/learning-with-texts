@@ -285,9 +285,27 @@ endpoint was always fine.
   fifteen more. `ReviewService` — 847 lines duplicating the queue with no
   caller — was deleted rather than migrated.
 
-**Still unverified:** the .apkg export has been read back with SQLite and
-matches what Anki documents, but nobody has yet opened one of these decks in a
-real Anki install.
+**Verified against real Anki** (pylib 26.08.1, #264). The full loop was run:
+LWT export → Anki import → answered with Anki's own v3/FSRS scheduler → Anki
+export → LWT import. Memory state crosses unchanged (stability 100.3036 and
+difficulty 2.1043 arrive as 100.303596 / 2.104), due dates and intervals match,
+`revlog` rows survive, and suspension is preserved. Coming back, a Good raised
+stability 100.30 → 161.81 and an Again dropped 18.50 → 1.88 with the lapse
+counted — with only the two new reviews replayed, not the three already ours.
+
+**Anki's defaults break the loop in both directions, and both fail quietly.**
+Neither is a defect in the file we write; both are options the user has to set:
+
+- Importing into Anki, *Import any learning progress* defaults **off**. Without
+  it every card arrives new — `type`/`queue` 0, `ivl` 0, no revlog, no memory
+  state, suspension dropped.
+- Exporting from Anki, *Support older Anki versions* defaults **off**, so Anki
+  writes the collection zstd-compressed as `collection.anki21b` and leaves
+  `collection.anki2` as a stub holding one note reading "Please update to the
+  latest Anki version…". Reading that stub succeeds, so the import used to
+  report one unrecognised note and nothing else. `ApkgReader` now refuses a
+  package containing `collection.anki21b` and names both settings; supporting
+  the format itself would need zstd, which PHP has no bundled extension for.
 
 ## Trade-offs & open questions
 

@@ -50,6 +50,24 @@ final class ApkgReader
             throw new RuntimeException("Could not open APKG: {$apkgPath}");
         }
 
+        // Anki's current export compresses the collection into
+        // collection.anki21b with zstd, and leaves collection.anki2 behind as a
+        // stub holding one note reading "Please update to the latest Anki
+        // version, then import the .colpkg/.apkg file again." Reading that stub
+        // succeeds, which is the problem: the import would report one
+        // unrecognised note and nothing else, and the user would be told their
+        // file imported fine. Refuse it by name instead, and say what to change
+        // -- the wording is Anki's own, from its export dialog.
+        if ($zip->locateName('collection.anki21b') !== false) {
+            $zip->close();
+            throw new RuntimeException(
+                'This .apkg uses Anki\'s newer compressed collection format, which LWT cannot read. '
+                . 'Export it from Anki again with "Support older Anki versions (slower/larger files)" '
+                . 'switched on, and keep "Include scheduling information" switched on so your reviews '
+                . 'come back with it.'
+            );
+        }
+
         $collectionName = null;
         foreach (['collection.anki21', 'collection.anki2'] as $candidate) {
             if ($zip->locateName($candidate) !== false) {

@@ -172,9 +172,24 @@ class ApkgController extends VocabularyBaseController
 
         echo '<p class="help mt-4">'
             . 'Notes from this file are matched to existing LWT terms by guid. '
-            . 'Translations, romanizations, notes, and tags are updated. '
+            . 'Translations, romanizations, notes, and tags are updated, and reviews you did in '
+            . 'Anki are replayed into this term\'s schedule. '
             . 'Cards suspended in Anki demote learning-status terms to <em>Ignored</em>.'
             . '</p>';
+
+        // Both of Anki's defaults work against the round-trip, and both fail
+        // quietly: without the legacy format LWT reads a stub instead of the
+        // collection, and without scheduling the reviews never leave Anki.
+        // Verified against Anki 26.08.
+        echo '<div class="notification is-warning is-light mt-4">'
+            . '<strong>Two settings to check in Anki before you export.</strong> Switch on '
+            . '<em>Support older Anki versions (slower/larger files)</em> — without it Anki writes a '
+            . 'compressed collection LWT cannot read — and <em>Include scheduling information</em>, '
+            . 'without which your reviews stay behind in Anki. '
+            . 'Going the other way, tick <em>Import any learning progress</em> when you import an '
+            . 'LWT deck into Anki, or Anki starts every card from scratch and discards the schedule '
+            . 'this page exported.'
+            . '</div>';
 
         // The commonest wrong turn: arriving here with a deck built in Anki,
         // which has no LWT guids and so updates nothing at all.
