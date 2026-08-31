@@ -53,14 +53,56 @@ ones are marked like "v1.0.0-fork".
   MeCab now always stays on the built-in pipeline, which is the one every
   install has been using.
 
-* **An .apkg from a current Anki is refused instead of silently half-read**
-  (#264). Anki's export writes the collection zstd-compressed as
-  `collection.anki21b` unless *Support older Anki versions* is switched on, and
-  leaves `collection.anki2` behind as a stub holding a single "please update
-  Anki" note. LWT read that stub quite happily, reported one unrecognised note,
-  and told the user the import had succeeded. It now refuses the file and names
-  the two settings to change. Found by running the round-trip against real Anki
+* **The format current Anki exports by default is read, not refused** (#264).
+  Anki writes the collection zstd-compressed as `collection.anki21b` unless
+  *Support older Anki versions* is switched on, and leaves `collection.anki2`
+  behind as a stub holding a single "please update Anki" note. LWT read that
+  stub quite happily, reported one unrecognised note, and told the user the
+  import had succeeded. It now reads the real collection: the compressed file is
+  SQLite at **schema 18**, where note types live in `notetypes`/`fields` tables
+  rather than the `col.models` blob, so the field lookup follows `col.ver`
+  instead of assuming schema 11. Decompression needs `ext-zstd`, which PHP does
+  not bundle; without it the file is refused with a message naming Anki's own
+  export setting, and the import page stops giving that advice on servers where
+  the extension is present. Found by running the round-trip against real Anki
   (pylib 26.08.1) rather than against our own reader.
+
+* **A due date set by hand in Anki comes back as one** (#264). "Set due date"
+  and "Forget" write a `revlog` row with no grade on it — `ease` 0, kind Manual
+  — so there is nothing to replay through the scheduler: what the learner said
+  is *when*, not *how well*. Those rows used to be dropped, and a card pushed
+  six months out in Anki came back due tomorrow. The due date now moves, no
+  review is invented to explain it, and stability and difficulty are left
+  untouched, so the next real review carries on from where the term already was.
+  Only when the reschedule is the newest thing that happened to the card — a
+  card postponed and then actually answered has been answered, and the answer
+  wins.
+
+* **Every card of a note counts** (#264). LWT's note type makes one card per
+  note, but a note type edited in Anki can make several, and the reader kept
+  only the first. Reviews on the others were silently discarded. A note's
+  history is now the union across its cards, its due date the earliest of them,
+  and it counts as suspended only when every card is — one card parked while
+  another is still in the queue is not a term to demote to *Ignored*.
+
+* **Notes created in Anki are pointed somewhere** (#264). They carry a random
+  guid and no language, so this page cannot create them; it reported a count
+  and left the user to work out where their words had gone. It now says
+  explicitly that those notes need
+  *Vocabulary → Import an Anki deck*, which asks which language they belong to.
+  Deletions are the case that stays impossible: an .apkg carries no record of
+  them at all — Anki's exporter builds a fresh collection holding only the notes
+  it gathered — so a term missing from a file is left alone rather than guessed
+  at, and the import page now says so.
+
+* **A round-trip check against real Anki** (#264). `composer test:anki-oracle`
+  drives `scripts/anki/anki_oracle.py` to push a deck through an actual Anki
+  collection — import, answer a card, set a due date by hand, re-export — and
+  asserts what comes back. It skips cleanly when Anki's Python library is
+  absent, since that is too heavy a dependency for `composer test`. It exists
+  because the stub bug above passed the entire suite: every other test of this
+  feature has LWT writing *and* reading, and the two agreed perfectly while the
+  round trip was broken.
 
 * **Reviews done in Anki come back** (#264). The `.apkg` exporter has carried
   LWT's scheduling into Anki since 3.6.0, but the importer discarded everything
@@ -76,7 +118,8 @@ ones are marked like "v1.0.0-fork".
   reviews, so the merge is "apply what happened after the state we already
   hold, in the order it happened" — and it is what stops a re-import applying
   each review a second time. The import summary now reports how many terms were
-  rescheduled and how many reviews were replayed.
+  rescheduled, how many reviews were replayed, and how many due dates were set
+  by hand in Anki.
 
 * **The `MECAB` magic word is now deprecated, and says so** (#288). It keeps
   working, but a reader that falls back to it logs a deprecation naming the

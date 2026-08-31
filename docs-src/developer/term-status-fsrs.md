@@ -303,9 +303,52 @@ Neither is a defect in the file we write; both are options the user has to set:
   writes the collection zstd-compressed as `collection.anki21b` and leaves
   `collection.anki2` as a stub holding one note reading "Please update to the
   latest Anki version…". Reading that stub succeeds, so the import used to
-  report one unrecognised note and nothing else. `ApkgReader` now refuses a
-  package containing `collection.anki21b` and names both settings; supporting
-  the format itself would need zstd, which PHP has no bundled extension for.
+  report one unrecognised note and nothing else.
+
+`ApkgReader` now reads both layouts. `collection.anki21b` is a zstd stream
+wrapping SQLite at **schema 18**, not schema 11, and schema 15 moved note types
+out of the `col.models` JSON blob into `notetypes`/`fields` tables — so the
+field-name lookup follows `col.ver` rather than assuming either. Decompression
+needs `ext-zstd`, which PHP does not bundle; where it is missing the package is
+refused with a message naming Anki's own export setting, and the import page
+drops that half of its advice when the extension *is* present.
+
+### The oracle
+
+`bin/lwt-apkg-oracle.php` (`composer test:anki-oracle`) drives
+`scripts/anki/anki_oracle.py` to run the loop through a real Anki collection. It
+skips cleanly, exit 0, when Anki's Python library is absent — the library is far
+too heavy to require of `composer test`, and a suite that fails on a missing
+optional tool gets deleted rather than fixed.
+
+It exists because the stub bug above passed the entire suite. Every other test
+of this feature has LWT on both ends: LWT writes a file, LWT reads it back, and
+they agree — as they did throughout the period the round trip was broken. The
+oracle is the one check where the other end is Anki. It pins the format Anki
+exports by default, that a grade given in Anki comes back with a newer
+timestamp than ours, that a hand-set due date is recognised as one, and that
+Anki still discards history when *Import any learning progress* is off — so if
+that default ever changes, the notice on the import page can change with it.
+
+### What the format cannot carry
+
+**Deletions.** An .apkg records none. Anki's exporter builds a *new minimal
+collection* and inserts only the notes the search gathered
+(`rslib/src/import_export/package/apkg/export.rs`), so the `graves` table that
+records deleted note ids inside a live collection never reaches the file. A term
+deleted in Anki is therefore indistinguishable from one that was simply not
+exported — a deck-scoped export would look like mass deletion — so LWT does not
+guess: an import never deletes a term.
+
+**Notes created in Anki.** They carry a random guid, no `lwt-` prefix, and no
+language. This page counts them as `skippedUnknown` and points at
+`/vocabulary/anki-deck/import`, which does ask for a language and does create
+terms.
+
+**A "Forget" in Anki.** Recorded like a "Set due date" — a `revlog` row with
+`ease` 0 and kind Manual — but it resets the card to new, leaving no due date to
+bring back. LWT keeps its own state rather than discarding it, on the grounds
+that it is the system of record for its own terms.
 
 ## Trade-offs & open questions
 
