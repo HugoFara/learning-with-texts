@@ -9,9 +9,11 @@
  * Usage:
  *   php bin/lwt-apkg-roundtrip-smoke.php [output.apkg]
  *
- * The output file can then be fed to Anki desktop (File → Import) for human
- * verification, or to scripts/anki/validate-apkg.py for automated checking
- * via the genanki round-trip.
+ * This checks LWT against itself, which is useful and not sufficient: both ends
+ * are our own code, so the two can agree while the file is wrong. For a check
+ * against real Anki -- which is what caught #264 -- use bin/lwt-apkg-oracle.php
+ * instead. The output file here can also be fed to Anki desktop by hand
+ * (File → Import).
  */
 
 declare(strict_types=1);
