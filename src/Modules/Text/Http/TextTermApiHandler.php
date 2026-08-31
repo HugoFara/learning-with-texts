@@ -248,16 +248,22 @@ class TextTermApiHandler
      */
     private static function parseWarning(array $words, int $langId): ?array
     {
-        $wordCount = 0;
-        $characters = 0;
+        $coverage = new ParseCoverage();
         foreach ($words as $word) {
-            $characters += mb_strlen((string) ($word['text'] ?? ''), 'UTF-8');
-            if (($word['isNotWord'] ?? true) === false) {
-                $wordCount++;
+            // Multi-word expressions are overlaid on the words they span, so
+            // counting them too would count their letters twice. The single
+            // words and the non-word runs between them tile the text exactly
+            // once, which is the denominator the verdict is defined against.
+            if ((int) ($word['wordCount'] ?? 1) > 1) {
+                continue;
             }
+            $coverage->add(
+                (string) ($word['text'] ?? ''),
+                ($word['isNotWord'] ?? true) === false
+            );
         }
 
-        $verdict = ParseCoverage::assess($wordCount, $characters);
+        $verdict = $coverage->verdict();
         if (!ParseCoverage::isWarning($verdict)) {
             return null;
         }

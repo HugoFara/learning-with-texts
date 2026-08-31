@@ -60,6 +60,27 @@ ones are marked like "v1.0.0-fork".
 
 ### Fixed in Unreleased
 
+* **A text with no words was told its language was misconfigured** (#289). The
+  "none of this text could be turned into words" banner had no minimum length,
+  so `123`, `2024`, `3.14` and `?!...` each sent the reader to change a language
+  setting that was working correctly. A price list, a date exercise or a numbers
+  drill genuinely contains no words; the parse was right and now says nothing.
+
+* **Short non-Latin texts warned about nothing at all** (#289, #278). The
+  density test was switched off below 200 characters, so a 122-character Chinese
+  text on a Latin language — five stray clickable tokens in a wall of
+  unclickable characters — got no explanation, which is the experience #278
+  reports. The verdict no longer has a length threshold to fall through.
+
+* **One rule, three denominators** (#289). The reading view, the check-text page
+  and the API shared the rule for when a parse came out empty but not its input:
+  one measured the raw text, two summed token lengths, so the same text could
+  cross the floor on one surface and not another. `ParseCoverage` is now fed the
+  text token by token and does its own counting, so a caller cannot measure
+  differently. Coverage is judged as the share of a text's **letters** that
+  ended up inside words, which — unlike word-per-character density — does not
+  move with how spaced-out a script is, and reads the same at any length.
+
 * **Config blobs could break out of their script element** (#301). Six islands
   passed no escaping flags at all, so a value containing `</script>` closed the
   element early and the rest parsed as markup. `preferences.php` separately

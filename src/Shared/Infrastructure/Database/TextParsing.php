@@ -147,7 +147,8 @@ class TextParsing
      * @param string $text Text to parse
      * @param int    $lid  Language ID
      *
-     * @return array{sentences: int, words: int, unknownPercent: float, preview: string}
+     * @return array{sentences: int, words: int, unknownPercent: float, preview: string,
+     *         warning: string} `warning` is a ParseCoverage verdict, 'ok' when fine
      */
     public static function checkText(string $text, int $lid): array
     {

@@ -75,8 +75,10 @@ class ParseText
             'unknownPercent' => $result['unknownPercent'] ?? 100.0,
             'preview' => $result['preview'] ?? '',
             // A language whose word characters do not fit the script parses
-            // successfully into nothing; say so rather than report a zero
-            'warning' => ParseCoverage::assess($words, mb_strlen($text, 'UTF-8'))
+            // successfully into nothing; say so rather than report a zero.
+            // The verdict comes from the tokens rather than being recomputed
+            // from the raw text, which measured a different denominator (#289)
+            'warning' => $result['warning'] ?? ParseCoverage::OK
         ];
     }
 

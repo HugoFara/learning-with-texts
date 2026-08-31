@@ -30,6 +30,12 @@ namespace Lwt\Modules\Text\Domain;
  * This is the one place that decides a parse came out empty, so that the
  * reading view, the check-text page and the API all agree on when to say so.
  *
+ * Feed every token of the text through {@see self::add()} — words and the
+ * punctuation and whitespace between them alike — then ask for the
+ * {@see self::verdict()}. Callers hand over the material and never the
+ * measurements, which is what stops each surface from measuring differently
+ * (#289).
+ *
  * @since 3.5.0
  */
 final class ParseCoverage
@@ -50,46 +56,86 @@ final class ParseCoverage
     public const ALMOST_NO_WORDS = 'almost_no_words';
 
     /**
-     * Shortest text worth judging on its word density.
+     * Smallest share of a text's letters that a working parse leaves in words.
      *
-     * A handful of characters can legitimately hold a single word, so the
-     * density test only applies once there is enough text to be sure.
+     * Coverage is judged in letters rather than characters, because letters are
+     * the only thing a word can be made of: digits, punctuation, symbols and
+     * the spaces between words are not evidence either way, and counting them
+     * made the measure depend on how spaced-out a script happens to be.
+     *
+     * A correctly configured language leaves essentially every letter inside a
+     * word, so healthy texts sit near 1.0 whatever their script or length —
+     * Latin prose, character-split Chinese and MeCab-segmented Japanese all do.
+     * The room below the floor is for legitimately mixed-script writing, such
+     * as a French text quoting a Chinese sentence. Four letters in five falling
+     * outside any word is not mixed script; it is a language that matched a few
+     * stray tokens and missed the text.
      */
-    private const DENSITY_MIN_CHARACTERS = 200;
+    private const COVERAGE_FLOOR = 0.2;
 
     /**
-     * Fewest words per character a real language ever produces.
-     *
-     * One word per fifty characters. Prose in a Latin script runs nearer one
-     * per six, and a character-split script nearer one per one, so anything
-     * under this is a language that matched a few stray tokens — digits, or a
-     * Latin fragment in a non-Latin text — and missed the rest.
+     * Letters anywhere in the text.
      */
-    private const DENSITY_FLOOR = 0.02;
+    private int $letters = 0;
 
     /**
-     * Judge a parse by what it produced.
+     * Letters that ended up inside a word.
+     */
+    private int $lettersInWords = 0;
+
+    /**
+     * Words the parse produced.
+     */
+    private int $words = 0;
+
+    /**
+     * Account for one token of the parsed text.
      *
-     * @param int $wordCount      Words the parse produced
-     * @param int $characterCount Characters in the text that was parsed
+     * Every token is passed, not only the words: the non-word runs are what
+     * tell us how much of the text the parser could not use.
+     *
+     * @param string $text   The token's text
+     * @param bool   $isWord Whether the parser made a word of it
+     *
+     * @return void
+     */
+    public function add(string $text, bool $isWord): void
+    {
+        $letters = preg_match_all('/\p{L}/u', $text);
+        if ($letters === false) {
+            $letters = 0;
+        }
+
+        $this->letters += $letters;
+        if ($isWord) {
+            $this->words++;
+            $this->lettersInWords += $letters;
+        }
+    }
+
+    /**
+     * Judge the parse by what it produced.
      *
      * @return self::OK|self::NO_WORDS|self::ALMOST_NO_WORDS
      */
-    public static function assess(int $wordCount, int $characterCount): string
+    public function verdict(): string
     {
-        if ($characterCount <= 0) {
-            // An empty text is empty; that is not a parsing problem
+        if ($this->letters === 0) {
+            // A price list, a date, a numbers drill or a line of punctuation
+            // holds nothing a word could be made of, so a parse that produced
+            // no words got it right. Telling the reader their word-characters
+            // setting is wrong would be a confident false diagnosis of a
+            // correctly configured language (#289).
             return self::OK;
         }
 
-        if ($wordCount <= 0) {
+        if ($this->words === 0) {
+            // Letters are there and not one became a word: the word-characters
+            // setting really does not match this text.
             return self::NO_WORDS;
         }
 
-        if (
-            $characterCount >= self::DENSITY_MIN_CHARACTERS
-            && $wordCount / $characterCount < self::DENSITY_FLOOR
-        ) {
+        if ($this->lettersInWords / $this->letters < self::COVERAGE_FLOOR) {
             return self::ALMOST_NO_WORDS;
         }
 
@@ -99,7 +145,7 @@ final class ParseCoverage
     /**
      * Whether a verdict is worth telling the reader about.
      *
-     * @param string $verdict A verdict from assess()
+     * @param string $verdict A verdict from verdict()
      *
      * @return bool
      */

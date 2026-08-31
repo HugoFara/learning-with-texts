@@ -83,18 +83,27 @@ final class TokenPersistence
      * @param ParsedToken[] $tokens Tokens for the whole text
      * @param int           $lid    Language ID
      *
-     * @return array{sentences: int, words: int, unknownPercent: float, preview: string}
+     * @return array{sentences: int, words: int, unknownPercent: float, preview: string,
+     *         warning: string} `warning` is a ParseCoverage verdict, 'ok' when fine
      */
     public static function stats(array $tokens, int $lid): array
     {
         if (empty($tokens)) {
-            return ['sentences' => 0, 'words' => 0, 'unknownPercent' => 100.0, 'preview' => ''];
+            return [
+                'sentences' => 0,
+                'words' => 0,
+                'unknownPercent' => 100.0,
+                'preview' => '',
+                'warning' => ParseCoverage::OK,
+            ];
         }
         $bySentence = self::groupBySentence($tokens);
 
         $counts = [];
         $total = 0;
+        $coverage = new ParseCoverage();
         foreach ($tokens as $t) {
+            $coverage->add($t->text, $t->wordCount === 1);
             if ($t->wordCount === 1) {
                 $lc = self::lc($t->text);
                 $counts[$lc] = ($counts[$lc] ?? 0) + 1;
@@ -124,6 +133,9 @@ final class TokenPersistence
             'words' => $total,
             'unknownPercent' => $unknownPercent,
             'preview' => $preview,
+            // Judged here, where the tokens are, so that the check page and the
+            // reading view measure the same text the same way (#289)
+            'warning' => $coverage->verdict(),
         ];
     }
 
@@ -157,9 +169,9 @@ final class TokenPersistence
 
         $wordCounts = [];
         $nonWordCounts = [];
-        $characters = 0;
+        $coverage = new ParseCoverage();
         foreach ($tokens as $t) {
-            $characters += \mb_strlen($t->text, 'UTF-8');
+            $coverage->add($t->text, $t->wordCount === 1);
             $lc = self::lc($t->text);
             if ($t->wordCount === 1) {
                 $wordCounts[$lc] = ($wordCounts[$lc] ?? 0) + 1;
@@ -191,7 +203,7 @@ final class TokenPersistence
             'nonWords' => $nonWords,
             'multiWords' => self::multiWordOccurrences($bySentence, $lid),
             'rtlScript' => $rtlScript,
-            'warning' => ParseCoverage::assess(array_sum($wordCounts), $characters),
+            'warning' => $coverage->verdict(),
         ];
     }
 
