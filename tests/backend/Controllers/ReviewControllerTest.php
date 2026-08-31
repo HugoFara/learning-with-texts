@@ -135,17 +135,6 @@ class ReviewControllerTest extends TestCase
         $this->assertTrue(method_exists($controller, 'index'));
     }
 
-    public function testControllerHasHeaderMethod(): void
-    {
-        if (!self::$dbConnected) {
-            $this->markTestSkipped('Database connection required');
-        }
-
-        $controller = $this->createController();
-
-        $this->assertTrue(method_exists($controller, 'header'));
-    }
-
     // ===== BaseController inheritance tests =====
 
     public function testControllerExtendsBaseController(): void
@@ -366,7 +355,7 @@ class ReviewControllerTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $sql = "SELECT WoID, WoText, WoStatus FROM " . Globals::table('words') . " LIMIT 10";
+        $sql = "SELECT WoID, WoText, WoStatus FROM words LIMIT 10";
         $result = Connection::query($sql);
 
         $this->assertInstanceOf(\mysqli_result::class, $result);
@@ -379,7 +368,7 @@ class ReviewControllerTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $sql = "SELECT COUNT(*) AS value FROM " . Globals::table('words') . " WHERE WoStatus BETWEEN 1 AND 5";
+        $sql = "SELECT COUNT(*) AS value FROM words WHERE WoStatus BETWEEN 1 AND 5";
         $result = Connection::fetchValue($sql);
 
         $this->assertIsNumeric($result);
@@ -392,7 +381,7 @@ class ReviewControllerTest extends TestCase
         }
 
         $sql = "SELECT LgID, LgName, LgTextSize, LgRegexpWordCharacters, LgRightToLeft
-                FROM " . Globals::table('languages') . " LIMIT 5";
+                FROM languages LIMIT 5";
         $result = Connection::query($sql);
 
         $this->assertInstanceOf(\mysqli_result::class, $result);

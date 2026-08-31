@@ -3,7 +3,7 @@
 /**
  * WhisperClient for NLP service integration.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Infrastructure
  * @package  Lwt

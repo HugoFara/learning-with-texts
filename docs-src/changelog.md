@@ -12,9 +12,334 @@ ones are marked like "v1.0.0-fork".
 
 ## [Unreleased]
 
+### Added in Unreleased
+
+* **One emitter and one reader for the values PHP hands a page** (#301). Server
+  values reach a page as a JSON island because the CSP build of Alpine cannot
+  evaluate inline expressions. All 35 islands now go through `ConfigIsland` on
+  the PHP side and `readPageConfig()` on the TypeScript side, instead of each
+  hand-rolling its own script tag, escaping flags and parser.
+
+* **Fetched source documents are cached** (#303). `FileCache` holds the text
+  behind a difficulty preview for 24 hours, keyed by URL. Only the document is
+  shared; coverage is still computed per user.
+
+* **`npm run serve`** (#303) starts the PHP dev server with
+  `PHP_CLI_SERVER_WORKERS` set. Use it instead of a bare `php -S`, which serves
+  one request at a time.
+
+### Changed in Unreleased
+
+* **The annotated text view is rendered by the browser** (#302). `/text/{id}/display`
+  was the last page building content in PHP. It now fetches
+  `GET /api/v1/texts/{id}/annotation`, and three view files become one. The
+  markup is unchanged, down to the class names the show/hide buttons rely on.
+
+* **Difficulty previews no longer refetch the book every time** (#303). Each
+  preview downloaded the whole text from Gutenberg — 5.4 s, essentially all
+  network — on every page load, and the suggestion panels ask for one per book
+  they list. Cached, the same call takes 0.02 s.
+
+* **`Globals` carries only what it needs to** (#300), going from 505 lines to
+  353. What remains is the request's database handle and user context; the
+  latter is what `QueryBuilder` scopes every query by, which the class now says
+  outright. `Connection` owns the mysqli handle alone, so `Connection::reset()`
+  genuinely clears it rather than recovering a second copy.
+
+* **Documentation matches the codebase again** (#298, #301). `CLAUDE.md`
+  described directories, helpers and tables that no longer exist. 530 file
+  docblocks also claimed PHP 8.1 while `composer.json` has required `^8.2` and
+  CI tests 8.2 through 8.5.
+
+### Removed in Unreleased
+
+* **Server-side rendering paths nothing reaches** (#299), 800 lines: the
+  word-by-word reading pane renderer superseded by `text_renderer.ts`, three
+  review views behind an unrouted controller method, and a frameset page header
+  from before the app had no framesets.
+
+* **`Globals::table()`** (#300), which was the identity function — a leftover
+  from a table prefix that no longer exists, called in 185 places and reading as
+  though it did something. Also `Globals::query()`, a one-line forward to
+  `QueryBuilder::table()`, and an error-display flag that was never switched on.
+
+### Fixed in Unreleased
+
+* **Config blobs could break out of their script element** (#301). Six islands
+  passed no escaping flags at all, so a value containing `</script>` closed the
+  element early and the rest parsed as markup. `preferences.php` separately
+  hand-spliced a pre-encoded value into a JSON literal, which held only while
+  the controller remembered to encode it.
+
+* **A malformed config blob no longer kills the page** (#301). The starter
+  vocabulary page parsed without a `try`/`catch`, so a bad blob threw during
+  `init()` and left an inert shell. `readPageConfig()` falls back to the
+  caller's defaults instead.
+
+* **Two empty ruby elements per annotated text** (#302). Splitting the stored
+  annotation on newlines yields a blank entry for any trailing newline, and the
+  API reported those as terms. Affected the annotated print view as well.
+
+* **Annotation items carry their romanization** (#302), resolved for the whole
+  text in one query rather than one lookup per term.
+
+## [3.6.0-fork] - 2026-08-30
+
+### Added in 3.6.0-fork
+
+* **Locale completion is documented and visible**. The translation badges the
+  `Locale completion` workflow has been publishing to the `badges` branch were
+  not referenced anywhere, so nothing displayed them. `CONTRIBUTING.md` now has
+  a Translations section carrying the badge for each of the nine locales,
+  alongside how to check completion locally and how to fill in or add a
+  language.
+
+* **The API reads and writes what the forms used to post** (#262, #266). Five
+  endpoints replace same-origin form POSTs: `POST /api/v1/texts/check` reports
+  what the parser made of a text without saving it,
+  `POST /api/v1/feeds/wizard/preview` and `.../article` read an RSS feed and one
+  of its articles, `PUT /api/v1/texts/archived/{id}` saves an archived text, and
+  local dictionaries are created through `/api/v1/local-dictionaries`. Each
+  answers with data, so the interface works against a configurable API base URL
+  rather than the page origin.
+
+### Changed in 3.6.0-fork
+
+* **The feed wizard is one page** (#262, #266). Its four steps were four POSTs,
+  each render rebuilding the parsed feed, the fetched article and the picked
+  selectors out of `$_SESSION` and the previous page's markup. They are panels
+  of one page now: the article is fetched once and shared between the steps that
+  need it rather than re-fetched on every hop, and reopening a saved feed is a
+  plain `GET /feeds/wizard?edit_feed={id}`.
+
+* **Checking a text no longer discards what you were editing** (#262, #266). The
+  check page and the editor's **Check** button both posted a form and got back a
+  whole server-rendered document, so checking from the editor threw away
+  everything else in it. The report is fetched and rendered in place now, and
+  built as text nodes rather than injected markup.
+
+* **The feed wizard and manager follow the navbar's language** (#262, #266). The
+  wizard's last step and the manager's feed form asked for the language again,
+  though the navbar had already been asked and the wizard's other paths had
+  always saved under it without asking. All three take that answer and show it
+  now; a feed being edited keeps whichever language it was saved with, and the
+  feed list's language column and filter go with the question.
+
+* **Dependencies move up within their existing ranges**. Notably Alpine 3.15 to
+  3.17, Lucide 1.28 to 1.37 and Vite 8.2.0 to 8.2.2 on the frontend, Guzzle
+  7.15.2 to 7.15.5 and Symfony Console 7.4.15 to 7.4.17 on the backend. No
+  constraint in `package.json` or `composer.json` was widened. The frontend is
+  built from the lock file when the image is built, so these are the versions
+  the release actually ships.
+
+### Fixed in 3.6.0-fork
+
+* **Whole-number locale percentages are no longer mangled**. The badge writer
+  trimmed trailing zeros off the plain string form of the percentage, which ate
+  significant digits: 100% was published as "1%", and 90% would have been "9%".
+  Only percentages ending in a zero were affected, so the fault sat unnoticed
+  behind the 99.7% shared by every translated locale, visible on English alone.
+
+* **Dictionary-imported terms are visible to the reader** (#283). Importing a
+  dictionary created one term per entry but never linked them to the words in
+  your texts. The reader decides a word is unknown from that link rather than
+  from whether the term exists, so imported terms stayed invisible: the word
+  kept its unmarked colour, and marking it known failed — HTTP 500 from the
+  term form, and silently nothing from the status shortcut. Since an import
+  covers essentially the whole language, this affected more or less every word
+  in a text. The import now links what it creates, a migration repairs the
+  terms already imported, and adding a term that turns out to exist updates it
+  instead of failing. Imported terms are also given the word count they were
+  missing, without which every text added after an import came back unmarked
+  all over again.
+
+* **A failed API write no longer reports success** (#284). Handlers signal
+  failure by returning an `error` payload rather than by throwing, and the
+  routers passed that straight to `Response::success()` — so the request came
+  back HTTP 200 and the interface, seeing a success, did nothing at all. Such
+  a payload is now recognised and sent as 400. The body is unchanged, so
+  anything reading the message out of it keeps working.
+
+* **API error messages reach the interface** (#284). The API client only ever
+  looked for `message` on a failed request, while the API sends `error` — so
+  even a well-formed error was shown as a bare "HTTP 400: Bad Request". It now
+  reads both.
+
+* **Restoring a foreign key no longer fails on the rows it exists to prevent**.
+  `addMissingForeignKeys()` adds a constraint with a plain `ALTER TABLE`, which
+  makes InnoDB validate the rows already there — and an install is missing a
+  constraint precisely because it spent time without one, so those rows exist.
+  InnoDB answered errno 1452 and refused the keys most worth putting back, and
+  the failure was only logged, so the constraint was lost without anything
+  saying so. It worked wherever it was actually reached, because every caller
+  happened to set `FOREIGN_KEY_CHECKS = 0` around its own migration run; the
+  repair establishes that itself now instead of inheriting it from whichever
+  caller is on the stack.
+
+* **The feed wizard's step icons appear** (#262, #266). `IconHelper` emits
+  placeholders for a script to replace, and that pass ran once on
+  `alpine:initialized` — enough when each step was a page load, not enough now
+  that a step's markup enters the DOM as the user reaches it.
+
+### Security in 3.6.0-fork
+
+* **Creating a local dictionary checks that the language is yours** (#262). The
+  dictionary index's quick-create form passed the URL's language id straight to
+  `DictionaryFacade::create()`, while the API path it sat beside gated the same
+  call through `languageBelongsToCurrentUser()`. `LdLgID` carries no foreign
+  key, so on a multi-user install a POST naming another user's language id
+  planted a dictionary row pinned to their language. Create goes through the API
+  now, which removes the unguarded path rather than duplicating the guard.
+
+* **The `nanoid` advisory is closed** (GHSA-2v37-7h3g-55p8). Versions below
+  3.3.18 can loop indefinitely when a custom generator is asked for a size of
+  zero. It reached the project through the Vite build chain rather than
+  anything the application serves, so nothing was exposed at runtime, but the
+  build no longer pulls a flagged version.
+
+## [3.5.0-fork] - 2026-08-27
+
+### Added in 3.5.0-fork
+
+* **Reviews are graded Again / Hard / Good / Easy** (#238). The review card's
+  Wrong/Correct pair becomes the four grades FSRS needs, each showing when it
+  would bring the term back before you commit to it. Keys 1-4 grade, as in Anki;
+  setting a status outright moved to Shift and the number keys. All three
+  correct grades still raise the term's status by one, so reading colours are
+  unchanged — what differs is what the scheduler learns.
+
+* **Anki decks arrive already scheduled** (#228, #238). A term LWT has scheduled
+  now exports as a review card rather than a new one, carrying its due date,
+  interval, review and lapse counts, FSRS memory state and review history, so
+  Anki's own FSRS continues from LWT's estimate instead of starting over.
+  Suspended terms keep their schedule. Nothing flows the other way.
+
+### Changed in 3.5.0-fork
+
+* **The database lives in a named Docker volume** (#275). `docker-compose.yml`
+  no longer bind-mounts the database directory from the host, which on Windows
+  forced `lower_case_table_names=2` and made every migration fail. **An existing
+  install will look empty after upgrading**: the old data is still in
+  `./lwt_db_data` but is no longer mounted. Dump the database before upgrading
+  and import it afterwards.
+
+* **The review queue follows the FSRS schedule** (#238). It picks and orders by
+  each term's due date instead of the retired Leitner score. A term you have not
+  graded keeps the schedule it already had, so nothing floods or empties on
+  upgrade. Statuses 2 and 5 come up a day earlier than before, where the old
+  formula rounded.
+
+* **Similar terms suggest the parts of a compound, not its siblings** (#137).
+  For a compound like *Geschwindigkeitsbegrenzung*, every word built on
+  *Geschwindigkeit* used to crowd out *Begrenzung*, which explains the other
+  half. Suggestions are now picked one at a time, and the term shrinks to what
+  is still unexplained after each pick, so a candidate repeating an earlier
+  suggestion scores near nothing.
+
+* **Similar terms follow word families, not just spelling** (#136). Ranking on
+  shared letter pairs alone cannot reach an irregular form — *bought* and *buy*
+  have no letters in common. Terms sharing the searched term's lemma now come
+  first, using whichever lemmatizer the language is configured with. Languages
+  with the lemmatizer set to *none* are unaffected.
+
+### Removed in 3.5.0-fork
+
+* **The legacy Leitner scoring is gone** (#238). `WoTodayScore`,
+  `WoTomorrowScore` and `WoRandom` cached a formula over a term's status and the
+  date it changed; everything reads the due date now, so a migration drops all
+  three. Nothing is lost — the values were derived, and every term keeps its
+  schedule. The nightly recomputation across your whole vocabulary goes with
+  them, and the vocabulary list's **Score** column becomes **Due**, counting
+  days until the term returns.
+
+### Fixed in 3.5.0-fork
+
+* **Chinese texts could not be read** (#278). A Chinese language from the
+  built-in preset produced a text with no clickable words at all. Chinese and
+  Japanese presets now point at a real tokenizer — **jieba** for Chinese, MeCab
+  for Japanese — falling back to character-by-character parsing where that
+  tokenizer is not installed, so the text stays readable either way.
+
+* **Choosing a parser in the language form did nothing** (#278). The Parser Type
+  menu wrote its value to the database and no part of the parsing pipeline read
+  it. The setting is now honoured, and the menu lists the parsers from
+  `config/parsers.php`, so jieba and MeCab Python appear on an install that has
+  them. Every language that exists today parses exactly as it did.
+
+* **A text that parses into nothing now says so** (#278). A language whose *Word
+  Characters* setting does not match its texts does not fail — it parses into
+  nothing, and the text opens looking normal while refusing every click. The
+  reading view and the check-text page now say what happened and link to the
+  language's settings.
+
+* **An incomplete schema no longer takes the review page and the vocabulary list
+  down with it** (#275, #285). The review queue reads each term's due date from
+  `term_schedule`; on an install where that migration failed, naming the missing
+  table made MySQL reject the whole statement and both pages answered 500. They
+  now fall back to the schedule a term's status implies — the same answer on
+  such an install, since nothing there has been graded.
+
+* **A failed migration gets retried again** (#285). Retries only happened when
+  an upgrade brought new migration files, which on a fresh install never
+  happens: the first run records all of them, so a failure stayed failed at one
+  attempt until some later release added a file. Failures are now retried on the
+  following requests, up to three attempts, and an upgrade restores that budget.
+  This is what left installs without `term_schedule`.
+
+* **Expected migration failures stopped being logged as failures** (#285). A
+  healthy fresh install wrote ~178 `Migration failed:` lines while every
+  migration succeeded, because legacy migrations rename tables a fresh install
+  never had. Those now log as skipped, and `Migration failed:` means it.
+
+* **Adding a term failed outright on a large vocabulary** (#277). Opening the
+  term editor read every term of the language into memory to look for similar
+  ones — fatal for a vocabulary seeded from a dictionary import, where clicking
+  a word died on PHP's memory limit. Candidates are now selected in the
+  database. Suggestions are unchanged.
+
+## [3.4.2-fork] - 2026-08-16
+
+### Fixed in 3.4.2-fork
+
+* **Finishing the RSS feed wizard saved nothing** (#262). The wizard's last
+  step posted the finished feed to `/feeds/edit`, and that route became a
+  redirect to the feeds manager in 3.4.0 when the duplicated server-rendered
+  feeds list was retired. A redirect discards the body, so the wizard ran to
+  completion and produced no feed. Affects 3.4.0 and 3.4.1. The manual "add a
+  feed" tab and the curated-source browser were unaffected.
+* **The feed wizard showed no article to pick from.** Steps 2 and 3 render the
+  fetched article so you can click the part to import, but the controller
+  handed the view the extractor's whole result array instead of the article's
+  HTML. The picker showed the word "Array", and the "Array to string
+  conversion" notice behind it is fatal wherever PHP warnings are — so on those
+  installs the wizard could not get past step 2 at all. Affects 3.4.0 and
+  3.4.1. The article is also cached in the session again, as it was meant to
+  be, so stepping back and forth no longer refetches it every time.
+
+### Changed in 3.4.2-fork
+
+* **The text editor and the feed forms save through `/api/v1`** (#262).
+  Creating or editing a text now uses `POST /api/v1/texts` and
+  `PUT /api/v1/texts/{id}`; the feed forms use `POST /api/v1/feeds` and
+  `PUT /api/v1/feeds/{id}`. Both surfaces work against a configurable API base
+  URL rather than the page origin, which is what a bundled mobile client needs.
+  The text editor's "Check" button still asks the server for its parsing
+  report, and the feed wizard's URL steps still drive the server-side session.
+
+### Security in 3.4.2-fork
+
+* **The language on a new text or feed is checked for ownership** (#262).
+  `texts.TxLgID` and `news_feeds.NfLgID` have foreign keys to `languages`, but
+  a foreign key proves the row exists, not that the caller owns it, and the
+  form handlers passed the submitted value straight through. On a multi-user
+  install a crafted request could file a text or feed under another user's
+  language. The API endpoints these forms now use check ownership, and the
+  form-POST routes that skipped the check are retired. Single-user installs
+  were never affected.
+
 ## [3.4.1-fork] - 2026-08-12
 
-### Fixed
+### Fixed in 3.4.1-fork
 
 * **Foreign keys earlier upgrades had already dropped are now put back**
   (#273). 3.4.0 stopped an upgrade from destroying constraints, but it could
@@ -43,18 +368,20 @@ ones are marked like "v1.0.0-fork".
   repair.
 
   **Timed on a large database** (3.05M occurrences, 155k terms, 760 texts,
-  210 MB): the whole upgrade takes **8 seconds**, once, and later upgrades on
-  the same database finish in under a second. Creating the constraints is not
-  what costs — each takes well under a second, because the columns already
-  carry a covering index. The cost is the column realignment, which rewrites
-  the table, so all the columns of one table are now realigned in a single
-  `ALTER` instead of one each: `word_occurrences` has four of them, and
-  rewriting a three-million-row table four times took 27 seconds where one pass
-  takes 8.
+  210 MB): the whole upgrade takes **8 to 10 seconds**, once, and later
+  upgrades on the same database finish in under a second. Creating the
+  constraints is not what costs — each takes well under a second, because the
+  columns already carry a covering index. The cost is the column realignment,
+  which rewrites the table, so all the columns of one table are now realigned
+  in a single `ALTER` instead of one each: `word_occurrences` has four of them,
+  and rewriting a three-million-row table four times took 27 seconds where one
+  pass takes under ten. Should a column be un-alterable — a foreign key still
+  pointing at it — the batch falls back to a statement per column rather than
+  leaving the whole table unaligned.
 
 ## [3.4.0-fork] - 2026-08-12
 
-### Fixed
+### Fixed in 3.4.0-fork
 
 * **A migration that failed was recorded as applied, so the schema silently
   stayed broken** (#247, #271). `Migrations::update()` logged each failing
@@ -112,7 +439,7 @@ ones are marked like "v1.0.0-fork".
   explanation pointing at the first-segment rule. It fails against the previous
   registry on exactly those two routes.
 
-### Added
+### Added in 3.4.0-fork
 
 * **Books are shell-free.** `/books` and `/book/{id}` render entirely from
   `/api/v1` through the new `bookList` and `bookDetail` Alpine components. The
@@ -130,7 +457,7 @@ ones are marked like "v1.0.0-fork".
   for `src/Modules/Book/Views` were removed — with no row data left to walk,
   Psalm reported them as unnecessary.
 
-### Removed
+### Removed in 3.4.0-fork
 
 * **Seven orphaned view templates**, taking `src/**/Views` from 78 files to 71.
   None had a caller — checked against literal `include`s, `render('stem')`, and
@@ -270,7 +597,7 @@ ones are marked like "v1.0.0-fork".
   and a language named `<img src=x onerror=…>` / `" onmouseover="…`. Each was
   checked against the pre-fix code to confirm it actually fails there.
 
-### Changed
+### Changed in 3.4.0-fork
 
 * **EPUB import no longer depends on an external Composer package** (#263):
   LWT now ships its own EPUB reader
@@ -290,7 +617,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.3.0-fork] - 2026-08-06
 
-### Added
+### Added in 3.3.0-fork
 
 * **Import an Anki deck to seed known words** (#228): point LWT at a deck you
   already study in Anki and it creates the terms for you, working out how well
@@ -317,7 +644,7 @@ ones are marked like "v1.0.0-fork".
   a learning term to *Ignored*. Scheduling state is deliberately not exchanged.
   See `docs/reference/anki-export-import`.
 
-### Fixed
+### Fixed in 3.3.0-fork
 
 * **Selecting several words in the reader produced a term named after hashes**:
   creating a multi-word term captured each word's `data_hex` identity token
@@ -332,7 +659,7 @@ ones are marked like "v1.0.0-fork".
   in a frame the reader no longer renders. It now links to `/word/edit-term`,
   the same route the Alpine review view already used.
 
-### Removed
+### Removed in 3.3.0-fork
 
 * **Dead legacy result-view plumbing** (#266): four result handlers
   (`delete_result`, `insert_wellknown_result`, `insert_ignore_result`,
@@ -344,7 +671,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.2.2-fork] - 2026-08-05
 
-### Fixed
+### Fixed in 3.2.2-fork
 
 * **A single-language install could never browse Gutenberg or GDL**: the
   new-text page said "Please select a language above" while the navbar already
@@ -396,7 +723,7 @@ ones are marked like "v1.0.0-fork".
   used optional chaining, which `@alpinejs/csp` cannot parse. Moved into the
   `backupManager` component as `selectFile()`.
 
-### Changed
+### Changed in 3.2.2-fork
 
 * **Three further security advisories** published after the bumps below, all
   fixed within existing constraints. `guzzlehttp/guzzle` 7.15.1 → 7.15.2 clears
@@ -438,7 +765,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.2.1-fork] - 2026-06-30
 
-### Fixed
+### Fixed in 3.2.1-fork
 
 * **Database error on first boot with CRLF schema files** (#241): a fresh
   install could fail to start with "Internal Server Error - A database error
@@ -458,7 +785,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.2.0-fork] - 2026-06-23
 
-### Added
+### Added in 3.2.0-fork
 
 * **Global Digital Library as a text source** ("Kids' Library"): browse and
   search openly-licensed (CC-BY/CC-BY-SA) children's and early-grade readers —
@@ -780,7 +1107,7 @@ ones are marked like "v1.0.0-fork".
   check that also strips query strings, so signed CDN URLs like
   `audio.mp3?token=...` resolve correctly.
 
-### Fixed
+### Fixed in 3.2.0-fork
 
 * **Navbar hamburger hidden under the status/camera bar** on edge-to-edge
   phones (and in the Android app shell). The navbar now respects the device
@@ -1461,7 +1788,7 @@ ones are marked like "v1.0.0-fork".
   short-circuits with a specific hint that the user must upload an
   archive containing the full bundle.
 
-### Changed
+### Changed in 3.2.0-fork
 
 * **Dependency security bumps** closing twelve Dependabot advisories. PHP
   runtime: `guzzlehttp/guzzle` 7.10.0 → 7.12.1, `guzzlehttp/psr7` 2.9.0 →
@@ -1476,7 +1803,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.1.1-fork] - 2026-04-26
 
-### Changed
+### Changed in 3.1.1-fork
 
 * **EPUB import unified onto `/texts/new`**: picking an `.epub` under
   *Source → File → From computer* now flips the form's action to
@@ -1491,7 +1818,7 @@ ones are marked like "v1.0.0-fork".
   are now Bulma tabs instead of stacked panels, hiding the unused option
   and reducing vertical clutter.
 
-### Fixed
+### Fixed in 3.1.1-fork
 
 * **EPUB upload** (#232): forward the original filename to
   `EpubParserService::parse()` / `getMetadata()` so the underlying
@@ -1540,7 +1867,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.1.0-fork] - 2026-04-21
 
-### Added
+### Added in 3.1.0-fork
 
 * **Internationalization (i18n)** (#223): PHP `__()` and JS `t()` /
   Alpine `$t` helpers backed by per-namespace JSON files under `locale/`,
@@ -1557,7 +1884,7 @@ ones are marked like "v1.0.0-fork".
 * **PHP 8.5 support**: All dependencies now support PHP 8.5. Added PHP 8.5 to
   the CI test matrix.
 
-### Changed
+### Changed in 3.1.0-fork
 
 * **Update notification**: The "new LWT version available" banner on the
   home page is now dismissible (remembered per-version via localStorage),
@@ -1604,13 +1931,13 @@ ones are marked like "v1.0.0-fork".
   added 5 missing ones. Added a Vite plugin to clean stale hashed bundles
   between builds.
 
-### Fixed
+### Fixed in 3.1.0-fork
 
 * **Version number not updated since 3.0.0**: `ApplicationInfo::VERSION` was
   never bumped for the 3.0.1 and 3.0.2 releases, causing the app to display
   "3.0.0-fork" in the UI.
 
-### Removed
+### Removed in 3.1.0-fork
 
 * **Dead route `/text/set-mode`**: This endpoint (and its view, controller
   method, and frontend JS) was no longer reachable from any UI. The "Show All"
@@ -1620,7 +1947,7 @@ ones are marked like "v1.0.0-fork".
   fully superseded by `POST /api/v1/settings`. No UI or frontend code referenced
   it.
 
-### Deprecated
+### Deprecated in 3.1.0-fork
 
 * **Legacy query-parameter routes** now emit `Deprecation`, `Sunset`, and `Link`
   HTTP headers. The routes still work but will be removed in the next major
@@ -1631,7 +1958,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.0.2-fork] - 2026-04-05
 
-### Changed
+### Changed in 3.0.2-fork
 
 * **Removed `@vitejs/plugin-legacy`**: The legacy Vite plugin generated ~1.2 MB
   of `nomodule` bundles and polyfills that were never served (ViteHelper only
@@ -1639,7 +1966,7 @@ ones are marked like "v1.0.0-fork".
   roughly 70%. Also switched from Terser to esbuild for minification (Vite's
   built-in default), which speeds up the build.
 
-### Added
+### Added in 3.0.2-fork
 
 * **Reading area width and text size controls**
   ([#225](https://github.com/HugoFara/lwt/issues/225)): The text reading
@@ -1648,7 +1975,7 @@ ones are marked like "v1.0.0-fork".
   across sessions as user preferences. The dropdown also groups the multi-word
   expressions toggle, translations toggle, and print link.
 
-### Fixed
+### Fixed in 3.0.2-fork
 
 * **EPUB import failing** ([#231](https://github.com/HugoFara/lwt/issues/231)):
   EPUB uploads always failed with "Invalid EPUB file" because the extension check
@@ -1666,7 +1993,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.0.1-fork] - 2026-03-15
 
-### Fixed
+### Fixed in 3.0.1-fork
 
 * **Docker image build** ([#230](https://github.com/HugoFara/lwt/discussions/230)):
   MeCab system packages and `mecab-python3` now skip gracefully on unsupported
@@ -1675,7 +2002,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.0.0-fork] - 2026-03-14
 
-### Added
+### Added in 3.0.0-fork
 
 * **Notes Field for Terms** ([#128](https://github.com/HugoFara/lwt/issues/128)):
   Added a dedicated "Notes" field to terms/words, allowing users to add personal
@@ -1732,7 +2059,7 @@ ones are marked like "v1.0.0-fork".
   based on the selected parser. Future parsers can be added by implementing
   `ParserInterface` and registering in `ParserRegistry`.
 
-### Changed
+### Changed in 3.0.0-fork
 
 * **Database Engine Migration** ([#220](https://github.com/HugoFara/lwt/issues/220)):
   All permanent tables converted from MyISAM to InnoDB engine. Benefits include:
@@ -1764,7 +2091,7 @@ ones are marked like "v1.0.0-fork".
   call has been removed and replaced with chunked batch inserts (500 rows per batch)
   that stream files line-by-line, reducing memory usage for large imports.
 
-### Fixed
+### Fixed in 3.0.0-fork
 
 * **Tag Duplicate Key Error** ([#120](https://github.com/HugoFara/lwt/issues/120)):
   Fixed rare error when updating a word with tags. When the session cache was
@@ -1794,7 +2121,7 @@ ones are marked like "v1.0.0-fork".
   adjacent words onto separate lines. Punctuation now stays "stuck" to the word
   it belongs to by wrapping word+punctuation pairs in non-breaking groups.
 
-### Security
+### Security in 3.0.0-fork
 
 * Adds session security cookie to protect against session hijacking.
 * Fixed SQL injection vulnerabilities in `validateLang()`, `validateText()`,
@@ -1808,14 +2135,14 @@ ones are marked like "v1.0.0-fork".
   failed tag creation. Functions now return gracefully instead of generating
   invalid SQL.
 
-### Deprecated
+### Deprecated in 3.0.0-fork
 
 * Removed testing for PHP 8.0.
 * Legacy table prefix system (`$tbpref`) is deprecated in favor of the new
   user-based multi-tenancy. Existing prefixed tables will be migrated to the
   new system automatically.
 
-### Removed
+### Removed in 3.0.0-fork
 
 * **Orphaned Frame Settings** ([#116](https://github.com/HugoFara/lwt/issues/116)):
   Removed all legacy frame-related settings from the admin settings page:

@@ -11,7 +11,7 @@
  * For new code, prefer using the Lwt\Database\DB class directly after including
  * this bootstrap.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Database
  * @package  Lwt\Shared\Infrastructure\Bootstrap
@@ -32,8 +32,6 @@ require_once __DIR__ . '/../Utilities/ErrorHandler.php';
 
 use Lwt\Shared\Infrastructure\Globals;
 
-// Initialize globals (this was previously done in settings.php)
-Globals::initialize();
 
 // Database classes
 require_once __DIR__ . '/EnvLoader.php';

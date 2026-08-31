@@ -6,7 +6,7 @@
  * Handles .env file operations for database connection wizard.
  * This repository does NOT require a database connection.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Admin\Infrastructure

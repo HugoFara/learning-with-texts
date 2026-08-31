@@ -6,7 +6,7 @@
  * Handles text position, audio position, display mode, and bulk word status
  * operations. Extracted from TextApiHandler.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Text\Http

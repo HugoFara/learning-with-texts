@@ -5,7 +5,7 @@
  *
  * Infrastructure adapter for language persistence using MySQL.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Language\Infrastructure

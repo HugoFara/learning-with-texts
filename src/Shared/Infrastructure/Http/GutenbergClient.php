@@ -6,7 +6,7 @@
  * Searches the Gutendex catalog API (gutendex.com) for free e-books
  * and resolves plain-text download URLs.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Shared\Infrastructure\Http

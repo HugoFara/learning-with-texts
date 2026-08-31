@@ -50,14 +50,14 @@ class WordBulkServiceTest extends TestCase
         if (self::$dbConnected) {
             // Create a test language if it doesn't exist
             $existingLang = Connection::fetchValue(
-                "SELECT LgID AS value FROM " . Globals::table('languages') . " WHERE LgName = 'TestLanguage' LIMIT 1"
+                "SELECT LgID AS value FROM languages WHERE LgName = 'TestLanguage' LIMIT 1"
             );
 
             if ($existingLang) {
                 self::$testLangId = (int)$existingLang;
             } else {
                 Connection::query(
-                    "INSERT INTO " . Globals::table('languages') .
+                    "INSERT INTO languages" .
                     " (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
                     "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
                     "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
@@ -78,9 +78,9 @@ class WordBulkServiceTest extends TestCase
         }
 
         // Clean up test words
-        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE WoLgID = " . self::$testLangId);
+        Connection::query("DELETE FROM words WHERE WoLgID = " . self::$testLangId);
         // Clean up test language
-        Connection::query("DELETE FROM " . Globals::table('languages') . " WHERE LgID = " . self::$testLangId);
+        Connection::query("DELETE FROM languages WHERE LgID = " . self::$testLangId);
     }
 
     protected function setUp(): void
@@ -96,7 +96,7 @@ class WordBulkServiceTest extends TestCase
         }
 
         // Clean up test words after each test
-        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE WoText LIKE 'test%'");
+        Connection::query("DELETE FROM words WHERE WoText LIKE 'test%'");
     }
 
     // ===== deleteMultiple() tests =====

@@ -4,7 +4,7 @@
  * \file
  * \brief Database maintenance and optimization utilities.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Database
  * @package  Lwt
@@ -18,7 +18,6 @@ declare(strict_types=1);
 
 namespace Lwt\Shared\Infrastructure\Database;
 
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Modules\Language\Application\Services\TextParsingService;
 use Lwt\Shared\Infrastructure\Database\QueryBuilder;
 
@@ -195,7 +194,11 @@ class Maintenance
          */
         $row = QueryBuilder::table('languages')
             ->selectRaw('GROUP_CONCAT(LgID) AS lang_ids')
-            ->whereRaw("UPPER(LgRegexpWordCharacters)='MECAB'")
+            ->whereRaw(
+                "LOWER(TRIM(COALESCE(LgParserType,''))) = 'mecab'"
+                . " OR (COALESCE(LgParserType,'') = ''"
+                . " AND UPPER(TRIM(LgRegexpWordCharacters)) = 'MECAB')"
+            )
             ->first();
         /** @var string|int|null $japid */
         $japid = $row !== null ? ($row['lang_ids'] ?? null) : null;

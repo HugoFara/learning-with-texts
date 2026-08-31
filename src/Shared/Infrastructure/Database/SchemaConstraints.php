@@ -4,7 +4,7 @@
  * \file
  * \brief The foreign keys the current schema is supposed to have.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Database
  * @package  Lwt

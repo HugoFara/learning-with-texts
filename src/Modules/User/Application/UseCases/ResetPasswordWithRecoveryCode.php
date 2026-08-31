@@ -8,7 +8,7 @@
  * a new password. On success the password is changed, all other long-lived
  * credentials are revoked, and a fresh recovery code is issued (one-time use).
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\User\Application\UseCases

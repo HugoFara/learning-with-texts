@@ -10,7 +10,7 @@
  * - $conn: DatabaseConnection object with current values
  * - $errorMessage: string|null Error message to display
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views

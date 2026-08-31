@@ -7,7 +7,7 @@
  * *the caller's own* account — there is no ID in any path — so there is no
  * object-reference surface to get wrong.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\User\Http

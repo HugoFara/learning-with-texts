@@ -6,7 +6,7 @@
  * This script enables clean URLs and legacy URL redirects when using
  * PHP's built-in web server (php -S localhost:8000 router.php)
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Server
  * @package  Lwt

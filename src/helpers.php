@@ -6,7 +6,7 @@
  * These functions are available throughout the application and provide
  * convenient shortcuts for common operations.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt

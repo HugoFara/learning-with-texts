@@ -8,7 +8,7 @@ declare(strict_types=1);
  * Shown when a user tries to log in with Google but an account
  * with the same email already exists.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\User\Views

@@ -3,7 +3,7 @@
 /**
  * Language API Handler
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Language\Http
@@ -17,6 +17,8 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Language\Http;
 
+use Lwt\Modules\Language\Domain\ParserSelection;
+use Lwt\Modules\Language\Domain\WordSpacing;
 use Lwt\Shared\Infrastructure\Database\QueryBuilder;
 use Lwt\Shared\Infrastructure\Database\Settings;
 use Lwt\Shared\Http\ApiRoutableInterface;
@@ -75,7 +77,7 @@ class LanguageApiHandler implements ApiRoutableInterface
     public function getReadingConfiguration(int $langId): array
     {
         $record = QueryBuilder::table('languages')
-            ->select(['LgName', 'LgTTSVoiceAPI', 'LgRegexpWordCharacters', 'LgPiperVoiceId'])
+            ->select(['LgName', 'LgTTSVoiceAPI', 'LgRegexpWordCharacters', 'LgPiperVoiceId', 'LgParserType'])
             ->where('LgID', '=', $langId)
             ->firstPrepared();
 
@@ -102,7 +104,7 @@ class LanguageApiHandler implements ApiRoutableInterface
             $readingMode = "piper";
         } elseif ($ttsVoiceApi !== '') {
             $readingMode = "external";
-        } elseif ($regexpWordChars === "mecab") {
+        } elseif (ParserSelection::rowTokenizesWithMecab($record)) {
             $readingMode = "internal";
         } else {
             $readingMode = "direct";

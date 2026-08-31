@@ -5,7 +5,7 @@
  *
  * Handles translations via Google Translate, Glosbe, and generic dictionary services.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Dictionary\Application

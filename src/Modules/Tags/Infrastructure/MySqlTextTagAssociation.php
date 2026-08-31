@@ -5,7 +5,7 @@
  *
  * Infrastructure adapter for text-tag associations using MySQL.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Tags\Infrastructure

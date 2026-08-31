@@ -7,7 +7,7 @@
  * Archived texts now share the text_tag_map table with active texts,
  * differentiated by TxArchivedAt IS NOT NULL.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Tags\Infrastructure

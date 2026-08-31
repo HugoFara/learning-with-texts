@@ -11,7 +11,7 @@
  * (foreign-user-tag, my-words) rows that contaminate the foreign user's
  * tag-to-word membership.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Tags\Application\Services

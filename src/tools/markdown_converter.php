@@ -4,7 +4,7 @@
  * \file
  * \brief Simple Mardown to HTML utility file.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Documentation
  * @package Lwt_Documentation

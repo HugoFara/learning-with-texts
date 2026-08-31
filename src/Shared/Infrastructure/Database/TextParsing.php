@@ -4,7 +4,7 @@
  * \file
  * \brief Text parsing and processing utilities (facade).
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Database
  * @package  Lwt
@@ -18,6 +18,8 @@ declare(strict_types=1);
 
 namespace Lwt\Shared\Infrastructure\Database;
 
+use Lwt\Modules\Language\Domain\ParserSelection;
+use Lwt\Modules\Language\Domain\WordSpacing;
 use Lwt\Modules\Language\Domain\Parser\ParserConfig;
 use Lwt\Modules\Language\Infrastructure\Parser\ParserRegistry;
 use Lwt\Shared\Infrastructure\Exception\DatabaseException;
@@ -147,7 +149,8 @@ class TextParsing
      * @param string $text Text to parse
      * @param int    $lid  Language ID
      *
-     * @return array{sentences: int, words: int, unknownPercent: float, preview: string}
+     * @return array{sentences: int, words: int, unknownPercent: float, preview: string,
+     *         warning: string} `warning` is a ParseCoverage verdict, 'ok' when fine
      */
     public static function checkText(string $text, int $lid): array
     {
@@ -278,7 +281,6 @@ class TextParsing
             return null;
         }
 
-        $termchar = (string)$record['LgRegexpWordCharacters'];
         $replace = explode("|", (string) $record['LgCharacterSubstitutions']);
         $text = Escaping::prepareTextdata($text);
 
@@ -291,6 +293,6 @@ class TextParsing
             }
         }
 
-        return [$text, 'MECAB' === strtoupper(trim($termchar)), $record];
+        return [$text, ParserSelection::rowTokenizesWithMecab($record), $record];
     }
 }

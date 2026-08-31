@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Lwt\Tests\Core\Word;
 
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Modules\Vocabulary\Application\Services\TermStatusService;
 use PHPUnit\Framework\TestCase;
 

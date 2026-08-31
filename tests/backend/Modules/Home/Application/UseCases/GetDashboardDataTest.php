@@ -3,7 +3,7 @@
 /**
  * Unit tests for GetDashboardData use case.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Home\Application\UseCases
@@ -18,7 +18,6 @@ namespace Lwt\Tests\Modules\Home\Application\UseCases;
 use Lwt\Modules\Home\Application\UseCases\GetDashboardData;
 use Lwt\Shared\Infrastructure\Database\QueryBuilder;
 use Lwt\Shared\Infrastructure\Database\Settings;
-use Lwt\Shared\Infrastructure\Globals;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

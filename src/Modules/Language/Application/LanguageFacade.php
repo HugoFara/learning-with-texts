@@ -6,7 +6,7 @@
  * Backward-compatible facade for language operations.
  * Delegates to use case classes for actual implementation.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Language\Application

@@ -9,7 +9,7 @@
  * - FeedLoadApiHandler: feed loading, parsing, and auto-update
  * - FeedWizardApiHandler: feed and article previews for the wizard
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Feed\Http

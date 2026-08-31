@@ -7,7 +7,7 @@
  * Supports two views: info (default) and edit (for creating/editing terms).
  * Works with the wordModal and wordEditForm Alpine.js components.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Views
  * @package  Lwt

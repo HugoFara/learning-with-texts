@@ -4,7 +4,7 @@
  * \file
  * \brief Start a PHP session.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Shared\Infrastructure\Bootstrap
@@ -25,7 +25,5 @@ require_once __DIR__ . '/SessionBootstrap.php';
 
 use Lwt\Shared\Infrastructure\Globals;
 
-// Initialize globals (this was previously done in settings.php)
-Globals::initialize();
 
 SessionBootstrap::bootstrap();

@@ -170,44 +170,6 @@ describe('language_form.ts', () => {
   });
 
   // ===========================================================================
-  // languageForm.checkLanguageChanged Tests
-  // ===========================================================================
-
-  describe('languageForm.checkLanguageChanged', () => {
-    it('shows MeCab option for Japanese', () => {
-      document.body.innerHTML = `
-        <form name="lg_form">
-          <select name="LgRegexpAlt" style="display: none;"></select>
-        </form>
-      `;
-
-      languageForm.checkLanguageChanged('Japanese');
-
-      const regexpAlt = document.querySelector('[name="LgRegexpAlt"]') as HTMLSelectElement;
-      expect(regexpAlt.style.display).toBe('block');
-    });
-
-    it('hides MeCab option for non-Japanese languages', () => {
-      document.body.innerHTML = `
-        <form name="lg_form">
-          <select name="LgRegexpAlt" style="display: block;"></select>
-        </form>
-      `;
-
-      languageForm.checkLanguageChanged('English');
-
-      const regexpAlt = document.querySelector('[name="LgRegexpAlt"]') as HTMLSelectElement;
-      expect(regexpAlt.style.display).toBe('none');
-    });
-
-    it('handles missing form gracefully', () => {
-      document.body.innerHTML = '';
-
-      expect(() => languageForm.checkLanguageChanged('Japanese')).not.toThrow();
-    });
-  });
-
-  // ===========================================================================
   // languageForm.multiWordsTranslateChange Tests
   // ===========================================================================
 
@@ -299,43 +261,6 @@ describe('language_form.ts', () => {
 
       const example = document.getElementById('LgTextSizeExample') as HTMLElement;
       expect(example.style.fontSize).toBe('200%');
-    });
-  });
-
-  // ===========================================================================
-  // languageForm.wordCharChange Tests
-  // ===========================================================================
-
-  describe('languageForm.wordCharChange', () => {
-    it('sets mecab value for mecab option', () => {
-      document.body.innerHTML = `
-        <form name="lg_form">
-          <input name="LgRegexpWordCharacters" value="">
-        </form>
-      `;
-
-      languageForm.wordCharChange('mecab');
-
-      const input = document.querySelector('[name="LgRegexpWordCharacters"]') as HTMLInputElement;
-      expect(input.value).toBe('mecab');
-    });
-
-    it('sets regexp value from langDefs for regexp option', () => {
-      languageForm.languageName = 'Japanese';
-      languageForm.langDefs = {
-        'Japanese': ['ja', 'Japanese', false, '\\p{Han}', '', false, false, false]
-      };
-
-      document.body.innerHTML = `
-        <form name="lg_form">
-          <input name="LgRegexpWordCharacters" value="">
-        </form>
-      `;
-
-      languageForm.wordCharChange('regexp');
-
-      const input = document.querySelector('[name="LgRegexpWordCharacters"]') as HTMLInputElement;
-      expect(input.value).toBe('\\p{Han}');
     });
   });
 
@@ -482,44 +407,6 @@ describe('language_form.ts', () => {
   });
 
   // ===========================================================================
-  // languageForm.checkWordChar Tests
-  // ===========================================================================
-
-  describe('languageForm.checkWordChar', () => {
-    it('sets regexp option for non-mecab values', () => {
-      document.body.innerHTML = `
-        <form name="lg_form">
-          <select name="LgRegexpAlt">
-            <option value="regexp">Regexp</option>
-            <option value="mecab">MeCab</option>
-          </select>
-        </form>
-      `;
-
-      languageForm.checkWordChar('\\p{L}');
-
-      const select = document.querySelector('[name="LgRegexpAlt"]') as HTMLSelectElement;
-      expect(select.value).toBe('regexp');
-    });
-
-    it('sets mecab option for mecab value', () => {
-      document.body.innerHTML = `
-        <form name="lg_form">
-          <select name="LgRegexpAlt">
-            <option value="regexp">Regexp</option>
-            <option value="mecab">MeCab</option>
-          </select>
-        </form>
-      `;
-
-      languageForm.checkWordChar('mecab');
-
-      const select = document.querySelector('[name="LgRegexpAlt"]') as HTMLSelectElement;
-      expect(select.value).toBe('mecab');
-    });
-  });
-
-  // ===========================================================================
   // languageForm.checkVoiceAPI Tests
   // ===========================================================================
 
@@ -657,9 +544,7 @@ describe('language_form.ts', () => {
 
   describe('checkLanguageForm', () => {
     it('calls check functions for all form elements', () => {
-      const langChangeSpy = vi.spyOn(languageForm, 'checkLanguageChanged');
       const dictChangeSpy = vi.spyOn(languageForm, 'checkDictionaryChanged');
-      const wordCharSpy = vi.spyOn(languageForm, 'checkWordChar');
 
       document.body.innerHTML = `
         <form name="lg_form">
@@ -674,18 +559,13 @@ describe('language_form.ts', () => {
           <select name="LgTranslatorName">
             <option value="google_translate">Google</option>
           </select>
-          <select name="LgRegexpAlt">
-            <option value="mecab">MeCab</option>
-          </select>
         </form>
       `;
 
       const form = document.querySelector('[name="lg_form"]') as HTMLFormElement;
       checkLanguageForm(form);
 
-      expect(langChangeSpy).toHaveBeenCalledWith('Japanese');
       expect(dictChangeSpy).toHaveBeenCalled();
-      expect(wordCharSpy).toHaveBeenCalledWith('mecab');
     });
   });
 

@@ -6,7 +6,7 @@
  * This file serves as the single entry point for all requests.
  * It bootstraps the application and delegates to the Application class.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category User_Interface
  * @package Lwt

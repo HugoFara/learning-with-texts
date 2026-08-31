@@ -6,7 +6,7 @@
  * This service contains functions for finding, formatting, and displaying
  * sentences containing specific words.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Text\Application\Services
@@ -20,6 +20,8 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Text\Application\Services;
 
+use Lwt\Modules\Language\Domain\ParserSelection;
+use Lwt\Modules\Language\Domain\WordSpacing;
 use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Shared\Infrastructure\Utilities\StringUtils;
 use Lwt\Shared\Infrastructure\Database\Connection;
@@ -124,7 +126,7 @@ class SentenceService
     {
         $mecab_str = null;
         $record = QueryBuilder::table('languages')
-            ->select(['LgRegexpWordCharacters', 'LgRemoveSpaces'])
+            ->select(['LgRegexpWordCharacters', 'LgRemoveSpaces', 'LgParserType'])
             ->where('LgID', '=', $lid)
             ->firstPrepared();
         if ($record === null) {
@@ -133,7 +135,7 @@ class SentenceService
         $removeSpaces = (int)$record["LgRemoveSpaces"];
         $regexpWordChars = (string)($record["LgRegexpWordCharacters"] ?? '');
 
-        if ('MECAB' == strtoupper(trim($regexpWordChars))) {
+        if (ParserSelection::rowTokenizesWithMecab($record)) {
             $mecab_file = sys_get_temp_dir() . "/lwt_mecab_to_db.txt";
             $mecab_args = ' -F %m\\t%t\\t%h\\n -U %m\\t%t\\t%h\\n -E EOP\\t3\\t7\\n ';
             if (file_exists($mecab_file)) {
@@ -270,7 +272,7 @@ class SentenceService
             CONCAT(
                 '​', group_concat(Ti2Text ORDER BY Ti2Order asc SEPARATOR '​'), '​'
             ) AS SeText, Ti2TxID AS SeTxID, LgRegexpWordCharacters,
-            LgRemoveSpaces, LgSplitEachChar
+            LgRemoveSpaces, LgSplitEachChar, LgParserType
             FROM word_occurrences, languages
             WHERE Ti2LgID = LgID AND Ti2WordCount < 2 AND Ti2SeID = ?
             AND Ti2Text != '¶'",
@@ -285,9 +287,13 @@ class SentenceService
         $termchar = (string) $record["LgRegexpWordCharacters"];
         $seText = (string)($record["SeText"] ?? '');
 
+        // MeCab is asked for by name rather than by the marker in the
+        // word-characters field, which a migration replaces with a real regex.
+        // It stays its own arm of this test: a MeCab language can also split
+        // each character, and that combination falls out of the first arm (#288)
         if (
             ($removeSpaces && !$splitEachChar)
-            || 'MECAB' == strtoupper(trim($termchar))
+            || ParserSelection::rowTokenizesWithMecab($record)
         ) {
             $text = $seText;
             $wordlcReplaced = preg_replace('/(.)/u', "$1[​]*", $wordlc);
@@ -330,7 +336,7 @@ class SentenceService
             );
             if (isset($prevseSentRaw)) {
                 $prevseSent = $prevseSentRaw;
-                if (!$removeSpaces && !($splitEachChar || 'MECAB' == strtoupper(trim($termchar)))) {
+                if (WordSpacing::separatesWordsWithSpaces($removeSpaces, $splitEachChar, $termchar)) {
                     $prevseSent = $this->convertZwsToSpacing($prevseSent, $termchar);
                 }
                 $se = str_replace('​', '', (string)preg_replace($pattern, '<b>$0</b>', $prevseSent)) . $se;
@@ -359,7 +365,7 @@ class SentenceService
             );
             if (isset($nextSentRaw)) {
                 $nextSent = $nextSentRaw;
-                if (!$removeSpaces && !($splitEachChar || 'MECAB' == strtoupper(trim($termchar)))) {
+                if (WordSpacing::separatesWordsWithSpaces($removeSpaces, $splitEachChar, $termchar)) {
                     $nextSent = $this->convertZwsToSpacing($nextSent, $termchar);
                 }
                 $se .= str_replace('​', '', (string)preg_replace($pattern, '<b>$0</b>', $nextSent));
@@ -452,7 +458,7 @@ class SentenceService
         // For languages that don't remove spaces and don't split each char
         // (like most Western languages), apply spacing conversion
         $seText = (string)$record['SeText'];
-        if (!$removeSpaces && !$splitEachChar && strtoupper(trim($termchar)) !== 'MECAB') {
+        if (WordSpacing::separatesWordsWithSpaces($removeSpaces, $splitEachChar, $termchar)) {
             $text = $this->convertZwsToSpacing($seText, $termchar);
         } else {
             // For Asian languages etc., just remove the ZWS markers
@@ -545,7 +551,7 @@ class SentenceService
         }
 
         // Convert ZWS to proper spacing
-        if (!$removeSpaces && !$splitEachChar && strtoupper(trim($termchar)) !== 'MECAB') {
+        if (WordSpacing::separatesWordsWithSpaces($removeSpaces, $splitEachChar, $termchar)) {
             $text = $this->convertZwsToSpacing($textWithZws, $termchar);
         } else {
             $text = str_replace('​', '', $textWithZws);

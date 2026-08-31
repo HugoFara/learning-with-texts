@@ -3,7 +3,7 @@
 /**
  * Word Context Service - Language and text context retrieval
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Vocabulary\Application\Services

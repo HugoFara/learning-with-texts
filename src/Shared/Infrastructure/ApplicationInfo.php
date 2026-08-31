@@ -4,7 +4,7 @@
  * \file
  * \brief Application information and version utilities.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Core
  * @package  Lwt\Shared\Infrastructure

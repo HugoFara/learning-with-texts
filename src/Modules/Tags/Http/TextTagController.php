@@ -5,7 +5,7 @@
  *
  * Controller for managing text tags in the Tags module.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Tags\Http

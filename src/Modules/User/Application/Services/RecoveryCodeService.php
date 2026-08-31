@@ -12,7 +12,7 @@
  * non-alphanumerics stripped) so the user can type it with or without the
  * dashes or in any case.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\User\Application\Services

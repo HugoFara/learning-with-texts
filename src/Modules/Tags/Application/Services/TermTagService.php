@@ -6,7 +6,7 @@
  * Extracted from TagsFacade — handles term (word) tag associations,
  * HTML rendering, batch operations, and select options.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Tags\Application\Services

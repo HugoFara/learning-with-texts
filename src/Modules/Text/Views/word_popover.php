@@ -6,7 +6,7 @@
  * Displays word information in a non-blocking popover near the clicked word.
  * Allows users to continue reading while viewing word details.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Views
  * @package  Lwt

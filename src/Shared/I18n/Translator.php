@@ -6,7 +6,7 @@
  * Provides internationalization (i18n) support by loading translations
  * from JSON locale files with dot-notation key resolution.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Shared\I18n

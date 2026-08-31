@@ -3,7 +3,7 @@
 /**
  * TTS Service - Business logic for Text-to-Speech settings
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Admin\Application\Services
@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Admin\Application\Services;
 
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Shared\Infrastructure\Http\InputValidator;
 use Lwt\Shared\Infrastructure\Http\SecurityHeaders;
 use Lwt\Shared\Infrastructure\Database\Settings;

@@ -5,7 +5,7 @@
  *
  * This file ensures proper environment setup for all tests.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests
@@ -35,8 +35,6 @@ class_exists(\PHPUnit\Framework\TestCase::class, true);
 require_once __DIR__ . '/../src/Shared/Infrastructure/Bootstrap/EnvLoader.php';
 require_once __DIR__ . '/../src/Shared/Infrastructure/Globals.php';
 
-// Initialize Globals
-Globals::initialize();
 
 // Register the i18n Translator in the DI container so __() resolves keys in tests.
 // Without this, the helper returns the raw key, breaking tests that assert on the

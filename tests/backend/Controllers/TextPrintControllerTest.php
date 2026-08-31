@@ -53,7 +53,7 @@ class TextPrintControllerTest extends TestCase
 
         if (self::$dbConnected) {
             // Create a test language if it doesn't exist
-            $langTable = Globals::table('languages');
+            $langTable = 'languages';
             $existingLang = Connection::fetchValue(
                 "SELECT LgID AS value FROM " . $langTable .
                 " WHERE LgName = 'PrintControllerTestLang' LIMIT 1"
@@ -78,7 +78,7 @@ class TextPrintControllerTest extends TestCase
             }
 
             // Create a test text
-            $textTable = Globals::table('texts');
+            $textTable = 'texts';
             $existingText = Connection::fetchValue(
                 "SELECT TxID AS value FROM " . $textTable .
                 " WHERE TxTitle = 'PrintControllerTestText' LIMIT 1"
@@ -109,10 +109,10 @@ class TextPrintControllerTest extends TestCase
         }
 
         // Clean up test data
-        $occurrencesTable = Globals::table('word_occurrences');
-        $sentencesTable = Globals::table('sentences');
-        $textsTable = Globals::table('texts');
-        $languagesTable = Globals::table('languages');
+        $occurrencesTable = 'word_occurrences';
+        $sentencesTable = 'sentences';
+        $textsTable = 'texts';
+        $languagesTable = 'languages';
 
         Connection::query(
             "DELETE FROM " . $occurrencesTable . " WHERE Ti2TxID = " . self::$testTextId

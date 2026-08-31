@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Lwt\Modules\Admin\Http;
 
 use Lwt\Shared\Http\BaseController;
-use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Modules\Admin\Application\UseCases\UserManagement\ListUsers;
 use Lwt\Modules\Admin\Application\UseCases\UserManagement\CreateUser;
 use Lwt\Modules\Admin\Application\UseCases\UserManagement\UpdateUser;

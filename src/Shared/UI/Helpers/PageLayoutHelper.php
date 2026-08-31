@@ -4,7 +4,7 @@
  * \file
  * \brief Helper for page layout generation (headers, footers, navigation).
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category View
  * @package  Lwt
@@ -825,9 +825,7 @@ HTML;
             return '';
         }
 
-        return '<script type="application/json" id="lwt-i18n">'
-            . json_encode($prefixed, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG)
-            . '</script>';
+        return ConfigIsland::html('lwt-i18n', $prefixed);
     }
 
     /**
@@ -838,35 +836,6 @@ HTML;
     public static function renderPageEnd(): void
     {
         echo '</main></body></html>';
-    }
-
-    /**
-     * Render a frameset page header.
-     *
-     * Outputs directly to browser. For legacy frameset-based pages.
-     *
-     * @param string $title Page title
-     *
-     * @return void
-     */
-    public static function renderFramesetHeader(string $title): void
-    {
-        self::sendNoCacheHeaders();
-
-        $htmlLang = self::getActiveLocale();
-        echo '<!DOCTYPE html>';
-        echo '<html lang="' . htmlspecialchars($htmlLang, ENT_QUOTES, 'UTF-8')
-            . '"' . self::buildDataThemeAttr() . '>';
-        echo '<head>';
-        echo '<meta http-equiv="content-type" content="text/html; charset=utf-8" />';
-        echo '<meta name="viewport" content="width=device-width, initial-scale=1">';
-        echo '<link rel="stylesheet" type="text/css" href="' . UrlUtilities::url('/dist/css/styles.css') . '" />';
-        echo '<link rel="shortcut icon" href="' . UrlUtilities::url('/favicon.ico') . '" type="image/x-icon"/>';
-        echo '<!--' . "\n";
-        echo file_get_contents("LICENSE");
-        echo '-->';
-        echo '<title>LWT :: ' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</title>';
-        echo '</head>';
     }
 
     /**

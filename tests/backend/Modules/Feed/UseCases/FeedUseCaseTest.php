@@ -6,7 +6,7 @@
  * Tests CreateFeed, ImportArticles, DeleteFeeds, and GetFeedList use cases
  * with mocked repository dependencies.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Tests\Modules\Feed\UseCases

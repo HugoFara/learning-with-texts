@@ -16,6 +16,7 @@
 import Alpine from 'alpinejs';
 import { t } from '@shared/i18n/translator';
 import { TermsApi } from '../api/terms_api';
+import { readPageConfig } from '@shared/utils/page_config';
 
 /** Config the scaffold ships. */
 export interface NewTermFormConfig {
@@ -42,19 +43,12 @@ export interface NewTermFormData {
 
 /** Read the scaffold's config blob. */
 function readConfig(): NewTermFormConfig {
-  const el = document.getElementById('new-term-config');
-  if (el) {
-    try {
-      const parsed = JSON.parse(el.textContent || '{}');
-      return {
-        languageId: Number(parsed.languageId) || 0,
-        textId: Number(parsed.textId) || 0
-      };
-    } catch {
-      // Malformed blob: the save will report the missing language.
-    }
-  }
-  return { languageId: 0, textId: 0 };
+  // On a missing or malformed blob the language stays 0 and the save
+  // reports it, rather than the form failing to start at all.
+  return readPageConfig<NewTermFormConfig>('new-term-config', {
+    languageId: 0,
+    textId: 0
+  });
 }
 
 /**

@@ -3,7 +3,7 @@
 /**
  * Word List Export Builder - Builds SQL queries for word list exports
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Vocabulary\Application\Services

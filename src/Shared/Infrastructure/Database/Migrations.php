@@ -4,7 +4,7 @@
  * \file
  * \brief Database migrations and initialization utilities.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Database
  * @package  Lwt

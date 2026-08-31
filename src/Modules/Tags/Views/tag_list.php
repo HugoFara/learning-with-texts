@@ -14,7 +14,7 @@
  * - $service: TagsFacade instance
  * - $isTextTag: boolean - true for text tags, false for term tags
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views
@@ -33,6 +33,7 @@ namespace Lwt\Modules\Tags\Views;
 use Lwt\Shared\UI\Helpers\IconHelper;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 use Lwt\Modules\Tags\Application\TagsFacade;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 /**
  * @var string $message
@@ -67,15 +68,13 @@ echo PageLayoutHelper::buildActionCard([
 ]);
 ?>
 
-<script type="application/json" id="tag-list-config">
-<?php echo json_encode([
+<?php ConfigIsland::render('tag-list-config', [
     'type' => $isTextTag ? 'text' : 'term',
     'isTextTag' => $isTextTag,
     'query' => $currentQuery,
     'sort' => $currentSort,
     'page' => 1,
-], JSON_HEX_TAG | JSON_HEX_AMP); ?>
-</script>
+]); ?>
 
 <div x-data="tagListApp">
     <div x-show="error" x-cloak class="notification is-danger">

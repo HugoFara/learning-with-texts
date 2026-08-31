@@ -10,7 +10,7 @@
  * - Text normalization for export (tabs, newlines, whitespace)
  * - Term masking in sentences for cloze deletion
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Vocabulary\Application\Services
@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Vocabulary\Application\Services;
 
+use Lwt\Modules\Language\Domain\WordSpacing;
 use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Shared\Infrastructure\Utilities\CsvFormulaGuard;
 
@@ -185,7 +186,7 @@ class ExportService
      */
     private function formatAnkiRow(array $record): string
     {
-        if ('MECAB' == strtoupper(trim((string) $record['LgRegexpWordCharacters']))) {
+        if (WordSpacing::usesMecabMagicWord((string) $record['LgRegexpWordCharacters'])) {
             $termchar = '一-龥ぁ-ヾ';
         } else {
             $termchar = (string)$record['LgRegexpWordCharacters'];

@@ -3,7 +3,7 @@
 /**
  * Language Entity
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Entity
@@ -431,7 +431,7 @@ class Language
         }
 
         // Legacy detection: check magic word in regexpWordCharacters
-        if (strtoupper(trim($this->regexpWordCharacters)) === 'MECAB') {
+        if (WordSpacing::usesMecabMagicWord($this->regexpWordCharacters)) {
             return 'mecab';
         }
 

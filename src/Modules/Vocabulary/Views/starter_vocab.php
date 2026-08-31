@@ -17,12 +17,13 @@
  * - $csrfToken: string - CSRF token for POST requests (field: _csrf_token)
  * - $curatedDictionaries: list<array<string, mixed>> - Curated dictionaries for this language
  *
- * PHP version 8.1
+ * PHP version 8.2
  */
 
 declare(strict_types=1);
 
 use Lwt\Shared\UI\Helpers\IconHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 /** @var string $langName */
 /** @var int $langId */
@@ -41,16 +42,14 @@ $downloadIcon = IconHelper::render('download', ['alt' => 'Import', 'size' => 14]
 $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 'size' => 14]);
 
 ?>
-<script type="application/json" id="starter-vocab-config">
-<?php echo json_encode([
+<?php ConfigIsland::render('starter-vocab-config', [
     'importUrl' => $importUrl,
     'enrichUrl' => $enrichUrl,
     'csrfToken' => $csrfToken,
     'langId' => $langId,
     'curatedDictionaries' => $curatedDictionaries,
     'isAvailable' => $isAvailable,
-], JSON_HEX_TAG | JSON_HEX_AMP); ?>
-</script>
+]); ?>
 
 <div x-data="starterVocab" class="container" style="max-width: 640px;">
     <h2 class="title is-4 mb-4"><?= __e('vocabulary.starter.title') ?></h2>

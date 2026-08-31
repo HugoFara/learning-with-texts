@@ -5,7 +5,7 @@
  *
  * Defines the contract for lemmatization implementations.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Vocabulary\Domain

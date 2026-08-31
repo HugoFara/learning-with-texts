@@ -52,6 +52,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
+    "serve": "PHP_CLI_SERVER_WORKERS=8 php -S localhost:8000 -t .",
     "e2e": "cypress run",
     "cy:open": "cypress open",
     "cy:run": "cypress run",

@@ -6,7 +6,7 @@
  * Shown when a user signs in with Microsoft but their email already
  * exists in the database with a different account.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\User\Views

@@ -292,6 +292,8 @@ export interface AnnotationItem {
   text: string;
   wordId: number | null;
   translation: string;
+  /** Reading of the term, shown as a tooltip; empty when the word has none. */
+  romanization: string;
   isWord: boolean;
 }
 

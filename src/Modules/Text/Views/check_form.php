@@ -9,7 +9,7 @@ declare(strict_types=1);
  * - $languagesOption: string - HTML select options for languages
  * - $languageData: array - Mapping of language ID to language code
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views
@@ -27,16 +27,20 @@ declare(strict_types=1);
 namespace Lwt\Views\Text;
 
 use Lwt\Shared\UI\Helpers\IconHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 // Type-safe variable extraction from controller context
 /**
  * @var string $languagesOptionTyped
 */
 $languagesOptionTyped = $languagesOption;
+
+/**
+ * @var array<int, string> $languageDataTyped
+*/
+$languageDataTyped = $languageData;
 ?>
-<script type="application/json" id="language-data-config"><?php
-    echo json_encode($languageData, JSON_HEX_TAG | JSON_HEX_AMP);
-?></script>
+<?php ConfigIsland::render('language-data-config', $languageDataTyped); ?>
 
 <h2 class="title is-4"><?= __e('text.check.heading') ?></h2>
 

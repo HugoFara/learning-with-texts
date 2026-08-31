@@ -86,8 +86,6 @@
     "form.regexp_split_sentences": "RegExp para dividir oraciones",
     "form.exceptions_split_sentences": "Excepciones al dividir oraciones",
     "form.regexp_word_characters": "RegExp de caracteres de palabra",
-    "form.regexp_alt_regexp": "Expresiones regulares (demostración)",
-    "form.regexp_alt_mecab": "MeCab (recomendado)",
     "form.split_each_char": "Tratar cada carácter como una palabra",
     "form.split_each_char_help": "Para chino, japonés, etc.",
     "form.remove_spaces": "Eliminar espacios",

@@ -4,7 +4,7 @@
  * \file
  * \brief Helper for word status display and filtering.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Application
  * @package  Lwt\Modules\Vocabulary\Application\Helpers

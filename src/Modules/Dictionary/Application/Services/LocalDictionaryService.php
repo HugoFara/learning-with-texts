@@ -3,7 +3,7 @@
 /**
  * Local Dictionary Service - Business logic for local dictionary management
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Dictionary\Application\Services
@@ -216,8 +216,8 @@ class LocalDictionaryService
 
         $bindings = [$languageId, $termLc];
         $sql = "SELECT le.LeTerm, le.LeDefinition, le.LeReading, le.LePartOfSpeech, ld.LdName
-                FROM " . Globals::table('local_dictionary_entries') . " le
-                INNER JOIN " . Globals::table('local_dictionaries') . " ld ON le.LeLdID = ld.LdID
+                FROM local_dictionary_entries le
+                INNER JOIN local_dictionaries ld ON le.LeLdID = ld.LdID
                 WHERE ld.LdLgID = ? AND ld.LdEnabled = 1 AND le.LeTermLc = ?"
                 . UserScopedQuery::forTablePrepared('local_dictionaries', $bindings, 'ld')
                 . " ORDER BY ld.LdPriority ASC";
@@ -253,8 +253,8 @@ class LocalDictionaryService
         $bindings[] = $limit;
 
         $sql = "SELECT DISTINCT le.LeTerm, le.LeDefinition
-                FROM " . Globals::table('local_dictionary_entries') . " le
-                INNER JOIN " . Globals::table('local_dictionaries') . " ld ON le.LeLdID = ld.LdID
+                FROM local_dictionary_entries le
+                INNER JOIN local_dictionaries ld ON le.LeLdID = ld.LdID
                 WHERE ld.LdLgID = ? AND ld.LdEnabled = 1 AND le.LeTermLc LIKE ?"
                 . $userScope
                 . " ORDER BY le.LeTermLc ASC
@@ -552,8 +552,8 @@ class LocalDictionaryService
     {
         $this->assertOwnsDictionary($dictId);
 
-        $entriesTable = Globals::table('local_dictionary_entries');
-        $wordsTable = Globals::table('words');
+        $entriesTable = 'local_dictionary_entries';
+        $wordsTable = 'words';
 
         $bindings = [$languageId, $dictId];
         $userColumn = UserScopedQuery::insertColumn('words');
@@ -603,8 +603,8 @@ class LocalDictionaryService
      */
     private function linkOccurrencesForLanguage(int $languageId): void
     {
-        $occurrencesTable = Globals::table('word_occurrences');
-        $wordsTable = Globals::table('words');
+        $occurrencesTable = 'word_occurrences';
+        $wordsTable = 'words';
 
         Connection::preparedExecute(
             "UPDATE {$occurrencesTable} o
@@ -779,7 +779,7 @@ class LocalDictionaryService
             $values[] = $pos;
         }
 
-        $sql = "INSERT INTO " . Globals::table('local_dictionary_entries') .
+        $sql = "INSERT INTO local_dictionary_entries" .
                " (" . implode(', ', $columns) . ") VALUES " .
                implode(', ', $placeholders);
 

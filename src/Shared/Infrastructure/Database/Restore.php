@@ -7,7 +7,7 @@
  * This file contains functions for restoring database backups
  * and truncating user data.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Database
@@ -418,21 +418,21 @@ class Restore
     private static function truncateAllUsersData(): void
     {
         // Level 1: Tables with FKs to multiple parents
-        Connection::execute('DELETE FROM ' . Globals::table('text_tag_map'));
-        Connection::execute('DELETE FROM ' . Globals::table('word_tag_map'));
-        Connection::execute('DELETE FROM ' . Globals::table('word_occurrences'));
-        Connection::execute('DELETE FROM ' . Globals::table('feed_links'));
+        Connection::execute('DELETE FROM text_tag_map');
+        Connection::execute('DELETE FROM word_tag_map');
+        Connection::execute('DELETE FROM word_occurrences');
+        Connection::execute('DELETE FROM feed_links');
 
         // Level 2: Tables with FKs to languages only
-        Connection::execute('DELETE FROM ' . Globals::table('sentences'));
-        Connection::execute('DELETE FROM ' . Globals::table('news_feeds'));
-        Connection::execute('DELETE FROM ' . Globals::table('texts'));
-        Connection::execute('DELETE FROM ' . Globals::table('words'));
+        Connection::execute('DELETE FROM sentences');
+        Connection::execute('DELETE FROM news_feeds');
+        Connection::execute('DELETE FROM texts');
+        Connection::execute('DELETE FROM words');
 
         // Level 3: Parent tables with no FKs to other content tables
-        Connection::execute('DELETE FROM ' . Globals::table('tags'));
-        Connection::execute('DELETE FROM ' . Globals::table('text_tags'));
-        Connection::execute('DELETE FROM ' . Globals::table('languages'));
+        Connection::execute('DELETE FROM tags');
+        Connection::execute('DELETE FROM text_tags');
+        Connection::execute('DELETE FROM languages');
 
         QueryBuilder::table('settings')
             ->where('StKey', '=', 'currenttext')

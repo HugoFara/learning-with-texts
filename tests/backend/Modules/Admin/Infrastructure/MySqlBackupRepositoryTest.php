@@ -8,7 +8,7 @@
  * user-scope contract is locked in without round-tripping
  * through a live MySQL connection.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Admin\Infrastructure

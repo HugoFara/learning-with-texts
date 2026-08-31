@@ -6,7 +6,7 @@
  *
  * Provides functionality for parsing SQL files into individual queries.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Database
  * @package  Lwt

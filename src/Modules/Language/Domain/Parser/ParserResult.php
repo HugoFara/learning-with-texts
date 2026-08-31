@@ -3,7 +3,7 @@
 /**
  * Parser Result Value Object
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Parser
  * @package  Lwt\Modules\Language\Domain\Parser

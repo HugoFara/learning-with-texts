@@ -7,7 +7,7 @@
  * and return type contracts. Integration tests with a real database are
  * needed for full coverage of scoring queries.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests\Modules\Text\Application\Services

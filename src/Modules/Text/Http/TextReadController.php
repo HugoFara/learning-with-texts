@@ -3,7 +3,7 @@
 /**
  * Text Read Controller - Text reading and display interface
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Text\Http
@@ -147,13 +147,10 @@ class TextReadController extends BaseController
             return $this->redirect('/text/edit');
         }
 
-        $annotatedText = $this->displayService->getAnnotatedText($textId);
-        if (strlen($annotatedText) <= 0) {
-            return $this->redirect('/text/edit');
-        }
-
-        $settings = $this->displayService->getTextDisplaySettings($textId);
-        if ($settings === null) {
+        // Still checked here: with no annotation there is nothing for the
+        // client to render, and sending the user to an empty shell is worse
+        // than putting them back on the text list.
+        if (strlen($this->displayService->getAnnotatedText($textId)) <= 0) {
             return $this->redirect('/text/edit');
         }
 
@@ -165,9 +162,10 @@ class TextReadController extends BaseController
         $title = $headerData['title'];
         $audio = $headerData['audio'];
         $sourceUri = $headerData['sourceUri'];
-        $textSize = $settings['textSize'];
-        $rtlScript = $settings['rtlScript'];
 
+        // Prev/next depends on the request's language filter, query and tag
+        // selection, which live in the session rather than behind an endpoint,
+        // so this chrome stays server-rendered.
         $textLinks = (new TextNavigationService())->getPreviousAndNextTextLinks(
             $textId,
             'display_impr_text.php?text=',
@@ -178,12 +176,10 @@ class TextReadController extends BaseController
         $mediaPlayerHtml = (new \Lwt\Modules\Admin\Application\Services\MediaService())
             ->getMediaPlayerHtml($audio);
 
-        $annotations = $this->displayService->parseAnnotations($annotatedText);
-
         $this->displayService->saveCurrentText($textId);
 
         PageLayoutHelper::renderPageStartNobody('Display');
-        include self::MODULE_VIEWS . '/display_main.php';
+        include self::MODULE_VIEWS . '/display_alpine.php';
         PageLayoutHelper::renderPageEnd();
 
         return null;

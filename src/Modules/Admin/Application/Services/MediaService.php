@@ -8,7 +8,7 @@
  * - HTML media player generation (audio/video)
  * - Support for local files and streaming platforms (YouTube, Vimeo, Dailymotion, Bilibili, NicoNico, PeerTube)
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Admin\Application\Services

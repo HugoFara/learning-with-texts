@@ -485,6 +485,150 @@ class TextPrintServiceTest extends TestCase
         $this->assertNull($data);
     }
 
+    // ===== getAnnotationForApi() tests =====
+
+    /**
+     * Link a word to the test text so the annotation rebuild picks it up.
+     *
+     * getAnnotationForApi() regenerates the annotation from word_occurrences
+     * rather than trusting the stored string, so a fixture that only writes
+     * TxAnnotatedText produces items with no word behind them.
+     *
+     * @param string $term        Surface form
+     * @param string $romanization Reading to store on the word
+     *
+     * @return array{0: int, 1: int} Word ID and sentence ID, for cleanup
+     */
+    private function linkWordToTestText(string $term, string $romanization): array
+    {
+        Connection::query(
+            "INSERT INTO sentences (SeLgID, SeTxID, SeOrder, SeFirstPos, SeText) VALUES ("
+            . self::$testLangId . ", " . self::$testTextId . ", 1, 1, '" . $term . ".')"
+        );
+        $sentenceId = (int) Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
+
+        Connection::query(
+            "INSERT INTO words (WoLgID, WoText, WoTextLC, WoStatus, WoTranslation, "
+            . "WoRomanization, WoSentence, WoStatusChanged) VALUES ("
+            . self::$testLangId . ", '" . $term . "', '" . $term . "', 1, 'meaning', '"
+            . $romanization . "', '', NOW())"
+        );
+        $wordId = (int) Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
+
+        Connection::query(
+            "INSERT INTO word_occurrences "
+            . "(Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text) VALUES ("
+            . $wordId . ", " . self::$testLangId . ", " . self::$testTextId . ", "
+            . $sentenceId . ", 1, 1, '" . $term . "')"
+        );
+        Connection::query(
+            "INSERT INTO word_occurrences "
+            . "(Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text) VALUES ("
+            . "NULL, " . self::$testLangId . ", " . self::$testTextId . ", "
+            . $sentenceId . ", 2, 0, '.')"
+        );
+
+        return [$wordId, $sentenceId];
+    }
+
+    /**
+     * Remove the fixture rows created by linkWordToTestText().
+     *
+     * @param int $wordId     Word to drop
+     * @param int $sentenceId Sentence to drop
+     *
+     * @return void
+     */
+    private function unlinkWordFromTestText(int $wordId, int $sentenceId): void
+    {
+        Connection::query("DELETE FROM word_occurrences WHERE Ti2SeID = " . $sentenceId);
+        Connection::query("DELETE FROM words WHERE WoID = " . $wordId);
+        Connection::query("DELETE FROM sentences WHERE SeID = " . $sentenceId);
+    }
+
+    public function testGetAnnotationForApiCarriesRomanization(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        [$wordId, $sentenceId] = $this->linkWordToTestText('annrom', 'ro-man');
+
+        try {
+            $items = (new TextPrintService())->getAnnotationForApi(self::$testTextId);
+
+            $this->assertIsArray($items);
+            $this->assertNotEmpty($items);
+
+            $words = array_values(array_filter($items, fn(array $i): bool => $i['isWord']));
+            $this->assertNotEmpty($words, 'Expected the linked word in the annotation');
+            $this->assertSame($wordId, $words[0]['wordId']);
+            $this->assertSame('ro-man', $words[0]['romanization']);
+
+            // Items with no word behind them carry an empty reading, never null,
+            // so the client can render them without a presence check.
+            $nonWords = array_values(array_filter($items, fn(array $i): bool => !$i['isWord']));
+            $this->assertNotEmpty($nonWords);
+            $this->assertSame('', $nonWords[0]['romanization']);
+        } finally {
+            $this->unlinkWordFromTestText($wordId, $sentenceId);
+        }
+    }
+
+    public function testGetAnnotationForApiReturnsEmptyRomanizationWhenWordHasNone(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        [$wordId, $sentenceId] = $this->linkWordToTestText('annnorom', '');
+
+        try {
+            $items = (new TextPrintService())->getAnnotationForApi(self::$testTextId);
+
+            $this->assertIsArray($items);
+            $words = array_values(array_filter($items, fn(array $i): bool => $i['isWord']));
+            $this->assertNotEmpty($words);
+            $this->assertSame('', $words[0]['romanization']);
+        } finally {
+            $this->unlinkWordFromTestText($wordId, $sentenceId);
+        }
+    }
+
+    public function testGetAnnotationForApiSkipsBlankAnnotationRows(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        [$wordId, $sentenceId] = $this->linkWordToTestText('annblank', '');
+
+        try {
+            $items = (new TextPrintService())->getAnnotationForApi(self::$testTextId);
+
+            $this->assertIsArray($items);
+            // A trailing or repeated newline in the stored annotation splits to a
+            // blank row. Reported as a word it would render an empty <ruby>, which
+            // is what the server-rendered display view used to filter out.
+            foreach ($items as $item) {
+                if ($item['isWord']) {
+                    $this->assertNotSame('', $item['text'], 'Blank row reported as a word');
+                }
+            }
+        } finally {
+            $this->unlinkWordFromTestText($wordId, $sentenceId);
+        }
+    }
+
+    public function testGetAnnotationForApiReturnsNullWithoutAnnotation(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $this->assertNull((new TextPrintService())->getAnnotationForApi(999999));
+    }
+
     // ===== Constants tests =====
 
     public function testAnnotationConstants(): void

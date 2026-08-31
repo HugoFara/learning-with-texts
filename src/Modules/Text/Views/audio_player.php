@@ -13,7 +13,7 @@
  * The control markup mirrors the server-rendered player exactly (same classes,
  * bindings and icons) so styling and behavior are unchanged.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Views
  * @package  Lwt

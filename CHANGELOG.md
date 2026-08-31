@@ -7,9 +7,155 @@ ones are marked like "v1.0.0-fork".
 
 ## [Unreleased]
 
+### Added in Unreleased
+
+* **One emitter and one reader for the values PHP hands a page** (#301). Server
+  values reach a page as a JSON island because the CSP build of Alpine cannot
+  evaluate inline expressions. All 35 islands now go through `ConfigIsland` on
+  the PHP side and `readPageConfig()` on the TypeScript side, instead of each
+  hand-rolling its own script tag, escaping flags and parser.
+
+* **Fetched source documents are cached** (#303). `FileCache` holds the text
+  behind a difficulty preview for 24 hours, keyed by URL. Only the document is
+  shared; coverage is still computed per user.
+
+* **`npm run serve`** (#303) starts the PHP dev server with
+  `PHP_CLI_SERVER_WORKERS` set. Use it instead of a bare `php -S`, which serves
+  one request at a time.
+
+### Changed in Unreleased
+
+* **The `MECAB` magic word has one reader instead of twelve** (#288).
+  `LgRegexpWordCharacters` is the field that should hold a word-characters
+  regex; historically it could instead hold the literal `MECAB`, saying two
+  unrelated things at once — *tokenize with MeCab*, and *this language has no
+  spaces between words*. `LgParserType` says the first properly, but nothing
+  said the second, so twelve sites spelled the comparison out by hand and three
+  of them got the normalisation wrong. `WordSpacing` now answers both questions,
+  and `SentenceService` asks whether a language separates its words with spaces
+  rather than what its word-characters field happens to contain. Behaviour is
+  unchanged for every combination of the three signals; only the three
+  mis-normalised sites move, and they move to what they meant.
+
+* **The `MECAB` magic word is retired from the database** (#288). A migration
+  gives its two jobs to the fields that mean them — `LgParserType = 'mecab'` and
+  `LgRemoveSpaces = 1` — and puts the Japanese preset's real regex back in
+  `LgRegexpWordCharacters`, so a migrated language ends up looking like a freshly
+  created one. Every reader moved to those fields first: clearing the marker
+  without that would have dropped Japanese onto the regex tokenizer, where the
+  text still opens and every word in it is wrong. Verified by parsing the same
+  Japanese text before and after the migration across all three legacy flag
+  combinations, with tokens, sentence split and phonetic reading unchanged.
+
+* **MeCab has one implementation again** (#288). `ParserRegistry` routed a
+  language naming `mecab` to `MecabParser`, a second tokenizer shelling out to
+  the same binary as the built-in `JapaneseTextParser` — and the two disagreed.
+  MeCab now always stays on the built-in pipeline, which is the one every
+  install has been using.
+
+* **The language form no longer offers to overwrite a working regex** (#288).
+  The word-characters selector's "MeCab (recommended)" option wrote the literal
+  `mecab` over whatever regex the field held — and it only appeared once a
+  language was already named Japanese, by which point the parser dropdown had
+  the choice covered. Removing it stops new installs acquiring the magic word;
+  existing ones keep working, since every reader still accepts it.
+
+* **The annotated text view is rendered by the browser** (#302). `/text/{id}/display`
+  was the last page building content in PHP. It now fetches
+  `GET /api/v1/texts/{id}/annotation`, and three view files become one. The
+  markup is unchanged, down to the class names the show/hide buttons rely on.
+
+* **Difficulty previews no longer refetch the book every time** (#303). Each
+  preview downloaded the whole text from Gutenberg — 5.4 s, essentially all
+  network — on every page load, and the suggestion panels ask for one per book
+  they list. Cached, the same call takes 0.02 s.
+
+* **`Globals` carries only what it needs to** (#300), going from 505 lines to
+  353. What remains is the request's database handle and user context; the
+  latter is what `QueryBuilder` scopes every query by, which the class now says
+  outright. `Connection` owns the mysqli handle alone, so `Connection::reset()`
+  genuinely clears it rather than recovering a second copy.
+
+* **Documentation matches the codebase again** (#298, #301). `CLAUDE.md`
+  described directories, helpers and tables that no longer exist. 530 file
+  docblocks also claimed PHP 8.1 while `composer.json` has required `^8.2` and
+  CI tests 8.2 through 8.5.
+
+### Removed in Unreleased
+
+* **Server-side rendering paths nothing reaches** (#299), 800 lines: the
+  word-by-word reading pane renderer superseded by `text_renderer.ts`, three
+  review views behind an unrouted controller method, and a frameset page header
+  from before the app had no framesets.
+
+* **`Globals::table()`** (#300), which was the identity function — a leftover
+  from a table prefix that no longer exists, called in 185 places and reading as
+  though it did something. Also `Globals::query()`, a one-line forward to
+  `QueryBuilder::table()`, and an error-display flag that was never switched on.
+
+### Fixed in Unreleased
+
+* **Japanese from the language preset parsed into almost nothing** (#288).
+  `MecabParser` read MeCab's character-type column with the test inverted, so
+  every word came out a non-word and every `。` came out a word: a text of
+  twelve words parsed to three, and — since 3.7.0 knows how to say so — raised
+  the "almost none of this text could be turned into words" banner. It affected
+  any language that actually reached that parser, which is one created from the
+  Japanese preset, since the preset names `mecab` and carries a real regex. The
+  built-in tokenizer has always read the column correctly; this now agrees.
+
+* **A Japanese language spelled `MECAB` got no phonetic reading** (#288). Every
+  reader of the magic word normalised before comparing except
+  `GetPhoneticReading`, which tested `!== "mecab"` in lowercase, so an install
+  holding the marker in any other casing silently got its input back with no
+  error. `ExternalParser` had the mirror bug — it compared against uppercase
+  only, so the lowercase `mecab` the language form writes was taken for a
+  regex and compiled as the character class `[mecab]`, making exactly the
+  letters m, e, c, a and b the language's word characters. The reading-mode
+  choice in `LanguageApiHandler` had the lowercase version of the same bug.
+
+* **A text with no words was told its language was misconfigured** (#289). The
+  "none of this text could be turned into words" banner had no minimum length,
+  so `123`, `2024`, `3.14` and `?!...` each sent the reader to change a language
+  setting that was working correctly. A price list, a date exercise or a numbers
+  drill genuinely contains no words; the parse was right and now says nothing.
+
+* **Short non-Latin texts warned about nothing at all** (#289, #278). The
+  density test was switched off below 200 characters, so a 122-character Chinese
+  text on a Latin language — five stray clickable tokens in a wall of
+  unclickable characters — got no explanation, which is the experience #278
+  reports. The verdict no longer has a length threshold to fall through.
+
+* **One rule, three denominators** (#289). The reading view, the check-text page
+  and the API shared the rule for when a parse came out empty but not its input:
+  one measured the raw text, two summed token lengths, so the same text could
+  cross the floor on one surface and not another. `ParseCoverage` is now fed the
+  text token by token and does its own counting, so a caller cannot measure
+  differently. Coverage is judged as the share of a text's **letters** that
+  ended up inside words, which — unlike word-per-character density — does not
+  move with how spaced-out a script is, and reads the same at any length.
+
+* **Config blobs could break out of their script element** (#301). Six islands
+  passed no escaping flags at all, so a value containing `</script>` closed the
+  element early and the rest parsed as markup. `preferences.php` separately
+  hand-spliced a pre-encoded value into a JSON literal, which held only while
+  the controller remembered to encode it.
+
+* **A malformed config blob no longer kills the page** (#301). The starter
+  vocabulary page parsed without a `try`/`catch`, so a bad blob threw during
+  `init()` and left an inert shell. `readPageConfig()` falls back to the
+  caller's defaults instead.
+
+* **Two empty ruby elements per annotated text** (#302). Splitting the stored
+  annotation on newlines yields a blank entry for any trailing newline, and the
+  API reported those as terms. Affected the annotated print view as well.
+
+* **Annotation items carry their romanization** (#302), resolved for the whole
+  text in one query rather than one lookup per term.
+
 ## [3.6.0-fork] - 2026-08-30
 
-### Added
+### Added in 3.6.0-fork
 
 * **Locale completion is documented and visible**. The translation badges the
   `Locale completion` workflow has been publishing to the `badges` branch were
@@ -27,7 +173,7 @@ ones are marked like "v1.0.0-fork".
   answers with data, so the interface works against a configurable API base URL
   rather than the page origin.
 
-### Changed
+### Changed in 3.6.0-fork
 
 * **The feed wizard is one page** (#262, #266). Its four steps were four POSTs,
   each render rebuilding the parsed feed, the fetched article and the picked
@@ -56,7 +202,7 @@ ones are marked like "v1.0.0-fork".
   built from the lock file when the image is built, so these are the versions
   the release actually ships.
 
-### Fixed
+### Fixed in 3.6.0-fork
 
 * **Whole-number locale percentages are no longer mangled**. The badge writer
   trimmed trailing zeros off the plain string form of the percentage, which ate
@@ -105,7 +251,7 @@ ones are marked like "v1.0.0-fork".
   `alpine:initialized` — enough when each step was a page load, not enough now
   that a step's markup enters the DOM as the user reaches it.
 
-### Security
+### Security in 3.6.0-fork
 
 * **Creating a local dictionary checks that the language is yours** (#262). The
   dictionary index's quick-create form passed the URL's language id straight to
@@ -123,7 +269,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.5.0-fork] - 2026-08-27
 
-### Added
+### Added in 3.5.0-fork
 
 * **Reviews are graded Again / Hard / Good / Easy** (#238). The review card's
   Wrong/Correct pair becomes the four grades FSRS needs, each showing when it
@@ -138,7 +284,7 @@ ones are marked like "v1.0.0-fork".
   Anki's own FSRS continues from LWT's estimate instead of starting over.
   Suspended terms keep their schedule. Nothing flows the other way.
 
-### Changed
+### Changed in 3.5.0-fork
 
 * **The database lives in a named Docker volume** (#275). `docker-compose.yml`
   no longer bind-mounts the database directory from the host, which on Windows
@@ -166,7 +312,7 @@ ones are marked like "v1.0.0-fork".
   first, using whichever lemmatizer the language is configured with. Languages
   with the lemmatizer set to *none* are unaffected.
 
-### Removed
+### Removed in 3.5.0-fork
 
 * **The legacy Leitner scoring is gone** (#238). `WoTodayScore`,
   `WoTomorrowScore` and `WoRandom` cached a formula over a term's status and the
@@ -176,7 +322,7 @@ ones are marked like "v1.0.0-fork".
   them, and the vocabulary list's **Score** column becomes **Due**, counting
   days until the term returns.
 
-### Fixed
+### Fixed in 3.5.0-fork
 
 * **Chinese texts could not be read** (#278). A Chinese language from the
   built-in preset produced a text with no clickable words at all. Chinese and
@@ -223,7 +369,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.4.2-fork] - 2026-08-16
 
-### Fixed
+### Fixed in 3.4.2-fork
 
 * **Finishing the RSS feed wizard saved nothing** (#262). The wizard's last
   step posted the finished feed to `/feeds/edit`, and that route became a
@@ -240,7 +386,7 @@ ones are marked like "v1.0.0-fork".
   3.4.1. The article is also cached in the session again, as it was meant to
   be, so stepping back and forth no longer refetches it every time.
 
-### Changed
+### Changed in 3.4.2-fork
 
 * **The text editor and the feed forms save through `/api/v1`** (#262).
   Creating or editing a text now uses `POST /api/v1/texts` and
@@ -250,7 +396,7 @@ ones are marked like "v1.0.0-fork".
   The text editor's "Check" button still asks the server for its parsing
   report, and the feed wizard's URL steps still drive the server-side session.
 
-### Security
+### Security in 3.4.2-fork
 
 * **The language on a new text or feed is checked for ownership** (#262).
   `texts.TxLgID` and `news_feeds.NfLgID` have foreign keys to `languages`, but
@@ -263,7 +409,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.4.1-fork] - 2026-08-12
 
-### Fixed
+### Fixed in 3.4.1-fork
 
 * **Foreign keys earlier upgrades had already dropped are now put back**
   (#273). 3.4.0 stopped an upgrade from destroying constraints, but it could
@@ -305,7 +451,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.4.0-fork] - 2026-08-12
 
-### Fixed
+### Fixed in 3.4.0-fork
 
 * **A migration that failed was recorded as applied, so the schema silently
   stayed broken** (#247, #271). `Migrations::update()` logged each failing
@@ -363,7 +509,7 @@ ones are marked like "v1.0.0-fork".
   explanation pointing at the first-segment rule. It fails against the previous
   registry on exactly those two routes.
 
-### Added
+### Added in 3.4.0-fork
 
 * **Books are shell-free.** `/books` and `/book/{id}` render entirely from
   `/api/v1` through the new `bookList` and `bookDetail` Alpine components. The
@@ -381,7 +527,7 @@ ones are marked like "v1.0.0-fork".
   for `src/Modules/Book/Views` were removed — with no row data left to walk,
   Psalm reported them as unnecessary.
 
-### Removed
+### Removed in 3.4.0-fork
 
 * **Seven orphaned view templates**, taking `src/**/Views` from 78 files to 71.
   None had a caller — checked against literal `include`s, `render('stem')`, and
@@ -521,7 +667,7 @@ ones are marked like "v1.0.0-fork".
   and a language named `<img src=x onerror=…>` / `" onmouseover="…`. Each was
   checked against the pre-fix code to confirm it actually fails there.
 
-### Changed
+### Changed in 3.4.0-fork
 
 * **EPUB import no longer depends on an external Composer package** (#263):
   LWT now ships its own EPUB reader
@@ -541,7 +687,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.3.0-fork] - 2026-08-06
 
-### Added
+### Added in 3.3.0-fork
 
 * **Import an Anki deck to seed known words** (#228): point LWT at a deck you
   already study in Anki and it creates the terms for you, working out how well
@@ -568,7 +714,7 @@ ones are marked like "v1.0.0-fork".
   a learning term to *Ignored*. Scheduling state is deliberately not exchanged.
   See `docs/reference/anki-export-import`.
 
-### Fixed
+### Fixed in 3.3.0-fork
 
 * **Selecting several words in the reader produced a term named after hashes**:
   creating a multi-word term captured each word's `data_hex` identity token
@@ -583,7 +729,7 @@ ones are marked like "v1.0.0-fork".
   in a frame the reader no longer renders. It now links to `/word/edit-term`,
   the same route the Alpine review view already used.
 
-### Removed
+### Removed in 3.3.0-fork
 
 * **Dead legacy result-view plumbing** (#266): four result handlers
   (`delete_result`, `insert_wellknown_result`, `insert_ignore_result`,
@@ -595,7 +741,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.2.2-fork] - 2026-08-05
 
-### Fixed
+### Fixed in 3.2.2-fork
 
 * **A single-language install could never browse Gutenberg or GDL**: the
   new-text page said "Please select a language above" while the navbar already
@@ -647,7 +793,7 @@ ones are marked like "v1.0.0-fork".
   used optional chaining, which `@alpinejs/csp` cannot parse. Moved into the
   `backupManager` component as `selectFile()`.
 
-### Changed
+### Changed in 3.2.2-fork
 
 * **Three further security advisories** published after the bumps below, all
   fixed within existing constraints. `guzzlehttp/guzzle` 7.15.1 → 7.15.2 clears
@@ -689,7 +835,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.2.1-fork] - 2026-06-30
 
-### Fixed
+### Fixed in 3.2.1-fork
 
 * **Database error on first boot with CRLF schema files** (#241): a fresh
   install could fail to start with "Internal Server Error - A database error
@@ -709,7 +855,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.2.0-fork] - 2026-06-23
 
-### Added
+### Added in 3.2.0-fork
 
 * **Global Digital Library as a text source** ("Kids' Library"): browse and
   search openly-licensed (CC-BY/CC-BY-SA) children's and early-grade readers —
@@ -1031,7 +1177,7 @@ ones are marked like "v1.0.0-fork".
   check that also strips query strings, so signed CDN URLs like
   `audio.mp3?token=...` resolve correctly.
 
-### Fixed
+### Fixed in 3.2.0-fork
 
 * **Navbar hamburger hidden under the status/camera bar** on edge-to-edge
   phones (and in the Android app shell). The navbar now respects the device
@@ -1712,7 +1858,7 @@ ones are marked like "v1.0.0-fork".
   short-circuits with a specific hint that the user must upload an
   archive containing the full bundle.
 
-### Changed
+### Changed in 3.2.0-fork
 
 * **Dependency security bumps** closing twelve Dependabot advisories. PHP
   runtime: `guzzlehttp/guzzle` 7.10.0 → 7.12.1, `guzzlehttp/psr7` 2.9.0 →
@@ -1727,7 +1873,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.1.1-fork] - 2026-04-26
 
-### Changed
+### Changed in 3.1.1-fork
 
 * **EPUB import unified onto `/texts/new`**: picking an `.epub` under
   *Source → File → From computer* now flips the form's action to
@@ -1742,7 +1888,7 @@ ones are marked like "v1.0.0-fork".
   are now Bulma tabs instead of stacked panels, hiding the unused option
   and reducing vertical clutter.
 
-### Fixed
+### Fixed in 3.1.1-fork
 
 * **EPUB upload** (#232): forward the original filename to
   `EpubParserService::parse()` / `getMetadata()` so the underlying
@@ -1791,7 +1937,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.1.0-fork] - 2026-04-21
 
-### Added
+### Added in 3.1.0-fork
 
 * **Internationalization (i18n)** (#223): PHP `__()` and JS `t()` /
   Alpine `$t` helpers backed by per-namespace JSON files under `locale/`,
@@ -1808,7 +1954,7 @@ ones are marked like "v1.0.0-fork".
 * **PHP 8.5 support**: All dependencies now support PHP 8.5. Added PHP 8.5 to
   the CI test matrix.
 
-### Changed
+### Changed in 3.1.0-fork
 
 * **Update notification**: The "new LWT version available" banner on the
   home page is now dismissible (remembered per-version via localStorage),
@@ -1855,13 +2001,13 @@ ones are marked like "v1.0.0-fork".
   added 5 missing ones. Added a Vite plugin to clean stale hashed bundles
   between builds.
 
-### Fixed
+### Fixed in 3.1.0-fork
 
 * **Version number not updated since 3.0.0**: `ApplicationInfo::VERSION` was
   never bumped for the 3.0.1 and 3.0.2 releases, causing the app to display
   "3.0.0-fork" in the UI.
 
-### Removed
+### Removed in 3.1.0-fork
 
 * **Dead route `/text/set-mode`**: This endpoint (and its view, controller
   method, and frontend JS) was no longer reachable from any UI. The "Show All"
@@ -1871,7 +2017,7 @@ ones are marked like "v1.0.0-fork".
   fully superseded by `POST /api/v1/settings`. No UI or frontend code referenced
   it.
 
-### Deprecated
+### Deprecated in 3.1.0-fork
 
 * **Legacy query-parameter routes** now emit `Deprecation`, `Sunset`, and `Link`
   HTTP headers. The routes still work but will be removed in the next major
@@ -1882,7 +2028,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.0.2-fork] - 2026-04-05
 
-### Changed
+### Changed in 3.0.2-fork
 
 * **Removed `@vitejs/plugin-legacy`**: The legacy Vite plugin generated ~1.2 MB
   of `nomodule` bundles and polyfills that were never served (ViteHelper only
@@ -1890,7 +2036,7 @@ ones are marked like "v1.0.0-fork".
   roughly 70%. Also switched from Terser to esbuild for minification (Vite's
   built-in default), which speeds up the build.
 
-### Added
+### Added in 3.0.2-fork
 
 * **Reading area width and text size controls**
   ([#225](https://github.com/HugoFara/lwt/issues/225)): The text reading
@@ -1899,7 +2045,7 @@ ones are marked like "v1.0.0-fork".
   across sessions as user preferences. The dropdown also groups the multi-word
   expressions toggle, translations toggle, and print link.
 
-### Fixed
+### Fixed in 3.0.2-fork
 
 * **EPUB import failing** ([#231](https://github.com/HugoFara/lwt/issues/231)):
   EPUB uploads always failed with "Invalid EPUB file" because the extension check
@@ -1917,7 +2063,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.0.1-fork] - 2026-03-15
 
-### Fixed
+### Fixed in 3.0.1-fork
 
 * **Docker image build** ([#230](https://github.com/HugoFara/lwt/discussions/230)):
   MeCab system packages and `mecab-python3` now skip gracefully on unsupported
@@ -1926,7 +2072,7 @@ ones are marked like "v1.0.0-fork".
 
 ## [3.0.0-fork] - 2026-03-14
 
-### Added
+### Added in 3.0.0-fork
 
 * **Notes Field for Terms** ([#128](https://github.com/HugoFara/lwt/issues/128)):
   Added a dedicated "Notes" field to terms/words, allowing users to add personal
@@ -1983,7 +2129,7 @@ ones are marked like "v1.0.0-fork".
   based on the selected parser. Future parsers can be added by implementing
   `ParserInterface` and registering in `ParserRegistry`.
 
-### Changed
+### Changed in 3.0.0-fork
 
 * **Database Engine Migration** ([#220](https://github.com/HugoFara/lwt/issues/220)):
   All permanent tables converted from MyISAM to InnoDB engine. Benefits include:
@@ -2015,7 +2161,7 @@ ones are marked like "v1.0.0-fork".
   call has been removed and replaced with chunked batch inserts (500 rows per batch)
   that stream files line-by-line, reducing memory usage for large imports.
 
-### Fixed
+### Fixed in 3.0.0-fork
 
 * **Tag Duplicate Key Error** ([#120](https://github.com/HugoFara/lwt/issues/120)):
   Fixed rare error when updating a word with tags. When the session cache was
@@ -2045,7 +2191,7 @@ ones are marked like "v1.0.0-fork".
   adjacent words onto separate lines. Punctuation now stays "stuck" to the word
   it belongs to by wrapping word+punctuation pairs in non-breaking groups.
 
-### Security
+### Security in 3.0.0-fork
 
 * Adds session security cookie to protect against session hijacking.
 * Fixed SQL injection vulnerabilities in `validateLang()`, `validateText()`,
@@ -2059,14 +2205,14 @@ ones are marked like "v1.0.0-fork".
   failed tag creation. Functions now return gracefully instead of generating
   invalid SQL.
 
-### Deprecated
+### Deprecated in 3.0.0-fork
 
 * Removed testing for PHP 8.0.
 * Legacy table prefix system (`$tbpref`) is deprecated in favor of the new
   user-based multi-tenancy. Existing prefixed tables will be migrated to the
   new system automatically.
 
-### Removed
+### Removed in 3.0.0-fork
 
 * **Orphaned Frame Settings** ([#116](https://github.com/HugoFara/lwt/issues/116)):
   Removed all legacy frame-related settings from the admin settings page:

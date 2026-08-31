@@ -13,6 +13,7 @@ import Alpine from 'alpinejs';
 import { t } from '@shared/i18n/translator';
 import { LanguagesApi, type LanguageListItem } from '@modules/language/api/languages_api';
 import { BooksApi, type Book, type BookPagination } from '../api/books_api';
+import { readPageConfig } from '@shared/utils/page_config';
 
 /** Config the PHP scaffold hands over. */
 interface BookListConfig {
@@ -50,19 +51,10 @@ export interface BookListData {
  * @returns The language filter and page to start on
  */
 function readConfig(): BookListConfig {
-  const el = document.getElementById('book-list-config');
-  if (el) {
-    try {
-      const parsed = JSON.parse(el.textContent || '{}');
-      return {
-        languageId: Number(parsed.languageId) || 0,
-        page: Number(parsed.page) || 1
-      };
-    } catch {
-      // Malformed blob: fall through to defaults rather than blocking the page.
-    }
-  }
-  return { languageId: 0, page: 1 };
+  return readPageConfig<BookListConfig>('book-list-config', {
+    languageId: 0,
+    page: 1
+  });
 }
 
 /**

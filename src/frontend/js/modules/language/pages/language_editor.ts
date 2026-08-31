@@ -17,6 +17,7 @@ import Alpine from 'alpinejs';
 import { t } from '@shared/i18n/translator';
 import { LanguagesApi, type LanguageFull } from '../api/languages_api';
 import { LocalDictionariesApi, type LocalDictionary } from '@modules/dictionary/api/local_dictionaries_api';
+import { readPageConfig } from '@shared/utils/page_config';
 
 /** Config the scaffold ships for the editor. */
 export interface LanguageEditorConfig {
@@ -77,7 +78,6 @@ export interface LanguageEditorData {
   save(): Promise<void>;
   toggleAdvanced(): void;
   onTranslatorChange(event: Event): void;
-  showJapaneseOptions(): boolean;
   isRegexParser(): boolean;
   isMecabParser(): boolean;
   textSizeStyle(): string;
@@ -90,21 +90,12 @@ export interface LanguageEditorData {
 
 /** Read the scaffold's config blob. */
 function readConfig(): LanguageEditorConfig {
-  const el = document.getElementById('language-form-config');
-  if (el) {
-    try {
-      const parsed = JSON.parse(el.textContent || '{}');
-      return {
-        languageId: parsed.languageId === null || parsed.languageId === undefined
-          ? null
-          : Number(parsed.languageId),
-        isNew: Boolean(parsed.isNew)
-      };
-    } catch {
-      // Malformed blob: fall through to the create-mode defaults.
-    }
-  }
-  return { languageId: null, isNew: true };
+  // A null languageId is not carried in the blob, so the default stands
+  // and the editor opens in create mode.
+  return readPageConfig<LanguageEditorConfig>('language-form-config', {
+    languageId: null,
+    isNew: true
+  });
 }
 
 /**
@@ -210,10 +201,6 @@ export function languageEditorData(): LanguageEditorData {
     onTranslatorChange(event: Event): void {
       const select = event.target as HTMLSelectElement;
       this.showTranslatorKey = select.value === 'libretranslate';
-    },
-
-    showJapaneseOptions(): boolean {
-      return this.lang.name === 'Japanese';
     },
 
     isRegexParser(): boolean {

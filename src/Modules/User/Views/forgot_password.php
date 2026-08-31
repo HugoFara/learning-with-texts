@@ -8,7 +8,7 @@
  * - $success: string|null Success message to display
  * - $email: string Pre-filled email
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\User\Views

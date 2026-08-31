@@ -12,6 +12,7 @@
 import Alpine from 'alpinejs';
 import { t } from '@shared/i18n/translator';
 import { TagsApi, type TagType } from '../api/tags_api';
+import { readPageConfig } from '@shared/utils/page_config';
 
 /** Config the scaffold ships. */
 export interface TagFormConfig {
@@ -43,21 +44,14 @@ export interface TagFormAppData {
 
 /** Read the scaffold's config blob. */
 function readConfig(): TagFormConfig {
-  const el = document.getElementById('tag-form-config');
-  if (el) {
-    try {
-      const parsed = JSON.parse(el.textContent || '{}');
-      return {
-        type: parsed.type === 'text' ? 'text' : 'term',
-        isEdit: Boolean(parsed.isEdit),
-        tagId: Number(parsed.tagId) || 0,
-        baseUrl: String(parsed.baseUrl || '/tags')
-      };
-    } catch {
-      // Malformed blob: fall through to create-mode defaults.
-    }
-  }
-  return { type: 'term', isEdit: false, tagId: 0, baseUrl: '/tags' };
+  const cfg = readPageConfig<TagFormConfig>('tag-form-config', {
+    type: 'term',
+    isEdit: false,
+    tagId: 0,
+    baseUrl: '/tags'
+  });
+  // Anything but an explicit 'text' means the term-tag form.
+  return { ...cfg, type: cfg.type === 'text' ? 'text' : 'term' };
 }
 
 /** Longest comment the server accepts; mirrored here only for the counter. */

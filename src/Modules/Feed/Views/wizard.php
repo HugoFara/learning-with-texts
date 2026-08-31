@@ -15,7 +15,7 @@
  * - $currentLanguageId / $currentLanguageName: the navbar's language
  * - $editFeedId: int|null feed being re-run through the wizard
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views
@@ -30,11 +30,12 @@ declare(strict_types=1);
 namespace Lwt\Views\Feed;
 
 use Lwt\Shared\UI\Helpers\IconHelper;
+use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 /** @var array<int, array{id: int, name: string}> $languages */
 $languages = $languages ?? [];
 
-$configJson = json_encode([
+$wizardConfig = [
     'languages' => array_map(
         function (array $lang): array {
             return ['id' => $lang['id'], 'name' => $lang['name']];
@@ -45,7 +46,7 @@ $configJson = json_encode([
     'currentLanguageId' => $currentLanguageId ?? 0,
     'currentLanguageName' => $currentLanguageName ?? '',
     'editFeedId' => $editFeedId ?? null,
-], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT);
+];
 
 /**
  * Render the four-step progress indicator.
@@ -80,7 +81,7 @@ $renderSteps = function (int $current): string {
     return $html . '</div>';
 };
 ?>
-<script type="application/json" id="feed-wizard-config"><?php echo $configJson; ?></script>
+<?php ConfigIsland::render('feed-wizard-config', $wizardConfig); ?>
 
 <div x-data="feedWizard" x-cloak>
 
@@ -255,8 +256,7 @@ $renderSteps = function (int $current): string {
                 <?php echo __e('feed.wizard.step1.manual_intro'); ?>
             </p>
 
-            <script type="application/json" id="feed-form-config">
-            <?php echo json_encode([
+            <?php ConfigIsland::render('feed-form-config', [
                 'editText' => true,
                 'autoUpdate' => false,
                 'autoUpdateValue' => '',
@@ -271,8 +271,7 @@ $renderSteps = function (int $current): string {
                 'tagValue' => '',
                 'articleSource' => false,
                 'articleSourceValue' => '',
-            ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT); ?>
-            </script>
+            ]); ?>
             <!-- Saves through POST /api/v1/feeds (#262), so no action of its own. -->
             <form class="validate"
                   x-data="feedForm"

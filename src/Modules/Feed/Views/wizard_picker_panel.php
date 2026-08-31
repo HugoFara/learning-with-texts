@@ -11,7 +11,7 @@
  * Expects to be included inside a `feedWizardStep2` or `feedWizardStep3`
  * component.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Views

@@ -11,7 +11,7 @@
  *   php tests/setup_test_db.php --drop    # Drop and recreate test database
  *   php tests/setup_test_db.php --status  # Show test database status
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Testing
  * @package  Lwt\Tests

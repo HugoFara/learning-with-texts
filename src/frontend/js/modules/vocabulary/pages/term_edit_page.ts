@@ -13,6 +13,7 @@
 import Alpine from 'alpinejs';
 import { loadTermEditor, wireTermEditor } from '@modules/vocabulary/components/term_edit_modal';
 import { t } from '@shared/i18n/translator';
+import { hasPageConfig, readPageConfig } from '@shared/utils/page_config';
 
 interface TermEditPageConfig {
   textId: number;
@@ -37,15 +38,16 @@ interface TermEditPageState {
  * @returns Parsed config, or null when the blob is missing or malformed
  */
 function readConfig(): TermEditPageConfig | null {
-  const el = document.getElementById('term-edit-page-config');
-  if (!el?.textContent) {
+  // Absence is meaningful here: it means this is not the term-edit page.
+  if (!hasPageConfig('term-edit-page-config')) {
     return null;
   }
-  try {
-    return JSON.parse(el.textContent) as TermEditPageConfig;
-  } catch {
-    return null;
-  }
+  return readPageConfig<TermEditPageConfig>('term-edit-page-config', {
+    textId: 0,
+    position: 0,
+    wordId: null,
+    returnUrl: ''
+  });
 }
 
 /**

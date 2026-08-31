@@ -6,7 +6,7 @@
  * This class encapsulates the front controller logic for LWT.
  * It handles routing, environment setup, and request execution.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Core
  * @package  Lwt

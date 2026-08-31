@@ -6,7 +6,7 @@
  * Issues a fresh one-time recovery code for a user, stores its hash, and
  * returns the plaintext to be shown to the user exactly once.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\User\Application\UseCases

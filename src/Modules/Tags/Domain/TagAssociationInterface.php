@@ -5,7 +5,7 @@
  *
  * Domain port for tag-entity association operations.
  *
- * PHP version 8.1
+ * PHP version 8.2
  *
  * @category Lwt
  * @package  Lwt\Modules\Tags\Domain
