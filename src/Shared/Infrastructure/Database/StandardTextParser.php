@@ -69,13 +69,30 @@ class StandardTextParser
             return null;
         }
 
+        $removeSpaces = (int)$record['LgRemoveSpaces'] === 1;
+
+        // A language reaches this parser only when no tokenizer ran: MeCab went
+        // to JapaneseTextParser, and an opted-in parser either handled the text
+        // or was unavailable. So if the language also writes without spaces,
+        // there is nothing left to find word boundaries with — a regex has no
+        // gaps to match on, and matches the longest run of word characters it
+        // can, which is the whole sentence. That is what #278 reports: a Chinese
+        // text where every sentence is one unclickable "word".
+        //
+        // Splitting each character is what the presets already do — every
+        // language declaring removeSpaces sets makeCharacterWord too, and names
+        // a tokenizer — and it is what getOptedInParserFromRow() says it falls
+        // back on. This makes that hold for a language that lost the flag, or
+        // never had it because it was configured by hand.
+        $splitEachChar = (int)$record['LgSplitEachChar'] === 1 || $removeSpaces;
+
         return [
             'removeSpaces' => (string)$record['LgRemoveSpaces'],
             'splitSentence' => (string)$record['LgRegexpSplitSentences'],
             'noSentenceEnd' => (string)$record['LgExceptionsSplitSentences'],
             'termchar' => (string)$record['LgRegexpWordCharacters'],
             'rtlScript' => $record['LgRightToLeft'],
-            'splitEachChar' => ((int)$record['LgSplitEachChar'] === 1),
+            'splitEachChar' => $splitEachChar,
         ];
     }
 

@@ -104,6 +104,18 @@ ones are marked like "v1.0.0-fork".
   Japanese preset, since the preset names `mecab` and carries a real regex. The
   built-in tokenizer has always read the column correctly; this now agrees.
 
+* **A Chinese text could parse into one unclickable word per sentence** (#278).
+  A language written without spaces gives a regex no gaps to match on, so it
+  took the longest run of word characters it could find — the whole sentence.
+  The reader got a text where `我昨天去了北京大学的图书馆看书` was a single term
+  that could not be clicked, looked up or learned, which is the reported
+  symptom. Reaching the regex parser at all means no tokenizer ran, so such a
+  language now falls back to splitting each character: what every spaceless
+  preset already asks for, and what `getOptedInParserFromRow()` already said it
+  relied on. The same text on two differently configured Chinese languages now
+  parses identically. Languages whose words really are space-separated are
+  untouched.
+
 * **A Japanese language spelled `MECAB` got no phonetic reading** (#288). Every
   reader of the magic word normalised before comparing except
   `GetPhoneticReading`, which tested `!== "mecab"` in lowercase, so an install

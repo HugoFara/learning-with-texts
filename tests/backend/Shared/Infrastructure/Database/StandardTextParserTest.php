@@ -15,7 +15,9 @@ declare(strict_types=1);
 
 namespace Tests\Backend\Shared\Infrastructure\Database;
 
+use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Shared\Infrastructure\Database\StandardTextParser;
+use Lwt\Shared\Infrastructure\Database\TextParsing;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -226,9 +228,129 @@ class StandardTextParserTest extends TestCase
     // getLanguageSettings (requires DB)
     // =========================================================================
 
-    #[Test]
-    public function getLanguageSettingsRequiresDatabase(): void
+    /**
+     * Create a language and return its ID.
+     *
+     * @param int $removeSpaces  LgRemoveSpaces
+     * @param int $splitEachChar LgSplitEachChar
+     *
+     * @return int The new language's ID
+     */
+    private function makeLanguage(int $removeSpaces, int $splitEachChar): int
     {
-        $this->markTestSkipped('Database connection required');
+        Connection::preparedExecute(
+            "INSERT INTO languages (LgName, LgDict1URI, LgRegexpWordCharacters,
+                LgRegexpSplitSentences, LgExceptionsSplitSentences,
+                LgCharacterSubstitutions, LgRemoveSpaces, LgSplitEachChar,
+                LgParserType, LgRightToLeft, LgTextSize)
+             VALUES (?, 'https://example.org/???', ?, '.!?:;。！？：；', '', '', ?, ?,
+                NULL, 0, 150)",
+            [
+                'SPTest' . substr(md5(uniqid('', true)), 0, 8),
+                '\\x{4E00}-\\x{9FFF}',
+                $removeSpaces,
+                $splitEachChar,
+            ]
+        );
+        return (int) Connection::lastInsertId();
+    }
+
+    /**
+     * Remove a language created for a test.
+     *
+     * @param int $lid Language ID
+     *
+     * @return void
+     */
+    private function dropLanguage(int $lid): void
+    {
+        Connection::preparedExecute("DELETE FROM languages WHERE LgID = ?", [$lid]);
+    }
+
+    #[Test]
+    public function aSpacelessLanguageWithoutATokenizerSplitsEachCharacter(): void
+    {
+        if (!defined('LWT_TEST_DB_AVAILABLE') || !LWT_TEST_DB_AVAILABLE) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        // #278: reaching this parser means no tokenizer ran, and a language
+        // written without spaces gives a regex no gaps to match on — it takes
+        // the longest run of word characters, which is the whole sentence. The
+        // reader then sees one unclickable "word" per sentence.
+        $lid = $this->makeLanguage(removeSpaces: 1, splitEachChar: 0);
+        try {
+            $settings = StandardTextParser::getLanguageSettings($lid);
+            $this->assertNotNull($settings);
+            $this->assertTrue(
+                $settings['splitEachChar'],
+                'a spaceless language must fall back to character splitting'
+            );
+        } finally {
+            $this->dropLanguage($lid);
+        }
+    }
+
+    #[Test]
+    public function aSpaceSeparatedLanguageIsLeftAlone(): void
+    {
+        if (!defined('LWT_TEST_DB_AVAILABLE') || !LWT_TEST_DB_AVAILABLE) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        // The fallback must not reach a language whose words really are
+        // separated by spaces: splitting French into characters would be worse
+        // than anything #278 describes.
+        $lid = $this->makeLanguage(removeSpaces: 0, splitEachChar: 0);
+        try {
+            $settings = StandardTextParser::getLanguageSettings($lid);
+            $this->assertNotNull($settings);
+            $this->assertFalse($settings['splitEachChar']);
+        } finally {
+            $this->dropLanguage($lid);
+        }
+    }
+
+    #[Test]
+    public function anExplicitSplitFlagIsStillHonoured(): void
+    {
+        if (!defined('LWT_TEST_DB_AVAILABLE') || !LWT_TEST_DB_AVAILABLE) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $lid = $this->makeLanguage(removeSpaces: 0, splitEachChar: 1);
+        try {
+            $settings = StandardTextParser::getLanguageSettings($lid);
+            $this->assertNotNull($settings);
+            $this->assertTrue($settings['splitEachChar']);
+        } finally {
+            $this->dropLanguage($lid);
+        }
+    }
+
+    #[Test]
+    public function aSpacelessTextParsesIntoCharactersRatherThanSentences(): void
+    {
+        if (!defined('LWT_TEST_DB_AVAILABLE') || !LWT_TEST_DB_AVAILABLE) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        // The reported symptom, end to end: every sentence came back as one
+        // long term that could not be clicked, looked up or learned (#278).
+        $lid = $this->makeLanguage(removeSpaces: 1, splitEachChar: 0);
+        try {
+            $report = TextParsing::checkTextReport('我昨天去了图书馆。今天天气很好。', $lid);
+            $terms = array_map(static fn (array $w): string => $w[0], $report['words']);
+            $this->assertNotEmpty($terms);
+            foreach ($terms as $term) {
+                $this->assertSame(
+                    1,
+                    mb_strlen($term, 'UTF-8'),
+                    "term '$term' spans more than one character"
+                );
+            }
+        } finally {
+            $this->dropLanguage($lid);
+        }
     }
 }
