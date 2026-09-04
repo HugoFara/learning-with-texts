@@ -240,6 +240,10 @@
     "wizard.step1.opt_auto_tag_help": "Aggiunge automaticamente un'etichetta a ogni testo importato da questo feed",
     "wizard.step1.opt_article_source": "Fonte dell'articolo",
     "wizard.step1.save": "Salva",
+    "wizard.reading_feed": "Lettura del feed…",
+    "wizard.read_failed": "Impossibile leggere questo feed. Controlla l'URL e riprova.",
+    "wizard.loading_article": "Caricamento dell'articolo…",
+    "wizard.article.failed": "Impossibile caricare questo articolo.",
     "wizard.common.cancel": "Annulla",
     "wizard.common.get": "Ottieni",
     "wizard.common.select_xpath_option": "Seleziona opzione XPath:",
@@ -270,6 +274,7 @@
     "wizard.common.min_max": "min/max",
     "wizard.common.settings": "Impostazioni",
     "wizard.common.webpage_link": "Link alla pagina web",
+    "wizard.common.detected": "Rilevato:",
     "wizard.step2.selected_elements": "Elementi selezionati:",
     "wizard.step3.elements_to_filter": "Elementi da filtrare:",
     "wizard.step3.filter": "Filtra",
@@ -284,9 +289,12 @@
     "wizard.step4.charset": "Charset:",
     "wizard.step4.tag": "Etichetta:",
     "wizard.step4.save": "Salva",
+    "wizard.step4.update": "Aggiorna",
+    "wizard.step4.saving": "Salvataggio…",
     "flash.created": "Feed creato con successo",
     "flash.updated": "Feed aggiornato con successo",
     "flash.deleted": "Feed eliminato con successo",
     "flash.not_found": "Feed non trovato",
-    "flash.delete_failed": "Impossibile eliminare il feed"
+    "flash.delete_failed": "Impossibile eliminare il feed",
+    "edit_feed_not_found": "Feed non trovato."
 }

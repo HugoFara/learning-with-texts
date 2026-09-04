@@ -7,6 +7,25 @@ ones are marked like "v1.0.0-fork".
 
 ## [Unreleased]
 
+### Changed
+
+* **The nine shipped locales are complete again** (#266). 3.7.0 moved the Anki
+  import pages, the term-import notifications, the feed wizard's messages and
+  three new `server_data` diagnostics out of hardcoded English and behind
+  `__()` — but the 102 keys it extracted only ever landed in `locale/en`, so a
+  reader in any other language saw exactly the English they saw before. The
+  refactor had moved the problem from the controllers into `locale/en/` rather
+  than solving it. All 102 are now translated in de, es, fr, it, ja, pt, ru and
+  zh, following each language's own Anki terminology (deck/mazo/paquet/デッキ/
+  колода/牌组) so a term matches what the user sees in Anki itself.
+
+* **Locale completion is enforced, not just reported** (#266).
+  `.github/workflows/locales.yml` ran `bin/check-locales.php` with no
+  `--fail-under`, so CI printed "94.5%" nine times and exited 0. That is how a
+  whole release's worth of untranslated keys accumulated unnoticed. The
+  workflow now passes `--fail-under=99`, which leaves roughly 18 keys of slack
+  for strings in flight while catching accumulation long before a release.
+
 ## [3.7.0-fork] - 2026-09-04
 
 ### Added in 3.7.0-fork

@@ -19,7 +19,10 @@ jobs:
           php-version: '8.2'
 
       - name: Report completion
-        run: php bin/check-locales.php
+        # Fails below 99% (~18 keys of slack). The check ran unguarded until
+        # 3.7.0, which is how 102 untranslated keys accumulated across a
+        # release without anyone seeing it.
+        run: php bin/check-locales.php --fail-under=99
 
       - name: Generate shields.io badges
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

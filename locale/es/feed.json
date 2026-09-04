@@ -240,6 +240,10 @@
     "wizard.step1.opt_auto_tag_help": "Añadir automáticamente una etiqueta a cada texto importado de esta fuente",
     "wizard.step1.opt_article_source": "Origen del artículo",
     "wizard.step1.save": "Guardar",
+    "wizard.reading_feed": "Leyendo la fuente…",
+    "wizard.read_failed": "No se ha podido leer esa fuente. Comprueba la URL e inténtalo de nuevo.",
+    "wizard.loading_article": "Cargando el artículo…",
+    "wizard.article.failed": "No se ha podido cargar ese artículo.",
     "wizard.common.cancel": "Cancelar",
     "wizard.common.get": "Obtener",
     "wizard.common.select_xpath_option": "Selecciona una opción XPath:",
@@ -270,6 +274,7 @@
     "wizard.common.min_max": "min/max",
     "wizard.common.settings": "Ajustes",
     "wizard.common.webpage_link": "Enlace a la página",
+    "wizard.common.detected": "Detectado:",
     "wizard.step2.selected_elements": "Elementos seleccionados:",
     "wizard.step3.elements_to_filter": "Elementos a filtrar:",
     "wizard.step3.filter": "Filtrar",
@@ -284,9 +289,12 @@
     "wizard.step4.charset": "Codificación:",
     "wizard.step4.tag": "Tag:",
     "wizard.step4.save": "Guardar",
+    "wizard.step4.update": "Actualizar",
+    "wizard.step4.saving": "Guardando…",
     "flash.created": "Fuente creada correctamente",
     "flash.updated": "Fuente actualizada correctamente",
     "flash.deleted": "Fuente eliminada correctamente",
     "flash.not_found": "Fuente no encontrada",
-    "flash.delete_failed": "No se pudo eliminar la fuente"
+    "flash.delete_failed": "No se pudo eliminar la fuente",
+    "edit_feed_not_found": "Fuente no encontrada."
 }

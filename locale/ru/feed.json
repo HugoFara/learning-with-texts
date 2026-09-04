@@ -240,6 +240,10 @@
     "wizard.step1.opt_auto_tag_help": "Автоматически добавлять метку каждому импортированному из ленты тексту",
     "wizard.step1.opt_article_source": "Источник статьи",
     "wizard.step1.save": "Сохранить",
+    "wizard.reading_feed": "Чтение ленты…",
+    "wizard.read_failed": "Не удалось прочитать эту ленту. Проверьте URL и попробуйте снова.",
+    "wizard.loading_article": "Загрузка статьи…",
+    "wizard.article.failed": "Не удалось загрузить эту статью.",
     "wizard.common.cancel": "Отмена",
     "wizard.common.get": "Получить",
     "wizard.common.select_xpath_option": "Выберите вариант XPath:",
@@ -270,6 +274,7 @@
     "wizard.common.min_max": "мин/макс",
     "wizard.common.settings": "Настройки",
     "wizard.common.webpage_link": "Ссылка на веб-страницу",
+    "wizard.common.detected": "Обнаружено:",
     "wizard.step2.selected_elements": "Выбранные элементы:",
     "wizard.step3.elements_to_filter": "Элементы для фильтрации:",
     "wizard.step3.filter": "Фильтр",
@@ -284,9 +289,12 @@
     "wizard.step4.charset": "Кодировка:",
     "wizard.step4.tag": "Метка:",
     "wizard.step4.save": "Сохранить",
+    "wizard.step4.update": "Обновить",
+    "wizard.step4.saving": "Сохранение…",
     "flash.created": "Лента успешно создана",
     "flash.updated": "Лента успешно обновлена",
     "flash.deleted": "Лента успешно удалена",
     "flash.not_found": "Лента не найдена",
-    "flash.delete_failed": "Не удалось удалить ленту"
+    "flash.delete_failed": "Не удалось удалить ленту",
+    "edit_feed_not_found": "Лента не найдена."
 }

@@ -240,6 +240,10 @@
     "wizard.step1.opt_auto_tag_help": "Ajouter automatiquement une étiquette à chaque texte importé depuis ce flux",
     "wizard.step1.opt_article_source": "Source de l'article",
     "wizard.step1.save": "Enregistrer",
+    "wizard.reading_feed": "Lecture du flux…",
+    "wizard.read_failed": "Impossible de lire ce flux. Vérifiez l'URL et réessayez.",
+    "wizard.loading_article": "Chargement de l'article…",
+    "wizard.article.failed": "Impossible de charger cet article.",
     "wizard.common.cancel": "Annuler",
     "wizard.common.get": "Obtenir",
     "wizard.common.select_xpath_option": "Sélectionner l'option XPath :",
@@ -270,6 +274,7 @@
     "wizard.common.min_max": "min/max",
     "wizard.common.settings": "Paramètres",
     "wizard.common.webpage_link": "Lien de la page Web",
+    "wizard.common.detected": "Détecté :",
     "wizard.step2.selected_elements": "Éléments sélectionnés :",
     "wizard.step3.elements_to_filter": "Éléments à filtrer :",
     "wizard.step3.filter": "Filtrer",
@@ -284,9 +289,12 @@
     "wizard.step4.charset": "Jeu de caractères :",
     "wizard.step4.tag": "Étiquette :",
     "wizard.step4.save": "Enregistrer",
+    "wizard.step4.update": "Mettre à jour",
+    "wizard.step4.saving": "Enregistrement…",
     "flash.created": "Flux créé avec succès",
     "flash.updated": "Flux mis à jour avec succès",
     "flash.deleted": "Flux supprimé avec succès",
     "flash.not_found": "Flux non trouvé",
-    "flash.delete_failed": "Échec de la suppression du flux"
+    "flash.delete_failed": "Échec de la suppression du flux",
+    "edit_feed_not_found": "Flux introuvable."
 }

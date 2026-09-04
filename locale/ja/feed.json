@@ -240,6 +240,10 @@
     "wizard.step1.opt_auto_tag_help": "このフィードからインポートされたすべてのテキストに自動でタグを追加します",
     "wizard.step1.opt_article_source": "記事ソース",
     "wizard.step1.save": "保存",
+    "wizard.reading_feed": "フィードを読み込み中…",
+    "wizard.read_failed": "そのフィードを読み込めませんでした。URL を確認してもう一度お試しください。",
+    "wizard.loading_article": "記事を読み込み中…",
+    "wizard.article.failed": "その記事を読み込めませんでした。",
     "wizard.common.cancel": "キャンセル",
     "wizard.common.get": "取得",
     "wizard.common.select_xpath_option": "XPathオプションを選択：",
@@ -270,6 +274,7 @@
     "wizard.common.min_max": "最小／最大",
     "wizard.common.settings": "設定",
     "wizard.common.webpage_link": "Webページリンク",
+    "wizard.common.detected": "検出:",
     "wizard.step2.selected_elements": "選択した要素：",
     "wizard.step3.elements_to_filter": "除外する要素：",
     "wizard.step3.filter": "フィルター",
@@ -284,9 +289,12 @@
     "wizard.step4.charset": "文字コード：",
     "wizard.step4.tag": "タグ：",
     "wizard.step4.save": "保存",
+    "wizard.step4.update": "更新",
+    "wizard.step4.saving": "保存中…",
     "flash.created": "フィードが作成されました",
     "flash.updated": "フィードが更新されました",
     "flash.deleted": "フィードが削除されました",
     "flash.not_found": "フィードが見つかりません",
-    "flash.delete_failed": "フィードの削除に失敗しました"
+    "flash.delete_failed": "フィードの削除に失敗しました",
+    "edit_feed_not_found": "フィードが見つかりません。"
 }

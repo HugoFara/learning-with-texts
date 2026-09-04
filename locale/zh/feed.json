@@ -240,6 +240,10 @@
     "wizard.step1.opt_auto_tag_help": "为从此订阅源导入的每个文本自动添加一个标签",
     "wizard.step1.opt_article_source": "文章来源",
     "wizard.step1.save": "保存",
+    "wizard.reading_feed": "正在读取订阅源…",
+    "wizard.read_failed": "无法读取该订阅源。请检查 URL 后重试。",
+    "wizard.loading_article": "正在加载文章…",
+    "wizard.article.failed": "无法加载该文章。",
     "wizard.common.cancel": "取消",
     "wizard.common.get": "获取",
     "wizard.common.select_xpath_option": "选择 XPath 选项：",
@@ -270,6 +274,7 @@
     "wizard.common.min_max": "最小/最大",
     "wizard.common.settings": "设置",
     "wizard.common.webpage_link": "网页链接",
+    "wizard.common.detected": "已检测到：",
     "wizard.step2.selected_elements": "已选元素：",
     "wizard.step3.elements_to_filter": "要过滤掉的元素：",
     "wizard.step3.filter": "过滤",
@@ -284,9 +289,12 @@
     "wizard.step4.charset": "字符集：",
     "wizard.step4.tag": "标签：",
     "wizard.step4.save": "保存",
+    "wizard.step4.update": "更新",
+    "wizard.step4.saving": "正在保存…",
     "flash.created": "订阅源创建成功",
     "flash.updated": "订阅源更新成功",
     "flash.deleted": "订阅源删除成功",
     "flash.not_found": "未找到订阅源",
-    "flash.delete_failed": "删除订阅源失败"
+    "flash.delete_failed": "删除订阅源失败",
+    "edit_feed_not_found": "未找到订阅源。"
 }
