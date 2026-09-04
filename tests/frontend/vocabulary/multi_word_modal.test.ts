@@ -174,9 +174,11 @@ describe('multi_word_modal.ts', () => {
           abbr: '1',
           class: 'is-danger'
         });
+        // The shared store labels every learning stage with its level, 5
+        // included; this file's own table stopped at "Learned" (#238).
         expect(component.statuses[4]).toEqual({
           value: 5,
-          label: 'Learned',
+          label: 'Learned (5)',
           abbr: '5',
           class: 'is-success'
         });

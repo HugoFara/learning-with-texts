@@ -21,19 +21,25 @@ use Lwt\Modules\Vocabulary\Infrastructure\MySqlTermRepository;
  *  - Notes from outside LWT (no `lwt-` guid prefix and no LwtId field) are
  *    counted as "skipped_unknown" — silently ignored. A future iteration
  *    will surface these for create-as-new with a language picker.
- *  - SRS scheduling state is intentionally not consumed.
+ *  - Reviews done in Anki are replayed into LWT's own schedule by
+ *    {@see ScheduleReplay}.
  */
 final class ApkgImportService
 {
     public function __construct(
         private readonly TermRepositoryInterface $terms,
         private readonly ApkgReader $reader,
+        private readonly ScheduleReplay $replay,
     ) {
     }
 
     public static function default(): self
     {
-        return new self(new MySqlTermRepository(), new ApkgReader());
+        return new self(
+            new MySqlTermRepository(),
+            new ApkgReader(),
+            ScheduleReplay::default(),
+        );
     }
 
     public function importApkg(string $apkgPath): ImportResult
@@ -83,6 +89,8 @@ final class ApkgImportService
             }
         }
 
+        $replayed = $this->replay->apply($notes);
+
         return new ImportResult(
             totalNotes: count($notes),
             updated: $updated,
@@ -91,6 +99,9 @@ final class ApkgImportService
             skippedMissing: $skippedMissing,
             statusSetToIgnored: $statusSetToIgnored,
             tagsChanged: $tagsChanged,
+            termsRescheduled: $replayed['terms'],
+            reviewsApplied: $replayed['reviews'],
+            dueDatesMoved: $replayed['dueDatesMoved'],
         );
     }
 

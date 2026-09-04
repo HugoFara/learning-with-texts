@@ -107,7 +107,7 @@ $colStatus = __('vocabulary.upload.results.status');
             <span class="icon">
                 <?php echo IconHelper::render('loader-2', ['alt' => 'Loading', 'class' => 'animate-spin']); ?>
             </span>
-            <span>Loading...</span>
+            <span><?= __e('vocabulary.common.loading') ?></span>
         </div>
     </template>
 
@@ -119,7 +119,9 @@ $colStatus = __('vocabulary.upload.results.status');
                 <div class="level-left">
                     <div class="level-item">
                         <span class="tag is-medium is-info is-light">
-                            <span x-text="recno"></span>&nbsp;Term<span x-show="recno !== 1">s</span>
+                            <span x-text="recno"></span>&nbsp;<span
+                                x-show="recno === 1"><?= __e('vocabulary.common.term') ?></span><span
+                                x-show="recno !== 1"><?= __e('vocabulary.common.terms') ?></span>
                         </span>
                     </div>
                 </div>

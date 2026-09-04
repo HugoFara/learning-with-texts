@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Backend\Modules\Vocabulary\Application\Services\Anki;
 
+use DateTimeImmutable;
+use Lwt\Modules\Review\Application\UseCases\RecordScheduledReview;
+use Lwt\Modules\Review\Domain\Scheduling\Rating;
+use Lwt\Modules\Review\Infrastructure\MySqlTermScheduleRepository;
 use Lwt\Modules\Tags\Application\Services\TermTagService;
 use Lwt\Modules\Vocabulary\Application\Services\Anki\ApkgExportService;
 use Lwt\Modules\Vocabulary\Application\Services\Anki\ApkgImportService;
@@ -236,6 +240,126 @@ final class ApkgServiceIntegrationTest extends TestCase
                 unlink($path);
             }
         }
+    }
+
+    public function testAReviewDoneInAnkiComesBackAndIsNotAppliedTwice(): void
+    {
+        $term = $this->seedTerm('apkgi_sched', TermStatus::LEARNING_3, 'scheduled', '');
+
+        // A review done here first, so the file carries LWT's own history back
+        // out with it — which is exactly what the import must not replay.
+        $ours = new DateTimeImmutable('2026-01-10 10:00:00');
+        self::assertTrue(
+            (new RecordScheduledReview())->execute($term, Rating::Good, $ours)
+        );
+
+        $path = tempnam(sys_get_temp_dir(), 'lwt_apkg_sched_');
+        self::assertNotFalse($path);
+        unlink($path);
+
+        try {
+            ApkgExportService::default()->exportLanguage(self::$languageId, $path);
+
+            // ... then a review the user did in Anki, a week later.
+            $theirs = new DateTimeImmutable('2026-01-20 09:30:00');
+            $this->addReviewToApkg($path, $term, $theirs, Rating::Easy);
+
+            $schedules = new MySqlTermScheduleRepository();
+            $before = $schedules->find($term);
+            self::assertNotNull($before);
+
+            $import = ApkgImportService::default()->importApkg($path);
+
+            self::assertSame(1, $import->termsRescheduled);
+            self::assertSame(1, $import->reviewsApplied, 'only the Anki review is new');
+
+            $after = $schedules->find($term);
+            self::assertNotNull($after);
+            self::assertSame(
+                $theirs->format('Y-m-d H:i:s'),
+                $after->lastReview?->format('Y-m-d H:i:s'),
+                'the term now stands where Anki left it'
+            );
+            self::assertSame($before->reps + 1, $after->reps);
+            self::assertGreaterThan(
+                $before->stability,
+                $after->stability,
+                'an Easy answer has to raise stability'
+            );
+
+            // Both reviews are on the record, each exactly once.
+            $logged = Connection::preparedFetchAll(
+                'SELECT RlGrade, RlReviewedAt FROM review_log WHERE RlWoID = ? ORDER BY RlReviewedAt',
+                [$term]
+            );
+            self::assertCount(2, $logged);
+            self::assertSame(Rating::Good->value, (int) $logged[0]['RlGrade']);
+            self::assertSame(Rating::Easy->value, (int) $logged[1]['RlGrade']);
+
+            // Importing the same file again must change nothing. Without the
+            // "newer than our last review" rule this is where a term's whole
+            // history would be applied a second time.
+            $again = ApkgImportService::default()->importApkg($path);
+
+            self::assertSame(0, $again->termsRescheduled);
+            self::assertSame(0, $again->reviewsApplied);
+            self::assertCount(
+                2,
+                Connection::preparedFetchAll(
+                    'SELECT RlID FROM review_log WHERE RlWoID = ?',
+                    [$term]
+                )
+            );
+        } finally {
+            if (is_file($path)) {
+                unlink($path);
+            }
+        }
+    }
+
+    /**
+     * Add a revlog row to a card in an .apkg, as answering it in Anki would.
+     *
+     * The counterpart of forceSuspendInApkg: it lets the test stand in for
+     * Anki without needing Anki.
+     */
+    private function addReviewToApkg(
+        string $apkgPath,
+        int $lwtId,
+        DateTimeImmutable $reviewedAt,
+        Rating $rating
+    ): void {
+        $zip = new \ZipArchive();
+        self::assertTrue($zip->open($apkgPath) === true);
+        $contents = $zip->getFromName('collection.anki21');
+        self::assertNotFalse($contents);
+
+        $tmpDb = tempnam(sys_get_temp_dir(), 'lwt_apkg_review_');
+        self::assertNotFalse($tmpDb);
+        file_put_contents($tmpDb, $contents);
+
+        $pdo = new \PDO('sqlite:' . $tmpDb);
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+
+        $cardStmt = $pdo->prepare(
+            'SELECT id FROM cards WHERE nid IN (SELECT id FROM notes WHERE guid = ?)'
+        );
+        $cardStmt->execute(['lwt-' . $lwtId]);
+        $cardId = $cardStmt->fetchColumn();
+        self::assertNotFalse($cardId, 'the exported file must contain a card for this term');
+
+        $pdo->prepare(
+            'INSERT INTO revlog (id, cid, usn, ease, ivl, lastIvl, factor, time, type) '
+            . 'VALUES (?, ?, -1, ?, 15, 5, 2500, 0, 1)'
+        )->execute([$reviewedAt->getTimestamp() * 1000, (int) $cardId, $rating->value]);
+        unset($pdo);
+
+        $newContents = file_get_contents($tmpDb);
+        self::assertNotFalse($newContents);
+        $zip->addFromString('collection.anki21', $newContents);
+        $zip->addFromString('collection.anki2', $newContents);
+        $zip->close();
+        unlink($tmpDb);
     }
 
     private function seedTerm(string $text, int $status, string $translation, string $romanization): int

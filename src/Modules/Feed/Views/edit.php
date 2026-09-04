@@ -5,7 +5,7 @@
  *
  * Variables expected:
  * - $feed: array feed data from database
- * - $languages: array of language data [{LgID, LgName}, ...]
+ * - $feedLanguageName: the feed's language, resolved by the controller
  * - $options: array parsed feed options
  * - $autoUpdateInterval: string|null auto-update interval value
  * - $autoUpdateUnit: string|null auto-update unit (h/d/w)
@@ -32,7 +32,7 @@ use Lwt\Shared\UI\Helpers\ConfigIsland;
  * @var array{NfID: int|null, NfLgID: int, NfName: string, NfSourceURI: string,
  *            NfArticleSectionTags: string, NfFilterTags: string, NfUpdate: int,
  *            NfOptions: string} $feed Feed data
- * @var array<int, array{LgID: int, LgName: string}> $languages Language records
+ * @var string $feedLanguageName The feed's language name
  * @var array<string, string> $options Parsed feed options
  * @var string|null $autoUpdateInterval Auto-update interval value
  * @var string|null $autoUpdateUnit Auto-update unit (h/d/w)
@@ -94,16 +94,7 @@ $helpLabel = __('feed.edit_help');
             <div class="control">
                 <input type="hidden" name="NfLgID" id="NfLgID" value="<?php echo $feed['NfLgID']; ?>" />
                 <span class="tag is-info is-light">
-                    <?php
-                    $feedLanguageName = '';
-                    foreach ($languages as $lang) {
-                        if ($feed['NfLgID'] === $lang['LgID']) {
-                            $feedLanguageName = $lang['LgName'];
-                            break;
-                        }
-                    }
-                    echo htmlspecialchars($feedLanguageName, ENT_QUOTES, 'UTF-8');
-                    ?>
+                    <?php echo htmlspecialchars($feedLanguageName, ENT_QUOTES, 'UTF-8'); ?>
                 </span>
             </div>
         </div>

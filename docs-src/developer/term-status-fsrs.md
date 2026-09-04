@@ -257,6 +257,26 @@ endpoint was always fine.
   ease factor is Anki's default 2500, since LWT has never computed an SM-2
   ease and 0 would collapse the interval for anyone with FSRS off.
 
+- **Scheduling comes back too** (#264). The importer reads each card's `revlog`
+  and replays the grades through `Fsrs6Scheduler`, rather than copying the
+  card's `cards.data` memory state across. Copying would either mix Anki's FSRS
+  parameters with ours in one table, or — for an SM-2 collection — import a
+  memory state that nothing computed. `revlog` records what the learner did,
+  which is the durable half; replaying it keeps one model answering for the
+  whole vocabulary and works the same whether the collection used FSRS or not.
+
+  Only reviews later than LWT's own last review are replayed, which is the
+  entire conflict policy and needs no sync protocol: both sides timestamp their
+  reviews, so the merge is "apply what happened after the state we already hold,
+  in the order it happened". It has to be there anyway — an exported file
+  carries LWT's history back out with it, so replaying everything would apply
+  each review twice and collapse the interval. Two limits: comparison is at the
+  second precision `review_log` stores, so an Anki review in the same second as
+  ours is dropped (the safe way round); and an Anki review that predates our
+  last one is skipped rather than interleaved, since catching those means
+  rebuilding state from both histories. Ignored and well-known terms are left
+  alone — they were never in the queue.
+
 - **The legacy scoring is retired.** `SCORE_FORMULA_*`,
   `makeScoreRandomInsertUpdate()` and the three columns are gone, along with
   the daily UPDATE across the whole `words` table that kept them fresh. The
@@ -265,9 +285,70 @@ endpoint was always fine.
   fifteen more. `ReviewService` — 847 lines duplicating the queue with no
   caller — was deleted rather than migrated.
 
-**Still unverified:** the .apkg export has been read back with SQLite and
-matches what Anki documents, but nobody has yet opened one of these decks in a
-real Anki install.
+**Verified against real Anki** (pylib 26.08.1, #264). The full loop was run:
+LWT export → Anki import → answered with Anki's own v3/FSRS scheduler → Anki
+export → LWT import. Memory state crosses unchanged (stability 100.3036 and
+difficulty 2.1043 arrive as 100.303596 / 2.104), due dates and intervals match,
+`revlog` rows survive, and suspension is preserved. Coming back, a Good raised
+stability 100.30 → 161.81 and an Again dropped 18.50 → 1.88 with the lapse
+counted — with only the two new reviews replayed, not the three already ours.
+
+**Anki's defaults break the loop in both directions, and both fail quietly.**
+Neither is a defect in the file we write; both are options the user has to set:
+
+- Importing into Anki, *Import any learning progress* defaults **off**. Without
+  it every card arrives new — `type`/`queue` 0, `ivl` 0, no revlog, no memory
+  state, suspension dropped.
+- Exporting from Anki, *Support older Anki versions* defaults **off**, so Anki
+  writes the collection zstd-compressed as `collection.anki21b` and leaves
+  `collection.anki2` as a stub holding one note reading "Please update to the
+  latest Anki version…". Reading that stub succeeds, so the import used to
+  report one unrecognised note and nothing else.
+
+`ApkgReader` now reads both layouts. `collection.anki21b` is a zstd stream
+wrapping SQLite at **schema 18**, not schema 11, and schema 15 moved note types
+out of the `col.models` JSON blob into `notetypes`/`fields` tables — so the
+field-name lookup follows `col.ver` rather than assuming either. Decompression
+needs `ext-zstd`, which PHP does not bundle; where it is missing the package is
+refused with a message naming Anki's own export setting, and the import page
+drops that half of its advice when the extension *is* present.
+
+### The oracle
+
+`bin/lwt-apkg-oracle.php` (`composer test:anki-oracle`) drives
+`scripts/anki/anki_oracle.py` to run the loop through a real Anki collection. It
+skips cleanly, exit 0, when Anki's Python library is absent — the library is far
+too heavy to require of `composer test`, and a suite that fails on a missing
+optional tool gets deleted rather than fixed.
+
+It exists because the stub bug above passed the entire suite. Every other test
+of this feature has LWT on both ends: LWT writes a file, LWT reads it back, and
+they agree — as they did throughout the period the round trip was broken. The
+oracle is the one check where the other end is Anki. It pins the format Anki
+exports by default, that a grade given in Anki comes back with a newer
+timestamp than ours, that a hand-set due date is recognised as one, and that
+Anki still discards history when *Import any learning progress* is off — so if
+that default ever changes, the notice on the import page can change with it.
+
+### What the format cannot carry
+
+**Deletions.** An .apkg records none. Anki's exporter builds a *new minimal
+collection* and inserts only the notes the search gathered
+(`rslib/src/import_export/package/apkg/export.rs`), so the `graves` table that
+records deleted note ids inside a live collection never reaches the file. A term
+deleted in Anki is therefore indistinguishable from one that was simply not
+exported — a deck-scoped export would look like mass deletion — so LWT does not
+guess: an import never deletes a term.
+
+**Notes created in Anki.** They carry a random guid, no `lwt-` prefix, and no
+language. This page counts them as `skippedUnknown` and points at
+`/vocabulary/anki-deck/import`, which does ask for a language and does create
+terms.
+
+**A "Forget" in Anki.** Recorded like a "Set due date" — a `revlog` row with
+`ease` 0 and kind Manual — but it resets the card to new, leaving no due date to
+bring back. LWT keeps its own state rather than discarding it, on the grounds
+that it is the system of record for its own terms.
 
 ## Trade-offs & open questions
 

@@ -12,19 +12,18 @@
 import Alpine from 'alpinejs';
 import type { Chart as ChartType } from 'chart.js';
 import { loadChartJs } from '@shared/utils/chart_loader';
+import { statusColour, statusLabel } from '@shared/stores/statuses';
 
 /**
- * Status colors matching LWT's existing status styles.
+ * Status colours come from `statusColour()`, which resolves the same
+ * `--lwt-status*` custom properties the reading view is painted with.
+ *
+ * This file used to hold its own table claiming to match "LWT's existing
+ * status styles", and it had not for some time: it kept the old 2.x pastels
+ * while the reading view moved to a saturated palette, so one status was one
+ * colour in a text and another in this chart. It also ignored themes, showing
+ * light-mode pastels to someone reading in Dark.
  */
-const STATUS_COLORS = {
-  s1: '#F5B8A9',   // Unknown (status 1) - red/pink
-  s2: '#F5CCA9',   // Learning 2 - orange
-  s3: '#F5E1A9',   // Learning 3 - yellow
-  s4: '#F5F3A9',   // Learning 4 - light yellow
-  s5: '#CCFFCC',   // Learned (status 5) - light green
-  s99: '#99DDDF', // Well Known (status 99) - cyan
-  s98: '#E5E5E5'  // Ignored (status 98) - gray
-};
 
 /**
  * Data structure for intensity statistics per language.
@@ -92,40 +91,16 @@ export async function initIntensityChart(
 
   const labels = data.map(lang => lang.name);
 
+  // One dataset per status, labelled and coloured from the shared store. The
+  // labels were English literals here, and called status 1 "Unknown" -- which
+  // is what an *unsaved* word is; a status-1 word is one being learnt.
   const chartData = {
     labels,
-    datasets: [
-      {
-        label: 'Unknown (1)',
-        data: data.map(lang => lang.s1),
-        backgroundColor: STATUS_COLORS.s1
-      },
-      {
-        label: 'Learning (2)',
-        data: data.map(lang => lang.s2),
-        backgroundColor: STATUS_COLORS.s2
-      },
-      {
-        label: 'Learning (3)',
-        data: data.map(lang => lang.s3),
-        backgroundColor: STATUS_COLORS.s3
-      },
-      {
-        label: 'Learning (4)',
-        data: data.map(lang => lang.s4),
-        backgroundColor: STATUS_COLORS.s4
-      },
-      {
-        label: 'Learned (5)',
-        data: data.map(lang => lang.s5),
-        backgroundColor: STATUS_COLORS.s5
-      },
-      {
-        label: 'Well Known (99)',
-        data: data.map(lang => lang.s99),
-        backgroundColor: STATUS_COLORS.s99
-      }
-    ]
+    datasets: ([1, 2, 3, 4, 5, 99] as const).map((status) => ({
+      label: statusLabel(status),
+      data: data.map(lang => lang[`s${status}`]),
+      backgroundColor: statusColour(status)
+    }))
   };
 
   return new ChartClass(canvas, {
@@ -191,24 +166,24 @@ export async function initFrequencyChart(
       {
         label: 'Created',
         data: [totals.ct, totals.cy, totals.cw, totals.cm, totals.ca],
-        borderColor: STATUS_COLORS.s1,
-        backgroundColor: STATUS_COLORS.s1,
+        borderColor: statusColour(1),
+        backgroundColor: statusColour(1),
         tension: 0.3,
         fill: false
       },
       {
         label: 'Activity',
         data: [totals.at, totals.ay, totals.aw, totals.am, totals.aa],
-        borderColor: STATUS_COLORS.s3,
-        backgroundColor: STATUS_COLORS.s3,
+        borderColor: statusColour(3),
+        backgroundColor: statusColour(3),
         tension: 0.3,
         fill: false
       },
       {
         label: 'Known',
         data: [totals.kt, totals.ky, totals.kw, totals.km, totals.ka],
-        borderColor: STATUS_COLORS.s5,
-        backgroundColor: STATUS_COLORS.s5,
+        borderColor: statusColour(5),
+        backgroundColor: statusColour(5),
         tension: 0.3,
         fill: false
       }

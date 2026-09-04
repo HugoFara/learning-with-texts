@@ -110,8 +110,7 @@ request blocks the rest and Cypress times out on pages that are only queued.
 ### Code Quality
 
 ```bash
-./vendor/bin/psalm                                   # Static analysis (default level)
-composer psalm:level1                                # Strictest static analysis
+./vendor/bin/psalm                                   # Static analysis (psalm.xml pins errorLevel 1, the strictest)
 npm run lint                                         # ESLint for TypeScript/JS
 npm run lint:fix                                     # Auto-fix lint issues
 npm run typecheck                                    # TypeScript type checking
@@ -121,7 +120,17 @@ npm run typecheck                                    # TypeScript type checking
 
 **After every PHP file change**, always run these checks and fix any issues before committing:
 
-1. `./vendor/bin/psalm --threads=1` — Psalm static analysis must pass with 0 errors (multi-thread crashes due to amphp bug; always use `--threads=1`)
+1. `./vendor/bin/psalm` — Psalm static analysis must pass with 0 errors.
+   Let it use every core; it is roughly 2.5x faster than one thread. The
+   `--threads=1` this file used to require was a workaround for an
+   amphp/parallel worker crash, and it no longer reproduces: on 1, 8 and 16
+   threads the run is clean and reports byte-identical findings, whole-program
+   `UnusedMethod` detection included. If a worker ever dies again ("Worker
+   exited due to signal 9" is the kernel OOM-killing a forked worker), set
+   `threads="N"` on the `<psalm>` element in `psalm.xml` rather than putting
+   the flag back in everyone's muscle memory. Note that Psalm forces one
+   thread by itself under `CI=true` and on Windows, so CI is single-threaded
+   whatever the config says.
 2. `./vendor/bin/phpcs --standard=PSR12 [changed files]` — PHP CodeSniffer must have 0 errors and 0 warnings
 3. `composer test:no-coverage` — PHPUnit tests must all pass (run after any important PHP change)
 

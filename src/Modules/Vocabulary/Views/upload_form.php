@@ -9,7 +9,6 @@
  * - Manual upload (CSV/TSV file, paste, or dictionary file)
  *
  * Expected variables:
- * - $currentLanguage: Current language setting (from settings)
  * - $languages: array - Array of languages for select dropdown
  * - $activeTab: string - Active tab ('frequency', 'dictionary', or 'manual')
  * - $curatedDictionaries: list<array<string, mixed>>|null - Curated dictionaries
@@ -41,7 +40,6 @@ use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 // Type assertions for variables passed from controller
-assert($currentLanguage === null || is_int($currentLanguage) || is_string($currentLanguage));
 assert(is_array($languages));
 /** @var array<int, array{id: int, name: string}> $languages */
 /** @var string|null $activeTab */

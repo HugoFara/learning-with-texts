@@ -156,12 +156,17 @@ describe('statistics_charts.ts', () => {
       const datasets = config.data?.datasets || [];
       const labels = datasets.map(d => d.label);
 
-      expect(labels).toContain('Unknown (1)');
+      // Status 1 is a word being learnt, not an unknown one -- "Unknown" is
+      // the pseudo-status 0 for a word not in the vocabulary at all. The chart
+      // called it "Unknown (1)" until the labels came from the shared store
+      // (#238), which also makes them localizable.
+      expect(labels).toContain('Learning (1)');
       expect(labels).toContain('Learning (2)');
       expect(labels).toContain('Learning (3)');
       expect(labels).toContain('Learning (4)');
       expect(labels).toContain('Learned (5)');
-      expect(labels).toContain('Well Known (99)');
+      // 99 is a manual flag, not a stage, so the store gives it a bare name.
+      expect(labels).toContain('Well Known');
     });
 
     it('handles data with zero values', async () => {

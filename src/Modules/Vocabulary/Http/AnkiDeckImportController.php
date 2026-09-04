@@ -52,7 +52,7 @@ class AnkiDeckImportController extends VocabularyBaseController
      */
     public function index(array $params): void
     {
-        PageLayoutHelper::renderPageStart('Import an Anki deck', true);
+        PageLayoutHelper::renderPageStart(__('vocabulary.anki.deck.title'), true);
 
         try {
             if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -76,18 +76,18 @@ class AnkiDeckImportController extends VocabularyBaseController
     {
         $file = InputValidator::getUploadedFile('apkg');
         if ($file === null) {
-            $this->renderUploadForm('No file was uploaded.');
+            $this->renderUploadForm(__('vocabulary.anki.deck.error_no_file'));
             return;
         }
 
         if (!str_ends_with(strtolower($file['name']), '.apkg')) {
-            $this->renderUploadForm('Only .apkg files are accepted.');
+            $this->renderUploadForm(__('vocabulary.anki.deck.error_not_apkg'));
             return;
         }
 
         $parked = tempnam(sys_get_temp_dir(), 'lwt_deck_');
         if ($parked === false) {
-            $this->renderUploadForm('Could not store the uploaded file.');
+            $this->renderUploadForm(__('vocabulary.anki.deck.error_store_failed'));
             return;
         }
         if (!move_uploaded_file($file['tmp_name'], $parked)) {
@@ -95,7 +95,7 @@ class AnkiDeckImportController extends VocabularyBaseController
             // to a copy so the flow stays exercisable outside a web request.
             if (!copy($file['tmp_name'], $parked)) {
                 @unlink($parked);
-                $this->renderUploadForm('Could not store the uploaded file.');
+                $this->renderUploadForm(__('vocabulary.anki.deck.error_store_failed'));
                 return;
             }
         }
@@ -103,7 +103,7 @@ class AnkiDeckImportController extends VocabularyBaseController
         $notetypes = $this->reader->notetypes($parked);
         if ($notetypes === []) {
             @unlink($parked);
-            $this->renderUploadForm('No notetypes found in this file — it may not be an Anki deck.');
+            $this->renderUploadForm(__('vocabulary.anki.deck.error_no_notetypes'));
             return;
         }
 
@@ -118,7 +118,7 @@ class AnkiDeckImportController extends VocabularyBaseController
     {
         $parked = $this->parkedFile();
         if ($parked === null) {
-            $this->renderUploadForm('That upload has expired. Please choose the file again.');
+            $this->renderUploadForm(__('vocabulary.anki.deck.error_expired'));
             return;
         }
 
@@ -152,198 +152,53 @@ class AnkiDeckImportController extends VocabularyBaseController
         return $value === '' ? null : $value;
     }
 
+    /**
+     * Step 1's form.
+     *
+     * @param string|null $error Message to show above it, if any
+     */
     private function renderUploadForm(?string $error): void
     {
-        echo '<h1>Import an Anki deck</h1>';
-
-        if ($error !== null) {
-            echo '<div class="notification is-danger">' . $this->esc($error) . '</div>';
-        }
-
-        echo '<p class="mb-4">Already study this language in Anki? Import the deck and LWT will '
-            . 'mark those words as known, so you do not have to reclassify them while reading. '
-            . 'Export your deck from Anki with <strong>File → Export → Anki Deck Package '
-            . '(.apkg)</strong>, including scheduling information.</p>';
-
-        echo '<form method="post" enctype="multipart/form-data" action="/vocabulary/anki-deck/import">';
-        echo $this->csrfField();
-        echo '<div class="field"><label class="label" for="apkg-file">Anki deck (.apkg)</label>'
-            . '<div class="control"><input class="input" type="file" name="apkg" id="apkg-file"'
-            . ' accept=".apkg" required></div></div>';
-        echo '<div class="field"><div class="control">'
-            . '<button class="button is-primary" type="submit">Continue</button>'
-            . '</div></div>';
-        echo '</form>';
-
-        echo '<p class="help mt-4">This creates new terms. It never changes terms you already '
-            . 'have — importing the same deck twice is safe.</p>';
+        $this->render('anki_deck_upload', ['error' => $error]);
     }
 
     /**
-     * @param list<ForeignNotetype> $notetypes
+     * Step 2's form: which field is the word, and what language is this.
+     *
+     * The field pickers offer every field name across every note type rather
+     * than only the selected one's, because the note type is chosen in the
+     * same form -- the two selects cannot see each other server-side.
+     *
+     * @param list<ForeignNotetype> $notetypes Note types found in the file
+     * @param string|null           $error     Message to show above the form
      */
     private function renderMappingForm(array $notetypes, ?string $error): void
     {
-        echo '<h1>Import an Anki deck</h1>';
-
-        if ($error !== null) {
-            echo '<div class="notification is-danger">' . $this->esc($error) . '</div>';
-        }
-
-        echo '<p class="mb-4">LWT cannot tell which field holds the word, or what language the '
-            . 'deck is in — an .apkg does not record either. Choose them below.</p>';
-
-        echo '<form method="post" action="/vocabulary/anki-deck/import">';
-        echo $this->csrfField();
-        echo '<input type="hidden" name="step" value="import">';
-
-        // Notetype, with its fields listed so the choice is informed.
-        echo '<div class="field"><label class="label" for="notetype">Note type</label>'
-            . '<div class="control"><div class="select"><select name="notetype" id="notetype">';
-        foreach ($notetypes as $nt) {
-            echo '<option value="' . $nt->id . '">'
-                . $this->esc($nt->name) . ' — ' . $nt->noteCount . ' notes ('
-                . $this->esc(implode(', ', $nt->fields)) . ')</option>';
-        }
-        echo '</select></div></div></div>';
-
-        // Field pickers list every field across every notetype; the user picks
-        // the notetype above and the matching names from the same vocabulary.
         $allFields = [];
-        foreach ($notetypes as $nt) {
-            foreach ($nt->fields as $field) {
+        foreach ($notetypes as $notetype) {
+            foreach ($notetype->fields as $field) {
                 $allFields[$field] = true;
             }
         }
-        $fieldNames = array_keys($allFields);
 
-        echo $this->fieldSelect('term_field', 'Field holding the term', $fieldNames, false);
-        echo $this->fieldSelect('translation_field', 'Field holding the translation', $fieldNames, true);
-
-        // Language.
-        echo '<div class="field"><label class="label" for="language">Language</label>'
-            . '<div class="control"><div class="select"><select name="language" id="language" required>'
-            . '<option value="">Choose a language…</option>';
-        foreach ($this->languageFacade->getAllLanguages() as $name => $id) {
-            echo '<option value="' . $id . '">' . $this->esc($name) . '</option>';
-        }
-        echo '</select></div></div></div>';
-
-        // Status rule.
-        echo '<div class="field"><label class="label">Word status</label>';
-        echo '<div class="control"><label class="radio">'
-            . '<input type="radio" name="status_mode" value="derive" checked> '
-            . 'Derive from Anki (recommended)</label></div>';
-        echo '<p class="help">Cards you have known for ' . DeckImportSettings::MATURE_INTERVAL_DAYS
-            . ' days or more become <strong>well known</strong>; younger cards get a learning '
-            . 'status based on their interval; unstudied cards start at level 1; suspended cards '
-            . 'become <strong>ignored</strong>.</p>';
-        echo '<div class="control mt-2"><label class="radio">'
-            . '<input type="radio" name="status_mode" value="fixed"> '
-            . 'Give every word the same status</label></div>';
-        echo '<div class="control mt-2"><div class="select is-small">'
-            . '<select name="fixed_status">'
-            . '<option value="99">Well known</option>'
-            . '<option value="1">1 (learning)</option>'
-            . '<option value="2">2</option>'
-            . '<option value="3">3</option>'
-            . '<option value="4">4</option>'
-            . '<option value="5">5</option>'
-            . '<option value="98">Ignored</option>'
-            . '</select></div></div>';
-        echo '</div>';
-
-        echo '<div class="field"><div class="control"><label class="checkbox">'
-            . '<input type="checkbox" name="import_tags" value="1" checked> '
-            . 'Import Anki tags</label></div></div>';
-
-        echo '<div class="field"><div class="control">'
-            . '<button class="button is-primary" type="submit">Import</button>'
-            . '</div></div>';
-        echo '</form>';
+        $this->render('anki_deck_mapping', [
+            'notetypes' => $notetypes,
+            'fieldNames' => array_keys($allFields),
+            'languages' => $this->languageFacade->getAllLanguages(),
+            'matureDays' => DeckImportSettings::MATURE_INTERVAL_DAYS,
+            'error' => $error,
+        ]);
     }
 
     /**
-     * @param list<string> $fieldNames
+     * What the import did.
      */
-    private function fieldSelect(string $name, string $label, array $fieldNames, bool $optional): string
-    {
-        $out = '<div class="field"><label class="label" for="' . $name . '">'
-            . $this->esc($label) . '</label>'
-            . '<div class="control"><div class="select"><select name="' . $name . '" id="' . $name . '"'
-            . ($optional ? '' : ' required') . '>';
-
-        if ($optional) {
-            $out .= '<option value="">(none)</option>';
-        }
-        foreach ($fieldNames as $field) {
-            $out .= '<option value="' . $this->esc($field) . '">' . $this->esc($field) . '</option>';
-        }
-
-        return $out . '</select></div></div></div>';
-    }
-
     private function renderSummary(DeckImportResult $result, DeckImportSettings $settings): void
     {
-        echo '<h1>Import an Anki deck</h1>';
-
-        echo '<div class="notification is-success"><p><strong>Imported '
-            . $result->created . ' new term' . ($result->created === 1 ? '' : 's') . '.</strong></p></div>';
-
-        echo '<table class="table is-narrow"><tbody>';
-        echo '<tr><th>Notes read</th><td>' . $result->totalNotes . '</td></tr>';
-        echo '<tr><th>Terms created</th><td>' . $result->created . '</td></tr>';
-        echo '<tr><th>Already in LWT</th><td>' . $result->skippedExisting . '</td></tr>';
-        if ($result->skippedEmpty > 0) {
-            echo '<tr><th>Skipped (empty term field)</th><td>' . $result->skippedEmpty . '</td></tr>';
-        }
-        if ($result->skippedTooLong > 0) {
-            echo '<tr><th>Skipped (too long to store)</th><td>' . $result->skippedTooLong . '</td></tr>';
-        }
-        echo '</tbody></table>';
-
-        if ($result->statusCounts !== []) {
-            echo '<h2 class="title is-5 mt-5">Status breakdown</h2><ul>';
-            foreach ($result->statusCounts as $status => $count) {
-                echo '<li>' . $this->esc($this->statusLabel($status)) . ': ' . $count . '</li>';
-            }
-            echo '</ul>';
-        }
-
-        if ($result->samples !== []) {
-            echo '<p class="mt-4"><strong>For example:</strong> '
-                . $this->esc(implode(', ', $result->samples)) . '…</p>';
-        }
-
-        if ($result->created === 0 && $result->skippedEmpty === $result->totalNotes) {
-            echo '<div class="notification is-warning mt-4">Every note had an empty term field. '
-                . 'The chosen field is probably not the one holding the word — go back and pick '
-                . 'a different one.</div>';
-        }
-
-        echo '<p class="mt-5"><a class="button" href="/words/edit?lang='
-            . $settings->languageId . '">View the imported terms</a> '
-            . '<a class="button is-light" href="/vocabulary/anki-deck/import">Import another deck</a></p>';
-    }
-
-    private function statusLabel(int $status): string
-    {
-        return match ($status) {
-            98 => 'Ignored',
-            99 => 'Well known',
-            default => 'Level ' . $status,
-        };
-    }
-
-    private function csrfField(): string
-    {
-        return '<input type="hidden" name="csrf_token" value="'
-            . $this->esc(\Lwt\Shared\UI\Helpers\FormHelper::csrfToken()) . '">';
-    }
-
-    private function esc(string $value): string
-    {
-        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+        $this->render('anki_deck_result', [
+            'result' => $result,
+            'languageId' => $settings->languageId,
+        ]);
     }
 
     private function rememberParkedFile(string $path): void

@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace Lwt\Tests\Modules\Admin\Application\UseCases\ServerData;
 
 use Lwt\Modules\Admin\Application\UseCases\ServerData\GetServerData;
+use Lwt\Modules\Language\Domain\LanguageRepositoryInterface;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -158,5 +159,28 @@ class GetServerDataTest extends TestCase
         $this->assertIsString($result['server_location']);
         // Should not contain raw user input from HTTP_HOST
         $this->assertStringNotContainsString('<script>', $result['server_location']);
+    }
+
+    #[Test]
+    public function reportsLanguagesStillUsingTheDeprecatedMecabMarker(): void
+    {
+        if (!defined('LWT_TEST_DB_AVAILABLE') || !LWT_TEST_DB_AVAILABLE) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        // The runtime deprecation notice only fires when a reader actually
+        // falls back to the marker, and it lands in the server's error log
+        // where nobody looks. This panel is the half an install owner sees,
+        // and the half that ends up pasted into a bug report (#288).
+        $languages = $this->createMock(LanguageRepositoryInterface::class);
+        $languages->method('findUsingDeprecatedMecabMarker')
+            ->willReturn([['id' => 7, 'name' => 'Japanese']]);
+
+        $data = (new GetServerData('Apache/2.4.52', $languages))->execute();
+
+        $this->assertSame(
+            [['id' => 7, 'name' => 'Japanese']],
+            $data['deprecated_mecab_languages']
+        );
     }
 }

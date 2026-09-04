@@ -159,4 +159,20 @@ interface LanguageRepositoryInterface
      * @return string|null The translator URI or null if not found
      */
     public function getTranslatorUri(int $id): ?string;
+
+    /**
+     * Languages whose word-characters field still holds the `MECAB` marker.
+     *
+     * `LgRegexpWordCharacters` is meant to hold a word-characters regex; the
+     * literal `MECAB` is a deprecated marker that said "tokenize with MeCab"
+     * and "this language has no spaces" at once. `20260831_120000` moves both
+     * facts to `LgParserType` and `LgRemoveSpaces` and puts a real regex back,
+     * so after an upgrade this is normally empty. A row still listed here was
+     * written after the migration ran -- by an API client sending the literal,
+     * or a language imported from an older install -- and needs re-saving
+     * before support for the marker is removed (#288).
+     *
+     * @return array<array{id: int, name: string}> Affected languages by name
+     */
+    public function findUsingDeprecatedMecabMarker(): array;
 }

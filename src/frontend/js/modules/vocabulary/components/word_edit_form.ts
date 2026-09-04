@@ -14,6 +14,7 @@ import type { WordStoreState } from '../stores/word_store';
 import type { SimilarTermForEdit } from '@modules/vocabulary/api/terms_api';
 import { updateWordStatusInDOM, updateWordTranslationInDOM } from '@modules/text/pages/reading/text_renderer';
 import { t } from '@shared/i18n/translator';
+import { statusTagClass } from '@shared/stores/statuses';
 
 /**
  * Status display information.
@@ -391,16 +392,7 @@ export function wordEditFormData(): WordEditFormData {
     },
 
     getStatusClass(status: number): string {
-      switch (status) {
-        case 1: return 'is-danger';
-        case 2: return 'is-warning';
-        case 3: return 'is-info';
-        case 4: return 'is-primary';
-        case 5:
-        case 99: return 'is-success';
-        case 98: return 'is-light';
-        default: return '';
-      }
+      return statusTagClass(status);
     },
 
     // Callbacks - can be set by parent component

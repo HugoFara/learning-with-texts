@@ -26,6 +26,7 @@ use Lwt\Modules\Dictionary\Application\DictionaryFacade;
 use Lwt\Modules\Dictionary\Application\Services\DictionaryImportFileResolver;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 use Lwt\Shared\UI\Helpers\FormHelper;
+use Lwt\Shared\UI\Helpers\NotificationHelper;
 use RuntimeException;
 
 /**
@@ -82,7 +83,7 @@ class TermImportController extends VocabularyBaseController
 
         // Saving goes to POST /api/v1/terms/bulk and the next batch is a plain
         // GET, so this only ever renders a batch of terms.
-        PageLayoutHelper::renderPageStartNobody('Translate New Words');
+        PageLayoutHelper::renderPageStartNobody(__('vocabulary.bulk.page_title'));
 
         if ($pos !== null) {
             $sl = InputValidator::getString('sl');
@@ -101,23 +102,21 @@ class TermImportController extends VocabularyBaseController
      * @param string|null $tl  Target language code
      * @param int         $pos Offset position
      *
-     * @psalm-suppress UnresolvableInclude Path computed from viewPath property
-     * @psalm-suppress UnusedParam $sl, $tl and $pos are read by the included
-     *                 view, which Psalm cannot follow.
-     *
      * @return void
      */
     private function displayBulkTranslateForm(int $tid, ?string $sl, ?string $tl, int $pos): void
     {
-        $contextService = $this->getContextService();
-        $dictionaries = $contextService->getLanguageDictionaries($tid);
-
         // The rows come from GET /api/v1/terms/unknown-for-translate; only the
         // page size travels with the page. The setting counts the extra
         // look-ahead row the old server-side loop used, so drop it again.
-        $limit = max(1, (int) Settings::getWithDefault('set-ggl-translation-per-page'));
-
-        include $this->viewPath . 'bulk_translate_form.php';
+        $this->render('bulk_translate_form', [
+            'tid' => $tid,
+            'sl' => $sl,
+            'tl' => $tl,
+            'pos' => $pos,
+            'dictionaries' => $this->getContextService()->getLanguageDictionaries($tid),
+            'limit' => max(1, (int) Settings::getWithDefault('set-ggl-translation-per-page')),
+        ]);
     }
 
     /**
@@ -129,7 +128,7 @@ class TermImportController extends VocabularyBaseController
      */
     public function upload(array $params): void
     {
-        PageLayoutHelper::renderPageStart('Import Terms', true);
+        PageLayoutHelper::renderPageStart(__('vocabulary.upload.page_title'), true);
 
         $op = InputValidator::getString('op');
         if ($op === 'Import') {
@@ -146,32 +145,58 @@ class TermImportController extends VocabularyBaseController
     /**
      * Display the word upload form.
      *
-     * @psalm-suppress UnresolvableInclude Path computed from viewPath property
-     *
      * @return void
      */
     private function displayUploadForm(): void
     {
-        $currentLanguage = Settings::get('currentlanguage');
-        $currentLanguageName = '';
-        $isFrequencyAvailable = false;
-        $langId = 0;
-        if ($currentLanguage !== '') {
-            $langId = (int) $currentLanguage;
-            $currentLanguageName = $this->languageFacade->getLanguageName($langId);
-            $isFrequencyAvailable = FrequencyLanguageMap::isSupported($currentLanguageName);
-        }
-        $languages = $this->languageFacade->getLanguagesForSelect();
         $activeTab = InputValidator::getString('tab') ?: 'frequency';
         // Map legacy tab values
         if ($activeTab === 'file' || $activeTab === 'text' || $activeTab === 'paste') {
             $activeTab = 'manual';
         }
-        $curatedDictionaries = $this->loadCuratedDictionaries();
-        $csrfToken = FormHelper::csrfToken();
-        $importUrl = $langId > 0 ? '/languages/' . $langId . '/starter-vocab/import' : '';
-        $enrichUrl = $langId > 0 ? '/languages/' . $langId . '/starter-vocab/enrich' : '';
-        include $this->viewPath . 'upload_form.php';
+        $this->render('upload_form', $this->uploadFormData($activeTab));
+    }
+
+    /**
+     * Everything the upload form needs to render.
+     *
+     * Built here rather than twice, because a dictionary import re-displays
+     * the same form once it has reported what it did. That second copy used
+     * to take its language *name* from the current-language setting while
+     * taking its language *id* from the submitted form, so a dictionary
+     * imported into any other language redisplayed the form labelled with one
+     * language and wired to another. One language resolves both here.
+     *
+     * @param string   $activeTab Tab the form should open on
+     * @param int|null $langId    Language in context; the current one if null
+     *
+     * @return array<string, mixed>
+     */
+    private function uploadFormData(string $activeTab, ?int $langId = null): array
+    {
+        if ($langId === null) {
+            $currentLanguage = Settings::get('currentlanguage');
+            $langId = $currentLanguage !== '' ? (int) $currentLanguage : 0;
+        }
+
+        $currentLanguageName = '';
+        $isFrequencyAvailable = false;
+        if ($langId > 0) {
+            $currentLanguageName = $this->languageFacade->getLanguageName($langId);
+            $isFrequencyAvailable = FrequencyLanguageMap::isSupported($currentLanguageName);
+        }
+
+        return [
+            'currentLanguageName' => $currentLanguageName,
+            'isFrequencyAvailable' => $isFrequencyAvailable,
+            'langId' => $langId,
+            'languages' => $this->languageFacade->getLanguagesForSelect(),
+            'activeTab' => $activeTab,
+            'curatedDictionaries' => $this->loadCuratedDictionaries(),
+            'csrfToken' => FormHelper::csrfToken(),
+            'importUrl' => $langId > 0 ? '/languages/' . $langId . '/starter-vocab/import' : '',
+            'enrichUrl' => $langId > 0 ? '/languages/' . $langId . '/starter-vocab/enrich' : '',
+        ];
     }
 
     /**
@@ -201,8 +226,6 @@ class TermImportController extends VocabularyBaseController
     /**
      * Handle the word import operation.
      *
-     * @psalm-suppress UnresolvableInclude Path computed from viewPath property
-     *
      * @return void
      */
     private function handleUploadImport(): void
@@ -215,17 +238,13 @@ class TermImportController extends VocabularyBaseController
         $langId = InputValidator::getInt("LgID", 0) ?? 0;
 
         if ($langId === 0) {
-            echo '<div class="notification is-danger">' .
-                '<button class="delete" aria-label="close"></button>' .
-                'Error: No language selected</div>';
+            NotificationHelper::render(__('vocabulary.upload.errors.no_language'));
             return;
         }
 
         $langData = $uploadService->getLanguageData($langId);
         if ($langData === null) {
-            echo '<div class="notification is-danger">' .
-                '<button class="delete" aria-label="close"></button>' .
-                'Error: Invalid language</div>';
+            NotificationHelper::render(__('vocabulary.upload.errors.invalid_language'));
             return;
         }
 
@@ -257,9 +276,7 @@ class TermImportController extends VocabularyBaseController
             $fileName = $uploadedFile["tmp_name"];
         } else {
             if ($uploadText === '') {
-                echo '<div class="notification is-danger">' .
-                    '<button class="delete" aria-label="close"></button>' .
-                    'Error: No data to import</div>';
+                NotificationHelper::render(__('vocabulary.upload.errors.no_data'));
                 return;
             }
             $fileName = $uploadService->createTempFile($uploadText);
@@ -291,18 +308,19 @@ class TermImportController extends VocabularyBaseController
                     $lastUpdate
                 );
 
-                // Display results
-                $rtl = $uploadService->isRightToLeft($langId) ? 1 : 0;
-                $recno = $uploadService->countImportedTerms($lastUpdate);
-                include $this->viewPath . 'upload_result.php';
+                // Display results. The view reads $rtl as a boolean -- it
+                // used to be handed 1/0, which its own assertion rejected.
+                $this->render('upload_result', [
+                    'lastUpdate' => $lastUpdate,
+                    'rtl' => $uploadService->isRightToLeft($langId),
+                    'recno' => $uploadService->countImportedTerms($lastUpdate),
+                ]);
             } elseif ($fields["tl"] > 0) {
                 // Import tags only
                 $uploadService->importTagsOnly(['tl' => $fields['tl']], $tabType, $fileName, $ignoreFirst);
-                echo '<p>Tags imported successfully.</p>';
+                NotificationHelper::render(__('vocabulary.upload.tags_imported'), false);
             } else {
-                echo '<div class="notification is-danger">' .
-                    '<button class="delete" aria-label="close"></button>' .
-                    'Error: No term column specified</div>';
+                NotificationHelper::render(__('vocabulary.upload.errors.no_term_column'));
             }
         } finally {
             // Clean up temp file if we created it
@@ -315,17 +333,13 @@ class TermImportController extends VocabularyBaseController
     /**
      * Handle dictionary file import.
      *
-     * @psalm-suppress UnresolvableInclude Path computed from viewPath property
-     *
      * @return void
      */
     private function handleDictionaryImport(): void
     {
         $langId = InputValidator::getInt("LgID", 0) ?? 0;
         if ($langId === 0) {
-            echo '<div class="notification is-danger">' .
-                '<button class="delete" aria-label="close"></button>' .
-                'Error: No language selected</div>';
+            NotificationHelper::render(__('vocabulary.upload.errors.no_language'));
             return;
         }
 
@@ -334,9 +348,7 @@ class TermImportController extends VocabularyBaseController
 
         $uploadedFile = InputValidator::getUploadedFile('dict_file');
         if ($uploadedFile === null) {
-            echo '<div class="notification is-danger">' .
-                '<button class="delete" aria-label="close"></button>' .
-                'Error: No file uploaded</div>';
+            NotificationHelper::render(__('vocabulary.upload.errors.no_file'));
             return;
         }
 
@@ -354,9 +366,7 @@ class TermImportController extends VocabularyBaseController
             $importer = $this->dictionaryFacade->getImporter($format, $importName);
 
             if (!$importer->canImport($importPath, $importName)) {
-                echo '<div class="notification is-danger">' .
-                    '<button class="delete" aria-label="close"></button>' .
-                    'Error: Invalid file format</div>';
+                NotificationHelper::render(__('vocabulary.upload.errors.invalid_format'));
                 return;
             }
 
@@ -374,45 +384,24 @@ class TermImportController extends VocabularyBaseController
             // Auto-enable local dict mode if currently online-only
             $this->dictionaryFacade->autoEnableLocalDictMode($langId);
 
-            $vocabMsg = $vocabCreated > 0
-                ? ' and ' . number_format($vocabCreated) . ' vocabulary terms'
-                : '';
-            // Report dropped entries rather than let the count silently differ
-            // from the source dictionary's own total.
-            $skippedMsg = $importResult['skipped'] > 0
-                ? ' ' . number_format($importResult['skipped'])
-                    . ' entries were skipped because their headword was too long.'
-                : '';
-            echo '<div class="notification is-success">' .
-                '<button class="delete" aria-label="close"></button>' .
-                'Dictionary <strong>' . htmlspecialchars($dictName, ENT_QUOTES, 'UTF-8') .
-                '</strong> created with ' . number_format($count) . ' entries' .
-                $vocabMsg . '.' . $skippedMsg . '</div>';
+            $this->render('dictionary_import_result', [
+                'dictName' => $dictName,
+                'entryCount' => $count,
+                'vocabCreated' => $vocabCreated,
+                'skipped' => $importResult['skipped'],
+            ]);
         } catch (RuntimeException $e) {
-            echo '<div class="notification is-danger">' .
-                '<button class="delete" aria-label="close"></button>' .
-                'Error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</div>';
+            NotificationHelper::render(
+                __('vocabulary.upload.errors.dictionary_failed', ['message' => $e->getMessage()])
+            );
             return;
         } finally {
             $resolver->cleanup();
         }
 
-        // Re-display the form with manual tab active (dictionary file sub-tab)
-        // $langId is already set from InputValidator::getInt("LgID") above
-        $currentLanguage = Settings::get('currentlanguage');
-        $currentLanguageName = '';
-        $isFrequencyAvailable = false;
-        if ($currentLanguage !== '') {
-            $currentLanguageName = $this->languageFacade->getLanguageName((int) $currentLanguage);
-            $isFrequencyAvailable = FrequencyLanguageMap::isSupported($currentLanguageName);
-        }
-        $languages = $this->languageFacade->getLanguagesForSelect();
-        $activeTab = 'manual';
-        $curatedDictionaries = $this->loadCuratedDictionaries();
-        $csrfToken = FormHelper::csrfToken();
-        $importUrl = $langId > 0 ? '/languages/' . $langId . '/starter-vocab/import' : '';
-        $enrichUrl = $langId > 0 ? '/languages/' . $langId . '/starter-vocab/enrich' : '';
-        include $this->viewPath . 'upload_form.php';
+        // Re-display the form with the manual tab active (dictionary file
+        // sub-tab), so the result reads as a step in the same page.
+        $this->render('upload_form', $this->uploadFormData('manual', $langId));
     }
 
     /**

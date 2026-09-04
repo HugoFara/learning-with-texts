@@ -411,7 +411,21 @@ class Container implements ContainerInterface
         // Handle named types (class/interface)
         if ($type instanceof \ReflectionNamedType && !$type->isBuiltin()) {
             $typeName = $type->getName();
-            return $this->get($typeName);
+            try {
+                return $this->get($typeName);
+            } catch (NotFoundException | ContainerException $e) {
+                // A parameter written as `?Foo $foo = null` says the caller may
+                // supply one; the class knows how to make its own otherwise.
+                // Auto-wiring it regardless turned every such collaborator into
+                // a hard requirement, so one unbound interface anywhere in the
+                // graph took the whole page to a 500 -- which is what
+                // /vocabulary/apkg/import did from 3.6.0 until this was fixed.
+                // Fall back to what the author already wrote as the answer.
+                if ($parameter->isDefaultValueAvailable()) {
+                    return $parameter->getDefaultValue();
+                }
+                throw $e;
+            }
         }
 
         // Handle default values

@@ -11,6 +11,7 @@
  */
 
 import { createWordTooltip } from '@modules/vocabulary/services/word_status';
+import { TERM_STATUS_VALUES, statusCssClass } from '@shared/stores/statuses';
 
 /**
  * Get the parent document context (for frame-based layouts).
@@ -105,8 +106,10 @@ export function updateWordStatusInDOM(
   const title = generateTooltip(word, translation, romanization, status);
 
   frameL.querySelectorAll<HTMLElement>(`.word${wid}`).forEach(el => {
-    el.classList.remove('status98', 'status99', 'status1', 'status2', 'status3', 'status4', 'status5');
-    el.classList.add(`status${status}`);
+    // Derived rather than listed: a hand-written list of every status class
+    // silently stops clearing one the day a status is added.
+    el.classList.remove(...TERM_STATUS_VALUES.map(statusCssClass));
+    el.classList.add(statusCssClass(Number(status)));
     el.setAttribute('data_status', String(status));
     el.title = title;
   });

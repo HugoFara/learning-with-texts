@@ -24,6 +24,8 @@ use Lwt\Shared\Infrastructure\Container\ServiceProviderInterface;
 // Domain
 use Lwt\Modules\Review\Domain\ReviewRepositoryInterface;
 // Infrastructure
+use Lwt\Modules\Review\Domain\Scheduling\Fsrs6Scheduler;
+use Lwt\Modules\Review\Domain\Scheduling\SchedulerInterface;
 use Lwt\Modules\Review\Domain\TermScheduleRepositoryInterface;
 use Lwt\Modules\Review\Infrastructure\MySqlReviewRepository;
 use Lwt\Modules\Review\Infrastructure\MySqlTermScheduleRepository;
@@ -66,6 +68,13 @@ class ReviewServiceProvider implements ServiceProviderInterface
         // asks for the interface.
         $container->singleton(TermScheduleRepositoryInterface::class, function (Container $_c) {
             return new MySqlTermScheduleRepository();
+        });
+
+        // The scheduler itself, for the same reason: RecordScheduledReview
+        // takes it as an optional collaborator, and anything auto-wired that
+        // reaches that use case asks the container for the interface first.
+        $container->singleton(SchedulerInterface::class, function (Container $_c) {
+            return new Fsrs6Scheduler();
         });
 
         // Register MySqlReviewRepository as concrete implementation

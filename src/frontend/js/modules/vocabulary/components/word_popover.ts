@@ -13,29 +13,11 @@ import type { WordStoreState, WordData } from '../stores/word_store';
 import { speechDispatcher } from '@shared/utils/user_interactions';
 import { initIcons } from '@shared/icons/lucide_icons';
 import { announce } from '@shared/accessibility/aria_live';
-
-/**
- * Status display information.
- */
-interface StatusInfo {
-  value: number;
-  label: string;
-  abbr: string;
-  class: string;
-}
-
-/**
- * Status definitions.
- */
-const STATUSES: StatusInfo[] = [
-  { value: 1, label: 'Learning (1)', abbr: '1', class: 'is-danger' },
-  { value: 2, label: 'Learning (2)', abbr: '2', class: 'is-warning' },
-  { value: 3, label: 'Learning (3)', abbr: '3', class: 'is-info' },
-  { value: 4, label: 'Learning (4)', abbr: '4', class: 'is-primary' },
-  { value: 5, label: 'Learned', abbr: '5', class: 'is-success' },
-  { value: 99, label: 'Well Known', abbr: 'Known', class: 'is-success is-light' },
-  { value: 98, label: 'Ignored', abbr: 'Ignore', class: 'is-light' }
-];
+import {
+  TERM_STATUS_VALUES,
+  statusOptions,
+  type StatusInfo
+} from '@shared/stores/statuses';
 
 /**
  * Popover position configuration.
@@ -129,7 +111,8 @@ export function wordPopoverData(): WordPopoverData {
             // Announce word details for screen readers
             const word = this.word;
             if (word) {
-              const statusInfo = STATUSES.find(s => s.value === word.status);
+              const statusInfo = statusOptions(TERM_STATUS_VALUES)
+                .find(s => s.value === word.status);
               const statusLabel = statusInfo?.label || 'Unknown';
               announce(`${word.text}, ${statusLabel}`);
             }
@@ -164,7 +147,7 @@ export function wordPopoverData(): WordPopoverData {
     },
 
     get statuses(): StatusInfo[] {
-      return STATUSES;
+      return statusOptions(TERM_STATUS_VALUES);
     },
 
     // CSP-safe null-safe proxy properties for word.* access.
@@ -258,7 +241,7 @@ export function wordPopoverData(): WordPopoverData {
       if (!word) return;
 
       await this.store.setStatus(word.hex, status);
-      const statusInfo = STATUSES.find(s => s.value === status);
+      const statusInfo = statusOptions(TERM_STATUS_VALUES).find(s => s.value === status);
       announce(`Changed to ${statusInfo?.label || 'status ' + status}`);
     },
 
@@ -303,7 +286,7 @@ export function wordPopoverData(): WordPopoverData {
     },
 
     getStatusButtonClass(status: number): string {
-      const statusInfo = STATUSES.find(s => s.value === status);
+      const statusInfo = statusOptions(TERM_STATUS_VALUES).find(s => s.value === status);
       const baseClass = statusInfo?.class || '';
 
       if (this.isCurrentStatus(status)) {

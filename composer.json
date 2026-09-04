@@ -66,6 +66,7 @@
             "@test:cleanup-db",
             "vendor/bin/phpunit --no-coverage --group integration"
         ],
+        "test:anki-oracle": "@php bin/lwt-apkg-oracle.php",
         "psalm": "vendor/bin/psalm",
         "phpcs": "vendor/bin/phpcs",
         "phpcbf": "vendor/bin/phpcbf",
@@ -90,6 +91,7 @@
         "test:integration": "Run integration tests (requires database)",
         "test": "Run all tests with coverage (cleans up stale DB connections first)",
         "test:no-coverage": "Run all tests without coverage (cleans up stale DB connections first)",
+        "test:anki-oracle": "Round-trip an .apkg through real Anki (skips unless Anki's Python library is installed; see scripts/anki/anki_oracle.py)",
         "psalm": "Run Psalm static analysis",
         "phpcs": "Check PHP code style (PSR-12)",
         "phpcbf": "Auto-fix PHP code style issues",

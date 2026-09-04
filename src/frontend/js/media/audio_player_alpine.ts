@@ -57,6 +57,8 @@ export interface AudioPlayerData {
   playbackRate: number;
   repeatMode: boolean;
   skipSeconds: number;
+  /** Skip intervals offered by the dropdown, in seconds. */
+  readonly skipOptions: readonly number[];
   isLoaded: boolean;
   /** Whether the current text has audio; drives x-show on the player. */
   hasAudio: boolean;
@@ -104,6 +106,8 @@ export interface AudioPlayerData {
 
   // Skip time selection
   setSkipSeconds(seconds: number): void;
+  skipOptionClass(seconds: number): string;
+  skipOptionLabel(seconds: number): string;
 
   // Utilities
   formatTime(seconds: number): string;
@@ -133,6 +137,10 @@ export function audioPlayerData(): AudioPlayerData {
     playbackRate: 1.0,
     repeatMode: false,
     skipSeconds: 5,
+    // The dropdown's choices. They lived in the view as a PHP loop over a
+    // literal array, which is client-side UI configuration rendered by the
+    // server for no reason -- the file's own header says it carries no data.
+    skipOptions: [1, 2, 3, 4, 5, 10, 15, 20, 25, 30],
     isLoaded: false,
     hasAudio: false,
 
@@ -409,6 +417,17 @@ export function audioPlayerData(): AudioPlayerData {
     setSkipSeconds(seconds: number) {
       this.skipSeconds = seconds;
       saveSetting('currentplayerseconds', String(seconds));
+    },
+
+    // The CSP build of Alpine cannot evaluate an object literal or a template
+    // string in an attribute, so the two bindings the dropdown needs are
+    // methods rather than inline expressions.
+    skipOptionClass(seconds: number): string {
+      return this.skipSeconds === seconds ? 'dropdown-item is-size-7 is-active' : 'dropdown-item is-size-7';
+    },
+
+    skipOptionLabel(seconds: number): string {
+      return `${seconds}s`;
     },
 
     // Utilities
