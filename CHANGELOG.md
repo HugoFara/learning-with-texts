@@ -44,6 +44,32 @@ ones are marked like "v1.0.0-fork".
 
 ### Changed in Unreleased
 
+* **The term-import page is translated, and its notifications have one
+  author** (#266). `TermImportController` reported every outcome — no language
+  selected, invalid language, nothing to import, no term column, no file, wrong
+  format, import failed, and both success cases — by echoing the notification
+  markup, ten hand-written copies of it. As with the Anki controllers, none of
+  the ten went through the translator, so all nine locales saw English. The
+  markup now lives in one `NotificationHelper`, which the Feed trait that had
+  the same problem also uses, every message resolves through `__()`, and the
+  one notification that genuinely carries markup — the dictionary a file
+  import created — is a view. The controller renders through `render()`
+  instead of `include`, so the last `UnresolvableInclude` suppressions in it
+  are gone.
+
+* **A dictionary imported into a language other than the current one no longer
+  redisplays a mislabelled form** (#266). After the import, the form was
+  rebuilt with its language *name* read from the current-language setting but
+  its language *id* taken from the submitted form, so it could show one
+  language's name while pointing its import and enrichment URLs at another.
+  One language now resolves both, and the block that built the form's data is
+  written once rather than twice.
+
+* **The import result page reports in the reader's language** (#266). Its term
+  counter spelled "Term"/"Terms" and its spinner "Loading..." directly into the
+  markup, and the controller handed it `1`/`0` for a flag its own assertion and
+  the TypeScript that reads it both declare as a boolean.
+
 * **The feed editor's language name is resolved by its controller** (#266),
   not by a loop in the view scanning every language for a matching id. The
   feed controllers' hand-written notification markup also moved into one

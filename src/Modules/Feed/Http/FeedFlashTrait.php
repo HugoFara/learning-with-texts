@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Lwt\Modules\Feed\Http;
 
 use Lwt\Shared\Infrastructure\Http\FlashMessageService;
+use Lwt\Shared\UI\Helpers\NotificationHelper;
 
 /**
  * Shared flash message rendering for Feed controllers.
@@ -37,7 +38,9 @@ trait FeedFlashTrait
      * Split out of the loop above so a controller reporting a problem of its
      * own does not have to spell the markup out again -- which is how the feed
      * controllers ended up with several hand-written copies of it, each
-     * escaping by hand and none of them translated.
+     * escaping by hand and none of them translated. The markup itself now
+     * lives in NotificationHelper, since the term-import controller had the
+     * same ten copies of it for the same reason.
      *
      * @param string $message Already-translated message text
      * @param bool   $isError Whether this reports a failure
@@ -46,12 +49,6 @@ trait FeedFlashTrait
      */
     protected function renderNotification(string $message, bool $isError = true): void
     {
-        $notifClass = $isError ? 'is-danger' : 'is-success';
-        $autoHide = $isError ? '' : ' data-auto-hide="true"';
-
-        echo '<div class="notification ' . $notifClass . '"' . $autoHide . '>'
-            . '<button class="delete" aria-label="close"></button>'
-            . htmlspecialchars($message, ENT_QUOTES, 'UTF-8')
-            . '</div>';
+        NotificationHelper::render($message, $isError);
     }
 }

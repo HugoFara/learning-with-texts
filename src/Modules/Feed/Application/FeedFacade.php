@@ -871,7 +871,7 @@ class FeedFacade
     /**
      * Get all languages for select dropdown.
      *
-     * @return array Array of language records
+     * @return array<int, array<string, mixed>> Array of language records
      */
     public function getLanguages(): array
     {
