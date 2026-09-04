@@ -7,7 +7,9 @@ ones are marked like "v1.0.0-fork".
 
 ## [Unreleased]
 
-### Added in Unreleased
+## [3.7.0-fork] - 2026-09-04
+
+### Added in 3.7.0-fork
 
 * **One emitter and one reader for the values PHP hands a page** (#301). Server
   values reach a page as a JSON island because the CSP build of Alpine cannot
@@ -23,26 +25,7 @@ ones are marked like "v1.0.0-fork".
   `PHP_CLI_SERVER_WORKERS` set. Use it instead of a bare `php -S`, which serves
   one request at a time.
 
-### Fixed in Unreleased
-
-* **The Anki .apkg import page loads again** (#266). `/vocabulary/apkg/import`
-  returned a 500 from the 3.6.0 release onwards: the router auto-wires the
-  controller, and one interface in its dependency graph
-  (`SchedulerInterface`) was never bound, so the container threw before the
-  page began. Nothing caught it — the unit tests build the controller directly
-  with their own services, which is exactly the step that was failing, and no
-  end-to-end test visited the route. It is now bound, there is an end-to-end
-  test for both Anki import pages, and the container no longer turns an
-  optional dependency into a required one: a constructor parameter written as
-  `?Foo $foo = null` falls back to its default when the container cannot
-  resolve it, instead of taking the whole page down.
-
-* **The Anki import forms send a CSRF token the middleware reads** (#266).
-  Both pages emitted the field as `csrf_token`; `CsrfMiddleware` only ever
-  looks for `_csrf_token`. They now use `FormHelper::csrfField()`, which is
-  the one place that knows the name.
-
-### Changed in Unreleased
+### Changed in 3.7.0-fork
 
 * **The term-import page is translated, and its notifications have one
   author** (#266). `TermImportController` reported every outcome — no language
@@ -258,7 +241,7 @@ ones are marked like "v1.0.0-fork".
   docblocks also claimed PHP 8.1 while `composer.json` has required `^8.2` and
   CI tests 8.2 through 8.5.
 
-### Removed in Unreleased
+### Removed in 3.7.0-fork
 
 * **Server-side rendering paths nothing reaches** (#299), 800 lines: the
   word-by-word reading pane renderer superseded by `text_renderer.ts`, three
@@ -270,7 +253,25 @@ ones are marked like "v1.0.0-fork".
   though it did something. Also `Globals::query()`, a one-line forward to
   `QueryBuilder::table()`, and an error-display flag that was never switched on.
 
-### Fixed in Unreleased
+### Fixed in 3.7.0-fork
+
+* **The Anki .apkg import page loads again** (#266). `/vocabulary/apkg/import`
+  returned a 500 from the 3.6.0 release onwards: the router auto-wires the
+  controller, and one interface in its dependency graph
+  (`SchedulerInterface`) was never bound, so the container threw before the
+  page began. Nothing caught it — the unit tests build the controller directly
+  with their own services, which is exactly the step that was failing, and no
+  end-to-end test visited the route. It is now bound, there is an end-to-end
+  test for both Anki import pages, and the container no longer turns an
+  optional dependency into a required one: a constructor parameter written as
+  `?Foo $foo = null` falls back to its default when the container cannot
+  resolve it, instead of taking the whole page down.
+
+* **The Anki import forms send a CSRF token the middleware reads** (#266).
+  Both pages emitted the field as `csrf_token`; `CsrfMiddleware` only ever
+  looks for `_csrf_token`. They now use `FormHelper::csrfField()`, which is
+  the one place that knows the name.
+
 
 * **Japanese from the language preset parsed into almost nothing** (#288).
   `MecabParser` read MeCab's character-type column with the test inverted, so
