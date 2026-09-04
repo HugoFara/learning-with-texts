@@ -864,15 +864,7 @@ HTML;
             return;
         }
 
-        echo '<div class="notification is-warning" role="alert">'
-            . '<strong>Email not verified.</strong> '
-            . 'Please check your inbox for a verification link. '
-            . '<form method="post" action="/email/resend-verification" style="display:inline">'
-            . FormHelper::csrfField()
-            . '<button type="submit" class="button is-small is-warning is-outlined ml-2">'
-            . 'Resend verification email</button>'
-            . '</form>'
-            . '</div>';
+        include __DIR__ . '/../../../Modules/User/Views/email_verification_notice.php';
     }
 
     /**
@@ -900,12 +892,12 @@ HTML;
             $backButton = $autoHide
                 ? ''
                 : '<button class="button is-small mt-2" data-action="go-back">' .
-                  IconHelper::render('arrow-left', ['alt' => 'Go back']) .
-                  '<span class="ml-1">Go back and correct</span></button>';
+                  IconHelper::render('arrow-left', ['alt' => __('common.back')]) .
+                  '<span class="ml-1">' . __e('common.go_back_correct') . '</span></button>';
 
             echo '<div class="notification is-danger" role="alert">' .
                 '<button class="delete" aria-label="close"></button>' .
-                '<strong>Error:</strong> ' . $escapedMessage .
+                '<strong>' . __e('common.error_prefix') . '</strong> ' . $escapedMessage .
                 $backButton .
                 '</div>';
         } else {

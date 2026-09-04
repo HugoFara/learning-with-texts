@@ -1,4 +1,5 @@
 {
+    "loader.updating": "Actualizando {loaded}/{count} fuentes",
     "index_title": "Fuentes",
     "index_action_feeds": "Fuentes",
     "index_action_new_feed": "Nueva fuente",

@@ -366,14 +366,6 @@ class FeedsTest extends TestCase
     }
 
     /**
-     * Test renderFeedLoadInterfaceModern method exists
-     */
-    public function testRenderFeedLoadInterfaceModernExists(): void
-    {
-        $this->assertTrue(method_exists($this->feedService, 'renderFeedLoadInterfaceModern'));
-    }
-
-    /**
      * Test getFeedLoadConfig method exists
      */
     public function testGetFeedLoadConfigExists(): void

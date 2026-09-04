@@ -22,6 +22,7 @@ use Lwt\Shared\Infrastructure\Http\InputValidator;
 use Lwt\Shared\Infrastructure\Dictionary\DictionaryAdapter;
 use Lwt\Modules\Dictionary\Application\TranslationService;
 use Lwt\Shared\Infrastructure\Database\Settings;
+use Lwt\Shared\UI\Helpers\NotificationHelper;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 use Lwt\Shared\UI\Helpers\IconHelper;
 
@@ -107,10 +108,10 @@ class TranslationController extends BaseController
         PageLayoutHelper::renderPageStartNobody('Google Translate');
 
         if ($text === '') {
-            echo '<div class="notification is-warning">' .
-                '<button class="delete" aria-label="close"></button>' .
-                'Term is not set!' .
-                '</div>';
+            NotificationHelper::renderAs(
+                __('dictionary.translate_term_not_set'),
+                NotificationHelper::LEVEL_WARNING
+            );
             PageLayoutHelper::renderPageEnd();
             return;
         }

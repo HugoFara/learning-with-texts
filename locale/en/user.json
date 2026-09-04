@@ -1,4 +1,7 @@
 {
+    "verify_banner.resend": "Resend verification email",
+    "verify_banner.body": "Please check your inbox for a verification link.",
+    "verify_banner.title": "Email not verified.",
     "app_subtitle": "Learning With Texts",
     "login.page_title": "Log In",
     "login.username_label": "Username or Email",

@@ -1,4 +1,7 @@
 {
+    "verify_banner.resend": "Reenviar correo de verificación",
+    "verify_banner.body": "Revisa tu bandeja de entrada para encontrar un enlace de verificación.",
+    "verify_banner.title": "Correo electrónico no verificado.",
     "app_subtitle": "Aprendiendo con textos",
     "login.page_title": "Iniciar sesión",
     "login.username_label": "Usuario o correo electrónico",

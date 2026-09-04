@@ -1,4 +1,7 @@
 {
+    "verify_banner.resend": "重新发送验证邮件",
+    "verify_banner.body": "请查看您的收件箱以找到验证链接。",
+    "verify_banner.title": "电子邮件未验证。",
     "app_subtitle": "Learning With Texts",
     "login.page_title": "登录",
     "login.username_label": "用户名或邮箱",

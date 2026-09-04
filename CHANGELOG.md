@@ -19,6 +19,37 @@ ones are marked like "v1.0.0-fork".
   zh, following each language's own Anki terminology (deck/mazo/paquet/デッキ/
   колода/牌组) so a term matches what the user sees in Anki itself.
 
+* **The last notification fragments have one author, and are translated**
+  (#266). Tier 3 of the issue: six files still built Bulma notification markup
+  by hand, and none of the English in them went through the translator.
+  `NotificationHelper` gained the other two Bulma levels, so a warning or a
+  progress notice no longer needs its own copy of the markup, and the three
+  plain cases — the Google Translate page's "Term is not set!", the language
+  editor's and the starter-vocabulary page's "Language not found." — now render
+  through it. The starter-vocabulary page had spelled its message in English
+  next to a `language.errors.language_not_found` key that already said the same
+  thing in nine languages.
+
+* **The feed loader is a view, and the application layer renders nothing**
+  (#266). `FeedFacade::renderFeedLoadInterfaceModern()` echoed an Alpine
+  component wrapper, a progress notification and a Continue button — markup,
+  from a class in `Application/` — and `FeedLoadController` carried a
+  byte-identical second copy. Both are replaced by one `feed_loader.php` that
+  the controller renders. The labels were English literals, so every locale
+  read "UPDATING 0/3 FEEDS"; they resolve through `__()` now. The dead
+  delegation chain that reached the duplicate (`FeedController::
+  renderFeedLoadInterface`, routed from nowhere) is gone with it.
+
+* **The email-verification banner and the shared message renderer are
+  translated** (#266). `PageLayoutHelper` echoed the "Email not verified"
+  banner with its three strings written in English; it carries a form and an
+  emphasised opening, so it moved to `User/Views/email_verification_notice.php`
+  — the case `NotificationHelper` documents as belonging in a view.
+  `renderMessage()` stays where it is, being the one generic message renderer,
+  but its `Error:` prefix and `Go back and correct` button no longer bypass the
+  translator. What remains of hand-built notification markup outside `Views/`
+  is those two lines, which is the point of having them.
+
 * **Locale completion is enforced, not just reported** (#266).
   `.github/workflows/locales.yml` ran `bin/check-locales.php` with no
   `--fail-under`, so CI printed "94.5%" nine times and exited 0. That is how a

@@ -1,4 +1,5 @@
 {
+    "loader.updating": "Aggiornamento di {loaded}/{count} feed",
     "index_title": "Feed",
     "index_action_feeds": "Feed",
     "index_action_new_feed": "Nuovo feed",

@@ -1,4 +1,7 @@
 {
+    "verify_banner.resend": "確認メールを再送信",
+    "verify_banner.body": "確認リンクが届いていないか受信トレイをご確認ください。",
+    "verify_banner.title": "メールアドレスが未確認です。",
     "app_subtitle": "Learning With Texts",
     "login.page_title": "ログイン",
     "login.username_label": "ユーザー名またはメールアドレス",

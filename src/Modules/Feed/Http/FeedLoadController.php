@@ -51,27 +51,15 @@ class FeedLoadController
         /** @var array{feeds: array, count: int} $config */
         $config = $this->feedFacade->getFeedLoadConfig($currentFeed, $checkAutoupdate);
 
-        // Output JSON config for Alpine component
+        // Boot parameters for the feedLoader Alpine component; the markup is
+        // the view's.
         ConfigIsland::render('feed-loader-config', [
             'feeds' => $config['feeds'],
             'redirectUrl' => $redirectUrl,
         ]);
 
-        // Alpine.js component wrapper
-        echo '<div x-data="feedLoader()">';
-
-        if ($config['count'] !== 1) {
-            echo '<div class="notification is-info">' .
-                '<p>UPDATING <span x-text="loadedCount">0</span>/' .
-                $config['count'] . ' FEEDS</p></div>';
-        }
-
-        echo '<template x-for="feed in feeds" :key="feed.id">';
-        echo '<div :class="getStatusClass(feed.id)"><p x-text="feedMessages[feed.id]"></p></div>';
-        echo '</template>';
-
-        echo '<div class="has-text-centered"><button @click="handleContinue()">Continue</button></div>';
-        echo '</div>';
+        $feedCount = $config['count'];
+        include __DIR__ . '/../Views/feed_loader.php';
     }
 
     /**
@@ -94,7 +82,7 @@ class FeedLoadController
         $langName = $this->languageFacade->getLanguageName($currentLang);
         PageLayoutHelper::renderPageStart('Updating Feeds - ' . $langName, true);
 
-        $this->feedFacade->renderFeedLoadInterfaceModern(
+        $this->renderFeedLoadInterface(
             InputValidator::getIntParam('selected_feed', 0, 0),
             true,
             '/feeds/manage'
@@ -121,7 +109,7 @@ class FeedLoadController
         $langName = $this->languageFacade->getLanguageName($currentLang);
         PageLayoutHelper::renderPageStart('Loading Feed - ' . $langName, true);
 
-        $this->feedFacade->renderFeedLoadInterfaceModern(
+        $this->renderFeedLoadInterface(
             $id,
             false,
             '/feeds/manage'

@@ -1,4 +1,7 @@
 {
+    "verify_banner.resend": "Renvoyer l'e-mail de vérification",
+    "verify_banner.body": "Veuillez consulter votre boîte de réception pour trouver un lien de vérification.",
+    "verify_banner.title": "Adresse e-mail non vérifiée.",
     "app_subtitle": "Learning With Texts",
     "login.page_title": "Connexion",
     "login.username_label": "Nom d'utilisateur ou e-mail",

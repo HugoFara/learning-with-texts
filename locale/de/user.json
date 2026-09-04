@@ -1,4 +1,7 @@
 {
+    "verify_banner.resend": "Bestätigungs-E-Mail erneut senden",
+    "verify_banner.body": "Bitte prüfen Sie Ihren Posteingang auf einen Bestätigungslink.",
+    "verify_banner.title": "E-Mail nicht bestätigt.",
     "app_subtitle": "Learning With Texts",
     "login.page_title": "Anmelden",
     "login.username_label": "Benutzername oder E-Mail",

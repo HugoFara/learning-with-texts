@@ -1320,11 +1320,11 @@ class FeedFacadeTest extends TestCase
         );
     }
 
-    public function testRenderFeedLoadInterfaceModernMethodExists(): void
+    public function testRenderingMovedOutOfTheApplicationLayer(): void
     {
-        $this->assertTrue(
+        $this->assertFalse(
             method_exists($this->facade, 'renderFeedLoadInterfaceModern'),
-            'renderFeedLoadInterfaceModern method should exist'
+            'the facade should not render markup; FeedLoadController owns the view (#266)'
         );
     }
 

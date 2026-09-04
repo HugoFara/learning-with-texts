@@ -1,4 +1,7 @@
 {
+    "verify_banner.resend": "Отправить письмо ещё раз",
+    "verify_banner.body": "Проверьте свой почтовый ящик — там должна быть ссылка для подтверждения.",
+    "verify_banner.title": "Электронная почта не подтверждена.",
     "app_subtitle": "Learning With Texts",
     "login.page_title": "Вход",
     "login.username_label": "Имя пользователя или эл. почта",

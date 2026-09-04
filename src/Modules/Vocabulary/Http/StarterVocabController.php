@@ -6,6 +6,7 @@ namespace Lwt\Modules\Vocabulary\Http;
 
 use Lwt\Shared\Http\BaseController;
 use Lwt\Shared\Infrastructure\Http\JsonResponse;
+use Lwt\Shared\UI\Helpers\NotificationHelper;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 use Lwt\Shared\UI\Helpers\FormHelper;
 use Lwt\Modules\Language\Application\LanguageFacade;
@@ -51,7 +52,7 @@ class StarterVocabController extends BaseController
         if ($language === null) {
             http_response_code(404);
             PageLayoutHelper::renderPageStart('Not Found', true);
-            echo '<div class="notification is-danger">Language not found.</div>';
+            NotificationHelper::render(__('language.errors.language_not_found'));
             PageLayoutHelper::renderPageEnd();
             return;
         }

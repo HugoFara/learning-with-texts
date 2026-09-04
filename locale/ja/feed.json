@@ -1,4 +1,5 @@
 {
+    "loader.updating": "{loaded}/{count} 件のフィードを更新中",
     "index_title": "フィード",
     "index_action_feeds": "フィード",
     "index_action_new_feed": "新規フィード",

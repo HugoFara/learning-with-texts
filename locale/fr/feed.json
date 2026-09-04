@@ -1,4 +1,5 @@
 {
+    "loader.updating": "Mise à jour de {loaded}/{count} flux",
     "index_title": "Flux",
     "index_action_feeds": "Flux",
     "index_action_new_feed": "Nouveau flux",

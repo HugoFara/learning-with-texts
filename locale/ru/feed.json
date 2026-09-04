@@ -1,4 +1,5 @@
 {
+    "loader.updating": "Обновление лент: {loaded}/{count}",
     "index_title": "Ленты",
     "index_action_feeds": "Ленты",
     "index_action_new_feed": "Новая лента",

@@ -1,4 +1,5 @@
 {
+    "loader.updating": "正在更新 {loaded}/{count} 个订阅源",
     "index_title": "订阅源",
     "index_action_feeds": "订阅源",
     "index_action_new_feed": "新建订阅源",
