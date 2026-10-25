@@ -49,7 +49,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
       MYSQL_DATABASE: ${DB_NAME:-learning-with-texts}
     hostname: db
-    image: mariadb:12.1
+    image: mariadb:12.3
     restart: unless-stopped
     volumes:
       # A named volume, NOT a host bind mount
