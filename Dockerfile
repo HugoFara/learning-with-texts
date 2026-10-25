@@ -1,5 +1,5 @@
 # Stage 1: Build frontend assets on a platform with reliable Node.js support
-FROM --platform=$BUILDPLATFORM node:22-bookworm-slim AS frontend-builder
+FROM --platform=$BUILDPLATFORM node:24-trixie-slim AS frontend-builder
 
 WORKDIR /build
 COPY package.json package-lock.json vite.config.ts tsconfig.json ./
@@ -8,7 +8,7 @@ COPY scripts/ scripts/
 RUN npm ci --ignore-scripts && npm run build:all
 
 # Stage 2: Final application image
-FROM php:8.4-apache-bookworm
+FROM php:8.5-apache-trixie
 
 LABEL org.opencontainers.image.title="LWT Community"
 LABEL org.opencontainers.image.description="An image for LWT"
