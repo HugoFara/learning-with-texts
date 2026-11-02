@@ -26,6 +26,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends libzip-dev \
     && echo 'mysqli.allow_local_infile = On' >> "$PHP_INI_DIR/php.ini" \
     && docker-php-ext-install pdo pdo_mysql mysqli zip
 
+# Upload limits. php.ini-production allows 2M files and 8M POST bodies, which
+# turns away most dictionaries (GH discussion #308). Match the 100 MB cap the
+# dictionary importers already enforce; POST gets headroom for form fields.
+# Kept in its own file so it can be overridden by mounting over it.
+RUN printf 'upload_max_filesize = 100M\npost_max_size = 105M\n' \
+    > "$PHP_INI_DIR/conf.d/lwt-uploads.ini"
+
 # Install Python and Composer dependencies
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update --fix-missing \

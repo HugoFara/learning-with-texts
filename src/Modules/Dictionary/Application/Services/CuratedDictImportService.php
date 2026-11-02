@@ -247,7 +247,7 @@ class CuratedDictImportService
      * Find the importable file within an extracted directory.
      *
      * @param string $directory Extracted directory path
-     * @param string $format    Expected format (stardict, csv)
+     * @param string $format    Expected format (stardict, csv, json, cedict)
      *
      * @return string Path to the importable file
      *
@@ -259,6 +259,7 @@ class CuratedDictImportService
             'stardict' => ['ifo'],
             'csv', 'tsv' => ['csv', 'tsv', 'txt'],
             'json' => ['json'],
+            'cedict' => ['u8', 'txt'],
             default => throw new RuntimeException('Unsupported format: ' . $format),
         };
 

@@ -111,6 +111,7 @@ echo PageLayoutHelper::buildActionCard([
                         <option value="csv"><?php echo __('dictionary.format_csv'); ?></option>
                         <option value="json"><?php echo __('dictionary.format_json'); ?></option>
                         <option value="stardict"><?php echo __('dictionary.format_stardict'); ?></option>
+                        <option value="cedict"><?php echo __('dictionary.format_cedict'); ?></option>
                     </select>
                 </div>
             </div>
@@ -139,6 +140,7 @@ echo PageLayoutHelper::buildActionCard([
             <p class="help" x-show="format === 'csv'"><?php echo __('dictionary.csv_help'); ?></p>
             <p class="help" x-show="format === 'json'"><?php echo __('dictionary.json_help'); ?></p>
             <p class="help" x-show="format === 'stardict'"><?php echo __('dictionary.stardict_help'); ?></p>
+            <p class="help" x-show="format === 'cedict'"><?php echo __('dictionary.cedict_help'); ?></p>
         </div>
 
         <!-- CSV Options -->

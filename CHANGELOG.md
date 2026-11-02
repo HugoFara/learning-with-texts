@@ -57,6 +57,26 @@ ones are marked like "v1.0.0-fork".
   workflow now passes `--fail-under=99`, which leaves roughly 18 keys of slack
   for strings in flight while catching accumulation long before a release.
 
+### Fixed
+
+* **CC-CEDICT imports again, as a dictionary rather than a broken CSV**
+  (discussion #308). MDBG moved the file under `/chinese/export/`, so the
+  curated download for Chinese failed outright. It could not have worked with
+  the right link either: the entry was tagged `csv`, the archive holds a
+  `cedict_ts.u8` that the CSV lookup (`.csv/.tsv/.txt`) never finds, and a
+  CEDICT line (`傳統 传统 [chuan2 tong3] /tradition/traditional/`) is not
+  comma-separated. A new `cedict` format reads it properly: pinyin goes to the
+  reading, senses are joined into the definition, and an entry is stored under
+  both its simplified and traditional headword when they differ (203,339
+  entries from the current file). It is also offered on both manual upload
+  forms.
+
+* **The Docker image accepts dictionary-sized uploads** (discussion #308). It
+  shipped `php.ini-production` untouched, so uploads stopped at 2 MB and POST
+  bodies at 8 MB — below most dictionaries, and surfacing as "No file was
+  uploaded" or a CSRF 403. `conf.d/lwt-uploads.ini` now raises them to the
+  100 MB the importers already allow.
+
 ## [3.7.0-fork] - 2026-09-04
 
 ### Added in 3.7.0-fork

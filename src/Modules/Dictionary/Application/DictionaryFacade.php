@@ -20,6 +20,7 @@ namespace Lwt\Modules\Dictionary\Application;
 use Lwt\Modules\Dictionary\Domain\LocalDictionary;
 use Lwt\Modules\Dictionary\Application\Services\LocalDictionaryService;
 use Lwt\Modules\Dictionary\Infrastructure\Import\ImporterInterface;
+use Lwt\Modules\Dictionary\Infrastructure\Import\CedictImporter;
 use Lwt\Modules\Dictionary\Infrastructure\Import\CsvImporter;
 use Lwt\Modules\Dictionary\Infrastructure\Import\JsonImporter;
 use Lwt\Modules\Dictionary\Infrastructure\Import\StarDictImporter;
@@ -249,7 +250,7 @@ class DictionaryFacade
     /**
      * Get the appropriate importer for a format.
      *
-     * @param string $format       Import format (csv, json, stardict)
+     * @param string $format       Import format (csv, json, stardict, cedict)
      * @param string $originalName Original filename for auto-detection
      *
      * @return ImporterInterface
@@ -266,6 +267,7 @@ class DictionaryFacade
             $format = match ($ext) {
                 'csv', 'tsv', 'txt' => 'csv',
                 'json' => 'json',
+                'u8' => 'cedict',
                 'ifo', 'idx', 'dict', 'dz' => 'stardict',
                 default => 'csv',
             };
@@ -275,6 +277,7 @@ class DictionaryFacade
             'csv', 'tsv' => new CsvImporter(),
             'json' => new JsonImporter(),
             'stardict', 'ifo' => new StarDictImporter(),
+            'cedict' => new CedictImporter(),
             default => throw new RuntimeException("Unsupported format: $format"),
         };
     }

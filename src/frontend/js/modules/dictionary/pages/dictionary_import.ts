@@ -33,7 +33,9 @@ export function dictionaryImportData(): DictionaryImportData {
       json: '.json',
       // StarDict needs companion .idx/.dict files alongside .ifo, so the
       // user uploads an archive that contains all three.
-      stardict: '.zip,.tar,.tgz,.gz,.bz2,.xz'
+      stardict: '.zip,.tar,.tgz,.gz,.bz2,.xz',
+      // CC-CEDICT ships as cedict_ts.u8, usually inside a .zip or .txt.gz.
+      cedict: '.u8,.txt,.zip,.gz'
     },
 
     fileSelected(event: Event): void {
