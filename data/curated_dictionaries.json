@@ -534,8 +534,8 @@
             "sources": [
                 {
                     "name": "CC-CEDICT (Chinese-English)",
-                    "url": "https://www.mdbg.net/export/cedict/cedict_1_0_ts_utf-8_mdbg.zip",
-                    "format": "csv",
+                    "url": "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.zip",
+                    "format": "cedict",
                     "entries": "~124,000",
                     "license": "CC BY-SA",
                     "notes": "CC-CEDICT Chinese-English dictionary in UTF-8 with traditional and simplified Chinese",

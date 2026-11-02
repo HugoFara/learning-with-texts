@@ -91,7 +91,7 @@ class LocalDictionary
             throw new InvalidArgumentException('Dictionary name cannot be empty');
         }
 
-        $validFormats = ['csv', 'json', 'stardict'];
+        $validFormats = ['csv', 'json', 'stardict', 'cedict'];
         if (!in_array($sourceFormat, $validFormats, true)) {
             throw new InvalidArgumentException(
                 'Invalid source format. Must be one of: ' . implode(', ', $validFormats)

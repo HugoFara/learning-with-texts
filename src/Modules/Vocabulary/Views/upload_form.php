@@ -478,6 +478,7 @@ echo PageLayoutHelper::buildActionCard($actions);
                                 <option value="csv"><?= __e('vocabulary.upload.manual.fmt_csv') ?></option>
                                 <option value="json"><?= __e('vocabulary.upload.manual.fmt_json') ?></option>
                                 <option value="stardict"><?= __e('vocabulary.upload.manual.fmt_stardict') ?></option>
+                                <option value="cedict"><?= __e('vocabulary.upload.manual.fmt_cedict') ?></option>
                             </select>
                         </div>
                     </div>
@@ -497,6 +498,9 @@ echo PageLayoutHelper::buildActionCard($actions);
                 </div>
                 <p class="help" x-show="dictFormat === 'stardict'">
                     <?= __e('vocabulary.upload.manual.stardict_help') ?>
+                </p>
+                <p class="help" x-show="dictFormat === 'cedict'">
+                    <?= __e('vocabulary.upload.manual.cedict_help') ?>
                 </p>
                 <div class="field mt-3">
                     <label class="label is-small"><?= __e('vocabulary.upload.manual.dict_name') ?></label>
