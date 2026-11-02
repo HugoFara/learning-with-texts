@@ -142,9 +142,11 @@ class CedictImporterTest extends TestCase
         // lookup (.csv/.tsv/.txt) could never find.
         $this->writeSample();
         $service = new CuratedDictImportService($this->createStub(DictionaryFacade::class));
+        // realpath() on both sides: the finder joins with DIRECTORY_SEPARATOR,
+        // so on Windows the separators differ from the ones written here.
         $this->assertSame(
-            $this->tmpDir . '/cedict_ts.u8',
-            $service->findImportFile($this->tmpDir, 'cedict')
+            realpath($this->tmpDir . '/cedict_ts.u8'),
+            realpath($service->findImportFile($this->tmpDir, 'cedict'))
         );
     }
 
