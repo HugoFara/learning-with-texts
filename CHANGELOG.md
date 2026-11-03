@@ -20,6 +20,9 @@ ones are marked like "v1.0.0-fork".
   their content. Nothing changes for the existing left-to-right locales;
   the first right-to-left locale follows separately.
 
+* **Persian (`fa`) interface locale** (#306), the first right-to-left one.
+  Complete but machine-drafted; native-speaker review is welcome.
+
 ### Changed
 
 * **The nine shipped locales are complete again** (#266). 3.7.0 moved the Anki
