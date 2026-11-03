@@ -292,7 +292,7 @@ describe('whisper_import.ts', () => {
 
       await vi.waitFor(() => {
         const options = document.getElementById('whisperOptions');
-        return options?.style.display === 'block';
+        expect(options?.style.display === 'block').toBe(true);
       });
 
       const options = document.getElementById('whisperOptions');
@@ -310,7 +310,7 @@ describe('whisper_import.ts', () => {
 
       await vi.waitFor(() => {
         const unavailable = document.getElementById('whisperUnavailable');
-        return unavailable?.style.display === 'block';
+        expect(unavailable?.style.display === 'block').toBe(true);
       });
 
       const unavailable = document.getElementById('whisperUnavailable');
@@ -326,7 +326,7 @@ describe('whisper_import.ts', () => {
 
       await vi.waitFor(() => {
         const unavailable = document.getElementById('whisperUnavailable');
-        return unavailable?.style.display === 'block';
+        expect(unavailable?.style.display === 'block').toBe(true);
       });
 
       // Should show unavailable message on error
@@ -374,7 +374,7 @@ describe('whisper_import.ts', () => {
 
       await vi.waitFor(() => {
         const options = document.getElementById('whisperOptions');
-        return options?.style.display === 'block';
+        expect(options?.style.display === 'block').toBe(true);
       });
 
       const startBtn = document.getElementById('startTranscription')!;
@@ -412,7 +412,7 @@ describe('whisper_import.ts', () => {
 
       await vi.waitFor(() => {
         const options = document.getElementById('whisperOptions');
-        return options?.style.display === 'block';
+        expect(options?.style.display === 'block').toBe(true);
       });
 
       const startBtn = document.getElementById('startTranscription')!;
@@ -420,7 +420,7 @@ describe('whisper_import.ts', () => {
 
       await vi.waitFor(() => {
         const progress = document.getElementById('whisperProgress');
-        return progress?.style.display === 'block';
+        expect(progress?.style.display === 'block').toBe(true);
       });
 
       const progress = document.getElementById('whisperProgress');
@@ -447,7 +447,7 @@ describe('whisper_import.ts', () => {
 
       await vi.waitFor(() => {
         const options = document.getElementById('whisperOptions');
-        return options?.style.display === 'block';
+        expect(options?.style.display === 'block').toBe(true);
       });
 
       const startBtn = document.getElementById('startTranscription')!;
@@ -455,7 +455,7 @@ describe('whisper_import.ts', () => {
 
       await vi.waitFor(() => {
         const status = document.getElementById('importFileStatus');
-        return status?.textContent?.includes('failed');
+        expect(status?.textContent?.includes('failed')).toBe(true);
       });
 
       const status = document.getElementById('importFileStatus');
@@ -487,7 +487,7 @@ describe('whisper_import.ts', () => {
 
       await vi.waitFor(() => {
         const options = document.getElementById('whisperOptions');
-        return options?.style.display === 'block';
+        expect(options?.style.display === 'block').toBe(true);
       });
 
       const startBtn = document.getElementById('startTranscription')!;
@@ -908,7 +908,7 @@ describe('whisper_import.ts', () => {
 
       // Wait for pre-check to complete
       await vi.waitFor(() => {
-        return (global.fetch as ReturnType<typeof vi.fn>).mock.calls.length >= 1;
+        expect((global.fetch as ReturnType<typeof vi.fn>).mock.calls.length >= 1).toBe(true);
       });
 
       const fileInput = document.getElementById('importFile') as HTMLInputElement;
@@ -919,8 +919,7 @@ describe('whisper_import.ts', () => {
 
       await vi.waitFor(() => {
         const select = document.getElementById('whisperLanguage') as HTMLSelectElement;
-        return select.options.length > 1;
-      }, { timeout: 1000 });
+        expect(select.options.length > 1).toBe(true);}, { timeout: 1000 });
 
       const select = document.getElementById('whisperLanguage') as HTMLSelectElement;
       expect(select.options.length).toBe(4); // Auto-detect + 3 languages
@@ -943,7 +942,7 @@ describe('whisper_import.ts', () => {
 
       // Wait for pre-check to complete
       await vi.waitFor(() => {
-        return (global.fetch as ReturnType<typeof vi.fn>).mock.calls.length >= 1;
+        expect((global.fetch as ReturnType<typeof vi.fn>).mock.calls.length >= 1).toBe(true);
       });
 
       const fileInput = document.getElementById('importFile') as HTMLInputElement;
@@ -954,8 +953,7 @@ describe('whisper_import.ts', () => {
 
       // Wait for language fetch to fail
       await vi.waitFor(() => {
-        return consoleSpy.mock.calls.length > 0;
-      }, { timeout: 1000 });
+        expect(consoleSpy.mock.calls.length > 0).toBe(true);}, { timeout: 1000 });
 
       expect(consoleSpy).toHaveBeenCalledWith('Failed to load Whisper languages:', expect.any(Error));
 
