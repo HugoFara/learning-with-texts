@@ -8,8 +8,8 @@
     "search": "検索",
     "suggested_from_gutenberg": "Project Gutenbergからのおすすめ",
     "suggested_from_gdl": "入門におすすめのやさしい本",
-    "books_found": "{count}冊の本が見つかりました",
-    "downloads_suffix": "ダウンロード",
+    "books_found_other": "{count}冊の本が見つかりました",
+    "downloads_other": "{count}回ダウンロード",
     "no_books_found": "本が見つかりません。別の検索語をお試しください。",
     "load_more": "さらに読み込む",
     "preview": "プレビュー",
@@ -28,5 +28,6 @@
     "warning_php_outdated": "PHPバージョンは{phpVersion}ですが、バージョン{minVersion}が必要です。PHPを更新してください。",
     "warning_update_available": "LWTの更新が利用可能です：{latestVersion}（現在のバージョン：{currentVersion}）。",
     "download": "ダウンロード",
-    "dismiss": "閉じる"
+    "dismiss": "閉じる",
+    "titles.home": "ホーム"
 }

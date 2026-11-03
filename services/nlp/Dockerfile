@@ -1,4 +1,4 @@
-FROM python:3.11-slim-bookworm
+FROM python:3.14-slim-trixie
 
 # Install system dependencies for MeCab, Piper and Whisper.
 # openai-whisper shells out to ffmpeg for audio decoding; without it
@@ -9,6 +9,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
     && rm -rf /var/lib/apt/lists/*
+
+# The mecab-python3 wheel bundles a libmecab built for /usr/local, so it
+# looks for /usr/local/etc/mecabrc; Debian's mecab package puts it in /etc.
+# Without this, MeCab.Tagger() raises and every Japanese parse fails.
+ENV MECABRC=/etc/mecabrc
 
 WORKDIR /app
 

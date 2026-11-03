@@ -69,7 +69,7 @@ $base = UrlUtilities::getBasePath();
     ></button>
     <p>
         <span x-text="warnings.updateAvailable.message"></span>
-        <a :href="warnings.updateAvailable.downloadUrl" class="button is-small is-info is-outlined ml-2">
+        <a :href="warnings.updateAvailable.downloadUrl" class="button is-small is-info is-outlined ms-2">
             <?= __('home.download') ?>
         </a>
     </p>
@@ -110,7 +110,7 @@ $base = UrlUtilities::getBasePath();
             <div style="flex-shrink: 0;">
                 <template x-if="lastText">
                     <div class="box has-background-link-light" style="width: 280px; min-height: 180px;">
-                        <p class="title is-5 mb-3" x-text="lastText.title"></p>
+                        <p dir="auto" class="title is-5 mb-3" x-text="lastText.title"></p>
                         <!-- Statistics bar - colors match word status highlights -->
                         <div
                             class="mb-3"
@@ -178,7 +178,7 @@ $base = UrlUtilities::getBasePath();
                     </div>
                 </template>
                 <template x-if="!lastText">
-                    <div class="box has-background-light" style="width: 280px; min-height: 180px;
+                    <div class="box has-background-light-soft" style="width: 280px; min-height: 180px;
                         display: flex; flex-direction: column; justify-content: center; align-items: center;">
                         <span class="icon is-large has-text-grey-light mb-2">
                             <i data-lucide="book-open" style="width: 36px; height: 36px;"></i>
@@ -348,7 +348,7 @@ $base = UrlUtilities::getBasePath();
                             <div class="is-flex is-justify-content-space-between is-align-items-start">
                                 <div style="flex: 1; min-width: 0;">
                                     <div class="is-flex is-align-items-center" style="gap: 0.5rem;">
-                                        <p
+                                        <p dir="auto"
                                             class="has-text-weight-semibold is-size-6"
                                             x-text="book.title"
                                             style="overflow: hidden; text-overflow: ellipsis;"
@@ -369,7 +369,7 @@ $base = UrlUtilities::getBasePath();
                                         x-text="downloadsLabel(book.downloadCount)"
                                     ></p>
                                 </div>
-                                <div class="buttons are-small ml-3" style="flex-shrink: 0;">
+                                <div class="buttons are-small ms-3" style="flex-shrink: 0;">
                                     <button
                                         @click="togglePreview(book)"
                                         class="button is-info is-outlined is-small"

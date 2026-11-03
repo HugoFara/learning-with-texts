@@ -218,4 +218,58 @@ describe('shared/i18n/translator.ts — API + cache delivery', () => {
       expect(t('common.save')).toBe('Cached');
     });
   });
+
+  describe('tn', () => {
+    const arabic = {
+      'common.terms_zero': 'لا مصطلحات',
+      'common.terms_one': 'مصطلح واحد',
+      'common.terms_two': 'مصطلحان',
+      'common.terms_few': '{count} مصطلحات',
+      'common.terms_many': '{count} مصطلحًا',
+      'common.terms_other': '{count} مصطلح',
+    };
+
+    it('picks the plural form of the API bundle locale', async () => {
+      const { loadI18nFromApi, tn } = await freshTranslator();
+      mockFetch.mockResolvedValue(okJson({ locale: 'ar', messages: arabic }));
+      await loadI18nFromApi('ar');
+
+      expect(tn('common.terms', 0)).toBe('لا مصطلحات');
+      expect(tn('common.terms', 2)).toBe('مصطلحان');
+      expect(tn('common.terms', 7)).toBe('7 مصطلحات');
+      expect(tn('common.terms', 11)).toBe('11 مصطلحًا');
+      expect(tn('common.terms', 100)).toBe('100 مصطلح');
+    });
+
+    it('falls back to the other form, and lets the caller format the count', async () => {
+      const { loadI18nFromApi, tn } = await freshTranslator();
+      mockFetch.mockResolvedValue(
+        okJson({ locale: 'ru', messages: { 'common.terms_one': '{count} термин', 'common.terms_other': '{count} терминов' } })
+      );
+      await loadI18nFromApi('ru');
+
+      expect(tn('common.terms', 21)).toBe('21 термин');
+      expect(tn('common.terms', 3)).toBe('3 терминов');
+      expect(tn('common.terms', 1500, { count: '1 500' })).toBe('1 500 терминов');
+      expect(tn('common.missing', 1)).toBe('common.missing');
+    });
+
+    it('reads the locale from <html lang> on server-rendered pages', async () => {
+      const { tn } = await freshTranslator();
+      document.documentElement.lang = 'fr';
+      const blob = document.createElement('script');
+      blob.id = 'lwt-i18n';
+      blob.type = 'application/json';
+      blob.textContent = JSON.stringify({ 'common.terms_one': '{count} terme', 'common.terms_other': '{count} termes' });
+      document.body.appendChild(blob);
+
+      try {
+        expect(tn('common.terms', 0)).toBe('0 terme');
+        expect(tn('common.terms', 2)).toBe('2 termes');
+      } finally {
+        blob.remove();
+        document.documentElement.lang = '';
+      }
+    });
+  });
 });

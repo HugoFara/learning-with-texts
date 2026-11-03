@@ -123,7 +123,7 @@ function ensureModalExists(): void {
           .lwt-modal-body td {
             padding: 8px 12px;
             border: 1px solid #ddd;
-            text-align: left;
+            text-align: start;
           }
           .lwt-modal-body th {
             background: #f0f0f0;

@@ -166,6 +166,14 @@
     "check.heading": "Textparsing prüfen",
     "check.text_max": "(max. 65.000 Bytes)",
     "check.text_placeholder": "Fügen Sie Ihren Text hier ein, um zu prüfen, wie er geparst wird...",
+    "check.heading_text": "Text",
+    "check.heading_sentences": "Sätze",
+    "check.heading_words": "Wortliste",
+    "check.heading_expressions": "Ausdrucksliste",
+    "check.heading_non_words": "Liste der Nicht-Wörter",
+    "check.already_saved": "(rot = bereits gespeichert)",
+    "check.checking": "Wird geprüft...",
+    "check.failed": "Der Text konnte nicht geprüft werden.",
 
     "read.loading": "Text wird geladen...",
     "read.display": "Anzeige",
@@ -220,5 +228,12 @@
     "parse_warning.no_words": "Aus diesem Text konnten keine Wörter gebildet werden.",
     "parse_warning.almost_no_words": "Fast nichts in diesem Text konnte in Wörter umgewandelt werden.",
     "parse_warning.check_language": "Die Einstellung „Wortzeichen“ der Sprache passt nicht zu diesem Text, daher lässt sich darin nichts anklicken oder lernen.",
-    "parse_warning.edit_language": "Spracheinstellungen prüfen"
+    "parse_warning.edit_language": "Spracheinstellungen prüfen",
+    "titles.texts": "Texte",
+    "titles.archived": "Archivierte Texte",
+    "titles.read": "Lesen",
+    "titles.display": "Anzeige",
+    "titles.print": "Drucken",
+    "titles.annotated": "Annotierter Text",
+    "titles.check": "Text prüfen"
 }

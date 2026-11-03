@@ -90,7 +90,7 @@ export function renderBookNav(ctx: BookContext | null): string {
 
   const chapterTitle =
     ctx.chapterTitle !== null && ctx.chapterTitle !== ''
-      ? ` <em class="ml-1">${escapeHtml(ctx.chapterTitle)}</em>`
+      ? ` <em class="ms-1">${escapeHtml(ctx.chapterTitle)}</em>`
       : '';
 
   return (
@@ -98,9 +98,9 @@ export function renderBookNav(ctx: BookContext | null): string {
     + '<div class="level is-mobile"><div class="level-left"><div class="level-item">'
     + `<a href="/book/${ctx.bookId}" class="has-text-grey-dark" title="${escapeHtml(
       t('text.read.view_book')
-    )}"><span class="icon is-small mr-1">${icon('book-open')}</span>`
+    )}"><span class="icon is-small me-1">${icon('book-open')}</span>`
     + `<strong>${escapeHtml(ctx.bookTitle)}</strong></a>`
-    + `<span class="has-text-grey ml-2">— Ch. ${ctx.chapterNum}/${ctx.totalChapters}${chapterTitle}</span>`
+    + `<span class="has-text-grey ms-2">— Ch. ${ctx.chapterNum}/${ctx.totalChapters}${chapterTitle}</span>`
     + '</div></div>'
     + '<div class="level-right"><div class="level-item">'
     + '<div class="buttons has-addons mb-0">'

@@ -47,6 +47,7 @@ $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 's
     'enrichUrl' => $enrichUrl,
     'csrfToken' => $csrfToken,
     'langId' => $langId,
+    'langName' => $langName,
     'curatedDictionaries' => $curatedDictionaries,
     'isAvailable' => $isAvailable,
 ]); ?>
@@ -95,7 +96,7 @@ $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 's
             <label class="box mb-3 p-4" style="cursor: pointer;"
                    :class="useWiktionary ? 'has-background-success-light' : ''">
                 <div class="is-flex is-align-items-center">
-                    <input type="checkbox" class="mr-3"
+                    <input type="checkbox" class="me-3"
                            :checked="useWiktionary"
                            @change="toggleWiktionary()">
                     <div class="is-flex-grow-1">
@@ -130,12 +131,12 @@ $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 's
                 <label class="box mb-3 p-4" style="cursor: pointer;"
                        :class="isSourceSelected(source.url) ? 'has-background-success-light' : ''">
                     <div class="is-flex is-align-items-center">
-                        <input type="checkbox" class="mr-3"
+                        <input type="checkbox" class="me-3"
                                :checked="isSourceSelected(source.url)"
                                :disabled="!source.directDownload"
                                @change="toggleSource(source.url)">
                         <div class="is-flex-grow-1">
-                            <p class="has-text-weight-semibold mb-1" x-text="source.name"></p>
+                            <p dir="auto" class="has-text-weight-semibold mb-1" x-text="source.name"></p>
                             <div class="tags mb-1">
                                 <span class="tag is-light" x-text="source.entries"></span>
                                 <span class="tag is-info is-light" x-text="source.format"></span>
@@ -161,7 +162,7 @@ $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 's
                             :disabled="!canImport()"
                             @click="startImport()">
                         <?= $downloadIcon ?>
-                        <span class="ml-1"><?= __e('vocabulary.starter.import') ?></span>
+                        <span class="ms-1"><?= __e('vocabulary.starter.import') ?></span>
                     </button>
                 </div>
                 <div class="control">
@@ -194,11 +195,9 @@ $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 's
             </p>
             <progress class="progress is-success" :value="enrichProgress" max="100"></progress>
             <p class="is-size-7 mb-3">
-                <span x-text="enrichStats.done"></span> <?= __e('vocabulary.starter.of') ?>
-                <span x-text="enrichStats.total"></span> <?= __e('vocabulary.starter.words_enriched') ?>
+                <span x-text="enrichProgressLabel()"></span>
                 <template x-if="enrichStats.failed > 0">
-                    <span class="has-text-grey">(<span x-text="enrichStats.failed"></span>
-                        <?= __e('vocabulary.starter.not_found') ?>)</span>
+                    <span class="has-text-grey" x-text="notFoundLabel()"></span>
                 </template>
             </p>
 
@@ -226,8 +225,7 @@ $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 's
             <progress class="progress is-info"
                       :value="dictBatchCurrent" :max="dictBatchTotal"></progress>
             <p class="is-size-7 has-text-grey">
-                <?= __e('vocabulary.starter.dictionary') ?> <span x-text="dictBatchCurrent"></span>
-                <?= __e('vocabulary.starter.of') ?> <span x-text="dictBatchTotal"></span>
+                <span x-text="dictProgressLabel()"></span>
             </p>
         </div>
     </template>
@@ -238,22 +236,14 @@ $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 's
             <div class="notification is-success is-light">
                 <template x-if="wiktResult.imported > 0 || wiktResult.skipped > 0">
                     <p>
-                        <?= __e('vocabulary.starter.imported') ?>
-                        <strong x-text="wiktResult.imported"></strong>
-                        <?= __e('vocabulary.starter.words') ?>
+                        <span x-text="importedLabel()"></span>
                         <template x-if="wiktResult.skipped > 0">
-                            <span>(<span x-text="wiktResult.skipped"></span>
-                                <?= __e('vocabulary.starter.already_existed') ?>)</span>
+                            <span x-text="skippedLabel()"></span>
                         </template>
-                        <?= __e('vocabulary.starter.for_lang') ?> <strong><?= $escapedLangName ?></strong>.
                     </p>
                 </template>
                 <template x-if="enrichStats.done > 0">
-                    <p class="mt-1">
-                        <span x-text="enrichStats.done"></span>
-                        <?= __e('vocabulary.starter.enriched_with') ?>
-                        <span x-text="enrichedModeLabel()"></span>.
-                    </p>
+                    <p class="mt-1" x-text="enrichedLabel()"></p>
                 </template>
                 <template x-for="(msg, i) in dictMessages" :key="i">
                     <p class="mt-1" :class="msg.success ? '' : 'has-text-danger'" x-text="msg.text"></p>

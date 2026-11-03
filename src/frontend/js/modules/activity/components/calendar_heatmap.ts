@@ -9,6 +9,7 @@
  */
 
 import Alpine from 'alpinejs';
+import { activeLocale, t, tn } from '@shared/i18n/translator';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -20,12 +21,30 @@ const CELL_STEP = CELL_SIZE + CELL_GAP;
 /** Color scale: 0 = empty, 1-4 = increasing intensity. */
 const COLORS = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
 
-/** Short month labels for the top axis. */
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** Rows (0 = Sunday) that get a day-of-week label on the left axis. */
+const LABELLED_ROWS = [1, 3, 5];
 
-/** Short day-of-week labels for the left axis. */
-const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
+/**
+ * The interface locale with the Gregorian calendar forced, since the grid
+ * is laid out by Gregorian month ("fa" would otherwise default to the
+ * Persian calendar and name months that do not match the columns).
+ */
+function dateLocale(): string {
+  return activeLocale() + '-u-ca-gregory';
+}
+
+/** Short month names, January first, in the interface language. */
+function monthLabels(): string[] {
+  const format = new Intl.DateTimeFormat(dateLocale(), { month: 'short' });
+  return Array.from({ length: 12 }, (_, m) => format.format(new Date(2024, m, 1)));
+}
+
+/** Short weekday names by row (0 = Sunday), in the interface language. */
+function dayLabels(): string[] {
+  const format = new Intl.DateTimeFormat(dateLocale(), { weekday: 'short' });
+  // 7 January 2024 was a Sunday.
+  return Array.from({ length: 7 }, (_, row) => format.format(new Date(2024, 0, 7 + row)));
+}
 
 interface CalendarDay {
   date: string;
@@ -73,7 +92,7 @@ function colorLevel(value: number, max: number): number {
  */
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString(undefined, {
+  return d.toLocaleDateString(dateLocale(), {
     weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
   });
 }
@@ -83,12 +102,12 @@ function formatDate(dateStr: string): string {
  */
 function formatTooltip(day: CalendarDay): string {
   const date = formatDate(day.date);
-  if (day.total === 0) return `No activity on ${date}`;
+  if (day.total === 0) return t('user.statistics.no_activity_on', { date });
   const parts: string[] = [];
-  if (day.created > 0) parts.push(`${day.created} created`);
-  if (day.reviewed > 0) parts.push(`${day.reviewed} reviewed`);
-  if (day.read > 0) parts.push(`${day.read} read`);
-  return `${parts.join(', ')} — ${date}`;
+  if (day.created > 0) parts.push(tn('user.statistics.today_created', day.created));
+  if (day.reviewed > 0) parts.push(tn('user.statistics.today_reviewed', day.reviewed));
+  if (day.read > 0) parts.push(tn('user.statistics.today_read', day.read));
+  return t('user.statistics.day_summary', { summary: parts.join(' · '), date });
 }
 
 /**
@@ -146,7 +165,7 @@ export function calendarHeatmap(): CalendarHeatmapState {
         })
         .catch(() => {
           this.loading = false;
-          this.error = 'Failed to load activity data';
+          this.error = t('user.statistics.load_failed');
         });
     },
 
@@ -154,7 +173,11 @@ export function calendarHeatmap(): CalendarHeatmapState {
       const { days, weeks } = buildDayGrid(data);
       const maxVal = Math.max(...days.map(d => d.total), 1);
 
-      const leftPad = 30;   // space for day-of-week labels
+      const days7 = dayLabels();
+      const months = monthLabels();
+      // Space for the day-of-week labels: "Mon" fits in 30px, "الاثنين" does not.
+      const longest = Math.max(...LABELLED_ROWS.map(row => days7[row].length));
+      const leftPad = Math.max(30, longest * 6 + 6);
       const topPad = 16;    // space for month labels
       const svgWidth = leftPad + weeks * CELL_STEP;
       const svgHeight = topPad + 7 * CELL_STEP;
@@ -164,18 +187,20 @@ export function calendarHeatmap(): CalendarHeatmapState {
       svg.setAttribute('height', String(svgHeight));
       svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
       svg.style.display = 'block';
+      // A timeline laid out left to right by date. In an RTL page the text
+      // would inherit direction: rtl and hang leftwards from its x, pushing
+      // the weekday labels off the canvas.
+      svg.setAttribute('direction', 'ltr');
 
       // Day-of-week labels
-      for (let row = 0; row < 7; row++) {
-        if (DAY_LABELS[row]) {
-          const text = document.createElementNS(SVG_NS, 'text');
-          text.setAttribute('x', '0');
-          text.setAttribute('y', String(topPad + row * CELL_STEP + CELL_SIZE));
-          text.setAttribute('font-size', '10');
-          text.setAttribute('fill', '#767676');
-          text.textContent = DAY_LABELS[row];
-          svg.appendChild(text);
-        }
+      for (const row of LABELLED_ROWS) {
+        const text = document.createElementNS(SVG_NS, 'text');
+        text.setAttribute('x', '0');
+        text.setAttribute('y', String(topPad + row * CELL_STEP + CELL_SIZE));
+        text.setAttribute('font-size', '10');
+        text.setAttribute('fill', '#767676');
+        text.textContent = days7[row];
+        svg.appendChild(text);
       }
 
       // Month labels — place at first Sunday of each month
@@ -190,7 +215,7 @@ export function calendarHeatmap(): CalendarHeatmapState {
           text.setAttribute('y', '10');
           text.setAttribute('font-size', '10');
           text.setAttribute('fill', '#767676');
-          text.textContent = MONTHS[m];
+          text.textContent = months[m];
           svg.appendChild(text);
         }
       }

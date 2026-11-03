@@ -191,9 +191,9 @@ $hasAnnotation = $viewData['hasAnnotation'];
                 <div class="buttons">
                     <button type="button" class="button is-primary" @click="handlePrint()">
                         <?php echo IconHelper::render('printer', ['size' => 16]); ?>
-                        <span class="ml-1">Print it!</span>
+                        <span class="ms-1">Print it!</span>
                     </button>
-                    <span class="is-size-7 ml-2">(only the text below the line)</span>
+                    <span class="is-size-7 ms-2">(only the text below the line)</span>
                 </div>
                 <div class="mt-3">
                     <?php if ($hasAnnotation) : ?>
@@ -231,21 +231,21 @@ $hasAnnotation = $viewData['hasAnnotation'];
                     <button type="button" class="button"
                         @click="navigateTo('/text/<?php echo $textId; ?>/print/edit')">
                         <?php echo IconHelper::render('pencil', ['size' => 16]); ?>
-                        <span class="ml-1">Edit</span>
+                        <span class="ms-1">Edit</span>
                     </button>
                     <button type="button" class="button is-danger is-outlined"
                         @click="confirmDeleteAnnotation(<?php echo $textId; ?>, 'Are you sure?')">
                         <?php echo IconHelper::render('trash-2', ['size' => 16]); ?>
-                        <span class="ml-1">Delete</span>
+                        <span class="ms-1">Delete</span>
                     </button>
                     <button type="button" class="button is-primary" @click="handlePrint()">
                         <?php echo IconHelper::render('printer', ['size' => 16]); ?>
-                        <span class="ml-1">Print</span>
+                        <span class="ms-1">Print</span>
                     </button>
                     <button type="button" class="button"
                         @click="openWindow('/text/display?text=<?php echo $textId; ?>')">
                         <?php echo IconHelper::render('external-link', ['size' => 16]); ?>
-                        <span class="ml-1">Display<?php
+                        <span class="ms-1">Display<?php
                             echo ($audioUri !== '' ? ' with Audio Player' : '');
                         ?> in new Window</span>
                     </button>
@@ -258,7 +258,7 @@ $hasAnnotation = $viewData['hasAnnotation'];
             <header class="card-header">
                 <p class="card-header-title">
                     Improved Annotated Text (Edit Mode)
-                    <a href="docs/info.html#il" target="_blank" class="ml-2">
+                    <a href="docs/info.html#il" target="_blank" class="ms-2">
                         <?php echo IconHelper::render('help-circle', ['title' => 'Help', 'alt' => 'Help']); ?>
                     </a>
                 </p>
@@ -275,7 +275,7 @@ $hasAnnotation = $viewData['hasAnnotation'];
 
     <!-- Print content -->
     <?php if ($mode === 'plain') : ?>
-    <div x-show="!loading" id="print" <?php echo ($rtlScript ? 'dir="rtl"' : ''); ?>>
+    <div x-show="!loading" id="print" dir="<?php echo $rtlScript ? 'rtl' : 'ltr'; ?>">
         <h2 x-text="getConfigTitle('<?php
             echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
         ?>')"></h2>
@@ -287,7 +287,7 @@ $hasAnnotation = $viewData['hasAnnotation'];
         </p>
     </div>
     <?php elseif ($mode === 'annotated') : ?>
-    <div x-show="!loading" id="print" <?php echo ($rtlScript ? 'dir="rtl"' : ''); ?>>
+    <div x-show="!loading" id="print" dir="<?php echo $rtlScript ? 'rtl' : 'ltr'; ?>">
         <p :style="'font-size:' + getAnnConfigTextSize(<?php echo $textSize; ?>)
             + '%; line-height: 1.35; margin-bottom: 10px;'">
             <span x-text="getAnnConfigTitle('<?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?>')"></span>

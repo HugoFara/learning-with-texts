@@ -18,6 +18,8 @@ import 'bulma/css/bulma.min.css';
 import '../css/base/styles.css';
 import '../css/base/html5_audio_player.css';
 import '../css/base/icons.css';
+import '../css/base/logical.css';
+import '../css/base/rtl.css';
 
 // =============================================================================
 // SHARED INFRASTRUCTURE (always loaded)
@@ -55,7 +57,7 @@ import '@shared/components/theme_toggle';
 import '@shared/components/footer';
 
 // Shared i18n
-import { bootI18n, t } from '@shared/i18n/translator';
+import { bootI18n, t, tn } from '@shared/i18n/translator';
 
 // Shared accessibility
 import { initAriaLive } from '@shared/accessibility/aria_live';
@@ -150,6 +152,11 @@ Promise.all(loaders).then(async () => {
   // Register Alpine.js magic for translations: this.$t('common.save')
   Alpine.magic('t', () => (key: string, params?: Record<string, string | number>) => {
     return t(key, params);
+  });
+
+  // Plural-aware variant: $tn('feed.spa_selected', selectedCount)
+  Alpine.magic('tn', () => (key: string, count: number, params?: Record<string, string | number>) => {
+    return tn(key, count, params);
   });
 
   // Register Alpine.js magic method for inline Markdown parsing

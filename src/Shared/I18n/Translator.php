@@ -88,6 +88,30 @@ class Translator
     }
 
     /**
+     * Languages whose script runs right to left, by ISO 639 primary subtag.
+     *
+     * Arabic, Central Kurdish (Sorani), Dhivehi, Persian, Hebrew, Pashto,
+     * Sindhi, Uyghur, Urdu and Yiddish. Only the primary subtag decides, so
+     * "ar-EG" and "fa_IR" resolve like "ar" and "fa".
+     */
+    private const RTL_LANGUAGES = ['ar', 'ckb', 'dv', 'fa', 'he', 'ps', 'sd', 'ug', 'ur', 'yi'];
+
+    /**
+     * The writing direction of a locale, as an HTML `dir` value (#306).
+     *
+     * @param string|null $locale Locale code; the active locale when null
+     *
+     * @return 'ltr'|'rtl'
+     */
+    public function getTextDirection(?string $locale = null): string
+    {
+        $code = strtolower($locale ?? $this->locale);
+        $primary = preg_split('/[-_]/', $code, 2)[0] ?? $code;
+
+        return in_array($primary, self::RTL_LANGUAGES, true) ? 'rtl' : 'ltr';
+    }
+
+    /**
      * Translate a dot-notated key with optional parameter interpolation.
      *
      * @param string                    $key    Dot-notated key (e.g. "common.save")
@@ -112,13 +136,56 @@ class Translator
             return $key;
         }
 
-        // Interpolate parameters
-        if ($params !== []) {
-            foreach ($params as $paramKey => $value) {
-                $text = str_replace('{' . $paramKey . '}', (string)$value, $text);
+        return $this->interpolate($text, $params);
+    }
+
+    /**
+     * Translate a count-dependent key, choosing the locale's plural form.
+     *
+     * Looks up "{key}_{category}", where the category is the CLDR plural
+     * category of $count in the active locale (see PluralRules), then
+     * "{key}_other". If the locale has neither, English is tried the same
+     * way. {count} is interpolated unless $params sets it already, so a
+     * caller can pass a formatted number.
+     *
+     * @param string                    $key    Dot-notated base key, without
+     *                                          the category suffix
+     * @param int                       $count  The number being counted
+     * @param array<string, string|int> $params Extra interpolation parameters
+     *
+     * @return string Translated string, or the raw key if not found
+     */
+    public function translatePlural(string $key, int $count, array $params = []): string
+    {
+        [$namespace, $subKey] = $this->resolveKey($key);
+        $locales = $this->locale === 'en' ? ['en'] : [$this->locale, 'en'];
+
+        foreach ($locales as $locale) {
+            $category = PluralRules::category($locale, $count);
+            foreach (array_unique([$category, 'other']) as $form) {
+                $text = $this->lookup($locale, $namespace, $subKey . '_' . $form);
+                if ($text !== null) {
+                    return $this->interpolate($text, $params + ['count' => $count]);
+                }
             }
         }
 
+        return $key;
+    }
+
+    /**
+     * Replace {name} placeholders with their values.
+     *
+     * @param string                    $text   Translation with placeholders
+     * @param array<string, string|int> $params Interpolation parameters
+     *
+     * @return string
+     */
+    private function interpolate(string $text, array $params): string
+    {
+        foreach ($params as $paramKey => $value) {
+            $text = str_replace('{' . $paramKey . '}', (string)$value, $text);
+        }
         return $text;
     }
 
@@ -135,10 +202,8 @@ class Translator
     {
         $translations = $this->loadNamespace($this->locale, $namespace);
 
-        // Merge English fallback for missing keys
         if ($this->locale !== 'en') {
-            $english = $this->loadNamespace('en', $namespace);
-            $translations = array_merge($english, $translations);
+            $translations = $this->withEnglishFallback($translations, $namespace);
         }
 
         return $translations;
@@ -182,7 +247,7 @@ class Translator
         foreach ($namespaces as $namespace) {
             $strings = $this->loadNamespace($locale, $namespace);
             if ($locale !== 'en') {
-                $strings = array_merge($this->loadNamespace('en', $namespace), $strings);
+                $strings = $this->withEnglishFallback($strings, $namespace);
             }
             foreach ($strings as $key => $value) {
                 $result[$namespace . '.' . $key] = $value;
@@ -190,6 +255,34 @@ class Translator
         }
 
         return $result;
+    }
+
+    /**
+     * Fill a locale's missing keys with English, plural sets excepted.
+     *
+     * The browser picks a plural form by looking up "{key}_{category}" in this
+     * merged map. If the locale has "x_other" but no "x_one", an English
+     * "x_one" merged in would win over the locale's own "x_other", and a
+     * Persian page would show English. So an English plural form is only
+     * merged when the locale lacks the whole set, i.e. has no "x_other" (#319).
+     *
+     * @param array<string, string> $strings   The locale's own strings
+     * @param string                $namespace Namespace name
+     *
+     * @return array<string, string>
+     */
+    private function withEnglishFallback(array $strings, string $namespace): array
+    {
+        $english = $this->loadNamespace('en', $namespace);
+        foreach (array_keys($english) as $key) {
+            if (
+                preg_match('/^(.+)_(?:zero|one|two|few|many)$/', $key, $m) === 1
+                && isset($strings[$m[1] . '_other'])
+            ) {
+                unset($english[$key]);
+            }
+        }
+        return array_merge($english, $strings);
     }
 
     /**

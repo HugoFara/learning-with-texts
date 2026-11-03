@@ -69,7 +69,14 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
     });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // Let a save that a test started finish before the DOM goes away. The
+    // handler re-enables the button as its last step; a save still pending
+    // when the file's environment is torn down hits a missing `document`.
+    await vi.waitFor(() => {
+      const saveBtn = document.getElementById('term-edit-save') as HTMLButtonElement | null;
+      expect(saveBtn?.disabled ?? false).toBe(false);
+    });
     dispatchEventSpy.mockRestore();
     document.body.innerHTML = '';
   });
@@ -648,7 +655,7 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
         ?.dispatchEvent(new Event('submit', { cancelable: true }));
 
       await vi.waitFor(() => {
-        return vi.mocked(TermsApi.updateFull).mock.calls.length > 0;
+        expect(vi.mocked(TermsApi.updateFull).mock.calls.length > 0).toBe(true);
       });
 
       expect(TermsApi.updateFull).toHaveBeenCalledWith(
@@ -665,7 +672,7 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
         ?.dispatchEvent(new Event('submit', { cancelable: true }));
 
       await vi.waitFor(() => {
-        return document.getElementById('term-edit-error')!.style.display === 'block';
+        expect(document.getElementById('term-edit-error')!.style.display === 'block').toBe(true);
       });
 
       expect(TermsApi.updateFull).not.toHaveBeenCalled();
@@ -754,7 +761,7 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
       form?.dispatchEvent(new Event('submit', { cancelable: true }));
 
       await vi.waitFor(() => {
-        return vi.mocked(TermsApi.updateFull).mock.calls.length > 0;
+        expect(vi.mocked(TermsApi.updateFull).mock.calls.length > 0).toBe(true);
       });
 
       expect(TermsApi.updateFull).toHaveBeenCalledWith(123, {
@@ -784,7 +791,7 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
       form?.dispatchEvent(new Event('submit', { cancelable: true }));
 
       await vi.waitFor(() => {
-        return vi.mocked(TermsApi.createFull).mock.calls.length > 0;
+        expect(vi.mocked(TermsApi.createFull).mock.calls.length > 0).toBe(true);
       });
 
       expect(TermsApi.createFull).toHaveBeenCalledWith({
@@ -811,7 +818,7 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
       form?.dispatchEvent(new Event('submit', { cancelable: true }));
 
       await vi.waitFor(() => {
-        return vi.mocked(closeModal).mock.calls.length > 0;
+        expect(vi.mocked(closeModal).mock.calls.length > 0).toBe(true);
       });
 
       expect(closeModal).toHaveBeenCalled();
@@ -828,9 +835,9 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
       form?.dispatchEvent(new Event('submit', { cancelable: true }));
 
       await vi.waitFor(() => {
-        return dispatchEventSpy.mock.calls.some(
+        expect(dispatchEventSpy.mock.calls.some(
           call => (call[0] as CustomEvent).type === 'lwt-term-saved'
-        );
+        )).toBe(true);
       });
 
       expect(dispatchEventSpy).toHaveBeenCalledWith(
@@ -856,7 +863,7 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
 
       await vi.waitFor(() => {
         const errorEl = document.getElementById('term-edit-error');
-        return errorEl?.style.display === 'block';
+        expect(errorEl?.style.display === 'block').toBe(true);
       });
 
       const errorEl = document.getElementById('term-edit-error');
@@ -876,7 +883,7 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
 
       await vi.waitFor(() => {
         const errorEl = document.getElementById('term-edit-error');
-        return errorEl?.style.display === 'block';
+        expect(errorEl?.style.display === 'block').toBe(true);
       });
 
       const errorEl = document.getElementById('term-edit-error');
@@ -893,7 +900,7 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
 
       await vi.waitFor(() => {
         const errorEl = document.getElementById('term-edit-error');
-        return errorEl?.style.display === 'block';
+        expect(errorEl?.style.display === 'block').toBe(true);
       });
 
       const errorEl = document.getElementById('term-edit-error');
@@ -911,7 +918,7 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
       form?.dispatchEvent(new Event('submit', { cancelable: true }));
 
       await vi.waitFor(() => {
-        return !saveBtn.disabled;
+        expect(!saveBtn.disabled).toBe(true);
       });
 
       expect(saveBtn.disabled).toBe(false);
@@ -935,7 +942,7 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
 
       await vi.waitFor(() => {
         const errorEl = document.getElementById('term-edit-error');
-        return errorEl?.style.display === 'block';
+        expect(errorEl?.style.display === 'block').toBe(true);
       });
 
       const errorEl = document.getElementById('term-edit-error');
@@ -954,7 +961,7 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
       form?.dispatchEvent(new Event('submit', { cancelable: true }));
 
       await vi.waitFor(() => {
-        return vi.mocked(TermsApi.updateFull).mock.calls.length > 0;
+        expect(vi.mocked(TermsApi.updateFull).mock.calls.length > 0).toBe(true);
       });
 
       expect(TermsApi.updateFull).toHaveBeenCalledWith(123, {
@@ -1055,7 +1062,7 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
       form?.dispatchEvent(new Event('submit', { cancelable: true }));
 
       await vi.waitFor(() => {
-        return vi.mocked(closeModal).mock.calls.length > 0;
+        expect(vi.mocked(closeModal).mock.calls.length > 0).toBe(true);
       });
 
       // Event should not be dispatched if no term in response
@@ -1080,7 +1087,7 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
       form?.dispatchEvent(new Event('submit', { cancelable: true }));
 
       await vi.waitFor(() => {
-        return vi.mocked(TermsApi.updateFull).mock.calls.length > 0;
+        expect(vi.mocked(TermsApi.updateFull).mock.calls.length > 0).toBe(true);
       });
 
       // Should use empty/default values for missing fields. An absent term
@@ -1120,7 +1127,7 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
       form?.dispatchEvent(new Event('submit', { cancelable: true }));
 
       await vi.waitFor(() => {
-        return vi.mocked(TermsApi.updateFull).mock.calls.length > 0;
+        expect(vi.mocked(TermsApi.updateFull).mock.calls.length > 0).toBe(true);
       });
 
       expect(TermsApi.updateFull).toHaveBeenCalledWith(123, expect.objectContaining({

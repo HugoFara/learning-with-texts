@@ -68,4 +68,67 @@ describe('Anki import pages', () => {
       cy.get('body').should('not.contain', 'vocabulary.anki.');
     });
   });
+
+  // #264: the page that pulls reviews from Anki over AnkiConnect. Anki is not
+  // running under test, so this checks the page and its failure path; the
+  // merge itself is covered by MergeReviewHistoryTest and AnkiReviewPullTest.
+  describe('Pull reviews from Anki', () => {
+    beforeEach(() => {
+      cy.visit('/vocabulary/anki/sync');
+      cy.waitForAlpine();
+    });
+
+    it('should load, with every label translated', () => {
+      cy.get('h1').should('be.visible');
+      cy.contains('Internal Server Error').should('not.exist');
+      cy.get('body').should('not.contain', 'vocabulary.anki.');
+    });
+
+    it('should be linked from the .apkg import page', () => {
+      cy.visit('/vocabulary/apkg/import');
+      cy.get('a[href="/vocabulary/anki/sync"]').should('exist');
+    });
+
+    it('should say so when Anki cannot be reached', () => {
+      cy.intercept('POST', 'http://127.0.0.1:8765/', { forceNetworkError: true });
+      cy.get('[x-data="ankiSync"] button.is-primary').click();
+      cy.get('[x-data="ankiSync"] .notification.is-danger')
+        .should('be.visible')
+        .and('contain', '127.0.0.1:8765');
+    });
+
+    it('should post what Anki returns and show the summary', () => {
+      cy.intercept('POST', 'http://127.0.0.1:8765/', (req) => {
+        // AnkiConnect requests go out as a plain-text JSON body.
+        const body = (typeof req.body === 'string' ? JSON.parse(req.body) : req.body) as { action: string };
+        const { action } = body;
+        const results: Record<string, unknown> = {
+          requestPermission: { permission: 'granted' },
+          deckNames: ['Default', 'LWT::Nowhere'],
+          findNotes: [100],
+          notesInfo: [{
+            noteId: 100,
+            cards: [1000],
+            tags: [],
+            fields: { Term: { value: 'x', order: 0 }, LwtId: { value: '999999', order: 4 } },
+          }],
+          cardsInfo: [{ cardId: 1000, deckName: 'LWT::Nowhere', queue: 0 }],
+          getReviewsOfCards: { 1000: [{ id: 1770000000000, ease: 3 }] },
+        };
+        req.reply({ result: results[action] ?? null, error: null });
+      });
+      cy.intercept('POST', '**/api/v1/anki/reviews').as('pull');
+
+      cy.get('[x-data="ankiSync"] button.is-primary').click();
+
+      cy.wait('@pull').then(({ request }) => {
+        const sent = (typeof request.body === 'string' ? JSON.parse(request.body) : request.body) as {
+          reviews: unknown[];
+        };
+        expect(sent.reviews).to.deep.equal([{ term_id: 999999, reviewed_at: 1770000000000, ease: 3 }]);
+      });
+      // No term 999999 here, so the one review is reported as skipped.
+      cy.get('[x-data="ankiSync"] .notification.is-success').should('be.visible');
+    });
+  });
 });

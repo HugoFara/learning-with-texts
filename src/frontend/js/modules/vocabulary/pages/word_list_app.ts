@@ -13,7 +13,7 @@
 
 import Alpine from 'alpinejs';
 import { initIcons } from '@shared/icons/lucide_icons';
-import { t } from '@shared/i18n/translator';
+import { t, tn } from '@shared/i18n/translator';
 import { getCsrfToken } from '@shared/api/client';
 import { statusTagClass } from '@shared/stores/statuses';
 import {
@@ -504,7 +504,7 @@ export function wordListData(): WordListData {
 
       // Confirm destructive actions
       if (action === 'del') {
-        if (!confirm(t('vocabulary.list.confirm_delete', { count: ids.length }))) {
+        if (!confirm(tn('vocabulary.list.confirm_delete', ids.length))) {
           select.value = '';
           return;
         }
@@ -563,7 +563,7 @@ export function wordListData(): WordListData {
 
       if (
         !confirm(
-          t('vocabulary.list.confirm_apply_all', { count: this.pagination.total })
+          tn('vocabulary.list.confirm_apply_all', this.pagination.total)
         )
       ) {
         select.value = '';
@@ -666,11 +666,11 @@ export function wordListData(): WordListData {
      */
     formatScore(days: number): string {
       if (days <= 0) return t('vocabulary.list.due_now');
-      if (days < 30) return t('vocabulary.list.due_days', { count: String(days) });
+      if (days < 30) return tn('vocabulary.list.due_days', days);
       if (days < 365) {
-        return t('vocabulary.list.due_months', { count: String(Math.round(days / 30)) });
+        return tn('vocabulary.list.due_months', Math.round(days / 30));
       }
-      return t('vocabulary.list.due_years', { count: String(Math.round(days / 365)) });
+      return tn('vocabulary.list.due_years', Math.round(days / 365));
     },
 
     getStatusClass(status: number): string {
@@ -691,11 +691,7 @@ export function wordListData(): WordListData {
     },
 
     termCountLabel(): string {
-      const total = this.pagination.total;
-      return t(
-        total === 1 ? 'vocabulary.list.term_count_one' : 'vocabulary.list.term_count_other',
-        { count: total }
-      );
+      return tn('vocabulary.list.term_count', this.pagination.total);
     },
 
     pageLabel(): string {
@@ -706,7 +702,7 @@ export function wordListData(): WordListData {
     },
 
     markedCountLabel(): string {
-      return t('vocabulary.list.marked_count', { count: this.getMarkedCount() });
+      return tn('vocabulary.list.marked_count', this.getMarkedCount());
     },
 
     /**

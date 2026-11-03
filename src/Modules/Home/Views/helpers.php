@@ -114,7 +114,7 @@ function renderSuggestionsGrid(): void
             >
                 <div>
                     <div class="is-flex is-align-items-center mb-1" style="gap: 0.4rem;">
-                        <p
+                        <p dir="auto"
                             class="has-text-weight-semibold is-size-7"
                             x-text="book.title"
                             style="overflow: hidden; text-overflow: ellipsis;
@@ -232,7 +232,7 @@ function renderGdlSuggestionsGrid(): void
                         <img :src="book.thumbnail" :alt="book.title" loading="lazy"
                              style="width: 100%; height: 90px; object-fit: cover;" />
                     </figure>
-                    <p
+                    <p dir="auto"
                         class="has-text-weight-semibold is-size-7"
                         x-text="book.title"
                         style="overflow: hidden; text-overflow: ellipsis;

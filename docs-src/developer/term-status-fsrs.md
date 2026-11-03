@@ -5,8 +5,9 @@ description: Centralize the scattered word-status model into a single source of 
 
 # Proposal: Term Status Model + FSRS Scheduling
 
-**Status:** **Phase 1 and phase 2a implemented** (#238). Phase 2b (retiring the
-legacy Leitner scoring and switching the review queue over) remains proposed.
+**Status:** **Phases 1, 2a and 2b implemented** (#238). The review queue reads
+the FSRS schedule, the review screen grades Again/Hard/Good/Easy, the legacy
+Leitner scoring is gone, and scheduling round-trips through `.apkg` files.
 Tracked in [issue #238](https://github.com/HugoFara/lwt/issues/238).
 
 The three open product questions have been decided — see
@@ -222,7 +223,7 @@ is no 4-grade UI, and interval fuzzing and the parameter optimiser are omitted
 (fuzzing only exists to spread Anki's daily load; the optimiser needs
 accumulated history).
 
-## Phase 2b — retire the legacy scoring (in progress)
+## Phase 2b — retire the legacy scoring ✅ implemented
 
 **Shipped so far:**
 
@@ -265,17 +266,16 @@ endpoint was always fine.
   which is the durable half; replaying it keeps one model answering for the
   whole vocabulary and works the same whether the collection used FSRS or not.
 
-  Only reviews later than LWT's own last review are replayed, which is the
-  entire conflict policy and needs no sync protocol: both sides timestamp their
-  reviews, so the merge is "apply what happened after the state we already hold,
-  in the order it happened". It has to be there anyway — an exported file
-  carries LWT's history back out with it, so replaying everything would apply
-  each review twice and collapse the interval. Two limits: comparison is at the
-  second precision `review_log` stores, so an Anki review in the same second as
-  ours is dropped (the safe way round); and an Anki review that predates our
-  last one is skipped rather than interleaved, since catching those means
-  rebuilding state from both histories. Ignored and well-known terms are left
-  alone — they were never in the queue.
+  Reviews join the term's history in time order (`MergeReviewHistory`), which
+  is the entire conflict policy and needs no sync protocol: reviews are
+  timestamped facts, so the merge is their union. An exported file carries
+  LWT's history back out with it; those reviews return with the same second
+  and grade and are dropped, so nothing is applied twice. A review predating
+  LWT's latest is fitted in where it happened and the later history is
+  recomputed on top (#264). The one approximation: the seed a term had before
+  its first graded review is not stored, so a review older than a seeded
+  term's whole history starts from a fresh seed of its current status.
+  Ignored and well-known terms are left alone — they were never in the queue.
 
 - **The legacy scoring is retired.** `SCORE_FORMULA_*`,
   `makeScoreRandomInsertUpdate()` and the three columns are gone, along with
@@ -412,6 +412,19 @@ What remains open, all deferred to phase 2b or later:
 
 4. **Gates:** psalm 0 errors, phpcs PSR12 clean, full PHPUnit suite green.
 
-**Still to do for phase 2b:** E2E through a real review session across all four
-grades, and confirmation that reading-view colours are untouched on a populated
-upgrade (true by construction under decision 1, but worth seeing).
+**Done for phase 2b:**
+
+1. **E2E through the review screen** (`cypress/e2e/23-review-grades.cy.ts`).
+   It creates four due terms in a throwaway language, reveals each card on
+   `/review` and presses Again, Hard, Good and Easy, checking that the request
+   carries the grade pressed. It then re-reads `GET /review/intervals`: after
+   Easy the interval Good would schedule has grown, after Again it has not. That
+   last step is what would have caught the 2a shadow write never firing from the
+   review SPA. The terms are made due by backdating `WoStatusChanged` with
+   `cypress/support/backdate-terms.php`, since no grade schedules sooner than a
+   day.
+
+2. **Reading-view colours on upgrade.** Unchanged by construction: the colours
+   come from `WoStatus`, and `20260816_120000_drop_legacy_score_columns.sql`
+   only drops the three derived score columns, never touching `WoStatus` or
+   `WoStatusChanged`.

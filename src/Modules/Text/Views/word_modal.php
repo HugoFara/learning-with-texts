@@ -121,11 +121,11 @@ namespace Lwt\Views\Text;
                 <div class="buttons">
                   <button class="button is-success" :disabled="isLoading" @click="markWellKnown">
                     <?php echo \Lwt\Shared\UI\Helpers\IconHelper::render('check', ['size' => 16]); ?>
-                    <span class="ml-1"><?= __e('text.modal.know_well') ?></span>
+                    <span class="ms-1"><?= __e('text.modal.know_well') ?></span>
                   </button>
                   <button class="button is-warning" :disabled="isLoading" @click="markIgnored">
                     <?php echo \Lwt\Shared\UI\Helpers\IconHelper::render('x', ['size' => 16]); ?>
-                    <span class="ml-1"><?= __e('text.modal.ignore') ?></span>
+                    <span class="ms-1"><?= __e('text.modal.ignore') ?></span>
                   </button>
                 </div>
               </div>
@@ -137,11 +137,11 @@ namespace Lwt\Views\Text;
                 <div class="buttons are-small">
                   <button class="button is-info is-outlined" @click="showEditForm" :disabled="isLoading">
                     <?php echo \Lwt\Shared\UI\Helpers\IconHelper::render('edit', ['size' => 14]); ?>
-                    <span class="ml-1"><?= __e('text.common.edit') ?></span>
+                    <span class="ms-1"><?= __e('text.common.edit') ?></span>
                   </button>
                   <button class="button is-danger is-outlined" :disabled="isLoading" @click="deleteWord">
                     <?php echo \Lwt\Shared\UI\Helpers\IconHelper::render('trash-2', ['size' => 14]); ?>
-                    <span class="ml-1"><?= __e('text.common.delete') ?></span>
+                    <span class="ms-1"><?= __e('text.common.delete') ?></span>
                   </button>
                 </div>
               </div>
@@ -152,7 +152,7 @@ namespace Lwt\Views\Text;
               <div class="mb-4">
                 <button class="button is-info" @click="showEditForm" :disabled="isLoading">
                   <?php echo \Lwt\Shared\UI\Helpers\IconHelper::render('edit', ['size' => 16]); ?>
-                  <span class="ml-1"><?= __e('text.modal.add_with_translation') ?></span>
+                  <span class="ms-1"><?= __e('text.modal.add_with_translation') ?></span>
                 </button>
               </div>
             </template>
@@ -169,7 +169,7 @@ namespace Lwt\Views\Text;
                   class="button is-outlined is-link"
                   rel="noopener">
                   <?php echo \Lwt\Shared\UI\Helpers\IconHelper::render('book-open', ['size' => 14]); ?>
-                  <span class="ml-1"><?= __e('text.modal.dict1') ?></span>
+                  <span class="ms-1"><?= __e('text.modal.dict1') ?></span>
                 </a>
                 <a
                   x-show="hasDictUrl('dict2')"
@@ -178,7 +178,7 @@ namespace Lwt\Views\Text;
                   class="button is-outlined is-link"
                   rel="noopener">
                   <?php echo \Lwt\Shared\UI\Helpers\IconHelper::render('book-open', ['size' => 14]); ?>
-                  <span class="ml-1"><?= __e('text.modal.dict2') ?></span>
+                  <span class="ms-1"><?= __e('text.modal.dict2') ?></span>
                 </a>
                 <a
                   x-show="hasDictUrl('translator')"
@@ -187,7 +187,7 @@ namespace Lwt\Views\Text;
                   class="button is-outlined is-link"
                   rel="noopener">
                   <?php echo \Lwt\Shared\UI\Helpers\IconHelper::render('languages', ['size' => 14]); ?>
-                  <span class="ml-1"><?= __e('text.modal.translate') ?></span>
+                  <span class="ms-1"><?= __e('text.modal.translate') ?></span>
                 </a>
               </div>
             </div>
@@ -222,20 +222,20 @@ namespace Lwt\Views\Text;
                   <a @click.prevent="setActiveTab('translate')">
                     <span><?= __e('text.modal.translation') ?></span>
                     <template x-if="tabHasError('translate')">
-                      <span class="tag is-danger is-small ml-1"></span>
+                      <span class="tag is-danger is-small ms-1"></span>
                     </template>
                   </a>
                 </li>
                 <li :class="{ 'is-active': activeTab === 'example' }">
                   <a @click.prevent="setActiveTab('example')">
                     <span><?= __e('text.modal.example_sentence') ?></span>
-                    <template x-if="tabHasError('example')"><span class="tag is-danger is-small ml-1"></span></template>
+                    <template x-if="tabHasError('example')"><span class="tag is-danger is-small ms-1"></span></template>
                   </a>
                 </li>
                 <li :class="{ 'is-active': activeTab === 'notes' }">
                   <a @click.prevent="setActiveTab('notes')">
                     <span><?= __e('text.modal.notes') ?></span>
-                    <template x-if="tabHasError('notes')"><span class="tag is-danger is-small ml-1"></span></template>
+                    <template x-if="tabHasError('notes')"><span class="tag is-danger is-small ms-1"></span></template>
                   </a>
                 </li>
                 <li :class="{ 'is-active': activeTab === 'tags' }">
@@ -310,7 +310,7 @@ namespace Lwt\Views\Text;
                         <div class="is-flex is-justify-content-space-between is-align-items-center py-1"
                              style="border-bottom: 1px solid #f0f0f0;">
                           <div>
-                            <span class="has-text-weight-semibold" x-text="term.text"></span>
+                            <span dir="auto" class="has-text-weight-semibold" x-text="term.text"></span>
                             <span class="has-text-grey" x-text="getSimilarTermDisplay(term)"></span>
                           </div>
                           <button
@@ -422,7 +422,7 @@ namespace Lwt\Views\Text;
                   @click="save"
                 >
                   <?php echo \Lwt\Shared\UI\Helpers\IconHelper::render('save', ['size' => 16]); ?>
-                  <span class="ml-1"><?= __e('text.common.save') ?></span>
+                  <span class="ms-1"><?= __e('text.common.save') ?></span>
                 </button>
               </div>
               <div class="control">

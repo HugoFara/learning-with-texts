@@ -6,6 +6,7 @@ namespace Lwt\Modules\Vocabulary\Http;
 
 use Lwt\Shared\Http\BaseController;
 use Lwt\Shared\Infrastructure\Http\JsonResponse;
+use Lwt\Shared\UI\Helpers\NotificationHelper;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 use Lwt\Shared\UI\Helpers\FormHelper;
 use Lwt\Modules\Language\Application\LanguageFacade;
@@ -50,8 +51,8 @@ class StarterVocabController extends BaseController
         $language = $this->languageFacade->getById($id);
         if ($language === null) {
             http_response_code(404);
-            PageLayoutHelper::renderPageStart('Not Found', true);
-            echo '<div class="notification is-danger">Language not found.</div>';
+            PageLayoutHelper::renderPageStart(__('vocabulary.titles.not_found'), true);
+            NotificationHelper::render(__('language.errors.language_not_found'));
             PageLayoutHelper::renderPageEnd();
             return;
         }
@@ -65,7 +66,7 @@ class StarterVocabController extends BaseController
         $csrfToken = FormHelper::csrfToken();
         $curatedDictionaries = $this->loadCuratedDictionariesForLanguage($langName);
 
-        PageLayoutHelper::renderPageStart('Starter Vocabulary', true);
+        PageLayoutHelper::renderPageStart(__('vocabulary.titles.starter'), true);
         include __DIR__ . '/../Views/starter_vocab.php';
         PageLayoutHelper::renderPageEnd();
     }

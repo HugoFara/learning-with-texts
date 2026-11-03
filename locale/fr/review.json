@@ -2,9 +2,6 @@
     "page_title": "Révision",
     "heading": "RÉVISION - {title}",
 
-    "header.words_due_today_one": "Mot à réviser aujourd'hui :",
-    "header.words_due_today_many": "Mots à réviser aujourd'hui :",
-    "header.remaining": "restants.",
     "header.read_words_aloud": "Lire les mots à voix haute",
     "header.button_table": "Tableau",
 
@@ -48,9 +45,9 @@
     "card.grade_good": "Correct",
     "card.grade_easy": "Facile",
     "card.interval_today": "aujourd'hui",
-    "card.interval_days": "{count} j",
-    "card.interval_months": "{count} mois",
-    "card.interval_years": "{count} a",
+    "card.interval_days_other": "{count} j",
+    "card.interval_months_other": "{count} mois",
+    "card.interval_years_other": "{count} a",
     "card.skip": "Passer",
     "card.set_status_directly": "Définir le statut directement :",
     "card.ignore": "Ignorer",
@@ -68,8 +65,6 @@
 
     "finished.nothing_more": "Rien de plus à réviser ici !",
     "finished.nothing": "Rien à réviser ici !",
-    "finished.tomorrow_one": "révision",
-    "finished.tomorrow_many": "révisions",
     "finished.tomorrow_count_one": "Demain vous trouverez ici {count} révision !",
     "finished.tomorrow_count_other": "Demain vous trouverez ici {count} révisions !",
 

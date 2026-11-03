@@ -123,7 +123,7 @@ class TextReadController extends BaseController
 
         Settings::savePerUser('currenttext', $textId);
 
-        PageLayoutHelper::renderPageStartNobody('Read', 'full-width');
+        PageLayoutHelper::renderPageStartNobody(__('text.titles.read'), 'full-width');
         include self::MODULE_VIEWS . '/read_desktop.php';
         PageLayoutHelper::renderPageEnd();
 
@@ -178,7 +178,7 @@ class TextReadController extends BaseController
 
         $this->displayService->saveCurrentText($textId);
 
-        PageLayoutHelper::renderPageStartNobody('Display');
+        PageLayoutHelper::renderPageStartNobody(__('text.titles.display'));
         include self::MODULE_VIEWS . '/display_alpine.php';
         PageLayoutHelper::renderPageEnd();
 
@@ -196,7 +196,7 @@ class TextReadController extends BaseController
      */
     public function check(array $params): void
     {
-        PageLayoutHelper::renderPageStart('Check a Text', true);
+        PageLayoutHelper::renderPageStart(__('text.titles.check'), true);
 
         $languageData = [];
         $translateUris = $this->textService->getLanguageTranslateUris();

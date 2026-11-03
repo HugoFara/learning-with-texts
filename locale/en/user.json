@@ -1,4 +1,7 @@
 {
+    "verify_banner.resend": "Resend verification email",
+    "verify_banner.body": "Please check your inbox for a verification link.",
+    "verify_banner.title": "Email not verified.",
     "app_subtitle": "Learning With Texts",
     "login.page_title": "Log In",
     "login.username_label": "Username or Email",
@@ -107,9 +110,17 @@
     "statistics.current_streak": "Current Streak",
     "statistics.best_streak": "Best Streak",
     "statistics.today": "Today",
-    "statistics.today_created": "created",
-    "statistics.today_reviewed": "reviewed",
-    "statistics.today_read": "read",
+    "statistics.today_created_one": "{count} term created",
+    "statistics.today_created_other": "{count} terms created",
+    "statistics.today_reviewed_one": "{count} term reviewed",
+    "statistics.today_reviewed_other": "{count} terms reviewed",
+    "statistics.today_read_one": "{count} text read",
+    "statistics.today_read_other": "{count} texts read",
+    "statistics.streak_days_one": "{count} day",
+    "statistics.streak_days_other": "{count} days",
+    "statistics.no_activity_on": "No activity on {date}",
+    "statistics.day_summary": "{summary} — {date}",
+    "statistics.load_failed": "Failed to load activity data",
     "statistics.activity_last_12_months": "Activity (Last 12 Months)",
     "statistics.loading_activity": "Loading activity...",
     "statistics.intensity_title": "Learning Intensity",
@@ -156,5 +167,6 @@
     "flash.microsoft_invalid_response": "Invalid response from Microsoft.",
     "flash.microsoft_welcome": "Welcome! You are now logged in with Microsoft.",
     "flash.microsoft_linked": "Microsoft account linked successfully!",
-    "flash.microsoft_invalid_password": "Invalid password. Please try again."
+    "flash.microsoft_invalid_password": "Invalid password. Please try again.",
+    "titles.statistics": "Statistics"
 }

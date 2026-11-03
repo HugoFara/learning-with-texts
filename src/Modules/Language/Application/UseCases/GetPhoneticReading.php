@@ -51,12 +51,8 @@ class GetPhoneticReading
     {
         $language = $this->repository->find($id);
 
-        // For now we only support phonetic text with MeCab. This asked the
-        // word-characters field directly, and compared against lowercase
-        // "mecab" without normalising, so a field holding MECAB in any other
-        // casing silently returned the input unchanged. Asking the language
-        // which parser it uses answers both that and the migration that clears
-        // the marker out of the field entirely (#288).
+        // For now we only support phonetic text with MeCab, which the
+        // language's parser type says (#288).
         if (
             $language === null
             || $language->getEffectiveParserType() !== ParserSelection::MECAB

@@ -15,12 +15,11 @@ declare(strict_types=1);
 namespace Lwt\Tests\Modules\Language\Domain;
 
 use Lwt\Modules\Language\Domain\ParserSelection;
-use Lwt\Modules\Language\Domain\WordSpacing;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Choosing MeCab by the setting that means it, not by the marker (#288).
+ * Choosing MeCab by the setting that means it (#288).
  */
 #[CoversClass(ParserSelection::class)]
 class ParserSelectionTest extends TestCase
@@ -30,61 +29,17 @@ class ParserSelectionTest extends TestCase
      */
     private const JA = '\x{4E00}-\x{9FFF}\x{F900}-\x{FAFF}\x{3040}-\x{30FF}\x{31F0}-\x{31FF}';
 
-    /** @var string|false Temporary file collecting error_log() output */
-    private string|false $logFile = false;
-
-    /** @var string|false The error_log setting to put back */
-    private string|false $previousLog = false;
-
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        WordSpacing::forgetDeprecationNotices();
-        $this->logFile = tempnam(sys_get_temp_dir(), 'lwt_deprecation');
-        $this->previousLog = ini_set(
-            'error_log',
-            $this->logFile === false ? '' : $this->logFile
-        );
-    }
-
-    /**
-     * @return void
-     */
-    protected function tearDown(): void
-    {
-        ini_set('error_log', $this->previousLog === false ? '' : $this->previousLog);
-        if ($this->logFile !== false && file_exists($this->logFile)) {
-            unlink($this->logFile);
-        }
-        WordSpacing::forgetDeprecationNotices();
-    }
-
-    /**
-     * Whether any deprecation notice was written.
-     *
-     * @return bool
-     */
-    private function anythingLogged(): bool
-    {
-        return $this->logFile !== false
-            && file_exists($this->logFile)
-            && trim((string) file_get_contents($this->logFile)) !== '';
-    }
-
     public function testAnExplicitParserTypeSettlesIt(): void
     {
-        $this->assertTrue(ParserSelection::tokenizesWithMecab('mecab', self::JA));
-        $this->assertFalse(ParserSelection::tokenizesWithMecab('jieba', self::JA));
-        $this->assertFalse(ParserSelection::tokenizesWithMecab('regex', self::JA));
+        $this->assertTrue(ParserSelection::tokenizesWithMecab('mecab'));
+        $this->assertFalse(ParserSelection::tokenizesWithMecab('jieba'));
+        $this->assertFalse(ParserSelection::tokenizesWithMecab('regex'));
     }
 
-    public function testAMigratedLanguageIsStillRecognised(): void
+    public function testAMigratedLanguageIsRecognised(): void
     {
-        // This is what the migration leaves behind: the marker is gone from the
-        // field, so only the parser type can answer. A reader still asking the
-        // field would quietly parse Japanese with the regex tokenizer.
+        // What the 20260831 migration leaves behind: a real regex in the
+        // word-characters field, and the parser type carrying the choice.
         $this->assertTrue(
             ParserSelection::rowTokenizesWithMecab([
                 'LgParserType' => 'mecab',
@@ -93,28 +48,15 @@ class ParserSelectionTest extends TestCase
         );
     }
 
-    public function testAnUnmigratedLanguageFallsBackToTheMarker(): void
+    public function testTheRetiredMarkerNoLongerSelectsMecab(): void
     {
-        $this->assertTrue(
-            ParserSelection::rowTokenizesWithMecab([
-                'LgParserType' => null,
-                'LgRegexpWordCharacters' => 'MECAB',
-            ])
-        );
-        $this->assertTrue(
-            ParserSelection::rowTokenizesWithMecab([
-                'LgRegexpWordCharacters' => 'mecab',
-            ])
-        );
-    }
-
-    public function testAChosenParserBeatsTheMarker(): void
-    {
-        // The marker is what the field used to hold; LgParserType is what the
-        // user chose. A language that says regex means regex.
+        // 3.8.0 removed the fallback: the field is a regex and nothing else.
+        // The migration converted every row holding the marker, and a restore
+        // re-runs it, so a row like this can only come from writing the
+        // literal after the upgrade.
         $this->assertFalse(
             ParserSelection::rowTokenizesWithMecab([
-                'LgParserType' => 'regex',
+                'LgParserType' => null,
                 'LgRegexpWordCharacters' => 'MECAB',
             ])
         );
@@ -133,27 +75,7 @@ class ParserSelectionTest extends TestCase
 
     public function testCasingAndPaddingDoNotMatter(): void
     {
-        $this->assertTrue(ParserSelection::tokenizesWithMecab('  MeCab  ', ''));
-        $this->assertTrue(ParserSelection::tokenizesWithMecab(null, ' MeCab '));
-    }
-
-    public function testOnlyAnActualFallbackIsReportedAsDeprecated(): void
-    {
-        // A language carrying both the marker and a parser type never consults
-        // the marker, so removing the fallback in step 5 cannot change what it
-        // does. Reporting it would make the notice mean "a row holds a marker"
-        // instead of "a reader needed one", and that is the only thing the
-        // removal can be decided on. The Server Data panel covers the rest.
-        ParserSelection::rowTokenizesWithMecab([
-            'LgParserType' => 'mecab',
-            'LgRegexpWordCharacters' => 'MECAB',
-        ]);
-        $this->assertFalse($this->anythingLogged());
-
-        ParserSelection::rowTokenizesWithMecab([
-            'LgParserType' => null,
-            'LgRegexpWordCharacters' => 'MECAB',
-        ]);
-        $this->assertTrue($this->anythingLogged());
+        $this->assertTrue(ParserSelection::tokenizesWithMecab('  MeCab  '));
+        $this->assertTrue(ParserSelection::rowTokenizesWithMecab(['LgParserType' => "\tMECAB\n"]));
     }
 }

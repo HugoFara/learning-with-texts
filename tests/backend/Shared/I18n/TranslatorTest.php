@@ -156,4 +156,116 @@ class TranslatorTest extends TestCase
         }
         rmdir($dir);
     }
+
+    public function testLeftToRightLocalesReportLtr(): void
+    {
+        $t = new Translator($this->localePath, 'en');
+        $this->assertSame('ltr', $t->getTextDirection());
+        foreach (['de', 'es', 'fr', 'it', 'ja', 'pt', 'ru', 'zh', 'zh-Hant'] as $code) {
+            $this->assertSame('ltr', $t->getTextDirection($code), $code);
+        }
+    }
+
+    public function testRightToLeftLocalesReportRtl(): void
+    {
+        $t = new Translator($this->localePath, 'en');
+        foreach (['ar', 'fa', 'he', 'ur', 'ckb', 'ar-EG', 'fa_IR', 'HE'] as $code) {
+            $this->assertSame('rtl', $t->getTextDirection($code), $code);
+        }
+    }
+
+    public function testDirectionFollowsTheActiveLocale(): void
+    {
+        $t = new Translator($this->localePath, 'en');
+        $t->setLocale('ar');
+        $this->assertSame('rtl', $t->getTextDirection());
+    }
+
+    public function testOnlyThePrimarySubtagDecides(): void
+    {
+        // "hr" is Croatian, not Hebrew; a prefix match would get these wrong
+        $t = new Translator($this->localePath, 'en');
+        $this->assertSame('ltr', $t->getTextDirection('hr'));
+        $this->assertSame('ltr', $t->getTextDirection('arn'));
+    }
+
+    public function testPluralPicksTheLocaleCategory(): void
+    {
+        $this->writeNamespace('ar', 'common', [
+            'terms_zero' => 'لا مصطلحات',
+            'terms_one' => 'مصطلح واحد',
+            'terms_two' => 'مصطلحان',
+            'terms_few' => '{count} مصطلحات',
+            'terms_many' => '{count} مصطلحًا',
+            'terms_other' => '{count} مصطلح',
+        ]);
+        $t = new Translator($this->localePath, 'ar');
+
+        $this->assertSame('لا مصطلحات', $t->translatePlural('common.terms', 0));
+        $this->assertSame('مصطلحان', $t->translatePlural('common.terms', 2));
+        $this->assertSame('5 مصطلحات', $t->translatePlural('common.terms', 5));
+        $this->assertSame('11 مصطلحًا', $t->translatePlural('common.terms', 11));
+        $this->assertSame('100 مصطلح', $t->translatePlural('common.terms', 100));
+    }
+
+    public function testPluralFallsBackToOtherThenEnglish(): void
+    {
+        $this->writeNamespace('en', 'common', [
+            'terms_one' => '{count} term',
+            'terms_other' => '{count} terms',
+            'notes_one' => '{count} note',
+            'notes_other' => '{count} notes',
+        ]);
+        $this->writeNamespace('ru', 'common', [
+            'terms_one' => '{count} термин',
+            'terms_other' => '{count} терминов',
+        ]);
+        $t = new Translator($this->localePath, 'ru');
+
+        // "few" is missing, so "other" stands in
+        $this->assertSame('3 терминов', $t->translatePlural('common.terms', 3));
+        $this->assertSame('21 термин', $t->translatePlural('common.terms', 21));
+        // Russian lacks the key entirely: English, with the English category
+        $this->assertSame('1 note', $t->translatePlural('common.notes', 1));
+        $this->assertSame('4 notes', $t->translatePlural('common.notes', 4));
+        $this->assertSame('common.missing', $t->translatePlural('common.missing', 1));
+    }
+
+    public function testPluralLetsTheCallerFormatTheCount(): void
+    {
+        $this->writeNamespace('en', 'common', [
+            'terms_one' => '{count} term in {lang}',
+            'terms_other' => '{count} terms in {lang}',
+        ]);
+        $t = new Translator($this->localePath, 'en');
+
+        $this->assertSame(
+            '1,200 terms in French',
+            $t->translatePlural('common.terms', 1200, ['count' => '1,200', 'lang' => 'French'])
+        );
+    }
+
+    public function testBundleKeepsEnglishPluralFormsOutOfALocalesOwnSet(): void
+    {
+        $this->writeNamespace('en', 'common', [
+            'terms_one' => '{count} term',
+            'terms_other' => '{count} terms',
+            'notes_one' => '{count} note',
+            'notes_other' => '{count} notes',
+        ]);
+        $this->writeNamespace('es', 'common', [
+            'terms_other' => '{count} términos',
+        ]);
+        $t = new Translator($this->localePath, 'es');
+
+        $all = $t->getAllTranslations('es', ['common']);
+        $this->assertArrayNotHasKey('common.terms_one', $all);
+        $this->assertSame('{count} términos', $all['common.terms_other']);
+        // A set the locale lacks entirely still falls back as a whole
+        $this->assertSame('{count} note', $all['common.notes_one']);
+
+        $page = $t->getNamespaceTranslations('common');
+        $this->assertArrayNotHasKey('terms_one', $page);
+        $this->assertSame('{count} note', $page['notes_one']);
+    }
 }

@@ -166,6 +166,14 @@
     "check.heading": "Comprobar análisis del texto",
     "check.text_max": "(máx. 65.000 bytes)",
     "check.text_placeholder": "Pega aquí tu texto para comprobar cómo se analizará...",
+    "check.heading_text": "Texto",
+    "check.heading_sentences": "Oraciones",
+    "check.heading_words": "Lista de palabras",
+    "check.heading_expressions": "Lista de expresiones",
+    "check.heading_non_words": "Lista de no palabras",
+    "check.already_saved": "(rojo = ya guardado)",
+    "check.checking": "Comprobando...",
+    "check.failed": "No se ha podido comprobar el texto.",
 
     "read.loading": "Cargando texto...",
     "read.display": "Visualización",
@@ -220,5 +228,12 @@
     "parse_warning.no_words": "No se pudo convertir en palabras ninguna parte de este texto.",
     "parse_warning.almost_no_words": "Casi nada de este texto se pudo convertir en palabras.",
     "parse_warning.check_language": "La configuración «Caracteres de palabra» del idioma no coincide con este texto, por lo que no se puede hacer clic ni aprender nada en él.",
-    "parse_warning.edit_language": "Revisar la configuración del idioma"
+    "parse_warning.edit_language": "Revisar la configuración del idioma",
+    "titles.texts": "Textos",
+    "titles.archived": "Textos archivados",
+    "titles.read": "Leer",
+    "titles.display": "Visualización",
+    "titles.print": "Imprimir",
+    "titles.annotated": "Texto anotado",
+    "titles.check": "Comprobar un texto"
 }

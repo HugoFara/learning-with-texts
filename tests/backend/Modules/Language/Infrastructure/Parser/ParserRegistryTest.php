@@ -70,11 +70,12 @@ class ParserRegistryTest extends TestCase
         $row = ['LgParserType' => 'character'];
         $this->assertEquals('character', $this->registry->resolveParserTypeFromRow($row));
 
-        // Test MeCab magic word
+        // The retired MECAB marker is a word-characters value like any other
+        // since 3.8.0; the parser type alone selects MeCab (#288)
         $row = ['LgRegexpWordCharacters' => 'MECAB'];
-        $this->assertEquals('mecab', $this->registry->resolveParserTypeFromRow($row));
+        $this->assertEquals('regex', $this->registry->resolveParserTypeFromRow($row));
 
-        $row = ['LgRegexpWordCharacters' => 'mecab'];
+        $row = ['LgParserType' => 'mecab'];
         $this->assertEquals('mecab', $this->registry->resolveParserTypeFromRow($row));
 
         // Test splitEachChar flag
@@ -137,13 +138,10 @@ class ParserRegistryTest extends TestCase
         $this->assertNull($this->registry->getOptedInParserFromRow(['LgParserType' => 'regex']));
     }
 
-    public function testLegacySignalsAreNotOptIns(): void
+    public function testTheLegacySplitFlagIsNotAnOptIn(): void
     {
-        // resolveParserTypeFromRow() reads both of these; the pipeline has
-        // always handled them itself, so they must not route anywhere new
-        $this->assertNull($this->registry->getOptedInParserFromRow([
-            'LgRegexpWordCharacters' => 'MECAB',
-        ]));
+        // resolveParserTypeFromRow() reads this; the pipeline has always
+        // handled it itself, so it must not route anywhere new
         $this->assertNull($this->registry->getOptedInParserFromRow([
             'LgSplitEachChar' => 1,
         ]));
@@ -161,17 +159,16 @@ class ParserRegistryTest extends TestCase
         ]));
     }
 
-    public function testABackfilledMecabTypeIsNotAnOptIn(): void
+    public function testAMecabTypeStaysOnTheBuiltInPipeline(): void
     {
-        // Same backfill, from the magic word this time. The built-in pipeline
-        // already routes these to JapaneseTextParser.
+        // Whether backfilled from the old marker or chosen in the form, MeCab
+        // runs through JapaneseTextParser; MecabParser is a second, drifted
+        // implementation of the same tokenizer. Retiring the marker (#288)
+        // must not change this, or Japanese retokenizes (#281).
         $this->assertNull($this->registry->getOptedInParserFromRow([
             'LgParserType' => 'mecab',
-            'LgRegexpWordCharacters' => 'MECAB',
-        ]));
-        $this->assertNull($this->registry->getOptedInParserFromRow([
-            'LgParserType' => 'mecab',
-            'LgRegexpWordCharacters' => '  mecab  ',
+            'LgRegexpWordCharacters' => '\x{4E00}-\x{9FFF}\x{3040}-\x{30FF}',
+            'LgRemoveSpaces' => 1,
         ]));
     }
 
@@ -197,15 +194,6 @@ class ParserRegistryTest extends TestCase
             'LgParserType' => 'unavailable-test',
             'LgSplitEachChar' => 1,
         ]), 'an unavailable parser still falls back, but for its own reason');
-
-        $this->assertInstanceOf(
-            CharacterParser::class,
-            $this->registry->getOptedInParserFromRow([
-                'LgParserType' => 'character',
-                'LgRegexpWordCharacters' => 'MECAB',
-            ]),
-            'the magic word only excuses a mecab type, not any other'
-        );
     }
 
     public function testAnExplicitAvailableParserIsReturned(): void

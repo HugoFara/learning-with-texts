@@ -80,7 +80,7 @@ class StatisticsController extends BaseController
         $intensityStats = $this->getIntensityStatistics->execute();
         $frequencyStats = $this->getFrequencyStatistics->execute();
 
-        $this->render('Statistics', true);
+        $this->render(__('user.titles.statistics'), true);
         include $this->viewPath . 'statistics.php';
         $this->endRender();
     }

@@ -8,8 +8,10 @@
     "search": "Rechercher",
     "suggested_from_gutenberg": "Suggestions de Project Gutenberg",
     "suggested_from_gdl": "Lectures faciles pour débuter",
-    "books_found": "{count} livres trouvés",
-    "downloads_suffix": "téléchargements",
+    "books_found_one": "{count} livre trouvé",
+    "books_found_other": "{count} livres trouvés",
+    "downloads_one": "{count} téléchargement",
+    "downloads_other": "{count} téléchargements",
     "no_books_found": "Aucun livre trouvé. Essayez un autre terme de recherche.",
     "load_more": "Charger plus",
     "preview": "Aperçu",
@@ -28,5 +30,6 @@
     "warning_php_outdated": "Votre version de PHP est {phpVersion}, mais la version {minVersion} est requise. Veuillez mettre à jour PHP.",
     "warning_update_available": "Une mise à jour de LWT est disponible : {latestVersion} (votre version : {currentVersion}).",
     "download": "Télécharger",
-    "dismiss": "Ignorer"
+    "dismiss": "Ignorer",
+    "titles.home": "Accueil"
 }

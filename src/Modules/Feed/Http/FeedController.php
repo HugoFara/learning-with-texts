@@ -156,15 +156,4 @@ class FeedController
     {
         $this->redirectToManager();
     }
-
-    /**
-     * Render feed load interface (used by renderFeedLoadInterfaceModern delegation).
-     */
-    public function renderFeedLoadInterface(
-        int $currentFeed,
-        bool $checkAutoupdate,
-        string $redirectUrl
-    ): void {
-        $this->loadController->renderFeedLoadInterface($currentFeed, $checkAutoupdate, $redirectUrl);
-    }
 }

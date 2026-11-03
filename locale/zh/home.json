@@ -8,8 +8,8 @@
     "search": "搜索",
     "suggested_from_gutenberg": "古腾堡计划推荐",
     "suggested_from_gdl": "入门易读读物",
-    "books_found": "找到 {count} 本书",
-    "downloads_suffix": "次下载",
+    "books_found_other": "找到 {count} 本书",
+    "downloads_other": "{count} 次下载",
     "no_books_found": "未找到书籍。请尝试其他搜索词。",
     "load_more": "加载更多",
     "preview": "预览",
@@ -28,5 +28,6 @@
     "warning_php_outdated": "您的 PHP 版本为 {phpVersion}，但需要 {minVersion} 版本。请升级 PHP。",
     "warning_update_available": "LWT 有可用更新：{latestVersion}（您的版本：{currentVersion}）。",
     "download": "下载",
-    "dismiss": "关闭"
+    "dismiss": "关闭",
+    "titles.home": "主页"
 }

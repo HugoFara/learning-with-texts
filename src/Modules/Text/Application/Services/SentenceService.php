@@ -336,7 +336,7 @@ class SentenceService
             );
             if (isset($prevseSentRaw)) {
                 $prevseSent = $prevseSentRaw;
-                if (WordSpacing::separatesWordsWithSpaces($removeSpaces, $splitEachChar, $termchar)) {
+                if (WordSpacing::separatesWordsWithSpaces($removeSpaces, $splitEachChar)) {
                     $prevseSent = $this->convertZwsToSpacing($prevseSent, $termchar);
                 }
                 $se = str_replace('​', '', (string)preg_replace($pattern, '<b>$0</b>', $prevseSent)) . $se;
@@ -365,7 +365,7 @@ class SentenceService
             );
             if (isset($nextSentRaw)) {
                 $nextSent = $nextSentRaw;
-                if (WordSpacing::separatesWordsWithSpaces($removeSpaces, $splitEachChar, $termchar)) {
+                if (WordSpacing::separatesWordsWithSpaces($removeSpaces, $splitEachChar)) {
                     $nextSent = $this->convertZwsToSpacing($nextSent, $termchar);
                 }
                 $se .= str_replace('​', '', (string)preg_replace($pattern, '<b>$0</b>', $nextSent));
@@ -458,7 +458,7 @@ class SentenceService
         // For languages that don't remove spaces and don't split each char
         // (like most Western languages), apply spacing conversion
         $seText = (string)$record['SeText'];
-        if (WordSpacing::separatesWordsWithSpaces($removeSpaces, $splitEachChar, $termchar)) {
+        if (WordSpacing::separatesWordsWithSpaces($removeSpaces, $splitEachChar)) {
             $text = $this->convertZwsToSpacing($seText, $termchar);
         } else {
             // For Asian languages etc., just remove the ZWS markers
@@ -551,7 +551,7 @@ class SentenceService
         }
 
         // Convert ZWS to proper spacing
-        if (WordSpacing::separatesWordsWithSpaces($removeSpaces, $splitEachChar, $termchar)) {
+        if (WordSpacing::separatesWordsWithSpaces($removeSpaces, $splitEachChar)) {
             $text = $this->convertZwsToSpacing($textWithZws, $termchar);
         } else {
             $text = str_replace('​', '', $textWithZws);

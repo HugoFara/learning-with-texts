@@ -1,4 +1,7 @@
 {
+    "verify_banner.resend": "Reenviar correo de verificación",
+    "verify_banner.body": "Revisa tu bandeja de entrada para encontrar un enlace de verificación.",
+    "verify_banner.title": "Correo electrónico no verificado.",
     "app_subtitle": "Aprendiendo con textos",
     "login.page_title": "Iniciar sesión",
     "login.username_label": "Usuario o correo electrónico",
@@ -107,9 +110,17 @@
     "statistics.current_streak": "Racha actual",
     "statistics.best_streak": "Mejor racha",
     "statistics.today": "Hoy",
-    "statistics.today_created": "creados",
-    "statistics.today_reviewed": "repasados",
-    "statistics.today_read": "leídos",
+    "statistics.today_created_one": "{count} término creado",
+    "statistics.today_created_other": "{count} términos creados",
+    "statistics.today_reviewed_one": "{count} término repasado",
+    "statistics.today_reviewed_other": "{count} términos repasados",
+    "statistics.today_read_one": "{count} texto leído",
+    "statistics.today_read_other": "{count} textos leídos",
+    "statistics.streak_days_one": "{count} día",
+    "statistics.streak_days_other": "{count} días",
+    "statistics.no_activity_on": "Sin actividad el {date}",
+    "statistics.day_summary": "{summary} — {date}",
+    "statistics.load_failed": "No se pudieron cargar los datos de actividad",
     "statistics.activity_last_12_months": "Actividad (últimos 12 meses)",
     "statistics.loading_activity": "Cargando actividad...",
     "statistics.intensity_title": "Intensidad de aprendizaje",
@@ -156,5 +167,6 @@
     "flash.microsoft_invalid_response": "Respuesta no válida de Microsoft.",
     "flash.microsoft_welcome": "¡Bienvenido! Has iniciado sesión con Microsoft.",
     "flash.microsoft_linked": "¡Cuenta de Microsoft vinculada correctamente!",
-    "flash.microsoft_invalid_password": "Contraseña incorrecta. Inténtalo de nuevo."
+    "flash.microsoft_invalid_password": "Contraseña incorrecta. Inténtalo de nuevo.",
+    "titles.statistics": "Estadísticas"
 }

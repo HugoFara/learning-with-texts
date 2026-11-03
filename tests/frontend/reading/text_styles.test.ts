@@ -291,18 +291,18 @@ describe('reading/text_styles.ts', () => {
       expect(css.length).toBeGreaterThan(0);
     });
 
-    it('generates margin-left for modeTrans 1 (after text)', () => {
+    it('generates margin-inline-start for modeTrans 1 (after text)', () => {
       const config = createConfig({ modeTrans: 1 });
       const css = generateTextStyles(config);
 
-      expect(css).toContain('margin-left: 0.2em');
+      expect(css).toContain('margin-inline-start: 0.2em');
     });
 
-    it('generates margin-right for modeTrans 3 (before text)', () => {
+    it('generates margin-inline-end for modeTrans 3 (before text)', () => {
       const config = createConfig({ modeTrans: 3 });
       const css = generateTextStyles(config);
 
-      expect(css).toContain('margin-right: 0.2em');
+      expect(css).toContain('margin-inline-end: 0.2em');
     });
   });
 });

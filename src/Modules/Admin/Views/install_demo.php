@@ -60,7 +60,7 @@ $base = UrlUtilities::getBasePath();
                             'db' => htmlspecialchars(Globals::getDatabaseName(), ENT_QUOTES, 'UTF-8'),
                         ]) ?>
                         <?php if ($langcnt > 0) : ?>
-                        <br><?= __('admin.install_demo_warning_existing', ['count' => $langcnt]) ?>
+                        <br><?= __n('admin.install_demo_warning_existing', $langcnt) ?>
                         <?php endif; ?>
                     </p>
                 </div>
@@ -108,7 +108,7 @@ $base = UrlUtilities::getBasePath();
                 <span class="icon is-medium has-text-info">
                     <span class="loader"></span>
                 </span>
-                <span class="ml-2"><?= __('admin.install_demo_installing') ?></span>
+                <span class="ms-2"><?= __('admin.install_demo_installing') ?></span>
             </p>
             <p class="has-text-grey is-size-7"><?= __('admin.install_demo_installing_help') ?></p>
         </div>

@@ -144,7 +144,7 @@ namespace Lwt\Views\Text;
                   @click="save"
                 >
                   <?php echo \Lwt\Shared\UI\Helpers\IconHelper::render('save', ['size' => 16]); ?>
-                  <span class="ml-1">Save</span>
+                  <span class="ms-1">Save</span>
                 </button>
               </div>
               <div class="control">

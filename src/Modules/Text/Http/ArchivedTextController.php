@@ -64,7 +64,7 @@ class ArchivedTextController extends BaseController
         $markAction = $this->param('markaction');
         $noPagestart = ($markAction == 'deltag');
         if (!$noPagestart) {
-            PageLayoutHelper::renderPageStart('Archived Texts', true);
+            PageLayoutHelper::renderPageStart(__('text.titles.archived'), true);
         }
 
         $message = '';
@@ -126,7 +126,7 @@ class ArchivedTextController extends BaseController
      */
     public function archivedEdit(int $id): ?RedirectResponse
     {
-        PageLayoutHelper::renderPageStart('Archived Texts', true);
+        PageLayoutHelper::renderPageStart(__('text.titles.archived'), true);
 
         $textId = $id;
         $record = $this->textService->getArchivedTextById($textId);

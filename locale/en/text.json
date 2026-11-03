@@ -228,5 +228,12 @@
     "parse_warning.no_words": "None of this text could be turned into words.",
     "parse_warning.almost_no_words": "Almost none of this text could be turned into words.",
     "parse_warning.check_language": "The language's Word Characters setting does not match this text, so nothing in it can be clicked or learned.",
-    "parse_warning.edit_language": "Check the language settings"
+    "parse_warning.edit_language": "Check the language settings",
+    "titles.texts": "Texts",
+    "titles.archived": "Archived Texts",
+    "titles.read": "Read",
+    "titles.display": "Display",
+    "titles.print": "Print",
+    "titles.annotated": "Annotated Text",
+    "titles.check": "Check a Text"
 }

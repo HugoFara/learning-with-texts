@@ -314,6 +314,7 @@ class SelectOptionsBuilder
             'ko' => '한국어',
             'ru' => 'Русский',
             'ar' => 'العربية',
+            'fa' => 'فارسی',
         ];
         $options = [];
         foreach ($locales as $code) {

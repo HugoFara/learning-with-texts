@@ -273,6 +273,11 @@ class ClassesTest extends TestCase
 
         $this->assertTrue($lang->rightToLeft());
         $this->assertEquals(' dir="rtl" ', $lang->getDirectionAttribute());
+
+        // An LTR language says so explicitly, rather than inheriting the
+        // interface's direction (#306)
+        $lang->setRightToLeft(false);
+        $this->assertEquals(' dir="ltr" ', $lang->getDirectionAttribute());
     }
 
     public function testLanguageSetTextSize(): void

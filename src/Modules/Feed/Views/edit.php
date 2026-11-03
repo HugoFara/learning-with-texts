@@ -52,7 +52,7 @@ $helpLabel = __('feed.edit_help');
 ?>
 <h2 class="title is-4 is-flex is-align-items-center">
     <?php echo __e('feed.edit_title'); ?>
-    <a target="_blank" href="docs/info.html#new_feed" class="ml-2">
+    <a target="_blank" href="docs/info.html#new_feed" class="ms-2">
         <?php echo IconHelper::render('help-circle', ['title' => $helpLabel, 'alt' => $helpLabel]); ?>
     </a>
 </h2>

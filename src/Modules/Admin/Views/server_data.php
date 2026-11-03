@@ -35,14 +35,12 @@ use Lwt\Shared\UI\Helpers\IconHelper;
  *     db_size?: float|int|string,
  *     mysql?: string,
  *     failed_migrations?: array<array{filename: string, attempts: int, error: string}>,
- *     missing_foreign_keys?: array<array{name: string, table: string}>,
- *     deprecated_mecab_languages?: array<array{id: int, name: string}>
+ *     missing_foreign_keys?: array<array{name: string, table: string}>
  * } $data Server data from ServerDataService::getServerData()
  */
 $data = is_array($data ?? null) ? $data : [];
 $failedMigrations = $data['failed_migrations'] ?? [];
 $missingForeignKeys = $data['missing_foreign_keys'] ?? [];
-$deprecatedMecab = $data['deprecated_mecab_languages'] ?? [];
 
 ?>
 <div class="container" x-data="serverDataApp()">
@@ -147,28 +145,10 @@ $deprecatedMecab = $data['deprecated_mecab_languages'] ?? [];
                             ?>
                             <li>
                                 <code><?php echo $name; ?></code>
-                                (<?php echo $attempts; ?>
-                                <?= __('admin.server_data_failed_migrations_attempts') ?>)
+                                (<?= __ne('admin.server_data_failed_migrations_attempts', $attempts) ?>)
                                 <br>
                                 <small><?php echo $error; ?></small>
                             </li>
-                        <?php } ?>
-                    </ul>
-                </div>
-            </article>
-        <?php } ?>
-        <?php if ($deprecatedMecab !== []) { ?>
-            <article class="message is-warning">
-                <div class="message-header">
-                    <p><?= __('admin.server_data_deprecated_mecab') ?></p>
-                </div>
-                <div class="message-body">
-                    <p class="mb-3"><?= __('admin.server_data_deprecated_mecab_warning') ?></p>
-                    <ul>
-                        <?php foreach ($deprecatedMecab as $language) {
-                            $name = htmlspecialchars($language['name'], ENT_QUOTES, 'UTF-8');
-                            ?>
-                            <li><?php echo $name; ?> (<code>LgID <?php echo $language['id']; ?></code>)</li>
                         <?php } ?>
                     </ul>
                 </div>
@@ -210,7 +190,7 @@ $deprecatedMecab = $data['deprecated_mecab_languages'] ?? [];
             <span class="icon is-medium">
                 <span class="loader"></span>
             </span>
-            <span class="ml-2"><?= __('admin.server_data_loading_api') ?></span>
+            <span class="ms-2"><?= __('admin.server_data_loading_api') ?></span>
         </div>
 
         <!-- Error State -->

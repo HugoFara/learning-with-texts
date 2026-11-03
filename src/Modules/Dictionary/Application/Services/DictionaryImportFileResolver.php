@@ -53,7 +53,7 @@ class DictionaryImportFileResolver
      *
      * @param string $tmpPath      PHP upload tmp_name (e.g. /tmp/phpXXXXXX)
      * @param string $originalName Original filename submitted by the browser
-     * @param string $format       Import format: 'stardict' | 'json' | 'csv'
+     * @param string $format       Import format: 'stardict' | 'json' | 'csv' | 'cedict'
      *
      * @return array{path: string, name: string} Resolved path and display name
      *
@@ -113,6 +113,7 @@ class DictionaryImportFileResolver
         return match ($format) {
             'stardict' => ['ifo'],
             'json' => ['json'],
+            'cedict' => ['u8', 'txt'],
             default => ['csv', 'tsv', 'txt'],
         };
     }

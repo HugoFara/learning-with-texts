@@ -43,7 +43,7 @@ if (!empty($message)) :
     $messageText = match ($message) {
         'deleted' => __('dictionary.deleted_success'),
         default => str_starts_with($message, 'imported_')
-            ? __('dictionary.imported_count', ['count' => substr($message, 9)])
+            ? __n('dictionary.imported_count', (int) substr($message, 9))
             : $message,
     };
     ?>
@@ -199,7 +199,7 @@ echo PageLayoutHelper::buildActionCard([
                 <template x-for="dict in dictionaries" :key="dict.id">
                     <tr>
                         <td>
-                            <strong x-text="dict.name"></strong>
+                            <strong dir="auto" x-text="dict.name"></strong>
                             <template x-if="hasDescription(dict)">
                                 <span>
                                     <br><span class="is-size-7 has-text-grey"

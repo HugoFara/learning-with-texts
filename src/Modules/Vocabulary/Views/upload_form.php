@@ -214,13 +214,9 @@ echo PageLayoutHelper::buildActionCard($actions);
             </p>
             <progress class="progress is-success" :value="enrichProgress" max="100"></progress>
             <p class="is-size-7 mb-3">
-                <span x-text="enrichStats.done"></span>
-                <?= __e('vocabulary.upload.freq.words_enriched_of') ?>
-                <span x-text="enrichStats.total"></span>
-                <?= __e('vocabulary.upload.freq.words_enriched_suffix') ?>
+                <span x-text="freqEnrichProgressLabel()"></span>
                 <template x-if="enrichStats.failed > 0">
-                    <span class="has-text-grey">(<span x-text="enrichStats.failed"></span>
-                        <?= __e('vocabulary.upload.freq.not_found') ?>)</span>
+                    <span class="has-text-grey" x-text="freqNotFoundLabel()"></span>
                 </template>
             </p>
 
@@ -244,23 +240,14 @@ echo PageLayoutHelper::buildActionCard($actions);
             <div class="notification is-success is-light">
                 <template x-if="freqResult.imported > 0 || freqResult.skipped > 0">
                     <p>
-                        <?= __e('vocabulary.upload.freq.imported_words') ?>
-                        <strong x-text="freqResult.imported"></strong>
-                        <?= __e('vocabulary.upload.freq.words') ?>
+                        <span x-text="freqImportedLabel()"></span>
                         <template x-if="freqResult.skipped > 0">
-                            <span>(<span x-text="freqResult.skipped"></span>
-                                <?= __e('vocabulary.upload.freq.already_existed') ?>)</span>
+                            <span x-text="freqSkippedLabel()"></span>
                         </template>
-                        <?= __e('vocabulary.upload.freq.for_lang') ?>
-                        <strong><?php echo htmlspecialchars($currentLanguageName, ENT_QUOTES, 'UTF-8'); ?></strong>.
                     </p>
                 </template>
                 <template x-if="enrichStats.done > 0">
-                    <p class="mt-1">
-                        <span x-text="enrichStats.done"></span>
-                        <?= __e('vocabulary.upload.freq.enriched_with') ?>
-                        <span x-text="freqEnrichedModeLabel()"></span>.
-                    </p>
+                    <p class="mt-1" x-text="freqEnrichedLabel()"></p>
                 </template>
             </div>
 
@@ -323,9 +310,7 @@ echo PageLayoutHelper::buildActionCard($actions);
             <div class="notification is-info is-light mb-4">
                 <p class="mb-2">
                     <strong><?= __e('vocabulary.upload.dict.importing') ?></strong>
-                    <span x-text="batchCurrent"></span>
-                    <?= __e('vocabulary.upload.freq.words_enriched_of') ?>
-                    <span x-text="batchTotal"></span>
+                    <span x-text="batchProgressLabel()"></span>
                 </p>
                 <progress class="progress is-info is-small" :value="batchCurrent" :max="batchTotal"></progress>
             </div>
@@ -364,12 +349,12 @@ echo PageLayoutHelper::buildActionCard($actions);
                     <label class="box mb-3 p-4" style="cursor: pointer;"
                            :class="isSelected(source.url) ? 'has-background-success-light' : ''">
                         <div class="is-flex is-align-items-center">
-                            <input type="checkbox" class="mr-3"
+                            <input type="checkbox" class="me-3"
                                    :checked="isSelected(source.url)"
                                    :disabled="!source.directDownload || batchImporting"
                                    @change="toggleSelection(source.url)">
                             <div class="is-flex-grow-1">
-                                <p class="has-text-weight-semibold mb-1" x-text="source.name"></p>
+                                <p dir="auto" class="has-text-weight-semibold mb-1" x-text="source.name"></p>
                                 <div class="tags mb-1">
                                     <span class="tag is-info is-light" x-text="source.format"></span>
                                     <span class="tag is-light" x-text="source.entries"></span>
@@ -478,6 +463,7 @@ echo PageLayoutHelper::buildActionCard($actions);
                                 <option value="csv"><?= __e('vocabulary.upload.manual.fmt_csv') ?></option>
                                 <option value="json"><?= __e('vocabulary.upload.manual.fmt_json') ?></option>
                                 <option value="stardict"><?= __e('vocabulary.upload.manual.fmt_stardict') ?></option>
+                                <option value="cedict"><?= __e('vocabulary.upload.manual.fmt_cedict') ?></option>
                             </select>
                         </div>
                     </div>
@@ -497,6 +483,9 @@ echo PageLayoutHelper::buildActionCard($actions);
                 </div>
                 <p class="help" x-show="dictFormat === 'stardict'">
                     <?= __e('vocabulary.upload.manual.stardict_help') ?>
+                </p>
+                <p class="help" x-show="dictFormat === 'cedict'">
+                    <?= __e('vocabulary.upload.manual.cedict_help') ?>
                 </p>
                 <div class="field mt-3">
                     <label class="label is-small"><?= __e('vocabulary.upload.manual.dict_name') ?></label>
@@ -675,7 +664,7 @@ echo PageLayoutHelper::buildActionCard($actions);
                     <thead>
                         <tr>
                             <template x-for="header in previewHeaders()" :key="header">
-                                <th x-text="header" class="has-background-light"></th>
+                                <th x-text="header" class="has-background-light-soft"></th>
                             </template>
                         </tr>
                     </thead>

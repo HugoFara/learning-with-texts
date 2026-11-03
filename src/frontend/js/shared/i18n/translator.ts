@@ -13,6 +13,7 @@
  */
 
 import { apiGet } from '@shared/api/client';
+import { pluralCategory } from './plural_rules';
 
 type TranslationMessages = Record<string, string>;
 
@@ -35,6 +36,12 @@ const LOCALE_KEY = 'lwt.locale';
 
 let messages: TranslationMessages = {};
 let initialized = false;
+
+/**
+ * Locale of the strings loaded from the API; null on server-rendered pages,
+ * where `<html lang>` names it instead.
+ */
+let apiLocale: string | null = null;
 
 /**
  * Merge additional strings into the active message map (later wins).
@@ -80,6 +87,7 @@ export function hydrateI18nFromCache(locale: string): boolean {
     const raw = localStorage.getItem(CACHE_PREFIX + locale);
     if (!raw) return false;
     mergeMessages(JSON.parse(raw) as TranslationMessages);
+    apiLocale = locale;
     return true;
   } catch {
     return false;
@@ -109,6 +117,7 @@ export async function loadI18nFromApi(
   if (!bundle?.messages) return false;
 
   mergeMessages(bundle.messages);
+  apiLocale = bundle.locale;
 
   // Cache under the resolved locale so hydration can find it next launch, and
   // remember which locale that was so the next boot knows what to hydrate.
@@ -178,14 +187,51 @@ export async function bootI18n(): Promise<void> {
  */
 export function t(key: string, params?: Record<string, string | number>): string {
   if (!initialized) initI18n();
+  return interpolate(messages[key] ?? key, params);
+}
 
-  let text = messages[key] ?? key;
+/**
+ * Translate a count-dependent key in the plural form the locale needs.
+ *
+ * Looks up `{key}_{category}`, where the category is the CLDR plural
+ * category of `count` in the active locale, then `{key}_other`. The
+ * server merges English into the bundle, so a key the locale lacks still
+ * resolves. `{count}` is filled in unless `params` sets it.
+ *
+ * @param key    - Dot-notated base key, without the category suffix
+ * @param count  - The number being counted
+ * @param params - Extra interpolation parameters
+ * @returns Translated string, or the raw key if not found
+ */
+export function tn(
+  key: string,
+  count: number,
+  params?: Record<string, string | number>
+): string {
+  if (!initialized) initI18n();
+  const category = pluralCategory(activeLocale(), count);
+  const text = messages[`${key}_${category}`] ?? messages[`${key}_other`] ?? key;
+  return interpolate(text, { count, ...params });
+}
 
-  if (params) {
-    for (const [k, v] of Object.entries(params)) {
-      text = text.split(`{${k}}`).join(String(v));
-    }
+/**
+ * The interface locale: the one the loaded strings belong to.
+ *
+ * Use it for Intl formatting (dates, numbers) so they follow the interface
+ * language rather than the browser's.
+ */
+export function activeLocale(): string {
+  if (apiLocale) return apiLocale;
+  if (typeof document !== 'undefined' && document.documentElement.lang) {
+    return document.documentElement.lang;
   }
+  return 'en';
+}
 
+function interpolate(text: string, params?: Record<string, string | number>): string {
+  if (!params) return text;
+  for (const [k, v] of Object.entries(params)) {
+    text = text.split(`{${k}}`).join(String(v));
+  }
   return text;
 }

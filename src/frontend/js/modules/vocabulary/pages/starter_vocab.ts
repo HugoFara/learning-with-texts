@@ -11,12 +11,14 @@
 import Alpine from 'alpinejs';
 import { apiPost } from '@shared/api/client';
 import { readPageConfig } from '@shared/utils/page_config';
+import * as messages from '../services/frequency_messages';
 
 interface StarterVocabConfig {
   importUrl: string;
   enrichUrl: string;
   csrfToken: string;
   langId: number;
+  langName: string;
   curatedDictionaries: CuratedDictGroup[];
   isAvailable: boolean;
 }
@@ -71,6 +73,7 @@ function readConfig(): StarterVocabConfig {
     enrichUrl: '',
     csrfToken: '',
     langId: 0,
+    langName: '',
     curatedDictionaries: [],
     isAvailable: false
   });
@@ -116,13 +119,31 @@ Alpine.data('starterVocab', () => {
     },
 
     enrichingLabel(): string {
-      return this.mode === 'translation'
-        ? 'Fetching translations...'
-        : 'Fetching definitions...';
+      return messages.enrichingLabel(this.mode);
     },
 
-    enrichedModeLabel(): string {
-      return this.mode === 'translation' ? 'translations' : 'definitions';
+    enrichProgressLabel(): string {
+      return messages.enrichProgress(this.enrichStats.done, this.enrichStats.total);
+    },
+
+    notFoundLabel(): string {
+      return messages.notFound(this.enrichStats.failed);
+    },
+
+    dictProgressLabel(): string {
+      return messages.progressOf(this.dictBatchCurrent, this.dictBatchTotal);
+    },
+
+    importedLabel(): string {
+      return messages.importedResult(this.wiktResult.imported, config.langName);
+    },
+
+    skippedLabel(): string {
+      return messages.skippedResult(this.wiktResult.skipped);
+    },
+
+    enrichedLabel(): string {
+      return messages.enrichedResult(this.enrichStats.done, this.mode);
     },
 
     async startImport(): Promise<void> {
@@ -235,15 +256,15 @@ Alpine.data('starterVocab', () => {
         };
 
         if (result.success) {
-          const skipped = result.skipped ?? 0;
           // Say so when entries were dropped, rather than reporting a count
           // that silently differs from the dictionary's own entry total.
-          const skippedNote = skipped > 0
-            ? ` (${skipped} skipped: headword too long)`
-            : '';
           this.dictMessages.push({
             success: true,
-            text: `${source.name}: imported ${result.imported ?? 0} entries.${skippedNote}`,
+            text: messages.dictionaryImported(
+              source.name,
+              result.imported ?? 0,
+              result.skipped ?? 0
+            ),
           });
         } else {
           this.dictMessages.push({

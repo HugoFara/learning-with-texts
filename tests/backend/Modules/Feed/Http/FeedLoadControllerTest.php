@@ -174,7 +174,10 @@ class FeedLoadControllerTest extends TestCase
         $this->controller->renderFeedLoadInterface(0, true, '/feeds');
         $output = ob_get_clean();
 
-        $this->assertStringContainsString('UPDATING', $output);
+        // Asserted on the markup, not the copy: the label goes through the
+        // translator now, so it is English only by default (#266).
+        $this->assertStringContainsString('notification is-info', $output);
+        $this->assertStringContainsString('x-text="loadedCount"', $output);
         $this->assertStringContainsString('3', $output);
     }
 
@@ -192,7 +195,7 @@ class FeedLoadControllerTest extends TestCase
         $this->controller->renderFeedLoadInterface(1, false, '/feeds');
         $output = ob_get_clean();
 
-        $this->assertStringNotContainsString('UPDATING', $output);
+        $this->assertStringNotContainsString('notification is-info', $output);
     }
 
     #[Test]
@@ -250,7 +253,7 @@ class FeedLoadControllerTest extends TestCase
     // =========================================================================
 
     #[Test]
-    public function loadFeedRouteCallsRenderFeedLoadInterfaceModern(): void
+    public function loadFeedRouteRendersThroughTheController(): void
     {
         if (!defined('LWT_TEST_DB_AVAILABLE') || !LWT_TEST_DB_AVAILABLE) {
             $this->markTestSkipped('Database connection required');
@@ -262,8 +265,9 @@ class FeedLoadControllerTest extends TestCase
             ->willReturn('English');
 
         $this->feedFacade->expects($this->once())
-            ->method('renderFeedLoadInterfaceModern')
-            ->with(42, false, '/feeds/manage');
+            ->method('getFeedLoadConfig')
+            ->with(42, false)
+            ->willReturn(['feeds' => [], 'count' => 1]);
 
         ob_start();
         try {

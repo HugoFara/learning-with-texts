@@ -185,7 +185,7 @@ class CreateBookFromTexts
 
             return [
                 'success' => true,
-                'message' => __('book.flash.created_from_text', ['title' => $title, 'count' => count($textIds)]),
+                'message' => __n('book.flash.created_from_text', count($textIds), ['title' => $title]),
                 'bookId' => $bookId,
                 'chapterCount' => count($textIds),
                 'textIds' => $textIds,

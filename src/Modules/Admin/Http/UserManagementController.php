@@ -61,7 +61,7 @@ class UserManagementController extends BaseController
             'dir' => $this->param('dir', 'ASC'),
         ];
 
-        $this->render('User Management', true);
+        $this->render(__('admin.titles.user_management'), true);
         $this->message($this->param('message'), true);
         include $this->viewPath . 'list.php';
         $this->endRender();
@@ -79,7 +79,7 @@ class UserManagementController extends BaseController
         $isEdit = false;
         $user = null;
 
-        $this->render('Create User', true);
+        $this->render(__('admin.titles.create_user'), true);
         include $this->viewPath . 'form.php';
         $this->endRender();
     }
@@ -104,7 +104,7 @@ class UserManagementController extends BaseController
 
         $isEdit = true;
 
-        $this->render('Edit User', true);
+        $this->render(__('admin.titles.edit_user'), true);
         include $this->viewPath . 'form.php';
         $this->endRender();
     }

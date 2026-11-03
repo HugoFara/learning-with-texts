@@ -81,10 +81,10 @@ $base = UrlUtilities::getBasePath();
                     <div class="level-left">
                         <div class="level-item">
                             <h2 class="title is-4 mb-0">
-                                <span class="icon mr-2 has-text-primary">
+                                <span class="icon me-2 has-text-primary">
                                     <i data-lucide="languages" style="width: 24px; height: 24px;"></i>
                                 </span>
-                                <span x-text="store.currentLanguage.name"></span>
+                                <span dir="auto" x-text="store.currentLanguage.name"></span>
                             </h2>
                         </div>
                         <div class="level-item">
@@ -208,7 +208,7 @@ $base = UrlUtilities::getBasePath();
                             <th class="has-text-centered"><?php echo __('language.list.col_archived'); ?></th>
                             <th class="has-text-centered"><?php echo __('language.list.col_terms'); ?></th>
                             <th class="has-text-centered"><?php echo __('language.list.col_feeds'); ?></th>
-                            <th class="has-text-right"><?php echo __('language.list.col_actions'); ?></th>
+                            <th class="has-text-end"><?php echo __('language.list.col_actions'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -217,15 +217,15 @@ $base = UrlUtilities::getBasePath();
                                 ? 'border-left: 3px solid hsl(171, 100%, 41%)'
                                 : ''">
                                 <td>
-                                    <strong x-text="lang.name"></strong>
+                                    <strong dir="auto" x-text="lang.name"></strong>
                                     <template x-if="lang.id === store.currentLanguageId">
-                                        <span class="tag is-primary is-light ml-2">
+                                        <span class="tag is-primary is-light ms-2">
                                             <?php echo __('language.current_language'); ?>
                                         </span>
                                     </template>
                                     <template x-if="lang.hasExportTemplate">
                                         <span
-                                            class="tag is-info is-light ml-1"
+                                            class="tag is-info is-light ms-1"
                                             title="<?php echo htmlspecialchars(
                                                 __('language.export_template_short_title'),
                                                 ENT_QUOTES,
@@ -256,7 +256,7 @@ $base = UrlUtilities::getBasePath();
                                         (<span x-text="lang.articleCount"></span>)
                                     </a>
                                 </td>
-                                <td class="has-text-right">
+                                <td class="has-text-end">
                                     <div class="buttons is-right are-small">
                                         <template x-if="lang.id !== store.currentLanguageId">
                                             <button

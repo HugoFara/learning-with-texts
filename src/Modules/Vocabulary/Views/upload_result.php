@@ -45,9 +45,6 @@ $actions = [
 ];
 echo PageLayoutHelper::buildActionCard($actions);
 
-$termsImportedLabel = $recno == 1
-    ? __('vocabulary.upload.terms_imported_one')
-    : __('vocabulary.upload.terms_imported_other');
 $titleSentence = htmlspecialchars(__('vocabulary.common.sentence'), ENT_QUOTES, 'UTF-8');
 $colStatus = __('vocabulary.upload.results.status');
 ?>
@@ -62,8 +59,7 @@ $colStatus = __('vocabulary.upload.results.status');
             </span>
             <span>
                 <strong><?= __('vocabulary.upload.import_successful') ?></strong>
-                <span id="recno"><?php echo $recno; ?></span>
-                <?= $termsImportedLabel ?>
+                <?= __ne('vocabulary.upload.terms_imported', $recno) ?>
             </span>
         </span>
     </div>
@@ -119,9 +115,7 @@ $colStatus = __('vocabulary.upload.results.status');
                 <div class="level-left">
                     <div class="level-item">
                         <span class="tag is-medium is-info is-light">
-                            <span x-text="recno"></span>&nbsp;<span
-                                x-show="recno === 1"><?= __e('vocabulary.common.term') ?></span><span
-                                x-show="recno !== 1"><?= __e('vocabulary.common.terms') ?></span>
+                            <span x-text="termCountLabel()"></span>
                         </span>
                     </div>
                 </div>
@@ -137,7 +131,7 @@ $colStatus = __('vocabulary.upload.results.status');
                                 </span>
                             </span>
                             <span class="pagination-list">
-                                <span class="mr-2"><?= __('vocabulary.upload.results.page') ?></span>
+                                <span class="me-2"><?= __('vocabulary.upload.results.page') ?></span>
                                 <template x-if="totalPages <= 1">
                                     <span>1</span>
                                 </template>
@@ -152,7 +146,7 @@ $colStatus = __('vocabulary.upload.results.status');
                                         </template>
                                     </select>
                                 </template>
-                                <span class="ml-1 mr-1"><?= __('vocabulary.upload.results.of') ?></span>
+                                <span class="ms-1 me-1"><?= __('vocabulary.upload.results.of') ?></span>
                                 <span x-text="totalPages"></span>
                             </span>
                             <span class="pagination-next" x-show="currentPage < totalPages">

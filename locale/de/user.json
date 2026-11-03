@@ -1,4 +1,7 @@
 {
+    "verify_banner.resend": "Bestätigungs-E-Mail erneut senden",
+    "verify_banner.body": "Bitte prüfen Sie Ihren Posteingang auf einen Bestätigungslink.",
+    "verify_banner.title": "E-Mail nicht bestätigt.",
     "app_subtitle": "Learning With Texts",
     "login.page_title": "Anmelden",
     "login.username_label": "Benutzername oder E-Mail",
@@ -107,9 +110,17 @@
     "statistics.current_streak": "Aktuelle Serie",
     "statistics.best_streak": "Beste Serie",
     "statistics.today": "Heute",
-    "statistics.today_created": "erstellt",
-    "statistics.today_reviewed": "wiederholt",
-    "statistics.today_read": "gelesen",
+    "statistics.today_created_one": "{count} Begriff erstellt",
+    "statistics.today_created_other": "{count} Begriffe erstellt",
+    "statistics.today_reviewed_one": "{count} Begriff wiederholt",
+    "statistics.today_reviewed_other": "{count} Begriffe wiederholt",
+    "statistics.today_read_one": "{count} Text gelesen",
+    "statistics.today_read_other": "{count} Texte gelesen",
+    "statistics.streak_days_one": "{count} Tag",
+    "statistics.streak_days_other": "{count} Tage",
+    "statistics.no_activity_on": "Keine Aktivität am {date}",
+    "statistics.day_summary": "{summary} — {date}",
+    "statistics.load_failed": "Aktivitätsdaten konnten nicht geladen werden",
     "statistics.activity_last_12_months": "Aktivität (letzte 12 Monate)",
     "statistics.loading_activity": "Aktivität wird geladen...",
     "statistics.intensity_title": "Lernintensität",
@@ -156,5 +167,6 @@
     "flash.microsoft_invalid_response": "Ungültige Antwort von Microsoft.",
     "flash.microsoft_welcome": "Willkommen! Sie sind jetzt mit Microsoft angemeldet.",
     "flash.microsoft_linked": "Microsoft-Konto erfolgreich verknüpft!",
-    "flash.microsoft_invalid_password": "Ungültiges Passwort. Bitte versuchen Sie es erneut."
+    "flash.microsoft_invalid_password": "Ungültiges Passwort. Bitte versuchen Sie es erneut.",
+    "titles.statistics": "Statistik"
 }

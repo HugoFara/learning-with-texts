@@ -225,7 +225,7 @@ $uploadMaxFilesize = ini_get('upload_max_filesize');
                     <span class="icon is-medium has-text-info">
                         <span class="loader"></span>
                     </span>
-                    <span class="ml-2"><?php echo __e('admin.restore_loading'); ?></span>
+                    <span class="ms-2"><?php echo __e('admin.restore_loading'); ?></span>
                 </p>
                 <p class="has-text-grey is-size-7"><?php echo __e('admin.restore_loading_help'); ?></p>
             </div>
@@ -345,7 +345,7 @@ $uploadMaxFilesize = ini_get('upload_max_filesize');
                     <span class="icon is-medium has-text-danger">
                         <span class="loader"></span>
                     </span>
-                    <span class="ml-2"><?php echo __e('admin.empty_db_loading'); ?></span>
+                    <span class="ms-2"><?php echo __e('admin.empty_db_loading'); ?></span>
                 </p>
             </div>
         </div>

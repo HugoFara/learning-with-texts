@@ -414,6 +414,32 @@ class AdminApiHandlerTest extends TestCase
     }
 
     #[Test]
+    public function formatTextsStatisticsCountsSavedExpressionsInTheTotal(): void
+    {
+        // A real text from #313: 19 unique words, one saved two-word
+        // expression ("Bonjour Manon"), every term saved. statu counts the
+        // expression among the saved terms, so a total of words alone made
+        // the card read "total 19, saved 20, unknown -1, -5%".
+        $handler = $this->getMockBuilder(AdminApiHandler::class)
+            ->setConstructorArgs([$this->facade])
+            ->onlyMethods(['getTextsStatistics'])
+            ->getMock();
+
+        $handler->method('getTextsStatistics')->willReturn([
+            'totalu' => ['10' => 19],
+            'expru' => ['10' => 1],
+            'statu' => ['10' => [1 => 3, 2 => 6, 4 => 3, 5 => 7, 98 => 1]],
+        ]);
+
+        $stats = $handler->formatTextsStatistics('10')['10'];
+
+        $this->assertSame(20, $stats['total']);
+        $this->assertSame(20, $stats['saved']);
+        $this->assertSame(0, $stats['unknown']);
+        $this->assertSame(0, $stats['unknownPercent']);
+    }
+
+    #[Test]
     public function formatTextsStatisticsHandlesMultipleTexts(): void
     {
         $handler = $this->getMockBuilder(AdminApiHandler::class)

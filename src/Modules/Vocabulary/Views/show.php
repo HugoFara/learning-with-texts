@@ -36,13 +36,13 @@ assert(is_string($ann));
 ?>
 <table class="table is-bordered is-fullwidth">
 <tr>
-    <td class="has-text-right word-show-label"><?= __('vocabulary.show.term') ?></td>
+    <td class="has-text-end word-show-label"><?= __('vocabulary.show.term') ?></td>
     <td class="word-show-term" <?php echo $scrdir; ?>>
         <b><?php echo htmlspecialchars($word['text'] ?? '', ENT_QUOTES, 'UTF-8'); ?></b>
     </td>
 </tr>
 <tr>
-    <td class="has-text-right"><?= __('vocabulary.show.translation') ?></td>
+    <td class="has-text-end"><?= __('vocabulary.show.translation') ?></td>
     <td class="word-show-value"><b><?php
     $translationHtml = StringUtils::parseInlineMarkdown($word['translation'] ?? '');
     if (!empty($ann)) {
@@ -59,32 +59,32 @@ assert(is_string($ann));
 </tr>
 <?php if (isset($word['notes']) && $word['notes'] !== '') : ?>
 <tr>
-    <td class="has-text-right"><?= __('vocabulary.show.notes') ?></td>
+    <td class="has-text-end"><?= __('vocabulary.show.notes') ?></td>
     <td class="word-show-value"><?php echo StringUtils::parseInlineMarkdown($word['notes']); ?></td>
 </tr>
 <?php endif; ?>
 <?php if ($tags !== '') : ?>
 <tr>
-    <td class="has-text-right"><?= __('vocabulary.show.tags') ?></td>
+    <td class="has-text-end"><?= __('vocabulary.show.tags') ?></td>
     <td class="word-show-value"><?php echo \Lwt\Shared\UI\Helpers\TagHelper::render($tags); ?></td>
 </tr>
 <?php endif; ?>
 <?php if ($word['romanization'] !== '') : ?>
 <tr>
-    <td class="has-text-right"><?= __('vocabulary.show.romaniz') ?></td>
+    <td class="has-text-end"><?= __('vocabulary.show.romaniz') ?></td>
     <td class="word-show-value">
         <b><?php echo htmlspecialchars($word['romanization'] ?? '', ENT_QUOTES, 'UTF-8'); ?></b>
     </td>
 </tr>
 <?php endif; ?>
 <tr>
-    <td class="has-text-right"><?= __('vocabulary.show.sentence_term_in_braces') ?></td>
+    <td class="has-text-end"><?= __('vocabulary.show.sentence_term_in_braces') ?></td>
     <td class="" <?php echo $scrdir; ?>>
         <?php echo htmlspecialchars($word['sentence'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
     </td>
 </tr>
 <tr>
-    <td class="has-text-right"><?= __('vocabulary.show.status') ?></td>
+    <td class="has-text-end"><?= __('vocabulary.show.status') ?></td>
     <td class=""><?php echo StatusHelper::getColoredMessage($word['status']); ?></td>
 </tr>
 </table>

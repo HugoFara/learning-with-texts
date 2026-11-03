@@ -42,12 +42,12 @@ $emphasisedName = '<strong>' . htmlspecialchars($dictName, ENT_QUOTES, 'UTF-8') 
 // One whole sentence per case rather than " and N vocabulary terms" appended
 // to another: a translator cannot reorder a sentence assembled by the code.
 $summary = $vocabCreated > 0
-    ? __('vocabulary.upload.dict.result_created_with_vocab_html', [
+    ? __n('vocabulary.upload.dict.result_created_with_vocab_html', $entryCount, [
         'name' => $emphasisedName,
         'count' => number_format($entryCount),
         'vocab' => number_format($vocabCreated),
     ])
-    : __('vocabulary.upload.dict.result_created_html', [
+    : __n('vocabulary.upload.dict.result_created_html', $entryCount, [
         'name' => $emphasisedName,
         'count' => number_format($entryCount),
     ]);
@@ -55,7 +55,7 @@ $summary = $vocabCreated > 0
 // Reported rather than left silent, so the count cannot differ from the source
 // dictionary's own total with no explanation.
 $skippedNotice = $skipped > 0
-    ? __('vocabulary.upload.dict.result_skipped', ['count' => number_format($skipped)])
+    ? __n('vocabulary.upload.dict.result_skipped', $skipped, ['count' => number_format($skipped)])
     : '';
 ?>
 <div class="notification is-success" data-auto-hide="true">

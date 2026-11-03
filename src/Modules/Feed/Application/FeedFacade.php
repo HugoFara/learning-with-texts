@@ -33,7 +33,6 @@ use Lwt\Modules\Feed\Domain\ArticleRepositoryInterface;
 use Lwt\Modules\Feed\Domain\Feed;
 use Lwt\Modules\Feed\Domain\FeedRepositoryInterface;
 use Lwt\Modules\Feed\Domain\TextCreationInterface;
-use Lwt\Shared\UI\Helpers\ConfigIsland;
 
 /**
  * Facade providing backward-compatible interface to Feed module.
@@ -820,52 +819,6 @@ class FeedFacade
             'TxID' => $item['text_id'],
             'ArchivedTxID' => $item['archived_id'],
         ];
-    }
-
-    /**
-     * Render feed loading interface using Alpine.js component.
-     *
-     * This method outputs JSON configuration that is consumed by the
-     * feed_loader_component.ts Alpine component.
-     *
-     * @param int    $currentFeed     Feed ID to load
-     * @param bool   $checkAutoupdate Whether checking auto-update
-     * @param string $redirectUrl     URL to redirect after completion
-     *
-     * @return void
-     */
-    public function renderFeedLoadInterfaceModern(
-        int $currentFeed,
-        bool $checkAutoupdate,
-        string $redirectUrl
-    ): void {
-        $config = $this->getFeedLoadConfig($currentFeed, $checkAutoupdate);
-
-        // Output JSON config for Alpine component
-        ConfigIsland::render('feed-loader-config', [
-            'feeds' => $config['feeds'],
-            'redirectUrl' => $redirectUrl,
-        ]);
-
-        // Alpine.js component wrapper
-        echo '<div x-data="feedLoader()">';
-
-        // Show progress UI
-        if ($config['count'] != 1) {
-            echo '<div class="notification is-info">' .
-                '<p>UPDATING <span x-text="loadedCount">0</span>/' .
-                $config['count'] . ' FEEDS</p></div>';
-        }
-
-        // Create placeholder divs for each feed using Alpine templates
-        echo '<template x-for="feed in feeds" :key="feed.id">';
-        echo '<div :class="getStatusClass(feed.id)"><p x-text="feedMessages[feed.id]"></p></div>';
-        echo '</template>';
-
-        // Continue button with Alpine click handler
-        echo '<div class="has-text-centered"><button @click="handleContinue()">Continue</button></div>';
-
-        echo '</div>';
     }
 
     /**

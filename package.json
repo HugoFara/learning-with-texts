@@ -1,6 +1,6 @@
 {
   "name": "lwt",
-  "version": "3.7.0",
+  "version": "3.8.0",
   "description": "Learning with Texts - A self-hosted language learning application for reading-based vocabulary acquisition",
   "type": "module",
   "main": "index.js",
@@ -56,6 +56,9 @@
     "e2e": "cypress run",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
+    "anki:build": "podman build -t lwt-anki scripts/anki/container",
+    "anki:up": "mkdir -p cypress/anki-exchange && podman run --rm -d --name lwt-anki -p 127.0.0.1:8765:8765 -v ./cypress/anki-exchange:/exchange:Z lwt-anki",
+    "anki:down": "podman stop lwt-anki",
     "docs:dev": "node scripts/docs-pre-build.js && vitepress dev docs-src",
     "docs:build": "node scripts/docs-pre-build.js && vitepress build docs-src",
     "docs:preview": "vitepress preview docs-src"
@@ -66,12 +69,13 @@
     "bulma": "^1.0.4",
     "chart.js": "^4.5.1",
     "dexie": "^4.2.1",
-    "lucide": "^1.7.0"
+    "lucide": "^1.62.0"
   },
   "overrides": {
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "esbuild": ">=0.25.0",
+    "katex": ">=0.18.2",
     "vitepress": {
       "vite": "^6.4.2"
     }

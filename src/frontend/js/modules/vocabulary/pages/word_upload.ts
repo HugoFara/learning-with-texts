@@ -18,6 +18,8 @@ import { apiPost } from '@shared/api/client';
 import { escapeHtml, renderTags } from '@shared/utils/html_utils';
 import { statuses } from '@shared/stores/app_data';
 import { iconHtml } from '@shared/icons/icons';
+import { tn } from '@shared/i18n/translator';
+import * as messages from '../services/frequency_messages';
 
 // Interface for imported term record
 interface ImportedTerm {
@@ -125,13 +127,27 @@ export function wordUploadPageApp() {
     },
 
     freqEnrichingLabel(): string {
-      return this.freqMode === 'translation'
-        ? 'Fetching translations...'
-        : 'Fetching definitions...';
+      return messages.enrichingLabel(this.freqMode);
     },
 
-    freqEnrichedModeLabel(): string {
-      return this.freqMode === 'translation' ? 'translations' : 'definitions';
+    freqEnrichProgressLabel(): string {
+      return messages.enrichProgress(this.enrichStats.done, this.enrichStats.total);
+    },
+
+    freqNotFoundLabel(): string {
+      return messages.notFound(this.enrichStats.failed);
+    },
+
+    freqImportedLabel(): string {
+      return messages.importedResult(this.freqResult.imported, this.selectedLanguageName);
+    },
+
+    freqSkippedLabel(): string {
+      return messages.skippedResult(this.freqResult.skipped);
+    },
+
+    freqEnrichedLabel(): string {
+      return messages.enrichedResult(this.enrichStats.done, this.freqMode);
     },
 
     async startFrequencyImport(): Promise<void> {
@@ -323,6 +339,7 @@ export interface WordUploadResultData {
 
   // Methods
   init(): void;
+  termCountLabel(): string;
   loadPage(page: number): Promise<void>;
   goToPage(page: number): void;
   goToPageFromEvent(event: Event): void;
@@ -373,6 +390,13 @@ export function wordUploadResultApp(config: UploadResultConfig = { lastUpdate: '
       if (this.hasTerms) {
         this.loadPage(1);
       }
+    },
+
+    /**
+     * "N terms", in the plural form the interface locale needs.
+     */
+    termCountLabel(): string {
+      return tn('vocabulary.list.term_count', this.recno);
     },
 
     /**
@@ -472,7 +496,7 @@ export function wordUploadResultApp(config: UploadResultConfig = { lastUpdate: '
 
       return `<tr>
         <td>
-          <span${this.rtl ? ' dir="rtl"' : ''}>${escapeHtml(term.WoText)}</span>
+          <span dir="${this.rtl ? 'rtl' : 'ltr'}">${escapeHtml(term.WoText)}</span>
           <span class="has-text-grey"> / </span>
           <span id="roman${term.WoID}" class="edit_area clickedit has-text-grey-dark">${term.WoRomanization !== '' ? escapeHtml(term.WoRomanization) : '*'}</span>
         </td>
@@ -593,6 +617,11 @@ export function curatedDictBrowser() {
     batchTotal: 0,
     batchMessages: [] as { success: boolean; text: string }[],
 
+    /** "3 of 5" while the selected dictionaries import. */
+    batchProgressLabel(): string {
+      return messages.progressOf(this.batchCurrent, this.batchTotal);
+    },
+
     /**
      * Initialize: sync filter with parent's selectedLanguageName.
      */
@@ -710,9 +739,12 @@ export function curatedDictBrowser() {
         if (result.success) {
           this.batchMessages.push({
             success: true,
-            text: `${source.name}: imported ${result.imported ?? 0} entries` +
-              (result.vocabCreated ? ` and ${result.vocabCreated} vocabulary terms` : '') +
-              '.',
+            text: messages.dictionaryImported(
+              source.name,
+              result.imported ?? 0,
+              0,
+              result.vocabCreated ?? 0
+            ),
           });
         } else {
           this.batchMessages.push({

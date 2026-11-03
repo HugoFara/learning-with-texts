@@ -166,6 +166,14 @@
     "check.heading": "Vérifier l'analyse du texte",
     "check.text_max": "(max. 65 000 octets)",
     "check.text_placeholder": "Collez votre texte ici pour vérifier comment il sera analysé...",
+    "check.heading_text": "Texte",
+    "check.heading_sentences": "Phrases",
+    "check.heading_words": "Liste des mots",
+    "check.heading_expressions": "Liste des expressions",
+    "check.heading_non_words": "Liste des non-mots",
+    "check.already_saved": "(rouge = déjà enregistré)",
+    "check.checking": "Vérification...",
+    "check.failed": "Impossible de vérifier le texte.",
 
     "read.loading": "Chargement du texte...",
     "read.display": "Affichage",
@@ -220,5 +228,12 @@
     "parse_warning.no_words": "Aucun mot n'a pu être extrait de ce texte.",
     "parse_warning.almost_no_words": "Presque aucun mot n'a pu être extrait de ce texte.",
     "parse_warning.check_language": "Le réglage « Caractères de mot » de la langue ne correspond pas à ce texte : rien n'y est cliquable ni apprenable.",
-    "parse_warning.edit_language": "Vérifier les réglages de la langue"
+    "parse_warning.edit_language": "Vérifier les réglages de la langue",
+    "titles.texts": "Textes",
+    "titles.archived": "Textes archivés",
+    "titles.read": "Lire",
+    "titles.display": "Affichage",
+    "titles.print": "Imprimer",
+    "titles.annotated": "Texte annoté",
+    "titles.check": "Vérifier un texte"
 }

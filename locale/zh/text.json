@@ -154,6 +154,14 @@
     "check.heading": "检查文本解析",
     "check.text_max": "（最大 65,000 字节）",
     "check.text_placeholder": "在此粘贴您的文本以检查解析效果...",
+    "check.heading_text": "文本",
+    "check.heading_sentences": "句子",
+    "check.heading_words": "单词列表",
+    "check.heading_expressions": "短语列表",
+    "check.heading_non_words": "非单词列表",
+    "check.already_saved": "（红色 = 已保存）",
+    "check.checking": "正在检查...",
+    "check.failed": "无法检查该文本。",
     "read.loading": "正在加载文本...",
     "read.display": "显示",
     "read.actions": "操作",
@@ -208,5 +216,12 @@
     "parse_warning.no_words": "无法从这段文本中提取出任何单词。",
     "parse_warning.almost_no_words": "几乎无法从这段文本中提取出单词。",
     "parse_warning.check_language": "该语言的“单词字符”设置与此文本不匹配，因此其中的内容无法点击或学习。",
-    "parse_warning.edit_language": "检查语言设置"
+    "parse_warning.edit_language": "检查语言设置",
+    "titles.texts": "文本",
+    "titles.archived": "已归档文本",
+    "titles.read": "阅读",
+    "titles.display": "显示",
+    "titles.print": "打印",
+    "titles.annotated": "注释文本",
+    "titles.check": "检查文本"
 }

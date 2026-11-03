@@ -131,7 +131,7 @@ $managerConfig = [
                     <div class="level-left">
                         <div class="level-item">
                             <span class="tag is-info is-medium"
-                                  x-text="selectedCount + ' ' + $t('feed.spa_selected_label')"></span>
+                                  x-text="$tn('feed.spa_selected', selectedCount)"></span>
                         </div>
                         <div class="level-item">
                             <div class="buttons">
@@ -170,7 +170,7 @@ $managerConfig = [
                                                @change="toggleSelection(feed.id)">
                                     </td>
                                     <td>
-                                        <a href="#" @click.prevent="viewArticles(feed)" x-text="feed.name"
+                                        <a dir="auto" href="#" @click.prevent="viewArticles(feed)" x-text="feed.name"
                                            class="has-text-weight-semibold"></a>
                                     </td>
                                     <td class="has-text-centered">
@@ -308,7 +308,7 @@ $managerConfig = [
                 <div class="level-left">
                     <div class="level-item" x-show="selectedCount > 0">
                         <span class="tag is-info is-medium"
-                              x-text="selectedCount + ' ' + $t('feed.spa_selected_label')"></span>
+                              x-text="$tn('feed.spa_selected', selectedCount)"></span>
                     </div>
                     <div class="level-item">
                         <div class="buttons">
@@ -366,7 +366,7 @@ $managerConfig = [
                                            @change="toggleSelection(article.id)">
                                 </td>
                                 <td>
-                                    <a :href="article.link" target="_blank" x-text="article.title"
+                                    <a dir="auto" :href="article.link" target="_blank" x-text="article.title"
                                        class="has-text-weight-semibold"></a>
                                     <p
                                         class="is-size-7 has-text-grey"
@@ -449,7 +449,7 @@ $managerConfig = [
                 <div class="level-right">
                     <div class="level-item">
                         <span class="tag is-info is-medium"
-                              x-text="selectedCount + ' ' + $t('feed.spa_selected_label')"></span>
+                              x-text="$tn('feed.spa_selected', selectedCount)"></span>
                     </div>
                 </div>
             </div>
@@ -486,7 +486,7 @@ $managerConfig = [
                                             <select :value="pending.language_id"
                                                     @change="setLanguage(i, $event.target.value)">
                                                 <template x-for="language in languages" :key="language.id">
-                                                    <option :value="language.id"
+                                                    <option dir="auto" :value="language.id"
                                                             :selected="language.id === pending.language_id"
                                                             x-text="language.name"></option>
                                                 </template>

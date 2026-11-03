@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace Lwt\Modules\Language\Http;
 
 use Lwt\Shared\Http\BaseController;
+use Lwt\Shared\UI\Helpers\NotificationHelper;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 use Lwt\Shared\UI\Helpers\FormHelper;
 use Lwt\Shared\UI\Helpers\IconHelper;
@@ -247,9 +248,7 @@ class LanguageController extends BaseController
         $languageEntity = $this->languageFacade->getById($lid);
 
         if ($languageEntity === null) {
-            echo '<div class="notification is-danger">' .
-                '<button class="delete" aria-label="close"></button>' .
-                __('language.errors.language_not_found') . '</div>';
+            NotificationHelper::render(__('language.errors.language_not_found'));
             return;
         }
 

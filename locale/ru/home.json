@@ -8,8 +8,14 @@
     "search": "Поиск",
     "suggested_from_gutenberg": "Рекомендуемое из Project Gutenberg",
     "suggested_from_gdl": "Простые тексты для начала",
-    "books_found": "Найдено книг: {count}",
-    "downloads_suffix": "загрузок",
+    "books_found_one": "Найдена {count} книга",
+    "books_found_few": "Найдено {count} книги",
+    "books_found_many": "Найдено {count} книг",
+    "books_found_other": "Найдено {count} книг",
+    "downloads_one": "{count} скачивание",
+    "downloads_few": "{count} скачивания",
+    "downloads_many": "{count} скачиваний",
+    "downloads_other": "{count} скачиваний",
     "no_books_found": "Книги не найдены. Попробуйте другой поисковый запрос.",
     "load_more": "Загрузить ещё",
     "preview": "Предпросмотр",
@@ -28,5 +34,6 @@
     "warning_php_outdated": "Ваша версия PHP — {phpVersion}, но требуется версия {minVersion}. Пожалуйста, обновите PHP.",
     "warning_update_available": "Доступно обновление LWT: {latestVersion} (ваша версия: {currentVersion}).",
     "download": "Скачать",
-    "dismiss": "Закрыть"
+    "dismiss": "Закрыть",
+    "titles.home": "Главная"
 }

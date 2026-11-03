@@ -320,6 +320,10 @@ class Restore
             // Drop legacy textitems table if it exists (replaced by word_occurrences)
             Connection::execute("DROP TABLE IF EXISTS textitems");
 
+            // The Anki sync base describes the vocabulary just replaced; kept,
+            // its rows would read as terms deleted in LWT (#264).
+            self::clearAnkiSyncBase(null);
+
             // Clear migration history so all migrations run fresh on restored data.
             // This handles old backups that predate the migration system or have
             // different schema versions. The migrations will bring the schema up to date.
@@ -437,6 +441,29 @@ class Restore
         QueryBuilder::table('settings')
             ->where('StKey', '=', 'currenttext')
             ->delete();
+
+        self::clearAnkiSyncBase(null);
+    }
+
+    /**
+     * Forget what the Anki sync agreed on, for one user or everyone.
+     *
+     * Its rows describe terms that a restore or a wipe has just replaced, and
+     * a row whose term is gone means "deleted in LWT" to the next sync (#264).
+     *
+     * @param int|null $userId Owner, or null for every row
+     */
+    private static function clearAnkiSyncBase(?int $userId): void
+    {
+        try {
+            if ($userId === null) {
+                Connection::execute('DELETE FROM anki_sync_base');
+            } else {
+                Connection::preparedExecute('DELETE FROM anki_sync_base WHERE AsUsID = ?', [$userId]);
+            }
+        } catch (\RuntimeException $e) {
+            // A schema from before the sync has no such table.
+        }
     }
 
     /**
@@ -454,6 +481,8 @@ class Restore
      */
     private static function truncateForUser(int $userId): void
     {
+        self::clearAnkiSyncBase($userId);
+
         // Level 1: Link/map and derived tables, scoped via parent ownership.
         Connection::preparedExecute(
             'DELETE FROM text_tag_map WHERE TtTxID IN (SELECT TxID FROM texts WHERE TxUsID = ?)',

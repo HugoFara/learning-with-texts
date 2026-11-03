@@ -1,0 +1,37 @@
+/*
+ * Direction-aware spacing and alignment helpers (#306).
+ *
+ * Bulma 1.0's own helpers are physical: `ml-N` is always margin-left, so a
+ * gap meant to sit "after the icon" lands on the wrong side in a right-to-left
+ * interface. These use logical properties instead, which follow the `dir` of
+ * the element: start is left in LTR and right in RTL.
+ *
+ *   ms-N   margin-inline-start   (replaces Bulma's ml-N)
+ *   me-N   margin-inline-end     (replaces Bulma's mr-N)
+ *   has-text-start / has-text-end  (replace has-text-left / has-text-right)
+ *
+ * Same scale and `!important` as Bulma's spacing helpers, so swapping one for
+ * the other changes nothing in a left-to-right interface. Use these in new
+ * markup; Bulma's physical ones are only for things that must not mirror.
+ */
+
+.ms-0 { margin-inline-start: 0 !important; }
+.ms-1 { margin-inline-start: 0.25rem !important; }
+.ms-2 { margin-inline-start: 0.5rem !important; }
+.ms-3 { margin-inline-start: 0.75rem !important; }
+.ms-4 { margin-inline-start: 1rem !important; }
+.ms-5 { margin-inline-start: 1.5rem !important; }
+.ms-6 { margin-inline-start: 3rem !important; }
+.ms-auto { margin-inline-start: auto !important; }
+
+.me-0 { margin-inline-end: 0 !important; }
+.me-1 { margin-inline-end: 0.25rem !important; }
+.me-2 { margin-inline-end: 0.5rem !important; }
+.me-3 { margin-inline-end: 0.75rem !important; }
+.me-4 { margin-inline-end: 1rem !important; }
+.me-5 { margin-inline-end: 1.5rem !important; }
+.me-6 { margin-inline-end: 3rem !important; }
+.me-auto { margin-inline-end: auto !important; }
+
+.has-text-start { text-align: start !important; }
+.has-text-end { text-align: end !important; }

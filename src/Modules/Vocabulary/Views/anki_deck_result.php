@@ -40,12 +40,7 @@ $statusName = static function (int $status): string {
 <h1><?= __e('vocabulary.anki.deck.title') ?></h1>
 
 <div class="notification is-success">
-  <p><strong><?= __e(
-      $result->created === 1
-            ? 'vocabulary.anki.deck.imported'
-            : 'vocabulary.anki.deck.imported_plural',
-      ['count' => $result->created]
-  ) ?></strong></p>
+  <p><strong><?= __ne('vocabulary.anki.deck.imported', $result->created) ?></strong></p>
 </div>
 
 <table class="table is-narrow">

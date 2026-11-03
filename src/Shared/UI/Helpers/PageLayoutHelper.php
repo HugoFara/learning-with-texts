@@ -586,7 +586,7 @@ HTML;
         $icon180 = UrlUtilities::url('/assets/images/lwt_icon_180.png');
 
         echo '<!DOCTYPE html>';
-        echo '<html lang="en"' . self::buildDataThemeAttr() . '>';
+        echo self::buildHtmlOpenTag();
         echo '<head>';
         echo '<meta http-equiv="content-type" content="text/html; charset=utf-8" />';
         echo '<!--' . "\n";
@@ -639,11 +639,8 @@ HTML;
         $favicon = UrlUtilities::url('/favicon.ico');
         $icon180 = UrlUtilities::url('/assets/images/lwt_icon_180.png');
 
-        $htmlLang = self::getActiveLocale();
-
         echo '<!DOCTYPE html>';
-        echo '<html lang="' . htmlspecialchars($htmlLang, ENT_QUOTES, 'UTF-8')
-            . '"' . self::buildDataThemeAttr() . '>';
+        echo self::buildHtmlOpenTag();
         echo '<head>';
         echo '<meta http-equiv="content-type" content="text/html; charset=utf-8" />';
         echo '<!--' . "\n";
@@ -773,6 +770,28 @@ HTML;
     }
 
     /**
+     * The opening `<html>` tag, carrying the interface locale and direction.
+     *
+     * `lang` is what screen readers pick a voice by and what CSS hyphenation
+     * and `:lang()` read; `dir` is what flips the layout for a right-to-left
+     * interface (#306). Both describe the *interface* language. A study text
+     * in another language states its own `lang`/`dir` on its container.
+     *
+     * @return string The tag, including the theme attribute when set
+     */
+    public static function buildHtmlOpenTag(): string
+    {
+        $locale = self::getActiveLocale();
+        $container = Container::getInstance();
+        $dir = $container->has(Translator::class)
+            ? $container->getTyped(Translator::class)->getTextDirection()
+            : 'ltr';
+
+        return '<html lang="' . htmlspecialchars($locale, ENT_QUOTES, 'UTF-8')
+            . '" dir="' . $dir . '"' . self::buildDataThemeAttr() . '>';
+    }
+
+    /**
      * Get the active locale code from the Translator service.
      *
      * @return string Locale code (e.g. "en", "es")
@@ -864,15 +883,7 @@ HTML;
             return;
         }
 
-        echo '<div class="notification is-warning" role="alert">'
-            . '<strong>Email not verified.</strong> '
-            . 'Please check your inbox for a verification link. '
-            . '<form method="post" action="/email/resend-verification" style="display:inline">'
-            . FormHelper::csrfField()
-            . '<button type="submit" class="button is-small is-warning is-outlined ml-2">'
-            . 'Resend verification email</button>'
-            . '</form>'
-            . '</div>';
+        include __DIR__ . '/../../../Modules/User/Views/email_verification_notice.php';
     }
 
     /**
@@ -900,12 +911,12 @@ HTML;
             $backButton = $autoHide
                 ? ''
                 : '<button class="button is-small mt-2" data-action="go-back">' .
-                  IconHelper::render('arrow-left', ['alt' => 'Go back']) .
-                  '<span class="ml-1">Go back and correct</span></button>';
+                  IconHelper::render('arrow-left', ['alt' => __('common.back')]) .
+                  '<span class="ms-1">' . __e('common.go_back_correct') . '</span></button>';
 
             echo '<div class="notification is-danger" role="alert">' .
                 '<button class="delete" aria-label="close"></button>' .
-                '<strong>Error:</strong> ' . $escapedMessage .
+                '<strong>' . __e('common.error_prefix') . '</strong> ' . $escapedMessage .
                 $backButton .
                 '</div>';
         } else {
