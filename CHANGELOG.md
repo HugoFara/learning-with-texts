@@ -77,6 +77,15 @@ ones are marked like "v1.0.0-fork".
   uploaded" or a CSRF 403. `conf.d/lwt-uploads.ini` now raises them to the
   100 MB the importers already allow.
 
+* **Every MeCab language gets MeCab word counts** (#310). The word-count
+  initialisation gathered the MeCab language IDs with `GROUP_CONCAT` and cast
+  the list to an integer, so `"12,13"` became `12`: only the first language
+  was counted by MeCab, and the terms of any other one fell through to the
+  regex count, which reads a run of kanji and kana as a single word
+  (`日本語の単語` counted as 1 instead of 3). Each MeCab language is now
+  counted in turn. Terms already saved keep their count; the fix applies to
+  terms whose count is still unset, as new and imported terms are.
+
 ### Removed
 
 * **The `MECAB` word-characters marker is no longer read** (#288). 3.7.0

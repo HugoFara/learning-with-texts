@@ -395,6 +395,61 @@ class MaintenanceTest extends TestCase
         Connection::query("DELETE FROM languages WHERE LgID = $japLangId");
     }
 
+    public function testInitWordCountUsesMecabForEveryMecabLanguage(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+        if (empty(shell_exec('which mecab 2>/dev/null'))) {
+            $this->markTestSkipped('MeCab not installed');
+        }
+
+        // initWordCount() used to GROUP_CONCAT the MeCab language IDs and cast
+        // the list to int, so "12,13" became 12: only the first language went
+        // through MeCab, and the second fell through to the regex count, which
+        // sees one run of CJK characters as a single word.
+        $langIds = [];
+        $wordIds = [];
+        foreach (['Test Japanese', 'Test Japanese'] as $name) {
+            Connection::query(
+                "INSERT INTO languages (
+                    LgName, LgDict1URI, LgGoogleTranslateURI, LgTextSize,
+                    LgCharacterSubstitutions, LgRegexpSplitSentences,
+                    LgExceptionsSplitSentences, LgRegexpWordCharacters,
+                    LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgParserType
+                ) VALUES (
+                    '$name', 'https://jisho.org/search/###', '', 100, '',
+                    '。！？', '', '\\\\x{4E00}-\\\\x{9FFF}\\\\x{3040}-\\\\x{30FF}',
+                    1, 0, 0, 'mecab'
+                )"
+            );
+            $langId = (int) mysqli_insert_id(Globals::getDbConnection());
+            $langIds[] = $langId;
+            Connection::query(
+                "INSERT INTO words (WoLgID, WoText, WoTextLC, WoStatus, WoWordCount)
+                 VALUES ($langId, '日本語の単語', '日本語の単語', 1, 0)"
+            );
+            $wordIds[] = (int) mysqli_insert_id(Globals::getDbConnection());
+        }
+
+        try {
+            Maintenance::initWordCount();
+
+            $counts = array_map(
+                static fn (int $id): int => (int) Connection::fetchValue(
+                    "SELECT WoWordCount AS value FROM words WHERE WoID = $id"
+                ),
+                $wordIds
+            );
+
+            $this->assertGreaterThan(1, $counts[0], 'MeCab splits the term into several words');
+            $this->assertSame($counts[0], $counts[1], 'both MeCab languages are counted by MeCab');
+        } finally {
+            Connection::query('DELETE FROM words WHERE WoID IN (' . implode(',', $wordIds) . ')');
+            Connection::query('DELETE FROM languages WHERE LgID IN (' . implode(',', $langIds) . ')');
+        }
+    }
+
     // ===== Edge cases and robustness tests =====
 
     public function testOptimizeDatabaseWithPrefix(): void

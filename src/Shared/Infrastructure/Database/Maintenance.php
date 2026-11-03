@@ -189,18 +189,15 @@ class Maintenance
      */
     public static function initWordCount(): void
     {
-        /**
-         * @var array<string, mixed>|null $row ID for the Japanese language using MeCab
-         */
-        $row = QueryBuilder::table('languages')
-            ->selectRaw('GROUP_CONCAT(LgID) AS lang_ids')
+        // Every MeCab language, one at a time. This used to GROUP_CONCAT the
+        // IDs and cast the list to int, so only the first was counted by MeCab
+        // and the rest fell through to the regex count below.
+        $mecabLanguages = QueryBuilder::table('languages')
+            ->select(['LgID'])
             ->whereRaw("LOWER(TRIM(COALESCE(LgParserType,''))) = 'mecab'")
-            ->first();
-        /** @var string|int|null $japid */
-        $japid = $row !== null ? ($row['lang_ids'] ?? null) : null;
-
-        if ($japid !== null && $japid !== '') {
-            self::updateJapaneseWordCount((int)$japid);
+            ->getPrepared();
+        foreach ($mecabLanguages as $language) {
+            self::updateJapaneseWordCount((int) $language['LgID']);
         }
         $rows = QueryBuilder::table('words')
             ->select(['WoID', 'WoTextLC', 'LgRegexpWordCharacters', 'LgSplitEachChar'])
