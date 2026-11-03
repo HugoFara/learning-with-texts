@@ -278,8 +278,8 @@ class AdminApiHandler implements ApiRoutableInterface
      * Format response for texts statistics.
      *
      * Transforms the raw statistics data into a format expected by the frontend:
-     * - total: unique word count
-     * - saved: count of words with any status (1-5, 98, 99)
+     * - total: unique words plus unique saved multi-word expressions
+     * - saved: count of terms (words and expressions) with any status
      * - unknown: count of words without a saved status
      * - unknownPercent: percentage of unknown words
      * - statusCounts: word counts by status
@@ -301,10 +301,17 @@ class AdminApiHandler implements ApiRoutableInterface
         foreach ($textIds as $textId) {
             $textIdStr = (string) $textId;
 
-            // Get unique word count (totalu)
-            $total = isset($raw['totalu'][$textIdStr])
+            // Unique words plus unique saved expressions. statu below counts
+            // saved terms of both kinds, so a total of words alone let a
+            // saved expression push "unknown" below zero (#313). Same sum
+            // as the reading view's counter (totalu + expru).
+            $words = isset($raw['totalu'][$textIdStr])
                 ? (int) $raw['totalu'][$textIdStr]
                 : 0;
+            $expressions = isset($raw['expru'][$textIdStr])
+                ? (int) $raw['expru'][$textIdStr]
+                : 0;
+            $total = $words + $expressions;
 
             // Sum saved words from status counts (statu)
             $saved = 0;
@@ -322,7 +329,8 @@ class AdminApiHandler implements ApiRoutableInterface
                 }
             }
 
-            // Unknown = total unique - saved unique
+            // Unknown = total unique - saved unique; never negative now that
+            // both sides count expressions
             $unknown = $total - $saved;
 
             // Calculate unknown percentage

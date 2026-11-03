@@ -59,6 +59,12 @@ ones are marked like "v1.0.0-fork".
 
 ### Fixed
 
+* **The text list no longer reports negative unknown words** (#313). Its
+  statistics counted saved multi-word expressions among the saved terms but
+  not in the total, so a text whose terms were all saved, one of them an
+  expression, read "total 19, saved 20, unknown -1, -5%". The total now
+  includes saved expressions, as the reading view's counter always did.
+
 * **CC-CEDICT imports again, as a dictionary rather than a broken CSV**
   (discussion #308). MDBG moved the file under `/chinese/export/`, so the
   curated download for Chinese failed outright. It could not have worked with
