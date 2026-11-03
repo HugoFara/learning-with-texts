@@ -156,4 +156,36 @@ class TranslatorTest extends TestCase
         }
         rmdir($dir);
     }
+
+    public function testLeftToRightLocalesReportLtr(): void
+    {
+        $t = new Translator($this->localePath, 'en');
+        $this->assertSame('ltr', $t->getTextDirection());
+        foreach (['de', 'es', 'fr', 'it', 'ja', 'pt', 'ru', 'zh', 'zh-Hant'] as $code) {
+            $this->assertSame('ltr', $t->getTextDirection($code), $code);
+        }
+    }
+
+    public function testRightToLeftLocalesReportRtl(): void
+    {
+        $t = new Translator($this->localePath, 'en');
+        foreach (['ar', 'fa', 'he', 'ur', 'ckb', 'ar-EG', 'fa_IR', 'HE'] as $code) {
+            $this->assertSame('rtl', $t->getTextDirection($code), $code);
+        }
+    }
+
+    public function testDirectionFollowsTheActiveLocale(): void
+    {
+        $t = new Translator($this->localePath, 'en');
+        $t->setLocale('ar');
+        $this->assertSame('rtl', $t->getTextDirection());
+    }
+
+    public function testOnlyThePrimarySubtagDecides(): void
+    {
+        // "hr" is Croatian, not Hebrew; a prefix match would get these wrong
+        $t = new Translator($this->localePath, 'en');
+        $this->assertSame('ltr', $t->getTextDirection('hr'));
+        $this->assertSame('ltr', $t->getTextDirection('arn'));
+    }
 }

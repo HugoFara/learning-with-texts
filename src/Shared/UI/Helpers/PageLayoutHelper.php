@@ -586,7 +586,7 @@ HTML;
         $icon180 = UrlUtilities::url('/assets/images/lwt_icon_180.png');
 
         echo '<!DOCTYPE html>';
-        echo '<html lang="en"' . self::buildDataThemeAttr() . '>';
+        echo self::buildHtmlOpenTag();
         echo '<head>';
         echo '<meta http-equiv="content-type" content="text/html; charset=utf-8" />';
         echo '<!--' . "\n";
@@ -639,11 +639,8 @@ HTML;
         $favicon = UrlUtilities::url('/favicon.ico');
         $icon180 = UrlUtilities::url('/assets/images/lwt_icon_180.png');
 
-        $htmlLang = self::getActiveLocale();
-
         echo '<!DOCTYPE html>';
-        echo '<html lang="' . htmlspecialchars($htmlLang, ENT_QUOTES, 'UTF-8')
-            . '"' . self::buildDataThemeAttr() . '>';
+        echo self::buildHtmlOpenTag();
         echo '<head>';
         echo '<meta http-equiv="content-type" content="text/html; charset=utf-8" />';
         echo '<!--' . "\n";
@@ -770,6 +767,28 @@ HTML;
             . '<button type="submit" class="button is-small" aria-label="Change language">'
             . '<span class="icon"><i data-lucide="globe"></i></span></button>'
             . '</div></form>';
+    }
+
+    /**
+     * The opening `<html>` tag, carrying the interface locale and direction.
+     *
+     * `lang` is what screen readers pick a voice by and what CSS hyphenation
+     * and `:lang()` read; `dir` is what flips the layout for a right-to-left
+     * interface (#306). Both describe the *interface* language. A study text
+     * in another language states its own `lang`/`dir` on its container.
+     *
+     * @return string The tag, including the theme attribute when set
+     */
+    public static function buildHtmlOpenTag(): string
+    {
+        $locale = self::getActiveLocale();
+        $container = Container::getInstance();
+        $dir = $container->has(Translator::class)
+            ? $container->getTyped(Translator::class)->getTextDirection()
+            : 'ltr';
+
+        return '<html lang="' . htmlspecialchars($locale, ENT_QUOTES, 'UTF-8')
+            . '" dir="' . $dir . '"' . self::buildDataThemeAttr() . '>';
     }
 
     /**
