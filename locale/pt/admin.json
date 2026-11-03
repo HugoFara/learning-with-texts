@@ -191,5 +191,13 @@
     "users.errors.load_failed": "Não foi possível carregar os usuários",
     "users.errors.action_failed": "A ação falhou",
     "users.confirm_delete": "Excluir o usuário \"{username}\"? Isso não pode ser desfeito.",
-    "users.confirm_role": "Alterar {username} para {role}?"
+    "users.confirm_role": "Alterar {username} para {role}?",
+    "titles.administration": "Administração",
+    "titles.database_operations": "Operações de banco de dados",
+    "titles.settings": "Configurações de administração",
+    "titles.install_demo": "Instalar o banco de dados de demonstração do LWT",
+    "titles.server_data": "Dados do servidor",
+    "titles.user_management": "Gerenciamento de usuários",
+    "titles.create_user": "Criar usuário",
+    "titles.edit_user": "Editar usuário"
 }

@@ -189,5 +189,13 @@
     "users.errors.load_failed": "无法加载用户",
     "users.errors.action_failed": "操作失败",
     "users.confirm_delete": "删除用户“{username}”？此操作无法撤销。",
-    "users.confirm_role": "将 {username} 改为 {role}？"
+    "users.confirm_role": "将 {username} 改为 {role}？",
+    "titles.administration": "管理",
+    "titles.database_operations": "数据库操作",
+    "titles.settings": "管理设置",
+    "titles.install_demo": "安装 LWT 演示数据库",
+    "titles.server_data": "服务器数据",
+    "titles.user_management": "用户管理",
+    "titles.create_user": "创建用户",
+    "titles.edit_user": "编辑用户"
 }

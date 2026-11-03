@@ -116,6 +116,11 @@
     "statistics.today_reviewed_other": "{count} termes révisés",
     "statistics.today_read_one": "{count} texte lu",
     "statistics.today_read_other": "{count} textes lus",
+    "statistics.streak_days_one": "{count} jour",
+    "statistics.streak_days_other": "{count} jours",
+    "statistics.no_activity_on": "Aucune activité le {date}",
+    "statistics.day_summary": "{summary} — {date}",
+    "statistics.load_failed": "Impossible de charger les données d'activité",
     "statistics.activity_last_12_months": "Activité (12 derniers mois)",
     "statistics.loading_activity": "Chargement de l'activité...",
     "statistics.intensity_title": "Intensité d'apprentissage",
@@ -162,5 +167,6 @@
     "flash.microsoft_invalid_response": "Réponse invalide de Microsoft.",
     "flash.microsoft_welcome": "Bienvenue ! Vous êtes désormais connecté avec Microsoft.",
     "flash.microsoft_linked": "Compte Microsoft lié avec succès !",
-    "flash.microsoft_invalid_password": "Mot de passe invalide. Veuillez réessayer."
+    "flash.microsoft_invalid_password": "Mot de passe invalide. Veuillez réessayer.",
+    "titles.statistics": "Statistiques"
 }

@@ -128,6 +128,15 @@
     "statistics.today_read_few": "تمت قراءة {count} نصوص",
     "statistics.today_read_many": "تمت قراءة {count} نصًا",
     "statistics.today_read_other": "تمت قراءة {count} نص",
+    "statistics.streak_days_zero": "لا أيام",
+    "statistics.streak_days_one": "يوم واحد",
+    "statistics.streak_days_two": "يومان",
+    "statistics.streak_days_few": "{count} أيام",
+    "statistics.streak_days_many": "{count} يومًا",
+    "statistics.streak_days_other": "{count} يوم",
+    "statistics.no_activity_on": "لا نشاط في {date}",
+    "statistics.day_summary": "{summary} — {date}",
+    "statistics.load_failed": "تعذّر تحميل بيانات النشاط",
     "statistics.activity_last_12_months": "النشاط (آخر 12 شهرًا)",
     "statistics.loading_activity": "جارٍ تحميل النشاط...",
     "statistics.intensity_title": "كثافة التعلّم",
@@ -174,5 +183,6 @@
     "flash.microsoft_invalid_response": "استجابة غير صالحة من Microsoft.",
     "flash.microsoft_welcome": "مرحبًا! لقد سجّلت الدخول عبر Microsoft.",
     "flash.microsoft_linked": "تم ربط حساب Microsoft بنجاح!",
-    "flash.microsoft_invalid_password": "كلمة المرور غير صحيحة. يُرجى المحاولة مرة أخرى."
+    "flash.microsoft_invalid_password": "كلمة المرور غير صحيحة. يُرجى المحاولة مرة أخرى.",
+    "titles.statistics": "الإحصاءات"
 }

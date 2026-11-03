@@ -191,5 +191,13 @@
     "users.errors.load_failed": "Could not load users",
     "users.errors.action_failed": "The action failed",
     "users.confirm_delete": "Delete the user \"{username}\"? This cannot be undone.",
-    "users.confirm_role": "Change {username} to {role}?"
+    "users.confirm_role": "Change {username} to {role}?",
+    "titles.administration": "Administration",
+    "titles.database_operations": "Database Operations",
+    "titles.settings": "Admin Settings",
+    "titles.install_demo": "Install LWT Demo Database",
+    "titles.server_data": "Server Data",
+    "titles.user_management": "User Management",
+    "titles.create_user": "Create User",
+    "titles.edit_user": "Edit User"
 }

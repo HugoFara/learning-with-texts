@@ -113,6 +113,10 @@
     "statistics.today_created_other": "{count} واژه ایجاد شد",
     "statistics.today_reviewed_other": "{count} واژه مرور شد",
     "statistics.today_read_other": "{count} متن خوانده شد",
+    "statistics.streak_days_other": "{count} روز",
+    "statistics.no_activity_on": "بدون فعالیت در {date}",
+    "statistics.day_summary": "{summary} — {date}",
+    "statistics.load_failed": "بارگیری داده‌های فعالیت ناموفق بود",
     "statistics.activity_last_12_months": "فعالیت (12 ماه گذشته)",
     "statistics.loading_activity": "در حال بارگذاری فعالیت...",
     "statistics.intensity_title": "شدت یادگیری",
@@ -159,5 +163,6 @@
     "flash.microsoft_invalid_response": "پاسخ نامعتبر از Microsoft.",
     "flash.microsoft_welcome": "خوش آمدید! اکنون با Microsoft وارد شده‌اید.",
     "flash.microsoft_linked": "حساب Microsoft با موفقیت پیوند داده شد!",
-    "flash.microsoft_invalid_password": "گذرواژه نامعتبر است. لطفاً دوباره تلاش کنید."
+    "flash.microsoft_invalid_password": "گذرواژه نامعتبر است. لطفاً دوباره تلاش کنید.",
+    "titles.statistics": "آمار"
 }

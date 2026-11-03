@@ -122,6 +122,13 @@
     "statistics.today_read_few": "Прочитано {count} текста",
     "statistics.today_read_many": "Прочитано {count} текстов",
     "statistics.today_read_other": "Прочитано {count} текстов",
+    "statistics.streak_days_one": "{count} день",
+    "statistics.streak_days_few": "{count} дня",
+    "statistics.streak_days_many": "{count} дней",
+    "statistics.streak_days_other": "{count} дней",
+    "statistics.no_activity_on": "Нет активности: {date}",
+    "statistics.day_summary": "{summary} — {date}",
+    "statistics.load_failed": "Не удалось загрузить данные активности",
     "statistics.activity_last_12_months": "Активность (последние 12 месяцев)",
     "statistics.loading_activity": "Загрузка активности...",
     "statistics.intensity_title": "Интенсивность обучения",
@@ -168,5 +175,6 @@
     "flash.microsoft_invalid_response": "Недействительный ответ от Microsoft.",
     "flash.microsoft_welcome": "Добро пожаловать! Вы вошли через Microsoft.",
     "flash.microsoft_linked": "Аккаунт Microsoft успешно привязан!",
-    "flash.microsoft_invalid_password": "Неверный пароль. Пожалуйста, попробуйте ещё раз."
+    "flash.microsoft_invalid_password": "Неверный пароль. Пожалуйста, попробуйте ещё раз.",
+    "titles.statistics": "Статистика"
 }

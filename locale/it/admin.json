@@ -191,5 +191,13 @@
     "users.errors.load_failed": "Impossibile caricare gli utenti",
     "users.errors.action_failed": "Azione non riuscita",
     "users.confirm_delete": "Eliminare l’utente «{username}»? L’operazione è irreversibile.",
-    "users.confirm_role": "Cambiare {username} in {role}?"
+    "users.confirm_role": "Cambiare {username} in {role}?",
+    "titles.administration": "Amministrazione",
+    "titles.database_operations": "Operazioni sul database",
+    "titles.settings": "Impostazioni di amministrazione",
+    "titles.install_demo": "Installa il database demo di LWT",
+    "titles.server_data": "Dati del server",
+    "titles.user_management": "Gestione utenti",
+    "titles.create_user": "Crea utente",
+    "titles.edit_user": "Modifica utente"
 }

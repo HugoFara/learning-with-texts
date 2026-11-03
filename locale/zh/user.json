@@ -113,6 +113,10 @@
     "statistics.today_created_other": "已创建 {count} 个词条",
     "statistics.today_reviewed_other": "已复习 {count} 个词条",
     "statistics.today_read_other": "已阅读 {count} 篇文本",
+    "statistics.streak_days_other": "{count} 天",
+    "statistics.no_activity_on": "{date} 无活动",
+    "statistics.day_summary": "{summary} — {date}",
+    "statistics.load_failed": "无法加载活动数据",
     "statistics.activity_last_12_months": "活动（最近 12 个月）",
     "statistics.loading_activity": "正在加载活动...",
     "statistics.intensity_title": "学习强度",
@@ -159,5 +163,6 @@
     "flash.microsoft_invalid_response": "Microsoft 返回的响应无效。",
     "flash.microsoft_welcome": "欢迎！您已通过 Microsoft 登录。",
     "flash.microsoft_linked": "Microsoft 账户关联成功！",
-    "flash.microsoft_invalid_password": "密码错误。请重试。"
+    "flash.microsoft_invalid_password": "密码错误。请重试。",
+    "titles.statistics": "统计"
 }

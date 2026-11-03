@@ -191,5 +191,13 @@
     "users.errors.load_failed": "Benutzer konnten nicht geladen werden",
     "users.errors.action_failed": "Die Aktion ist fehlgeschlagen",
     "users.confirm_delete": "Benutzer „{username}“ löschen? Das lässt sich nicht rückgängig machen.",
-    "users.confirm_role": "{username} zu {role} ändern?"
+    "users.confirm_role": "{username} zu {role} ändern?",
+    "titles.administration": "Verwaltung",
+    "titles.database_operations": "Datenbankoperationen",
+    "titles.settings": "Admin-Einstellungen",
+    "titles.install_demo": "LWT-Demodatenbank installieren",
+    "titles.server_data": "Serverdaten",
+    "titles.user_management": "Benutzerverwaltung",
+    "titles.create_user": "Benutzer erstellen",
+    "titles.edit_user": "Benutzer bearbeiten"
 }

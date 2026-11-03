@@ -195,5 +195,13 @@
     "users.errors.load_failed": "Не удалось загрузить пользователей",
     "users.errors.action_failed": "Не удалось выполнить действие",
     "users.confirm_delete": "Удалить пользователя «{username}»? Это необратимо.",
-    "users.confirm_role": "Изменить роль {username} на {role}?"
+    "users.confirm_role": "Изменить роль {username} на {role}?",
+    "titles.administration": "Администрирование",
+    "titles.database_operations": "Операции с базой данных",
+    "titles.settings": "Настройки администратора",
+    "titles.install_demo": "Установка демонстрационной базы LWT",
+    "titles.server_data": "Данные сервера",
+    "titles.user_management": "Управление пользователями",
+    "titles.create_user": "Создание пользователя",
+    "titles.edit_user": "Редактирование пользователя"
 }

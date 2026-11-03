@@ -199,5 +199,13 @@
     "users.errors.load_failed": "تعذّر تحميل المستخدمين",
     "users.errors.action_failed": "فشل الإجراء",
     "users.confirm_delete": "حذف المستخدم \"{username}\"؟ لا يمكن التراجع عن ذلك.",
-    "users.confirm_role": "تغيير دور {username} إلى {role}؟"
+    "users.confirm_role": "تغيير دور {username} إلى {role}؟",
+    "titles.administration": "الإدارة",
+    "titles.database_operations": "عمليات قاعدة البيانات",
+    "titles.settings": "إعدادات الإدارة",
+    "titles.install_demo": "تثبيت قاعدة بيانات LWT التجريبية",
+    "titles.server_data": "بيانات الخادم",
+    "titles.user_management": "إدارة المستخدمين",
+    "titles.create_user": "إنشاء مستخدم",
+    "titles.edit_user": "تعديل المستخدم"
 }

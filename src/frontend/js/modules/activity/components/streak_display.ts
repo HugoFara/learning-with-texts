@@ -8,6 +8,7 @@
  */
 
 import Alpine from 'alpinejs';
+import { t, tn } from '@shared/i18n/translator';
 
 interface DashboardResponse {
   streak: {
@@ -72,12 +73,12 @@ export function streakDisplay(): StreakDisplayState {
         })
         .catch(() => {
           this.loading = false;
-          this.error = 'Failed to load activity data';
+          this.error = t('user.statistics.load_failed');
         });
     },
 
     streakLabel(n: number): string {
-      return n === 1 ? '1 day' : n + ' days';
+      return tn('user.statistics.streak_days', n);
     },
   };
 }
