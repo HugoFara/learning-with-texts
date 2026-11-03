@@ -28,17 +28,23 @@ ones are marked like "v1.0.0-fork".
   complete and machine-translated, with the same invitation: please open
   an issue for any string that reads wrong.
 
-* **Sync reviews with Anki without a file** (#264). A new page,
+* **Sync with Anki without a file** (#264). A new page,
   `/vocabulary/anki/sync`, linked from the `.apkg` import page, talks to Anki
-  on your computer through the AnkiConnect add-on. It brings the reviews you
-  did in Anki into LWT's schedule, then sends the reviews you did in LWT to
-  Anki and gives the cards LWT's due dates. Anki asks once whether to trust
-  the page. Syncing again is safe: reviews either side already has are
-  skipped. Only cards LWT exported are matched, and only reviews and schedules
-  are synced, not translations or tags. With FSRS on in Anki, Anki's own
-  memory estimates catch up when you next optimise, since AnkiConnect cannot
-  write them. On a hosted LWT the browser may ask for local network access to
-  reach Anki.
+  on your computer through the AnkiConnect add-on and keeps the two in step:
+  - reviews travel both ways and join each term's history where they
+    happened, and Anki's cards get LWT's due dates;
+  - translations, romanizations, notes, tags and suspension (↔ *ignored*)
+    travel both ways, edits to different fields of a term both survive, and a
+    field changed differently on both sides is listed rather than guessed;
+  - a term added to a language that has an `LWT::` deck in Anki appears
+    there, and a note you add to such a deck becomes a term;
+  - a term or note deleted on one side is only deleted on the other once you
+    confirm it, and not at all if the other side changed since.
+
+  Anki asks once whether to trust the page. Syncing again is safe. With FSRS
+  on in Anki, Anki's own memory estimates catch up when you next optimise,
+  since AnkiConnect cannot write them. On a hosted LWT the browser may ask for
+  local network access to reach Anki.
 
 * **Language-aware plural forms** (#319). Counted messages now take the
   form the interface language needs, not just English's singular and

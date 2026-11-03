@@ -104,8 +104,15 @@ describe('Anki import pages', () => {
         const { action } = body;
         const results: Record<string, unknown> = {
           requestPermission: { permission: 'granted' },
+          deckNames: ['Default', 'LWT::Nowhere'],
           findNotes: [100],
-          notesInfo: [{ noteId: 100, cards: [1000], fields: { LwtId: { value: '999999', order: 4 } } }],
+          notesInfo: [{
+            noteId: 100,
+            cards: [1000],
+            tags: [],
+            fields: { Term: { value: 'x', order: 0 }, LwtId: { value: '999999', order: 4 } },
+          }],
+          cardsInfo: [{ cardId: 1000, deckName: 'LWT::Nowhere', queue: 0 }],
           getReviewsOfCards: { 1000: [{ id: 1770000000000, ease: 3 }] },
         };
         req.reply({ result: results[action] ?? null, error: null });
