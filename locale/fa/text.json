@@ -214,5 +214,12 @@
     "parse_warning.no_words": "هیچ بخشی از این متن به واژه تبدیل نشد.",
     "parse_warning.almost_no_words": "تقریباً هیچ بخشی از این متن به واژه تبدیل نشد.",
     "parse_warning.check_language": "تنظیم «نویسه‌های واژه» این زبان با این متن سازگار نیست، بنابراین هیچ بخشی از آن قابل کلیک یا یادگیری نیست.",
-    "parse_warning.edit_language": "تنظیمات زبان را بررسی کنید"
+    "parse_warning.edit_language": "تنظیمات زبان را بررسی کنید",
+    "titles.texts": "متن‌ها",
+    "titles.archived": "متن‌های بایگانی‌شده",
+    "titles.read": "خواندن",
+    "titles.display": "نمایش",
+    "titles.print": "چاپ",
+    "titles.annotated": "متن حاشیه‌دار",
+    "titles.check": "بررسی متن"
 }

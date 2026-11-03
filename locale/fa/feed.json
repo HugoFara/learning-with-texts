@@ -297,5 +297,10 @@
     "flash.deleted": "خوراک با موفقیت حذف شد",
     "flash.not_found": "خوراک یافت نشد",
     "flash.delete_failed": "حذف خوراک ناموفق بود",
-    "edit_feed_not_found": "خوراک یافت نشد."
+    "edit_feed_not_found": "خوراک یافت نشد.",
+    "titles.manager": "مدیریت خوراک‌ها",
+    "titles.add": "افزودن خوراک",
+    "titles.edit": "ویرایش خوراک - {name}",
+    "titles.updating": "در حال به‌روزرسانی خوراک‌ها - {name}",
+    "titles.loading": "در حال بارگیری خوراک - {name}"
 }

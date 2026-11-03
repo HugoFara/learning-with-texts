@@ -28,5 +28,6 @@
     "warning_php_outdated": "نسخهٔ PHP شما {phpVersion} است، اما نسخهٔ {minVersion} لازم است. لطفاً PHP را به‌روزرسانی کنید.",
     "warning_update_available": "به‌روزرسانی LWT در دسترس است: {latestVersion} (نسخهٔ شما: {currentVersion}).",
     "download": "بارگیری",
-    "dismiss": "رد کردن"
+    "dismiss": "رد کردن",
+    "titles.home": "خانه"
 }
