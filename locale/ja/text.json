@@ -228,5 +228,12 @@
     "parse_warning.no_words": "このテキストからは単語を1つも抽出できませんでした。",
     "parse_warning.almost_no_words": "このテキストからはほとんど単語を抽出できませんでした。",
     "parse_warning.check_language": "この言語の「単語を構成する文字」の設定がこのテキストと一致していないため、クリックも学習もできません。",
-    "parse_warning.edit_language": "言語設定を確認"
+    "parse_warning.edit_language": "言語設定を確認",
+    "titles.texts": "テキスト",
+    "titles.archived": "アーカイブ済みテキスト",
+    "titles.read": "読む",
+    "titles.display": "表示",
+    "titles.print": "印刷",
+    "titles.annotated": "注釈付きテキスト",
+    "titles.check": "テキストを確認"
 }

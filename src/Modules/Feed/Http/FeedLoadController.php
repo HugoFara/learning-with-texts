@@ -80,7 +80,7 @@ class FeedLoadController
         );
 
         $langName = $this->languageFacade->getLanguageName($currentLang);
-        PageLayoutHelper::renderPageStart('Updating Feeds - ' . $langName, true);
+        PageLayoutHelper::renderPageStart(__('feed.titles.updating', ['name' => $langName]), true);
 
         $this->renderFeedLoadInterface(
             InputValidator::getIntParam('selected_feed', 0, 0),
@@ -107,7 +107,7 @@ class FeedLoadController
         );
 
         $langName = $this->languageFacade->getLanguageName($currentLang);
-        PageLayoutHelper::renderPageStart('Loading Feed - ' . $langName, true);
+        PageLayoutHelper::renderPageStart(__('feed.titles.loading', ['name' => $langName]), true);
 
         $this->renderFeedLoadInterface(
             $id,

@@ -416,5 +416,15 @@
     "flash.invalid_term_ids": "无效的词条 ID",
     "flash.tag_name_required": "请输入标签名称",
     "flash.unknown_action": "未知操作：{action}",
-    "flash.no_terms_match_filter": "没有词条符合筛选条件"
+    "flash.no_terms_match_filter": "没有词条符合筛选条件",
+    "titles.terms": "词条",
+    "titles.term": "词条",
+    "titles.term_named": "词条：{term}",
+    "titles.edit_term": "编辑词条：{term}",
+    "titles.new_term": "新建词条",
+    "titles.starter": "入门词汇",
+    "titles.not_found": "未找到",
+    "titles.error": "错误",
+    "titles.status_changed": "状态已更改",
+    "titles.status_set": "状态已设置"
 }

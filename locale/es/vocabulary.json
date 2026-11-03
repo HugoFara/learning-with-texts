@@ -429,5 +429,15 @@
     "anki.apkg.settings_scheduling": "sin ello tus repasos se quedan en Anki.",
     "anki.apkg.settings_import": "En sentido inverso, marca <em>Importar el progreso de aprendizaje</em> cuando importes un mazo de LWT en Anki, o Anki empezará cada tarjeta desde cero y descartará la programación que exportó esta página.",
     "anki.apkg.deck_notice_title": "¿Vas a importar un mazo que creaste en Anki?",
-    "anki.apkg.deck_notice": "Esta página solo actualiza términos que LWT exportó en primer lugar: un mazo de Anki o de AnkiWeb no tiene nada aquí con lo que emparejarse, así que no cambiaría nada. Usa en su lugar <a href=\"{url}\">Importar un mazo de Anki</a>, que crea términos nuevos y deduce lo bien que conoces cada palabra a partir de la propia programación de Anki."
+    "anki.apkg.deck_notice": "Esta página solo actualiza términos que LWT exportó en primer lugar: un mazo de Anki o de AnkiWeb no tiene nada aquí con lo que emparejarse, así que no cambiaría nada. Usa en su lugar <a href=\"{url}\">Importar un mazo de Anki</a>, que crea términos nuevos y deduce lo bien que conoces cada palabra a partir de la propia programación de Anki.",
+    "titles.terms": "Términos",
+    "titles.term": "Término",
+    "titles.term_named": "Término: {term}",
+    "titles.edit_term": "Editar término: {term}",
+    "titles.new_term": "Nuevo término",
+    "titles.starter": "Vocabulario inicial",
+    "titles.not_found": "No encontrado",
+    "titles.error": "Error",
+    "titles.status_changed": "Estado cambiado",
+    "titles.status_set": "Estado establecido"
 }

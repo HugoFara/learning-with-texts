@@ -297,5 +297,10 @@
   "flash.deleted": "Feed deleted successfully",
   "flash.not_found": "Feed not found",
   "flash.delete_failed": "Failed to delete feed",
-  "edit_feed_not_found": "Feed not found."
+  "edit_feed_not_found": "Feed not found.",
+  "titles.manager": "Feed Manager",
+  "titles.add": "Add a Feed",
+  "titles.edit": "Edit Feed - {name}",
+  "titles.updating": "Updating Feeds - {name}",
+  "titles.loading": "Loading Feed - {name}"
 }

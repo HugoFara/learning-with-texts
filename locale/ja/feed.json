@@ -297,5 +297,10 @@
     "flash.deleted": "フィードが削除されました",
     "flash.not_found": "フィードが見つかりません",
     "flash.delete_failed": "フィードの削除に失敗しました",
-    "edit_feed_not_found": "フィードが見つかりません。"
+    "edit_feed_not_found": "フィードが見つかりません。",
+    "titles.manager": "フィード管理",
+    "titles.add": "フィードを追加",
+    "titles.edit": "フィードを編集 - {name}",
+    "titles.updating": "フィードを更新中 - {name}",
+    "titles.loading": "フィードを読み込み中 - {name}"
 }

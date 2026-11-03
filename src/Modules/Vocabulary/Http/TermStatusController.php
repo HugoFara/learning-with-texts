@@ -99,7 +99,7 @@ class TermStatusController extends VocabularyBaseController
         $ajax = InputValidator::getString('ajax');
 
         if ($wid === 0) {
-            PageLayoutHelper::renderPageStartNobody('Error');
+            PageLayoutHelper::renderPageStartNobody(__('vocabulary.titles.error'));
             echo '<p>Invalid word ID</p>';
             PageLayoutHelper::renderPageEnd();
             return;
@@ -119,7 +119,7 @@ class TermStatusController extends VocabularyBaseController
                 return;
             }
 
-            PageLayoutHelper::renderPageStartNobody('Status Changed');
+            PageLayoutHelper::renderPageStartNobody(__('vocabulary.titles.status_changed'));
             // Safe: $result['increment'] is pre-escaped HTML from TermStatusApiHandler
             echo $result['increment'] ?? '<p>Status updated</p>';
             PageLayoutHelper::renderPageEnd();
@@ -136,13 +136,13 @@ class TermStatusController extends VocabularyBaseController
                 return;
             }
 
-            PageLayoutHelper::renderPageStartNobody('Status Set');
+            PageLayoutHelper::renderPageStartNobody(__('vocabulary.titles.status_set'));
             echo '<p>Status set to ' . $status . '</p>';
             PageLayoutHelper::renderPageEnd();
             return;
         }
 
-        PageLayoutHelper::renderPageStartNobody('Error');
+        PageLayoutHelper::renderPageStartNobody(__('vocabulary.titles.error'));
         echo '<p>No status operation specified</p>';
         PageLayoutHelper::renderPageEnd();
     }

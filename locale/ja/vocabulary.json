@@ -428,5 +428,15 @@
     "anki.apkg.settings_scheduling": "そうしないと、復習の記録が Anki に残されたままになります。",
     "anki.apkg.settings_import": "逆方向では、LWT のデッキを Anki にインポートする際に <em>学習の進捗をインポートする</em> にチェックを入れてください。そうしないと Anki はすべてのカードを最初から始め、このページがエクスポートしたスケジュールを破棄します。",
     "anki.apkg.deck_notice_title": "Anki で作成したデッキをインポートしますか？",
-    "anki.apkg.deck_notice": "このページは、もともと LWT がエクスポートした用語だけを更新します。Anki や AnkiWeb のデッキには照合できるものがここにないため、何も変わりません。代わりに <a href=\"{url}\">Anki デッキをインポート</a> を使用してください。新しい用語を作成し、Anki 自身のスケジュールから各単語の習熟度を判定します。"
+    "anki.apkg.deck_notice": "このページは、もともと LWT がエクスポートした用語だけを更新します。Anki や AnkiWeb のデッキには照合できるものがここにないため、何も変わりません。代わりに <a href=\"{url}\">Anki デッキをインポート</a> を使用してください。新しい用語を作成し、Anki 自身のスケジュールから各単語の習熟度を判定します。",
+    "titles.terms": "用語",
+    "titles.term": "用語",
+    "titles.term_named": "用語：{term}",
+    "titles.edit_term": "用語を編集：{term}",
+    "titles.new_term": "新規用語",
+    "titles.starter": "スターター語彙",
+    "titles.not_found": "見つかりません",
+    "titles.error": "エラー",
+    "titles.status_changed": "ステータスを変更しました",
+    "titles.status_set": "ステータスを設定しました"
 }

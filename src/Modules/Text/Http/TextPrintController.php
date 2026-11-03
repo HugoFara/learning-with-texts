@@ -121,7 +121,7 @@ class TextPrintController extends BaseController
         $annotationLinkHtml = (new AnnotationService())->getAnnotationLink($textId);
 
         // Render the view
-        PageLayoutHelper::renderPageStartNobody('Print');
+        PageLayoutHelper::renderPageStartNobody(__('text.titles.print'));
 
         include self::MODULE_VIEWS . '/print_alpine.php';
 
@@ -178,7 +178,7 @@ class TextPrintController extends BaseController
         $annotationLinkHtml = (new AnnotationService())->getAnnotationLink($textId);
 
         // Render the view
-        PageLayoutHelper::renderPageStartNobody('Annotated Text');
+        PageLayoutHelper::renderPageStartNobody(__('text.titles.annotated'));
 
         include self::MODULE_VIEWS . '/print_alpine.php';
 
@@ -247,7 +247,7 @@ class TextPrintController extends BaseController
         $annotationLinkHtml = (new AnnotationService())->getAnnotationLink($textId);
 
         // Render the view
-        PageLayoutHelper::renderPageStartNobody('Annotated Text');
+        PageLayoutHelper::renderPageStartNobody(__('text.titles.annotated'));
 
         include self::MODULE_VIEWS . '/print_alpine.php';
 

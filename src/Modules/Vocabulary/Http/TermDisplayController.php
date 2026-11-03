@@ -108,7 +108,7 @@ class TermDisplayController extends VocabularyBaseController
             return;
         }
 
-        PageLayoutHelper::renderPageStart("Term: " . $term->text(), false);
+        PageLayoutHelper::renderPageStart(__('vocabulary.titles.term_named', ['term' => $term->text()]), false);
 
         $this->render('show', [
             'term' => $term,
@@ -132,7 +132,7 @@ class TermDisplayController extends VocabularyBaseController
      */
     public function showWord(?int $wid = null): void
     {
-        PageLayoutHelper::renderPageStartNobody('Term');
+        PageLayoutHelper::renderPageStartNobody(__('vocabulary.titles.term'));
 
         // Support both new route param injection and legacy query param
         if ($wid === null) {
@@ -203,7 +203,7 @@ class TermDisplayController extends VocabularyBaseController
             return;
         }
 
-        PageLayoutHelper::renderPageStart("Edit Term: " . $term->text(), false);
+        PageLayoutHelper::renderPageStart(__('vocabulary.titles.edit_term', ['term' => $term->text()]), false);
 
         $this->render('form_edit', [
             'term' => $term,
@@ -284,7 +284,7 @@ class TermDisplayController extends VocabularyBaseController
         }
 
         // Use a placeholder title - Alpine.js will update it dynamically
-        PageLayoutHelper::renderPageStart('Terms', true);
+        PageLayoutHelper::renderPageStart(__('vocabulary.titles.terms'), true);
 
         include $this->viewPath . 'list_alpine.php';
 

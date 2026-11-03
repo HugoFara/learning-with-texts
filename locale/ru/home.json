@@ -28,5 +28,6 @@
     "warning_php_outdated": "Ваша версия PHP — {phpVersion}, но требуется версия {minVersion}. Пожалуйста, обновите PHP.",
     "warning_update_available": "Доступно обновление LWT: {latestVersion} (ваша версия: {currentVersion}).",
     "download": "Скачать",
-    "dismiss": "Закрыть"
+    "dismiss": "Закрыть",
+    "titles.home": "Главная"
 }

@@ -28,5 +28,6 @@
     "warning_php_outdated": "您的 PHP 版本为 {phpVersion}，但需要 {minVersion} 版本。请升级 PHP。",
     "warning_update_available": "LWT 有可用更新：{latestVersion}（您的版本：{currentVersion}）。",
     "download": "下载",
-    "dismiss": "关闭"
+    "dismiss": "关闭",
+    "titles.home": "主页"
 }

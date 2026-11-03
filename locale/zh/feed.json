@@ -297,5 +297,10 @@
     "flash.deleted": "订阅源删除成功",
     "flash.not_found": "未找到订阅源",
     "flash.delete_failed": "删除订阅源失败",
-    "edit_feed_not_found": "未找到订阅源。"
+    "edit_feed_not_found": "未找到订阅源。",
+    "titles.manager": "订阅源管理",
+    "titles.add": "添加订阅源",
+    "titles.edit": "编辑订阅源 - {name}",
+    "titles.updating": "正在更新订阅源 - {name}",
+    "titles.loading": "正在加载订阅源 - {name}"
 }
