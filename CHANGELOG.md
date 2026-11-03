@@ -28,6 +28,17 @@ ones are marked like "v1.0.0-fork".
   complete and machine-translated, with the same invitation: please open
   an issue for any string that reads wrong.
 
+* **Language-aware plural forms** (#319). Counted messages now take the
+  form the interface language needs, not just English's singular and
+  plural: Arabic's six forms (0, 1, 2, 3–10, 11–99, 100…), Russian's
+  one/few/many, and French, Portuguese and Persian's singular for zero.
+  Translators write `key_one`, `key_other` and whichever other CLDR
+  categories their language uses. In code, `__n()` / `__ne()` in PHP and
+  `tn()` in TypeScript replace the `count === 1 ? … : …` key choice. The
+  term list, the term-import and Anki import results, and the review
+  completion message use it; the locale checker counts a plural set as
+  one key.
+
 ### Changed
 
 * **The nine shipped locales are complete again** (#266). 3.7.0 moved the Anki

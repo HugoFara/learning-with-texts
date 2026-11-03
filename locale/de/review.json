@@ -2,8 +2,6 @@
     "page_title": "Wiederholung",
     "heading": "WIEDERHOLUNG - {title}",
 
-    "header.words_due_today_one": "Heute fälliges Wort:",
-    "header.words_due_today_many": "Heute fällige Wörter:",
     "header.remaining": "verbleibend.",
     "header.read_words_aloud": "Wörter vorlesen",
     "header.button_table": "Tabelle",
@@ -68,8 +66,6 @@
 
     "finished.nothing_more": "Nichts mehr zur Wiederholung hier!",
     "finished.nothing": "Nichts zur Wiederholung hier!",
-    "finished.tomorrow_one": "Wiederholung",
-    "finished.tomorrow_many": "Wiederholungen",
     "finished.tomorrow_count_one": "Morgen finden Sie hier {count} Wiederholung!",
     "finished.tomorrow_count_other": "Morgen finden Sie hier {count} Wiederholungen!",
 

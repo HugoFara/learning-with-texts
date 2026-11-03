@@ -15,6 +15,11 @@
  *   php bin/check-locales.php --fail-under=90    # Exit 1 if any non-en
  *                                                # locale is below 90%
  *
+ * Plural variants count as one: English's "x_one" is present in a locale that
+ * has "x_other", since a language without a singular form (Chinese, Japanese)
+ * only needs "x_other" (#319). Extra categories a locale adds, such as
+ * Arabic's "x_two", are not counted against it.
+ *
  * Exit codes:
  *   0 = success (all locales meet --fail-under threshold, or none given)
  *   1 = one or more locales below threshold
@@ -50,6 +55,26 @@ if (!is_dir($referencePath)) {
     exit(2);
 }
 
+/**
+ * Whether $key is translated in $strings, treating plural variants as one.
+ *
+ * A closure rather than a function, so the script declares no symbols.
+ *
+ * @param string               $key     Reference key
+ * @param array<mixed, mixed>  $strings The locale's namespace file
+ * @param list<string>         $refKeys The reference namespace's keys
+ */
+$isTranslated = static function (string $key, array $strings, array $refKeys): bool {
+    if (isset($strings[$key]) && $strings[$key] !== '') {
+        return true;
+    }
+    if (preg_match('/^(.+)_(zero|one|two|few|many)$/', $key, $m) !== 1) {
+        return false;
+    }
+    $other = $m[1] . '_other';
+    return in_array($other, $refKeys, true) && isset($strings[$other]) && $strings[$other] !== '';
+};
+
 // Load reference key set per namespace.
 $reference = [];
 $referenceTotal = 0;
@@ -84,7 +109,7 @@ foreach ($locales as $locale) {
             $decoded = json_decode((string)file_get_contents($nsFile), true);
             if (is_array($decoded)) {
                 foreach ($refKeys as $key) {
-                    if (array_key_exists($key, $decoded) && $decoded[$key] !== '') {
+                    if ($isTranslated($key, $decoded, $refKeys)) {
                         $present++;
                     } else {
                         $missing[] = $key;

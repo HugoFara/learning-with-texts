@@ -2,8 +2,6 @@
     "page_title": "復習",
     "heading": "復習 - {title}",
 
-    "header.words_due_today_one": "本日の復習単語：",
-    "header.words_due_today_many": "本日の復習単語：",
     "header.remaining": "残り。",
     "header.read_words_aloud": "単語を読み上げる",
     "header.button_table": "表",
@@ -68,8 +66,6 @@
 
     "finished.nothing_more": "ここで復習するものはもうありません！",
     "finished.nothing": "ここで復習するものはありません！",
-    "finished.tomorrow_one": "復習",
-    "finished.tomorrow_many": "復習",
     "finished.tomorrow_count_one": "明日はここに{count}件の復習があります！",
     "finished.tomorrow_count_other": "明日はここに{count}件の復習があります！",
 

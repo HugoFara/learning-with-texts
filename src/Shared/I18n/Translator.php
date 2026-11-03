@@ -136,13 +136,56 @@ class Translator
             return $key;
         }
 
-        // Interpolate parameters
-        if ($params !== []) {
-            foreach ($params as $paramKey => $value) {
-                $text = str_replace('{' . $paramKey . '}', (string)$value, $text);
+        return $this->interpolate($text, $params);
+    }
+
+    /**
+     * Translate a count-dependent key, choosing the locale's plural form.
+     *
+     * Looks up "{key}_{category}", where the category is the CLDR plural
+     * category of $count in the active locale (see PluralRules), then
+     * "{key}_other". If the locale has neither, English is tried the same
+     * way. {count} is interpolated unless $params sets it already, so a
+     * caller can pass a formatted number.
+     *
+     * @param string                    $key    Dot-notated base key, without
+     *                                          the category suffix
+     * @param int                       $count  The number being counted
+     * @param array<string, string|int> $params Extra interpolation parameters
+     *
+     * @return string Translated string, or the raw key if not found
+     */
+    public function translatePlural(string $key, int $count, array $params = []): string
+    {
+        [$namespace, $subKey] = $this->resolveKey($key);
+        $locales = $this->locale === 'en' ? ['en'] : [$this->locale, 'en'];
+
+        foreach ($locales as $locale) {
+            $category = PluralRules::category($locale, $count);
+            foreach (array_unique([$category, 'other']) as $form) {
+                $text = $this->lookup($locale, $namespace, $subKey . '_' . $form);
+                if ($text !== null) {
+                    return $this->interpolate($text, $params + ['count' => $count]);
+                }
             }
         }
 
+        return $key;
+    }
+
+    /**
+     * Replace {name} placeholders with their values.
+     *
+     * @param string                    $text   Translation with placeholders
+     * @param array<string, string|int> $params Interpolation parameters
+     *
+     * @return string
+     */
+    private function interpolate(string $text, array $params): string
+    {
+        foreach ($params as $paramKey => $value) {
+            $text = str_replace('{' . $paramKey . '}', (string)$value, $text);
+        }
         return $text;
     }
 

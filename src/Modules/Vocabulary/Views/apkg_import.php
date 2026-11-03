@@ -50,9 +50,6 @@ $counts = $result === null ? [] : [
 ];
 
 $unknownCount = $result?->skippedUnknown ?? 0;
-$unknownNotice = $unknownCount === 1
-    ? 'vocabulary.anki.apkg.unknown_notice'
-    : 'vocabulary.anki.apkg.unknown_notice_plural';
 
 $settingsExport = $needsLegacyExport
     ? 'vocabulary.anki.apkg.settings_export_legacy'
@@ -80,7 +77,7 @@ $settingsExport = $needsLegacyExport
         // vocabulary. Say where they go, and only when there are some. ?>
     <?php if ($unknownCount > 0) { ?>
     <div class="notification is-warning">
-      <strong><?= __e($unknownNotice, ['count' => $unknownCount]) ?></strong>
+      <strong><?= __ne('vocabulary.anki.apkg.unknown_notice', $unknownCount) ?></strong>
         <?= __('vocabulary.anki.apkg.unknown_advice', ['url' => $deckImportUrl]) ?>
     </div>
     <?php } ?>
