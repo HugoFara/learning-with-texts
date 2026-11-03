@@ -21,7 +21,8 @@ ones are marked like "v1.0.0-fork".
   the first right-to-left locale follows separately.
 
 * **Persian (`fa`) interface locale** (#306), the first right-to-left one.
-  Complete but machine-drafted; native-speaker review is welcome.
+  Complete, but machine-translated and not yet reviewed by a native
+  speaker: please open an issue for any string that reads wrong.
 
 ### Changed
 
