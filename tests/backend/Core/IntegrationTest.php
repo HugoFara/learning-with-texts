@@ -490,12 +490,8 @@ class IntegrationTest extends TestCase
             $dir_tag = self::$languageService->getScriptDirectionTag($lang_id);
 
             $this->assertIsString($dir_tag);
-            $this->assertTrue(
-                $dir_tag === 'direction:ltr;' ||
-                $dir_tag === 'direction:rtl;' ||
-                $dir_tag === '' ||
-                $dir_tag === ' dir="rtl" '
-            );
+            // An existing language always states its direction (#306)
+            $this->assertContains($dir_tag, [' dir="ltr" ', ' dir="rtl" ']);
         } else {
             $this->markTestSkipped('No languages in database');
         }

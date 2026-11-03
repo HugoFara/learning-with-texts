@@ -36,7 +36,7 @@ describe('renderBookNav', () => {
     expect(html).toContain('href="/book/7"');
     expect(html).toContain('<strong>My Book</strong>');
     expect(html).toContain('Ch. 2/3');
-    expect(html).toContain('<em class="ml-1">The Second</em>');
+    expect(html).toContain('<em class="ms-1">The Second</em>');
   });
 
   it('renders prev/next as links when adjacent chapters exist', () => {
@@ -75,7 +75,7 @@ describe('renderBookNav', () => {
 
   it('omits the chapter-title emphasis when there is none', () => {
     const html = renderBookNav(ctx({ chapterTitle: null }));
-    expect(html).not.toContain('<em class="ml-1">');
+    expect(html).not.toContain('<em class="ms-1">');
   });
 
   it('escapes book and chapter titles to prevent HTML injection', () => {

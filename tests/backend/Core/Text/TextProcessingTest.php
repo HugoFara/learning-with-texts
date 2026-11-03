@@ -162,7 +162,8 @@ class TextProcessingTest extends TestCase
 
         $tag = self::$languageService->getScriptDirectionTag($lgId);
 
-        $this->assertEquals('', $tag);
+        // Explicit, so the text keeps its direction inside an RTL interface
+        $this->assertEquals(' dir="ltr" ', $tag);
 
         // Clean up
         Connection::query("DELETE FROM languages WHERE LgID = $lgId");

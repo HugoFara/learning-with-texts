@@ -472,7 +472,7 @@ export function wordUploadResultApp(config: UploadResultConfig = { lastUpdate: '
 
       return `<tr>
         <td>
-          <span${this.rtl ? ' dir="rtl"' : ''}>${escapeHtml(term.WoText)}</span>
+          <span dir="${this.rtl ? 'rtl' : 'ltr'}">${escapeHtml(term.WoText)}</span>
           <span class="has-text-grey"> / </span>
           <span id="roman${term.WoID}" class="edit_area clickedit has-text-grey-dark">${term.WoRomanization !== '' ? escapeHtml(term.WoRomanization) : '*'}</span>
         </td>

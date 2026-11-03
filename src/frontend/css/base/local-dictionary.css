@@ -87,14 +87,14 @@
 .local-dict-reading {
   color: var(--bulma-grey, #7a7a7a);
   font-size: 0.9em;
-  margin-left: 4px;
+  margin-inline-start: 4px;
 }
 
 .local-dict-pos {
   color: var(--bulma-info, #3e8ed0);
   font-size: 0.8em;
   font-style: italic;
-  margin-left: 4px;
+  margin-inline-start: 4px;
 }
 
 .local-dict-definition {

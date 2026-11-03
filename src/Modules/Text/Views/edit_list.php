@@ -111,15 +111,15 @@ echo PageLayoutHelper::buildActionCard(
                 <div class="buttons are-small">
                     <button type="button" class="button" @click="markAllTexts(true)">
                         <?php echo IconHelper::render('check-square', ['size' => 14]); ?>
-                        <span class="ml-1"><?= __e('text.common.mark_all') ?></span>
+                        <span class="ms-1"><?= __e('text.common.mark_all') ?></span>
                     </button>
                     <button type="button" class="button" @click="markAllTexts(false)">
                         <?php echo IconHelper::render('square', ['size' => 14]); ?>
-                        <span class="ml-1"><?= __e('text.common.mark_none') ?></span>
+                        <span class="ms-1"><?= __e('text.common.mark_none') ?></span>
                     </button>
                     <span
                         x-show="markedTexts.size > 0"
-                        class="tag is-warning ml-2"
+                        class="tag is-warning ms-2"
                         x-text="markedTexts.size + ' selected'"></span>
                 </div>
             </div>
@@ -130,7 +130,7 @@ echo PageLayoutHelper::buildActionCard(
                     <div class="control">
                         <span class="button is-static is-small">
                             <?php echo IconHelper::render('zap', ['size' => 14]); ?>
-                            <span class="ml-1"><?= __e('text.common.actions') ?></span>
+                            <span class="ms-1"><?= __e('text.common.actions') ?></span>
                         </span>
                     </div>
                     <div class="control">
@@ -162,7 +162,7 @@ echo PageLayoutHelper::buildActionCard(
                                    :data-text-id="text.id"
                                    @change="toggleTextMark($event)" />
                         </label>
-                        <p class="card-header-title" x-text="text.title"></p>
+                        <p dir="auto" class="card-header-title" x-text="text.title"></p>
                         <div class="card-header-icon card-icons">
                             <span x-show="text.has_audio" title="<?= __e('text.common.with_audio') ?>">
                                 <?php echo IconHelper::render('volume-2', ['size' => 16]); ?>

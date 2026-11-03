@@ -369,9 +369,13 @@ class LanguageFacade
      *
      * @param string|int|null $id Language ID
      *
-     * @return string ' dir="rtl" ' or empty string
+     * A left-to-right language states `dir="ltr"` rather than nothing, so its
+     * text keeps its direction inside a right-to-left interface instead of
+     * inheriting the page's (#306). Empty only when there is no language.
      *
-     * @psalm-return ' dir="rtl" '|''
+     * @return string ' dir="rtl" ', ' dir="ltr" ', or empty string
+     *
+     * @psalm-return ' dir="rtl" '|' dir="ltr" '|''
      */
     public function getScriptDirectionTag($id): string
     {

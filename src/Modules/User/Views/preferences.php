@@ -60,7 +60,7 @@ use Lwt\Shared\UI\Helpers\ConfigIsland;
         <header class="card-header is-clickable" @click="open = !open">
             <p class="card-header-title">
                 <?php echo IconHelper::render('palette', ['alt' => 'Appearance']); ?>
-                <span class="ml-2"><?= __('preferences.section_appearance') ?></span>
+                <span class="ms-2"><?= __('preferences.section_appearance') ?></span>
             </p>
             <button
                 type="button"
@@ -109,7 +109,7 @@ use Lwt\Shared\UI\Helpers\ConfigIsland;
                         </p>
                         <div class="tags">
                             <span class="tag" :class="mode === 'dark' ? 'is-dark' : 'is-light'" x-show="mode">
-                                <i data-lucide="sun" style="width:14px;height:14px;margin-right:4px"></i>
+                                <i data-lucide="sun" style="width:14px;height:14px;margin-inline-end:4px"></i>
                                 <span x-text="
                                     mode === 'dark'
                                         ? $t('preferences.theme_dark_mode')
@@ -117,11 +117,11 @@ use Lwt\Shared\UI\Helpers\ConfigIsland;
                                 "></span>
                             </span>
                             <span class="tag is-info is-light" x-show="highlighting">
-                                <i data-lucide="palette" style="width:14px;height:14px;margin-right:4px"></i>
+                                <i data-lucide="palette" style="width:14px;height:14px;margin-inline-end:4px"></i>
                                 <span x-text="highlighting"></span>
                             </span>
                             <span class="tag is-primary is-light" x-show="wordBreaking">
-                                <i data-lucide="wrap-text" style="width:14px;height:14px;margin-right:4px"></i>
+                                <i data-lucide="wrap-text" style="width:14px;height:14px;margin-inline-end:4px"></i>
                                 <span x-text="wordBreaking"></span>
                             </span>
                         </div>
@@ -136,7 +136,7 @@ use Lwt\Shared\UI\Helpers\ConfigIsland;
         <header class="card-header is-clickable" @click="open = !open">
             <p class="card-header-title">
                 <?php echo IconHelper::render('languages', ['alt' => 'Language']); ?>
-                <span class="ml-2"><?= __('preferences.section_language') ?></span>
+                <span class="ms-2"><?= __('preferences.section_language') ?></span>
             </p>
             <button
                 type="button"
@@ -184,7 +184,7 @@ use Lwt\Shared\UI\Helpers\ConfigIsland;
         <header class="card-header is-clickable" @click="open = !open">
             <p class="card-header-title">
                 <?php echo IconHelper::render('book-open', ['alt' => 'Read Text Screen']); ?>
-                <span class="ml-2"><?= __('preferences.section_read_text_screen') ?></span>
+                <span class="ms-2"><?= __('preferences.section_read_text_screen') ?></span>
             </p>
             <button
                 type="button"
@@ -292,7 +292,7 @@ use Lwt\Shared\UI\Helpers\ConfigIsland;
         <header class="card-header is-clickable" @click="open = !open">
             <p class="card-header-title">
                 <?php echo IconHelper::render('graduation-cap', ['alt' => 'Review Screen']); ?>
-                <span class="ml-2"><?= __('preferences.section_review_screen') ?></span>
+                <span class="ms-2"><?= __('preferences.section_review_screen') ?></span>
             </p>
             <button
                 type="button"
@@ -378,7 +378,7 @@ use Lwt\Shared\UI\Helpers\ConfigIsland;
         <header class="card-header is-clickable" @click="open = !open">
             <p class="card-header-title">
                 <?php echo IconHelper::render('glasses', ['alt' => 'Reading']); ?>
-                <span class="ml-2"><?= __('preferences.section_reading') ?></span>
+                <span class="ms-2"><?= __('preferences.section_reading') ?></span>
             </p>
             <button
                 type="button"
@@ -478,7 +478,7 @@ use Lwt\Shared\UI\Helpers\ConfigIsland;
         <header class="card-header is-clickable" @click="open = !open">
             <p class="card-header-title">
                 <?php echo IconHelper::render('spell-check', ['alt' => 'Review & Terms']); ?>
-                <span class="ml-2"><?= __('preferences.section_review_terms') ?></span>
+                <span class="ms-2"><?= __('preferences.section_review_terms') ?></span>
             </p>
             <button
                 type="button"
@@ -623,7 +623,7 @@ use Lwt\Shared\UI\Helpers\ConfigIsland;
         <header class="card-header is-clickable" @click="open = !open">
             <p class="card-header-title">
                 <?php echo IconHelper::render('volume-2', ['alt' => 'Text to Speech']); ?>
-                <span class="ml-2"><?= __('preferences.section_tts') ?></span>
+                <span class="ms-2"><?= __('preferences.section_tts') ?></span>
             </p>
             <button
                 type="button"
@@ -817,7 +817,7 @@ use Lwt\Shared\UI\Helpers\ConfigIsland;
         <header class="card-header is-clickable" @click="open = !open">
             <p class="card-header-title">
                 <?php echo IconHelper::render('table', ['alt' => 'Tables & Pagination']); ?>
-                <span class="ml-2"><?= __('preferences.section_tables') ?></span>
+                <span class="ms-2"><?= __('preferences.section_tables') ?></span>
             </p>
             <button
                 type="button"

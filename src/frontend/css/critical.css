@@ -63,7 +63,7 @@ body {
   cursor: pointer;
   height: 3.25rem;
   width: 3.25rem;
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 @media screen and (min-width: 1024px) {
@@ -77,13 +77,13 @@ body {
     display: flex;
     align-items: stretch;
     justify-content: flex-start;
-    margin-right: auto;
+    margin-inline-end: auto;
   }
   .navbar-end {
     display: flex;
     align-items: stretch;
     justify-content: flex-end;
-    margin-left: auto;
+    margin-inline-start: auto;
   }
   .navbar-burger {
     display: none;

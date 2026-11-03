@@ -106,7 +106,7 @@ $titleDelete = htmlspecialchars(__('admin.users_action_delete'), ENT_QUOTES, 'UT
             <div class="level-item">
                 <a class="button is-primary" href="<?php echo url('/admin/users/new'); ?>">
                     <?php echo IconHelper::render('circle-plus', ['class' => 'icon']); ?>
-                    <span class="ml-1"><?php echo __e('admin.users_add_new'); ?></span>
+                    <span class="ms-1"><?php echo __e('admin.users_add_new'); ?></span>
                 </a>
             </div>
         </div>
@@ -149,7 +149,7 @@ $titleDelete = htmlspecialchars(__('admin.users_action_delete'), ENT_QUOTES, 'UT
                     <tr>
                         <td>
                             <strong x-text="user.username"></strong>
-                            <span class="tag is-light is-small ml-1" x-show="isSelf(user)">
+                            <span class="tag is-light is-small ms-1" x-show="isSelf(user)">
                                 <?php echo __e('admin.users_self_tag'); ?>
                             </span>
                         </td>

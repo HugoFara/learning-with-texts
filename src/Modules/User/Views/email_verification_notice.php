@@ -30,7 +30,7 @@ use Lwt\Shared\UI\Helpers\FormHelper;
     <?php echo __e('user.verify_banner.body'); ?>
     <form method="post" action="/email/resend-verification" style="display:inline">
         <?php echo FormHelper::csrfField(); ?>
-        <button type="submit" class="button is-small is-warning is-outlined ml-2">
+        <button type="submit" class="button is-small is-warning is-outlined ms-2">
             <?php echo __e('user.verify_banner.resend'); ?>
         </button>
     </form>

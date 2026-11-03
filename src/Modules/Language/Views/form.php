@@ -141,7 +141,7 @@ $importMoreTitle = htmlspecialchars(__('language.form.import_more_entries'), ENT
             <header class="is-flex is-align-items-center is-justify-content-space-between is-clickable"
                     @click="toggleAdvanced()">
                 <h4 class="title is-5 mb-0 is-flex is-align-items-center">
-                    <span class="icon mr-2">
+                    <span class="icon me-2">
                         <?php echo IconHelper::render('settings', ['alt' => __('language.form.advanced_settings')]); ?>
                     </span>
                     <?php echo __('language.form.advanced_settings'); ?>
@@ -170,7 +170,7 @@ $importMoreTitle = htmlspecialchars(__('language.form.import_more_entries'), ENT
                         <a href="<?php echo url('/word/upload?tab=dictionary'); ?>"
                            class="button is-primary is-small">
                             <?php echo IconHelper::render('upload', ['alt' => __('language.form.import')]); ?>
-                            <span class="ml-1"><?php echo __('language.form.import'); ?></span>
+                            <span class="ms-1"><?php echo __('language.form.import'); ?></span>
                         </a>
                     </h6>
 
@@ -197,15 +197,15 @@ $importMoreTitle = htmlspecialchars(__('language.form.import_more_entries'), ENT
                                 <template x-for="dict in dictionaries" :key="dict.id">
                                     <tr>
                                         <td>
-                                            <span x-text="dict.name"></span>
-                                            <span class="tag is-light is-small ml-1"
+                                            <span dir="auto" x-text="dict.name"></span>
+                                            <span class="tag is-light is-small ms-1"
                                                   x-text="formatLabel(dict)"></span>
                                         </td>
                                         <td x-text="entryCountLabel(dict)"></td>
                                         <td>
                                             <span :class="statusClass(dict)" x-text="statusLabel(dict)"></span>
                                         </td>
-                                        <td class="has-text-right">
+                                        <td class="has-text-end">
                                             <a href="<?php echo url('/word/upload?tab=dictionary'); ?>"
                                                class="button is-small is-info is-outlined"
                                                title="<?php echo $importMoreTitle; ?>">
@@ -531,7 +531,7 @@ $importMoreTitle = htmlspecialchars(__('language.form.import_more_entries'), ENT
                                x-model="lang.splitEachChar" />
                         <strong><?php echo __('language.form.split_each_char'); ?></strong>
                     </label>
-                    <p class="help ml-5"><?php echo __('language.form.split_each_char_help'); ?></p>
+                    <p class="help ms-5"><?php echo __('language.form.split_each_char_help'); ?></p>
                 </div>
 
                 <div class="field">
@@ -539,7 +539,7 @@ $importMoreTitle = htmlspecialchars(__('language.form.import_more_entries'), ENT
                         <input type="checkbox" name="LgRemoveSpaces" id="LgRemoveSpaces" x-model="lang.removeSpaces" />
                         <strong><?php echo __('language.form.remove_spaces'); ?></strong>
                     </label>
-                    <p class="help ml-5"><?php echo __('language.form.remove_spaces_help'); ?></p>
+                    <p class="help ms-5"><?php echo __('language.form.remove_spaces_help'); ?></p>
                 </div>
 
                 <div class="field">
@@ -547,7 +547,7 @@ $importMoreTitle = htmlspecialchars(__('language.form.import_more_entries'), ENT
                         <input type="checkbox" name="LgRightToLeft" id="LgRightToLeft" x-model="lang.rightToLeft" />
                         <strong><?php echo __('language.form.right_to_left'); ?></strong>
                     </label>
-                    <p class="help ml-5"><?php echo __('language.form.right_to_left_help'); ?></p>
+                    <p class="help ms-5"><?php echo __('language.form.right_to_left_help'); ?></p>
                 </div>
 
                 <div class="field">
@@ -556,7 +556,7 @@ $importMoreTitle = htmlspecialchars(__('language.form.import_more_entries'), ENT
                                x-model="lang.showRomanization" />
                         <strong><?php echo __('language.form.show_romanization'); ?></strong>
                     </label>
-                    <p class="help ml-5"><?php echo __('language.form.show_romanization_help'); ?></p>
+                    <p class="help ms-5"><?php echo __('language.form.show_romanization_help'); ?></p>
                 </div>
 
                 <hr class="my-5" />

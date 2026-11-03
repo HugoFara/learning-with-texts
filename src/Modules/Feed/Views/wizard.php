@@ -167,10 +167,10 @@ $renderSteps = function (int $current): string {
                                     <div class="card-content p-4">
                                         <div class="is-flex is-align-items-center mb-2">
                                             <input type="checkbox"
-                                                   class="mr-2"
+                                                   class="me-2"
                                                    x-model="selectedUrls"
                                                    :value="source.url" />
-                                            <p class="title is-6 mb-0" x-text="source.name"></p>
+                                            <p dir="auto" class="title is-6 mb-0" x-text="source.name"></p>
                                         </div>
                                         <div class="tags mb-2">
                                             <span class="tag is-info is-light" x-text="source.category"></span>
@@ -545,14 +545,14 @@ $renderSteps = function (int $current): string {
                 <p class="is-size-7 has-text-grey mb-2">
                     <?php echo __e('feed.wizard.step2.selected_elements'); ?>
                 </p>
-                <ol id="lwt_sel" class="ml-4">
+                <ol id="lwt_sel" class="ms-4">
                     <template x-for="selector in articleSelectors" :key="selector.id">
                         <li class="is-flex is-align-items-center mb-1"
                             :class="{ 'has-text-weight-bold': selector.isHighlighted }">
                             <span class="is-family-monospace is-size-7" x-text="selector.xpath"
                                   @click="toggleSelectorHighlight(selector.id)"
                                   style="cursor: pointer;"></span>
-                            <button type="button" class="delete is-small ml-2"
+                            <button type="button" class="delete is-small ms-2"
                                     @click="deleteSelector(selector.id)"></button>
                         </li>
                     </template>
@@ -622,7 +622,7 @@ $renderSteps = function (int $current): string {
                             <div class="control">
                                 <span class="tag is-info is-light">
                                     <?php echo __e('feed.wizard.common.detected'); ?>
-                                    <span class="ml-1" x-text="detectedFeed"></span>
+                                    <span class="ms-1" x-text="detectedFeed"></span>
                                 </span>
                             </div>
                         </div>
@@ -750,14 +750,14 @@ $renderSteps = function (int $current): string {
                 <p class="is-size-7 has-text-grey mb-2">
                     <?php echo __e('feed.wizard.step3.elements_to_filter'); ?>
                 </p>
-                <ol id="lwt_sel" class="ml-4">
+                <ol id="lwt_sel" class="ms-4">
                     <template x-for="selector in filterSelectors" :key="selector.id">
                         <li class="is-flex is-align-items-center mb-1"
                             :class="{ 'has-text-weight-bold': selector.isHighlighted }">
                             <span class="is-family-monospace is-size-7" x-text="selector.xpath"
                                   @click="toggleSelectorHighlight(selector.id)"
                                   style="cursor: pointer;"></span>
-                            <button type="button" class="delete is-small ml-2"
+                            <button type="button" class="delete is-small ms-2"
                                     @click="deleteSelector(selector.id)"></button>
                         </li>
                     </template>

@@ -94,7 +94,7 @@ echo PageLayoutHelper::buildActionCard([
                             <select :value="filters.text_id" @change="setFilterFromEvent('text_id', $event)">
                                 <option value=""><?= __('vocabulary.list.all_texts') ?></option>
                                 <template x-for="text in filterOptions.texts" :key="text.id">
-                                    <option :value="text.id" x-text="text.title"></option>
+                                    <option dir="auto" :value="text.id" x-text="text.title"></option>
                                 </template>
                             </select>
                         </div>
@@ -131,7 +131,7 @@ echo PageLayoutHelper::buildActionCard([
                             <select :value="filters.tag1" @change="setFilterFromEvent('tag1', $event)">
                                 <option value=""><?= __('vocabulary.list.any_tag') ?></option>
                                 <template x-for="tag in filterOptions.tags" :key="tag.id">
-                                    <option :value="tag.id" x-text="tag.name"></option>
+                                    <option dir="auto" :value="tag.id" x-text="tag.name"></option>
                                 </template>
                             </select>
                         </div>
@@ -288,7 +288,7 @@ echo PageLayoutHelper::buildActionCard([
                             'title' => __('vocabulary.multi.title'),
                             'alt' => __('vocabulary.multi.title')
                         ]); ?>
-                        <span class="has-text-weight-semibold ml-1"><?= __('vocabulary.multi.title') ?></span>
+                        <span class="has-text-weight-semibold ms-1"><?= __('vocabulary.multi.title') ?></span>
                     </span>
                 </div>
             </div>
@@ -344,15 +344,15 @@ echo PageLayoutHelper::buildActionCard([
                 <div class="buttons are-small">
                     <button type="button" class="button is-light" @click="markAll(true)">
                         <?php echo IconHelper::render('check-check', ['alt' => __('vocabulary.multi.mark_all')]); ?>
-                        <span class="ml-1"><?= __('vocabulary.multi.mark_all') ?></span>
+                        <span class="ms-1"><?= __('vocabulary.multi.mark_all') ?></span>
                     </button>
                     <button type="button" class="button is-light" @click="markAll(false)">
                         <?php echo IconHelper::render('x', ['alt' => __('vocabulary.multi.mark_none')]); ?>
-                        <span class="ml-1"><?= __('vocabulary.multi.mark_none') ?></span>
+                        <span class="ms-1"><?= __('vocabulary.multi.mark_none') ?></span>
                     </button>
                     <span
                         x-show="getMarkedCount() > 0"
-                        class="tag is-warning ml-2"
+                        class="tag is-warning ms-2"
                         x-text="markedCountLabel()"
                     ></span>
                 </div>
@@ -461,7 +461,7 @@ echo PageLayoutHelper::buildActionCard([
                         <!-- Term -->
                         <td>
                             <span :class="word.ttsClass" :dir="word.rightToLeft ? 'rtl' : 'ltr'">
-                                <strong x-text="word.text"></strong>
+                                <strong dir="auto" x-text="word.text"></strong>
                             </span>
                         </td>
 
@@ -599,7 +599,7 @@ echo PageLayoutHelper::buildActionCard([
                             </div>
                             <div class="level-item">
                                 <span :class="word.ttsClass" :dir="word.rightToLeft ? 'rtl' : 'ltr'">
-                                    <strong class="is-size-5" x-text="word.text"></strong>
+                                    <strong dir="auto" class="is-size-5" x-text="word.text"></strong>
                                 </span>
                             </div>
                         </div>

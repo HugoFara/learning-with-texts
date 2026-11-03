@@ -601,7 +601,7 @@ class FindSimilarTerms
     {
         if ((int) Settings::getWithDefault("set-similar-terms-count") > 0) {
             return '<tr>
-                <td class="has-text-right">Similar<br />Terms:</td>
+                <td class="has-text-end">Similar<br />Terms:</td>
                 <td><span id="simwords" class="is-size-7">&nbsp;</span></td>
             </tr>';
         }

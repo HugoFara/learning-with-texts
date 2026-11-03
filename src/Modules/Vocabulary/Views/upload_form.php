@@ -364,12 +364,12 @@ echo PageLayoutHelper::buildActionCard($actions);
                     <label class="box mb-3 p-4" style="cursor: pointer;"
                            :class="isSelected(source.url) ? 'has-background-success-light' : ''">
                         <div class="is-flex is-align-items-center">
-                            <input type="checkbox" class="mr-3"
+                            <input type="checkbox" class="me-3"
                                    :checked="isSelected(source.url)"
                                    :disabled="!source.directDownload || batchImporting"
                                    @change="toggleSelection(source.url)">
                             <div class="is-flex-grow-1">
-                                <p class="has-text-weight-semibold mb-1" x-text="source.name"></p>
+                                <p dir="auto" class="has-text-weight-semibold mb-1" x-text="source.name"></p>
                                 <div class="tags mb-1">
                                     <span class="tag is-info is-light" x-text="source.format"></span>
                                     <span class="tag is-light" x-text="source.entries"></span>

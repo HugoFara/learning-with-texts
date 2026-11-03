@@ -137,7 +137,7 @@ $colStatus = __('vocabulary.upload.results.status');
                                 </span>
                             </span>
                             <span class="pagination-list">
-                                <span class="mr-2"><?= __('vocabulary.upload.results.page') ?></span>
+                                <span class="me-2"><?= __('vocabulary.upload.results.page') ?></span>
                                 <template x-if="totalPages <= 1">
                                     <span>1</span>
                                 </template>
@@ -152,7 +152,7 @@ $colStatus = __('vocabulary.upload.results.status');
                                         </template>
                                     </select>
                                 </template>
-                                <span class="ml-1 mr-1"><?= __('vocabulary.upload.results.of') ?></span>
+                                <span class="ms-1 me-1"><?= __('vocabulary.upload.results.of') ?></span>
                                 <span x-text="totalPages"></span>
                             </span>
                             <span class="pagination-next" x-show="currentPage < totalPages">

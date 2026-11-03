@@ -912,7 +912,7 @@ HTML;
                 ? ''
                 : '<button class="button is-small mt-2" data-action="go-back">' .
                   IconHelper::render('arrow-left', ['alt' => __('common.back')]) .
-                  '<span class="ml-1">' . __e('common.go_back_correct') . '</span></button>';
+                  '<span class="ms-1">' . __e('common.go_back_correct') . '</span></button>';
 
             echo '<div class="notification is-danger" role="alert">' .
                 '<button class="delete" aria-label="close"></button>' .

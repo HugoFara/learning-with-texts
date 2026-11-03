@@ -95,7 +95,7 @@ $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 's
             <label class="box mb-3 p-4" style="cursor: pointer;"
                    :class="useWiktionary ? 'has-background-success-light' : ''">
                 <div class="is-flex is-align-items-center">
-                    <input type="checkbox" class="mr-3"
+                    <input type="checkbox" class="me-3"
                            :checked="useWiktionary"
                            @change="toggleWiktionary()">
                     <div class="is-flex-grow-1">
@@ -130,12 +130,12 @@ $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 's
                 <label class="box mb-3 p-4" style="cursor: pointer;"
                        :class="isSourceSelected(source.url) ? 'has-background-success-light' : ''">
                     <div class="is-flex is-align-items-center">
-                        <input type="checkbox" class="mr-3"
+                        <input type="checkbox" class="me-3"
                                :checked="isSourceSelected(source.url)"
                                :disabled="!source.directDownload"
                                @change="toggleSource(source.url)">
                         <div class="is-flex-grow-1">
-                            <p class="has-text-weight-semibold mb-1" x-text="source.name"></p>
+                            <p dir="auto" class="has-text-weight-semibold mb-1" x-text="source.name"></p>
                             <div class="tags mb-1">
                                 <span class="tag is-light" x-text="source.entries"></span>
                                 <span class="tag is-info is-light" x-text="source.format"></span>
@@ -161,7 +161,7 @@ $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 's
                             :disabled="!canImport()"
                             @click="startImport()">
                         <?= $downloadIcon ?>
-                        <span class="ml-1"><?= __e('vocabulary.starter.import') ?></span>
+                        <span class="ms-1"><?= __e('vocabulary.starter.import') ?></span>
                     </button>
                 </div>
                 <div class="control">

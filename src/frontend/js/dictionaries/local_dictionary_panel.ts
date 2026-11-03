@@ -78,7 +78,7 @@ export function createPanelElement(): HTMLElement {
           <template x-for="result in results" :key="result.term + result.dictionary">
             <div class="local-dict-entry">
               <div class="local-dict-term">
-                <span class="local-dict-headword" x-text="result.term"></span>
+                <span dir="auto" class="local-dict-headword" x-text="result.term"></span>
                 <span x-show="result.reading" class="local-dict-reading"
                       x-text="'[' + (result.reading || '') + ']'"></span>
                 <span x-show="result.pos" class="local-dict-pos"

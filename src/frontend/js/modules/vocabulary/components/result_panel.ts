@@ -571,7 +571,7 @@ const styles = `
 
 .lwt-test-btn img {
   vertical-align: middle;
-  margin-right: 5px;
+  margin-inline-end: 5px;
 }
 
 .lwt-word-popup-content {

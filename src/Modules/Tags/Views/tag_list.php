@@ -155,7 +155,7 @@ echo PageLayoutHelper::buildActionCard([
                                 'zap',
                                 ['title' => 'Multi Actions', 'alt' => 'Multi Actions']
                             ); ?>
-                            <span class="has-text-weight-semibold ml-1"><?= __e('tags.list_multi_actions') ?></span>
+                            <span class="has-text-weight-semibold ms-1"><?= __e('tags.list_multi_actions') ?></span>
                         </span>
                     </div>
                 </div>
@@ -166,11 +166,11 @@ echo PageLayoutHelper::buildActionCard([
                     <div class="buttons are-small">
                         <button type="button" class="button is-light" @click="markAll()">
                             <?php echo IconHelper::render('check-check', ['alt' => 'Mark All']); ?>
-                            <span class="ml-1"><?= __e('tags.list_mark_all') ?></span>
+                            <span class="ms-1"><?= __e('tags.list_mark_all') ?></span>
                         </button>
                         <button type="button" class="button is-light" @click="markNone()">
                             <?php echo IconHelper::render('x', ['alt' => 'Mark None']); ?>
-                            <span class="ml-1"><?= __e('tags.list_mark_none') ?></span>
+                            <span class="ms-1"><?= __e('tags.list_mark_none') ?></span>
                         </button>
                     </div>
                 </div>
@@ -180,13 +180,13 @@ echo PageLayoutHelper::buildActionCard([
                                 :disabled="selectedIds.length === 0 || isBusy"
                                 @click="deleteSelected()">
                             <?php echo IconHelper::render('circle-minus', ['alt' => 'Delete']); ?>
-                            <span class="ml-1"><?= __e('tags.list_delete_marked') ?></span>
+                            <span class="ms-1"><?= __e('tags.list_delete_marked') ?></span>
                         </button>
                         <button type="button" class="button is-danger"
                                 :disabled="pagination.total === 0 || isBusy"
                                 @click="deleteAllMatching()">
                             <?php echo IconHelper::render('trash', ['alt' => 'Delete All']); ?>
-                            <span class="ml-1"><?= __e('tags.list_delete_all') ?></span>
+                            <span class="ms-1"><?= __e('tags.list_delete_all') ?></span>
                         </button>
                     </div>
                 </div>
@@ -240,7 +240,7 @@ echo PageLayoutHelper::buildActionCard([
                                 </div>
                             </td>
                             <td>
-                                <span class="tag is-medium is-light" x-text="tag.text"></span>
+                                <span dir="auto" class="tag is-medium is-light" x-text="tag.text"></span>
                             </td>
                             <td class="has-text-grey" x-text="tag.comment"></td>
                             <td class="has-text-centered">
@@ -283,7 +283,7 @@ echo PageLayoutHelper::buildActionCard([
                                     </label>
                                 </div>
                                 <div class="level-item">
-                                    <span class="tag is-medium is-info is-light" x-text="tag.text"></span>
+                                    <span dir="auto" class="tag is-medium is-info is-light" x-text="tag.text"></span>
                                 </div>
                             </div>
                             <div class="level-right">
