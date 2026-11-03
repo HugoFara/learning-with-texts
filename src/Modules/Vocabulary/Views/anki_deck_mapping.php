@@ -91,11 +91,10 @@ $fieldSelect = static function (string $name, string $label, array $fields, bool
         <select name="notetype" id="notetype">
           <?php foreach ($notetypes as $notetype) { ?>
             <option value="<?= $notetype->id ?>">
-                <?= __e('vocabulary.anki.deck.notetype_option', [
+                <?= __ne('vocabulary.anki.deck.notetype_option', $notetype->noteCount, [
                     'name' => $notetype->name,
-                    'count' => $notetype->noteCount,
                     'fields' => implode(', ', $notetype->fields),
-              ]) ?>
+                ]) ?>
             </option>
           <?php } ?>
         </select>

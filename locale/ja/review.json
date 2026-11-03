@@ -2,7 +2,6 @@
     "page_title": "復習",
     "heading": "復習 - {title}",
 
-    "header.remaining": "残り。",
     "header.read_words_aloud": "単語を読み上げる",
     "header.button_table": "表",
 
@@ -46,9 +45,9 @@
     "card.grade_good": "普通",
     "card.grade_easy": "簡単",
     "card.interval_today": "今日",
-    "card.interval_days": "{count}日",
-    "card.interval_months": "{count}か月",
-    "card.interval_years": "{count}年",
+    "card.interval_days_other": "{count}日",
+    "card.interval_months_other": "{count}か月",
+    "card.interval_years_other": "{count}年",
     "card.skip": "スキップ",
     "card.set_status_directly": "ステータスを直接設定：",
     "card.ignore": "無視",

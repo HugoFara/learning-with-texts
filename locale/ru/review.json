@@ -2,7 +2,6 @@
     "page_title": "Повторение",
     "heading": "ПОВТОРЕНИЕ — {title}",
 
-    "header.remaining": "осталось.",
     "header.read_words_aloud": "Произносить слова вслух",
     "header.button_table": "Таблица",
 
@@ -46,9 +45,12 @@
     "card.grade_good": "Хорошо",
     "card.grade_easy": "Легко",
     "card.interval_today": "сегодня",
-    "card.interval_days": "{count} д",
-    "card.interval_months": "{count} мес",
-    "card.interval_years": "{count} г",
+    "card.interval_days_other": "{count} д",
+    "card.interval_months_other": "{count} мес",
+    "card.interval_years_one": "{count} г",
+    "card.interval_years_few": "{count} г",
+    "card.interval_years_many": "{count} л",
+    "card.interval_years_other": "{count} л",
     "card.skip": "Пропустить",
     "card.set_status_directly": "Установить статус напрямую:",
     "card.ignore": "Игнорировать",

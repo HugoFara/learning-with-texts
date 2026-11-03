@@ -145,8 +145,7 @@ $missingForeignKeys = $data['missing_foreign_keys'] ?? [];
                             ?>
                             <li>
                                 <code><?php echo $name; ?></code>
-                                (<?php echo $attempts; ?>
-                                <?= __('admin.server_data_failed_migrations_attempts') ?>)
+                                (<?= __ne('admin.server_data_failed_migrations_attempts', $attempts) ?>)
                                 <br>
                                 <small><?php echo $error; ?></small>
                             </li>

@@ -10,7 +10,7 @@
 
 import Alpine from 'alpinejs';
 import { initIcons } from '@shared/icons/lucide_icons';
-import { t } from '@shared/i18n/translator';
+import { t, tn } from '@shared/i18n/translator';
 
 interface GutenbergBook {
   id: number;
@@ -251,11 +251,11 @@ export function librarySearchData(): LibrarySearchData {
     },
 
     downloadsLabel(count: number): string {
-      return `${this.formatDownloads(count)} ${t('home.downloads_suffix')}`;
+      return tn('home.downloads', count, { count: this.formatDownloads(count) });
     },
 
     booksFoundLabel(count: number): string {
-      return t('home.books_found', { count });
+      return tn('home.books_found', count);
     },
 
     coverageLabel(data: PreviewData): string {

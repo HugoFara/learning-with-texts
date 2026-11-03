@@ -2,7 +2,6 @@
     "page_title": "Wiederholung",
     "heading": "WIEDERHOLUNG - {title}",
 
-    "header.remaining": "verbleibend.",
     "header.read_words_aloud": "Wörter vorlesen",
     "header.button_table": "Tabelle",
 
@@ -46,9 +45,9 @@
     "card.grade_good": "Gut",
     "card.grade_easy": "Einfach",
     "card.interval_today": "heute",
-    "card.interval_days": "{count} T",
-    "card.interval_months": "{count} Mon",
-    "card.interval_years": "{count} J",
+    "card.interval_days_other": "{count} T",
+    "card.interval_months_other": "{count} Mon",
+    "card.interval_years_other": "{count} J",
     "card.skip": "Überspringen",
     "card.set_status_directly": "Status direkt festlegen:",
     "card.ignore": "Ignorieren",

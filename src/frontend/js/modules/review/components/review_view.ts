@@ -712,11 +712,11 @@ function registerReviewAppComponent(config: ReviewConfig): void {
       const days = this.store.intervals[String(grade)];
       if (days === undefined) return '';
       if (days < 1) return t('review.card.interval_today');
-      if (days < 30) return t('review.card.interval_days', { count: String(days) });
+      if (days < 30) return tn('review.card.interval_days', days);
       if (days < 365) {
-        return t('review.card.interval_months', { count: String(Math.round(days / 30)) });
+        return tn('review.card.interval_months', Math.round(days / 30));
       }
-      return t('review.card.interval_years', { count: String(Math.round(days / 365)) });
+      return tn('review.card.interval_years', Math.round(days / 365));
     },
 
     async skipWord() {

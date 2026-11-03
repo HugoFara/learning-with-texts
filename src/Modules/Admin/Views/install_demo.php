@@ -60,7 +60,7 @@ $base = UrlUtilities::getBasePath();
                             'db' => htmlspecialchars(Globals::getDatabaseName(), ENT_QUOTES, 'UTF-8'),
                         ]) ?>
                         <?php if ($langcnt > 0) : ?>
-                        <br><?= __('admin.install_demo_warning_existing', ['count' => $langcnt]) ?>
+                        <br><?= __n('admin.install_demo_warning_existing', $langcnt) ?>
                         <?php endif; ?>
                     </p>
                 </div>

@@ -119,12 +119,11 @@ $t = static fn(string $key): string => htmlspecialchars(__('user.' . $key), ENT_
                 <div class="box has-background-light has-text-centered py-3">
                     <p class="heading"><?php echo $t('statistics.today'); ?></p>
                     <p class="is-size-6">
-                        <span class="has-text-weight-semibold" x-text="todayCreated"></span>
-                        <?php echo $t('statistics.today_created'); ?>,
-                        <span class="has-text-weight-semibold" x-text="todayReviewed"></span>
-                        <?php echo $t('statistics.today_reviewed'); ?>,
-                        <span class="has-text-weight-semibold" x-text="todayTextsRead"></span>
-                        <?php echo $t('statistics.today_read'); ?>
+                        <span x-text="$tn('user.statistics.today_created', todayCreated)"></span>
+                        &middot;
+                        <span x-text="$tn('user.statistics.today_reviewed', todayReviewed)"></span>
+                        &middot;
+                        <span x-text="$tn('user.statistics.today_read', todayTextsRead)"></span>
                     </p>
                 </div>
             </div>

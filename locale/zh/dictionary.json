@@ -52,7 +52,7 @@
     "stardict_archive_required": "上传一个包含三个文件的归档 — FreeDict 提供的压缩包可直接使用。",
     "stardict_archive_formats": "支持格式：.zip、.tar.gz、.tar.bz2、.tar.xz、.tgz",
     "deleted_success": "词典删除成功。",
-    "imported_count": "已导入 {count} 个条目。",
+    "imported_count_other": "已导入 {count} 个条目。",
     "local_mode_title": "本地词典模式",
     "current_mode": "当前模式：",
     "mode_online": "仅在线词典",

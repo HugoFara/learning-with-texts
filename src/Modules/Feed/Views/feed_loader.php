@@ -28,12 +28,10 @@ namespace Lwt\Views\Feed;
 
 /** @var int $feedCount */
 
-$updatingLine = __(
+$updatingLine = __n(
     'feed.loader.updating',
-    [
-        'loaded' => '<span x-text="loadedCount">0</span>',
-        'count' => (string)$feedCount,
-    ]
+    $feedCount,
+    ['loaded' => '<span x-text="loadedCount">0</span>']
 );
 ?>
 <div x-data="feedLoader()">

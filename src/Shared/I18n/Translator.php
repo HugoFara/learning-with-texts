@@ -202,10 +202,8 @@ class Translator
     {
         $translations = $this->loadNamespace($this->locale, $namespace);
 
-        // Merge English fallback for missing keys
         if ($this->locale !== 'en') {
-            $english = $this->loadNamespace('en', $namespace);
-            $translations = array_merge($english, $translations);
+            $translations = $this->withEnglishFallback($translations, $namespace);
         }
 
         return $translations;
@@ -249,7 +247,7 @@ class Translator
         foreach ($namespaces as $namespace) {
             $strings = $this->loadNamespace($locale, $namespace);
             if ($locale !== 'en') {
-                $strings = array_merge($this->loadNamespace('en', $namespace), $strings);
+                $strings = $this->withEnglishFallback($strings, $namespace);
             }
             foreach ($strings as $key => $value) {
                 $result[$namespace . '.' . $key] = $value;
@@ -257,6 +255,34 @@ class Translator
         }
 
         return $result;
+    }
+
+    /**
+     * Fill a locale's missing keys with English, plural sets excepted.
+     *
+     * The browser picks a plural form by looking up "{key}_{category}" in this
+     * merged map. If the locale has "x_other" but no "x_one", an English
+     * "x_one" merged in would win over the locale's own "x_other", and a
+     * Persian page would show English. So an English plural form is only
+     * merged when the locale lacks the whole set, i.e. has no "x_other" (#319).
+     *
+     * @param array<string, string> $strings   The locale's own strings
+     * @param string                $namespace Namespace name
+     *
+     * @return array<string, string>
+     */
+    private function withEnglishFallback(array $strings, string $namespace): array
+    {
+        $english = $this->loadNamespace('en', $namespace);
+        foreach (array_keys($english) as $key) {
+            if (
+                preg_match('/^(.+)_(?:zero|one|two|few|many)$/', $key, $m) === 1
+                && isset($strings[$m[1] . '_other'])
+            ) {
+                unset($english[$key]);
+            }
+        }
+        return array_merge($english, $strings);
     }
 
     /**

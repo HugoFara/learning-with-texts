@@ -2,7 +2,6 @@
     "page_title": "Revisão",
     "heading": "REVISÃO - {title}",
 
-    "header.remaining": "restantes.",
     "header.read_words_aloud": "Ler palavras em voz alta",
     "header.button_table": "Tabela",
 
@@ -46,9 +45,9 @@
     "card.grade_good": "Bom",
     "card.grade_easy": "Fácil",
     "card.interval_today": "hoje",
-    "card.interval_days": "{count} d",
-    "card.interval_months": "{count} m",
-    "card.interval_years": "{count} a",
+    "card.interval_days_other": "{count} d",
+    "card.interval_months_other": "{count} m",
+    "card.interval_years_other": "{count} a",
     "card.skip": "Pular",
     "card.set_status_directly": "Definir status diretamente:",
     "card.ignore": "Ignorar",

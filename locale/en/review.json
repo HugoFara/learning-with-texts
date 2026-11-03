@@ -2,7 +2,6 @@
     "page_title": "Review",
     "heading": "REVIEW - {title}",
 
-    "header.remaining": "remaining.",
     "header.read_words_aloud": "Read words aloud",
     "header.button_table": "Table",
 
@@ -46,9 +45,9 @@
     "card.grade_good": "Good",
     "card.grade_easy": "Easy",
     "card.interval_today": "today",
-    "card.interval_days": "{count}d",
-    "card.interval_months": "{count}mo",
-    "card.interval_years": "{count}y",
+    "card.interval_days_other": "{count}d",
+    "card.interval_months_other": "{count}mo",
+    "card.interval_years_other": "{count}y",
     "card.skip": "Skip",
     "card.set_status_directly": "Set status directly:",
     "card.ignore": "Ignore",

@@ -210,7 +210,7 @@ class ImportEpub
 
             return [
                 'success' => true,
-                'message' => __('book.flash.imported', ['title' => $book->title(), 'count' => count($textIds)]),
+                'message' => __n('book.flash.imported', count($textIds), ['title' => $book->title()]),
                 'bookId' => $bookId,
                 'chapterCount' => count($textIds),
                 'textIds' => $textIds,
