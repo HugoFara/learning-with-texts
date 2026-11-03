@@ -5,13 +5,18 @@ description: How LWT and Anki should merge when both change the same terms betwe
 
 # Spike: Conflict Resolution for Live Anki Sync
 
-**Status:** Spike result (#264). **Steps 1 and 2 of the build order are
-implemented**, and tested against a real Anki in a container (see
-[Testing against real Anki](#testing-against-real-anki)): `/vocabulary/anki/sync`
-pulls Anki's reviews into LWT through `MergeReviewHistory`, which fits an
-older review into the history instead of skipping it, then sends LWT's reviews
-and schedule back to Anki. The `.apkg` importer merges the same way. Step 3
-(fields, tags, flags, existence) is not built. The roadmap asked for
+**Status:** Spike result (#264), **implemented in full** and tested against a
+real Anki in a container (see [Testing against real Anki](#testing-against-real-anki)).
+`/vocabulary/anki/sync` pulls Anki's reviews into LWT through
+`MergeReviewHistory`, which fits an older review into the history instead of
+skipping it; sends LWT's reviews and schedule back (`AnkiPushPlan`); then
+merges the notes themselves -- fields, tags, suspension, additions, deletions
+-- against the stored base (`NoteSyncPlanner`, `AnkiNoteSync`,
+`anki_sync_base`). The `.apkg` importer merges reviews the same way. Two
+choices differ from the plan below, both towards losing nothing: a true
+conflict is reported and left alone rather than decided by the newer edit
+(see [True conflicts](#true-conflicts)), and deletions wait for the learner to
+confirm them. The roadmap asked for
 this before any: *"Spike conflict resolution FIRST (the Anki problem) — it
 looks easy and isn't. Decide last-writer-wins+tombstones vs CRDT before
 committing."*
@@ -209,9 +214,19 @@ preference:
    notes, so it is recoverable. Clock skew only matters here, in the one case
    that is genuinely ambiguous.
 
-`WoUpdated` is the one schema addition this needs from `words`. It must be set
-by content edits only, not by status changes or review writes, so it cannot be
-a plain `ON UPDATE CURRENT_TIMESTAMP`.
+**Built: option 1 only.** The sync page lists each conflict with both values
+and touches neither; the base keeps the last agreed value, so the field stays a
+conflict until the learner makes the two sides match, in either app, and the
+next sync settles it. That needs no `WoUpdated` column and no clock comparison,
+and unlike option 2 it never rewrites a field the learner did not choose. A
+pair whose fields differ on its very first sync (no base yet) is treated the
+same way: equal fields are agreed at once, differing ones reported.
+
+**Deletions are confirmed.** A term or note deleted on one side is listed with
+a button; nothing is deleted on the other side until it is pressed. A deletion
+that would lose work (the other side changed the item since the last sync, or
+was reviewed) is not offered at all: the item is re-created on the deleting
+side instead.
 
 ## Running a sync safely
 
@@ -287,7 +302,10 @@ live sync is built, sequence it so each step is useful alone:
    `POST /api/v1/anki/push-plan` what Anki lacks (`AnkiPushPlan`) and writes
    it. FSRS memory state cannot be written; see above.
 3. **Fields, tags, flags and existence** through the sync base, with the
-   conflict report.
+   conflict report. ✅ Implemented: `POST /api/v1/anki/notes-plan` and
+   `/anki/notes-commit`, plan → apply to Anki → commit as described above.
+   Decks map to languages by the export's `LWT::{Language}` naming, so no setup
+   is needed; status 1–5 stays LWT's own, only suspension ↔ ignored travels.
 
 Step 1 alone delivers most of what "sync with Anki" means to a learner who
 reviews on the phone and reads in LWT.
@@ -310,7 +328,10 @@ npm run anki:down
 `24-anki-live.cy.ts` runs the learner's loop for real: export terms from LWT,
 import them into Anki (`importPackage`), answer them there (`answerCards`),
 sync, answer one in LWT, sync again, and check Anki's history and card, then
-that a third sync changes nothing. It skips itself when nothing answers on
+that a third sync changes nothing. A second test edits fields, tags and
+suspension on both sides, adds a note in Anki and a term in LWT, syncs, checks
+both sides, then deletes a note in Anki and checks that the term only goes once
+the deletion is confirmed. It skips itself when nothing answers on
 8765, so CI is unaffected. `ANKI_FSRS=1` on `podman run` starts Anki with FSRS
 on; the spec passes in both modes.
 

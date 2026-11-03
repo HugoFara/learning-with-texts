@@ -46,6 +46,9 @@ describe('Sync reviews with a real Anki', () => {
   let noteIds: number[] = [];
   let deckName = '';
   let cardIds: number[] = [];
+  /** Further languages and decks the note test creates, for cleanup. */
+  const languageIds: number[] = [];
+  const extraDecks: string[] = [];
 
   before(() => {
     cy.request({ method: 'POST', url: anki, body: { action: 'version', version: 6 }, failOnStatusCode: false, timeout: 3000 })
@@ -65,18 +68,28 @@ describe('Sync reviews with a real Anki', () => {
 
   after(() => {
     if (!ankiUp) return;
+    // Tolerant: a test may already have deleted some of these.
+    const quietly = (action: string, params: Record<string, unknown>) =>
+      cy.request({ method: 'POST', url: anki, body: { action, version: 6, params }, failOnStatusCode: false });
     if (noteIds.length > 0) {
-      ankiConnect('deleteNotes', { notes: noteIds });
+      quietly('deleteNotes', { notes: noteIds });
     }
-    if (deckName !== '') {
-      ankiConnect('deleteDecks', { decks: [deckName], cardsToo: true });
-    }
+    [deckName, ...extraDecks].filter((d) => d !== '').forEach((deck) => {
+      quietly('deleteDecks', { decks: [deck], cardsToo: true });
+    });
     termIds.forEach((id) => {
       cy.apiRequest({ method: 'DELETE', url: `${apiBase}/terms/${id}`, failOnStatusCode: false });
     });
-    if (languageId > 0) {
-      cy.apiRequest({ method: 'DELETE', url: `${apiBase}/languages/${languageId}`, failOnStatusCode: false });
-    }
+    // A sync may have created terms the test never saw (a run that failed
+    // part-way), and a language with terms cannot be deleted: empty each first.
+    [languageId, ...languageIds].filter((id) => id > 0).forEach((id) => {
+      cy.request(`${apiBase}/terms/list?lang=${id}&per_page=500`).then((r) => {
+        unwrap<{ words: { id: number }[] }>(r.body).words.forEach((word) => {
+          cy.apiRequest({ method: 'DELETE', url: `${apiBase}/terms/${word.id}`, failOnStatusCode: false });
+        });
+      });
+      cy.apiRequest({ method: 'DELETE', url: `${apiBase}/languages/${id}`, failOnStatusCode: false });
+    });
   });
 
   it('brings Anki answers into LWT and sends LWT answers to Anki, once each way', () => {
@@ -211,5 +224,145 @@ describe('Sync reviews with a real Anki', () => {
     cy.wait('@plan').then(({ response }) => {
       expect(unwrap<{ reviews: unknown[] }>(response?.body).reviews).to.have.length(0);
     });
+  });
+
+  // Step 3: the notes themselves. A second throwaway language, so its deck
+  // and terms are this test's alone.
+  it('syncs fields, tags, suspension, additions and deletions both ways', () => {
+    const name = `E2E Notes ${Date.now()}`;
+    const deck = `LWT::${name}`;
+    const file = 'lwt-e2e-notes.apkg';
+    let langId = 0;
+    const ids: Record<string, number> = {};
+    const noteOf: Record<string, number> = {};
+    const cardOf: Record<string, number> = {};
+
+    interface NoteInfo { noteId: number; cards: number[]; tags: string[]; fields: Record<string, { value: string }> }
+    const ourNotes = (): Cypress.Chainable<NoteInfo[]> =>
+      ankiConnect<number[]>('findNotes', { query: `"deck:${deck}"` })
+        .then((found) => ankiConnect<NoteInfo[]>('notesInfo', { notes: found }));
+    const notesPlan = (): Cypress.Chainable<{ summary: Record<string, number>; conflicts: unknown[] }> =>
+      ourNotes().then((notes) =>
+        ankiConnect<{ cardId: number; deckName: string; queue: number }[]>('cardsInfo', { cards: notes.map((n) => n.cards[0]) })
+          .then((cards) => cy.apiRequest({
+            method: 'POST',
+            url: `${apiBase}/anki/notes-plan`,
+            body: {
+              decks: [deck],
+              notes: notes.map((n, i) => ({
+                note_id: n.noteId,
+                card_id: cards[i].cardId,
+                deck: cards[i].deckName,
+                fields: Object.fromEntries(Object.entries(n.fields).map(([k, v]) => [k, v.value])),
+                tags: n.tags,
+                suspended: cards[i].queue === -1,
+                last_review: null,
+              })),
+            },
+          }).then((r) => unwrap<{ summary: Record<string, number>; conflicts: unknown[] }>(r.body)))
+      );
+    const sync = (): void => {
+      cy.get('[x-data="ankiSync"] button.is-primary').click();
+      cy.get('[x-data="ankiSync"] button.is-primary').should('not.be.disabled');
+      cy.get('[x-data="ankiSync"] .notification.is-success').should('be.visible');
+    };
+
+    // Three terms in LWT, exported and imported into Anki.
+    cy.apiRequest({ method: 'POST', url: `${apiBase}/languages`, body: { name } }).then((response) => {
+      langId = unwrap<{ id: number }>(response.body).id;
+      languageIds.push(langId);
+      ['uno', 'dos', 'tres'].forEach((text) => {
+        cy.apiRequest({
+          method: 'POST',
+          url: `${apiBase}/terms/for-language`,
+          body: { language_id: langId, text, translation: `${text} meaning`, status: 2 },
+        }).then((r) => {
+          ids[text] = unwrap<{ id: number }>(r.body).id;
+          termIds.push(ids[text]);
+        });
+      });
+    });
+    cy.then(() =>
+      cy.request({ url: `/vocabulary/apkg/export?lang_id=${langId}`, encoding: 'binary' })
+        .then((response) => cy.writeFile(`cypress/anki-exchange/${file}`, response.body, 'binary'))
+    );
+    cy.then(() => ankiConnect('importPackage', { path: `/exchange/${file}` }));
+    cy.then(() => ourNotes().then((notes) => {
+      for (const n of notes) {
+        const text = n.fields.Term.value;
+        noteOf[text] = n.noteId;
+        cardOf[text] = n.cards[0];
+        noteIds.push(n.noteId);
+      }
+      extraDecks.push(deck);
+    }));
+
+    // First sync after the export: both sides agree; nothing moves.
+    cy.visit('/vocabulary/anki/sync');
+    cy.waitForAlpine();
+    sync();
+    cy.then(() => notesPlan().then((plan) => {
+      expect(plan.summary.to_anki + plan.summary.to_lwt, 'in step after the first sync').to.eq(0);
+      expect(plan.conflicts).to.have.length(0);
+    }));
+
+    // Edits on both sides, and an addition on each.
+    cy.then(() => {
+      ankiConnect('updateNoteFields', { note: { id: noteOf.uno, fields: { Notes: 'edited in Anki' } } });
+      ankiConnect('addTags', { notes: [noteOf.dos], tags: 'from-anki' });
+      ankiConnect('suspend', { cards: [cardOf.tres] });
+      ankiConnect<number>('addNote', {
+        note: { deckName: deck, modelName: 'LWT Term', fields: { Term: 'cuatro', Translation: 'four' } },
+      }).then((id) => { noteIds.push(id); });
+      cy.apiRequest({ method: 'PUT', url: `${apiBase}/terms/${ids.dos}/translation`, body: { translation: 'two (LWT)' } });
+      cy.apiRequest({
+        method: 'POST',
+        url: `${apiBase}/terms/for-language`,
+        body: { language_id: langId, text: 'cinco', translation: 'five', status: 1 },
+      }).then((r) => { termIds.push(unwrap<{ id: number }>(r.body).id); });
+    });
+
+    sync();
+
+    // Anki got LWT's changes; the new LWT term is a note with its id.
+    cy.then(() => cy.request(`${apiBase}/terms/${ids.dos}`).then((r) => ourNotes().then((notes) => {
+      const byText = Object.fromEntries(notes.map((n) => [n.fields.Term.value, n]));
+      // The translation endpoint adds to the existing translation; Anki must
+      // hold whatever LWT now has.
+      const lwtTranslation = unwrap<{ translation: string }>(r.body).translation;
+      expect(lwtTranslation).to.contain('two (LWT)');
+      expect(byText.dos.fields.Translation.value).to.eq(lwtTranslation);
+      expect(byText.dos.tags).to.include('from-anki');
+      expect(byText.cinco, 'LWT term added to Anki').to.not.eq(undefined);
+      expect(Number(byText.cinco.fields.LwtId.value)).to.be.greaterThan(0);
+      expect(Number(byText.cuatro.fields.LwtId.value), 'Anki note now names its new term').to.be.greaterThan(0);
+      noteIds.push(byText.cinco.noteId);
+      termIds.push(Number(byText.cuatro.fields.LwtId.value));
+    })));
+    // LWT got Anki's: the suspended card ignores its term ...
+    cy.then(() => cy.request(`${apiBase}/terms/${ids.tres}`).then((r) => {
+      expect(unwrap<{ status: number }>(r.body).status, 'suspended in Anki').to.eq(98);
+    }));
+    // ... and everything else matches: a plan from Anki's state moves nothing.
+    cy.then(() => notesPlan().then((plan) => {
+      expect(plan.summary.to_anki, 'nothing left for Anki').to.eq(0);
+      expect(plan.summary.to_lwt, 'nothing left for LWT').to.eq(0);
+      expect(plan.summary.added_to_anki + plan.summary.added_to_lwt).to.eq(0);
+      expect(plan.conflicts).to.have.length(0);
+    }));
+
+    // A note deleted in Anki: the term is only deleted once confirmed.
+    cy.then(() => ankiConnect('deleteNotes', { notes: [noteOf.uno] }));
+    sync();
+    cy.get('[x-data="ankiSync"] .notification.is-danger').should('contain', 'uno');
+    cy.then(() => cy.request(`${apiBase}/terms/${ids.uno}`).then((r) => {
+      expect(unwrap<{ id?: number }>(r.body).id, 'still there before confirming').to.eq(ids.uno);
+    }));
+    cy.get('[x-data="ankiSync"] .notification.is-danger button').click();
+    cy.get('[x-data="ankiSync"] button.is-primary').should('not.be.disabled');
+    cy.then(() => cy.request({ url: `${apiBase}/terms/${ids.uno}`, failOnStatusCode: false }).then((r) => {
+      expect(r.status, 'deleted once confirmed').to.be.oneOf([400, 404]);
+      expect(JSON.stringify(r.body)).to.contain('not found');
+    }));
   });
 });

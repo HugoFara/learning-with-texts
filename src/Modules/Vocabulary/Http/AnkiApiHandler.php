@@ -18,6 +18,7 @@ namespace Lwt\Modules\Vocabulary\Http;
 use Lwt\Api\V1\Response;
 use Lwt\Modules\Vocabulary\Application\Services\Anki\AnkiPushPlan;
 use Lwt\Modules\Vocabulary\Application\Services\Anki\AnkiReviewPull;
+use Lwt\Modules\Vocabulary\Application\Services\Anki\Sync\AnkiNoteSync;
 use Lwt\Shared\Http\ApiRoutableInterface;
 use Lwt\Shared\Infrastructure\Http\JsonResponse;
 
@@ -34,16 +35,26 @@ use Lwt\Shared\Infrastructure\Http\JsonResponse;
  * 1767..., "reviews": [[1767225600000, 3], ...]}, ...]}`, each card's revlog as
  * Anki holds it. Answers with AnkiConnect-ready rows; the browser makes the
  * calls ({@see AnkiPushPlan}).
+ *
+ * POST /api/v1/anki/notes-plan and /anki/notes-commit: the note sync
+ * ({@see AnkiNoteSync}). Both take `{"notes": [...], "decks": [...]}`, the
+ * learner's "LWT Term" notes and Anki's deck names; commit also takes
+ * `added` (notes the browser created) and `confirm_deletions`.
  */
 class AnkiApiHandler implements ApiRoutableInterface
 {
     private AnkiReviewPull $pull;
     private AnkiPushPlan $push;
+    private ?AnkiNoteSync $notes;
 
-    public function __construct(?AnkiReviewPull $pull = null, ?AnkiPushPlan $push = null)
-    {
+    public function __construct(
+        ?AnkiReviewPull $pull = null,
+        ?AnkiPushPlan $push = null,
+        ?AnkiNoteSync $notes = null
+    ) {
         $this->pull = $pull ?? AnkiReviewPull::default();
         $this->push = $push ?? AnkiPushPlan::default();
+        $this->notes = $notes;
     }
 
     /**
@@ -60,6 +71,9 @@ class AnkiApiHandler implements ApiRoutableInterface
     public function routePost(array $fragments, array $params): JsonResponse
     {
         $route = $fragments[1] ?? '';
+        if ($route === 'notes-plan' || $route === 'notes-commit') {
+            return $this->routeNotes($route, $params);
+        }
         if ($route === 'push-plan') {
             $cards = $params['cards'] ?? null;
             if (!is_array($cards) || !array_is_list($cards)) {
@@ -78,6 +92,33 @@ class AnkiApiHandler implements ApiRoutableInterface
         }
 
         return Response::success($this->pull->apply($reviews));
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function routeNotes(string $route, array $params): JsonResponse
+    {
+        $notes = $params['notes'] ?? null;
+        $decks = $params['decks'] ?? null;
+        if (!is_array($notes) || !array_is_list($notes) || !is_array($decks) || !array_is_list($decks)) {
+            return Response::error('"notes" and "decks" must be lists', 400);
+        }
+        $deckNames = array_values(array_filter($decks, 'is_string'));
+        $sync = $this->notes ??= AnkiNoteSync::default();
+
+        if ($route === 'notes-plan') {
+            return Response::success($sync->plan($notes, $deckNames));
+        }
+
+        $added = $params['added'] ?? [];
+        if (!is_array($added) || !array_is_list($added)) {
+            return Response::error('"added" must be a list', 400);
+        }
+
+        $confirm = ($params['confirm_deletions'] ?? false) === true;
+
+        return Response::success($sync->commit($notes, $deckNames, $added, $confirm));
     }
 
     /**

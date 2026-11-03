@@ -1,11 +1,15 @@
 /**
- * The "sync reviews with Anki" page (#264, steps 1 and 2).
+ * The "sync with Anki" page (#264, steps 1 to 3).
  *
  * Reads LWT's notes and their reviews from the learner's Anki over
  * AnkiConnect and posts the reviews to LWT, which merges them into each
  * term's history and drops any it already has. LWT then answers with what
  * Anki is missing -- its own reviews and the resulting schedule -- and this
- * writes that to Anki. Running it twice in a row changes nothing.
+ * writes that to Anki. Then the notes themselves: fields, tags, suspension,
+ * additions and deletions merge against what both sides agreed on last time
+ * (see AnkiNoteSync). Deletions wait for the learner to confirm them, and
+ * conflicting edits are listed rather than decided. Running it twice in a row
+ * changes nothing.
  *
  * @license Unlicense <http://unlicense.org/>
  * @since   3.8.0
@@ -19,6 +23,7 @@ import {
   AnkiConnect,
   AnkiConnectError,
   type CardHistory,
+  type NotePlan,
   type PulledReview,
   type PushPlan,
 } from '../services/anki_connect';
@@ -45,6 +50,43 @@ export interface SyncSummary extends PullSummary {
   pushed: number;
   /** Anki cards given LWT's schedule. */
   cardsRescheduled: number;
+  /** Field, tag and suspension changes written to Anki. */
+  notesToAnki: number;
+  /** Field, tag and suspension changes written to LWT. */
+  notesToLwt: number;
+  /** LWT terms added to Anki as notes. */
+  addedToAnki: number;
+  /** Anki notes added to LWT as terms. */
+  addedToLwt: number;
+  /** Terms and notes deleted after confirmation. */
+  deleted: number;
+}
+
+/** Deletions waiting for the learner's yes. */
+interface PendingDeletion {
+  text: string;
+  side: 'lwt' | 'anki';
+}
+
+/**
+ * The latest answer of each card, epoch ms: what the note sync weighs a
+ * deletion against.
+ */
+export function lastReviews(cards: CardHistory[]): Map<number, number> {
+  const latest = new Map<number, number>();
+  for (const card of cards) {
+    const answers = card.reviews.filter(([, ease]) => ease > 0).map(([id]) => id);
+    if (answers.length > 0) latest.set(card.card_id, Math.max(...answers));
+  }
+  return latest;
+}
+
+async function post<T>(path: string, body: Record<string, unknown>): Promise<T> {
+  const response = await apiPost<T>(path, body);
+  if (response.error || !response.data) {
+    throw new Error(response.error ?? 'Empty response');
+  }
+  return response.data;
 }
 
 const EMPTY: PullSummary = { terms: 0, applied: 0, duplicates: 0, rebuilt: 0, skipped: 0 };
@@ -106,11 +148,23 @@ export function ankiSync() {
     progress: '',
     error: '',
     summary: null as SyncSummary | null,
+    conflicts: [] as NotePlan['conflicts'],
+    pendingDeletions: [] as PendingDeletion[],
 
     async pull(): Promise<void> {
+      await this.sync(false);
+    },
+
+    async confirmDeletions(): Promise<void> {
+      await this.sync(true);
+    },
+
+    async sync(confirmDeletions: boolean): Promise<void> {
       this.busy = true;
       this.error = '';
       this.summary = null;
+      this.conflicts = [];
+      this.pendingDeletions = [];
       this.progress = t('vocabulary.anki.sync.connecting');
 
       try {
@@ -134,7 +188,35 @@ export function ankiSync() {
           this.progress = t('vocabulary.anki.sync.writing', { done, total });
         });
 
-        this.summary = { ...pulled, pushed: written.reviews, cardsRescheduled: written.cards };
+        // The notes: fields, tags, suspension, additions, deletions.
+        this.progress = t('vocabulary.anki.sync.reading_notes', { done: 0, total: 0 });
+        const { notes, decks } = await anki.readNotes(config.noteType, lastReviews(cards));
+        const notePlan = await post<NotePlan>('/anki/notes-plan', { notes, decks });
+        this.progress = t('vocabulary.anki.sync.writing', { done: 0, total: notePlan.summary.to_anki });
+        const added = await anki.applyNotePlan(notePlan, config.noteType, confirmDeletions);
+        const committed = await post<{ created: { note_id: number; term_id: number }[]; deleted: number }>(
+          '/anki/notes-commit',
+          { notes, decks, added, confirm_deletions: confirmDeletions }
+        );
+        await anki.writeLwtIds(committed.created, config.idField);
+
+        this.conflicts = notePlan.conflicts;
+        if (!confirmDeletions) {
+          this.pendingDeletions = [
+            ...notePlan.delete_in_lwt.map((d) => ({ text: d.text, side: 'lwt' as const })),
+            ...notePlan.delete_in_anki.map((d) => ({ text: d.text, side: 'anki' as const })),
+          ];
+        }
+        this.summary = {
+          ...pulled,
+          pushed: written.reviews,
+          cardsRescheduled: written.cards,
+          notesToAnki: notePlan.summary.to_anki,
+          notesToLwt: notePlan.summary.to_lwt,
+          addedToAnki: added.length,
+          addedToLwt: committed.created.length,
+          deleted: committed.deleted + (confirmDeletions ? notePlan.delete_in_anki.length : 0),
+        };
         this.progress = '';
       } catch (err) {
         this.progress = '';
@@ -163,6 +245,44 @@ export function ankiSync() {
     },
     cardsLabel(): string {
       return tn('vocabulary.anki.sync.cards', this.summary?.cardsRescheduled ?? 0);
+    },
+    notesToAnkiLabel(): string {
+      return tn('vocabulary.anki.sync.notes_to_anki', this.summary?.notesToAnki ?? 0);
+    },
+    notesToLwtLabel(): string {
+      return tn('vocabulary.anki.sync.notes_to_lwt', this.summary?.notesToLwt ?? 0);
+    },
+    addedToAnkiLabel(): string {
+      return tn('vocabulary.anki.sync.added_to_anki', this.summary?.addedToAnki ?? 0);
+    },
+    addedToLwtLabel(): string {
+      return tn('vocabulary.anki.sync.added_to_lwt', this.summary?.addedToLwt ?? 0);
+    },
+    deletedLabel(): string {
+      return tn('vocabulary.anki.sync.deleted', this.summary?.deleted ?? 0);
+    },
+    hasDeleted(): boolean {
+      return (this.summary?.deleted ?? 0) > 0;
+    },
+    hasConflicts(): boolean {
+      return this.conflicts.length > 0;
+    },
+    conflictLine(conflict: NotePlan['conflicts'][number]): string {
+      return t('vocabulary.anki.sync.conflict_line', {
+        term: conflict.text,
+        field: t(`vocabulary.anki.sync.field_${conflict.field}`),
+        lwt: conflict.lwt,
+        anki: conflict.anki,
+      });
+    },
+    hasPendingDeletions(): boolean {
+      return this.pendingDeletions.length > 0;
+    },
+    deletionLine(deletion: PendingDeletion): string {
+      return t(
+        deletion.side === 'lwt' ? 'vocabulary.anki.sync.deleted_in_anki' : 'vocabulary.anki.sync.deleted_in_lwt',
+        { term: deletion.text }
+      );
     },
     skippedLabel(): string {
       return tn('vocabulary.anki.sync.skipped', this.summary?.skipped ?? 0);

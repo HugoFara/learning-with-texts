@@ -64,8 +64,35 @@ ConfigIsland::render('anki-sync-config', [
       <li x-show="hasRebuilt()" x-text="rebuiltLabel()"></li>
       <li x-text="pushedLabel()"></li>
       <li x-text="cardsLabel()"></li>
+      <li x-text="notesToLwtLabel()"></li>
+      <li x-text="notesToAnkiLabel()"></li>
+      <li x-text="addedToLwtLabel()"></li>
+      <li x-text="addedToAnkiLabel()"></li>
+      <li x-show="hasDeleted()" x-text="deletedLabel()"></li>
       <li x-show="hasSkipped()" x-text="skippedLabel()"></li>
     </ul>
+  </div>
+
+  <div x-show="hasConflicts()" class="notification is-warning" x-cloak>
+    <p><strong><?= __e('vocabulary.anki.sync.conflicts_title') ?></strong></p>
+    <ul>
+      <template x-for="conflict in conflicts" :key="conflict.term_id + conflict.field">
+        <li dir="auto" x-text="conflictLine(conflict)"></li>
+      </template>
+    </ul>
+  </div>
+
+  <div x-show="hasPendingDeletions()" class="notification is-danger is-light" x-cloak>
+    <p><strong><?= __e('vocabulary.anki.sync.deletions_title') ?></strong></p>
+    <ul>
+      <template x-for="deletion in pendingDeletions" :key="deletion.side + deletion.text">
+        <li dir="auto" x-text="deletionLine(deletion)"></li>
+      </template>
+    </ul>
+    <button type="button" class="button is-danger is-small mt-2"
+            :disabled="busy" @click="confirmDeletions()">
+      <?= __e('vocabulary.anki.sync.confirm_deletions') ?>
+    </button>
   </div>
 
   <?php // Contains <code> and <a>, so it is not escaped. ?>

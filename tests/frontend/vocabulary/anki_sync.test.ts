@@ -150,8 +150,10 @@ describe('pushing to Anki', () => {
     expect(written).toEqual({ reviews: 1, cards: 3 });
     expect(calls.map((c) => c.action)).toEqual(['insertReviews', 'setDueDate', 'setDueDate', 'multi']);
     expect(calls[1].params).toEqual({ cards: [1000, 1001], days: '2' });
-    const first = (calls[3].params.actions as { params: Record<string, unknown> }[])[0].params;
-    expect(first).toEqual({ card: 1000, keys: ['ivl', 'reps', 'lapses'], newValues: [2, 1, 0], warning_check: true });
+    const first = (calls[3].params.actions as { version: number; params: Record<string, unknown> }[])[0];
+    // Without its own version an action inside multi answers in the old format.
+    expect(first.version).toBe(6);
+    expect(first.params).toEqual({ card: 1000, keys: ['ivl', 'reps', 'lapses'], newValues: [2, 1, 0], warning_check: true });
   });
 
   it('fails when Anki refuses a card value', async () => {
