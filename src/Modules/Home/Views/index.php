@@ -178,7 +178,7 @@ $base = UrlUtilities::getBasePath();
                     </div>
                 </template>
                 <template x-if="!lastText">
-                    <div class="box has-background-light" style="width: 280px; min-height: 180px;
+                    <div class="box has-background-light-soft" style="width: 280px; min-height: 180px;
                         display: flex; flex-direction: column; justify-content: center; align-items: center;">
                         <span class="icon is-large has-text-grey-light mb-2">
                             <i data-lucide="book-open" style="width: 36px; height: 36px;"></i>

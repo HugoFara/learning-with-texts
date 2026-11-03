@@ -104,19 +104,19 @@ $t = static fn(string $key): string => htmlspecialchars(__('user.' . $key), ENT_
         <!-- Streak stats row -->
         <div class="columns is-mobile is-multiline mb-3">
             <div class="column is-4-desktop is-6-mobile">
-                <div class="box has-background-light has-text-centered py-3">
+                <div class="box has-background-light-soft has-text-centered py-3">
                     <p class="heading"><?php echo $t('statistics.current_streak'); ?></p>
                     <p class="title is-5" x-text="streakLabel(currentStreak)">--</p>
                 </div>
             </div>
             <div class="column is-4-desktop is-6-mobile">
-                <div class="box has-background-light has-text-centered py-3">
+                <div class="box has-background-light-soft has-text-centered py-3">
                     <p class="heading"><?php echo $t('statistics.best_streak'); ?></p>
                     <p class="title is-5" x-text="streakLabel(bestStreak)">--</p>
                 </div>
             </div>
             <div class="column is-4-desktop is-12-mobile">
-                <div class="box has-background-light has-text-centered py-3">
+                <div class="box has-background-light-soft has-text-centered py-3">
                     <p class="heading"><?php echo $t('statistics.today'); ?></p>
                     <p class="is-size-6">
                         <span x-text="$tn('user.statistics.today_created', todayCreated)"></span>

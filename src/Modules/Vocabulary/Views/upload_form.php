@@ -664,7 +664,7 @@ echo PageLayoutHelper::buildActionCard($actions);
                     <thead>
                         <tr>
                             <template x-for="header in previewHeaders()" :key="header">
-                                <th x-text="header" class="has-background-light"></th>
+                                <th x-text="header" class="has-background-light-soft"></th>
                             </template>
                         </tr>
                     </thead>
