@@ -191,5 +191,13 @@
     "users.errors.load_failed": "No se pudieron cargar los usuarios",
     "users.errors.action_failed": "La acción ha fallado",
     "users.confirm_delete": "¿Eliminar el usuario «{username}»? Esto no se puede deshacer.",
-    "users.confirm_role": "¿Cambiar {username} a {role}?"
+    "users.confirm_role": "¿Cambiar {username} a {role}?",
+    "titles.administration": "Administración",
+    "titles.database_operations": "Operaciones de base de datos",
+    "titles.settings": "Ajustes de administración",
+    "titles.install_demo": "Instalar la base de datos de demostración de LWT",
+    "titles.server_data": "Datos del servidor",
+    "titles.user_management": "Gestión de usuarios",
+    "titles.create_user": "Crear usuario",
+    "titles.edit_user": "Editar usuario"
 }

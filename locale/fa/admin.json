@@ -191,5 +191,13 @@
     "users.errors.load_failed": "بارگذاری کاربران ممکن نشد",
     "users.errors.action_failed": "عملیات ناموفق بود",
     "users.confirm_delete": "کاربر «{username}» حذف شود؟ این کار برگشت‌پذیر نیست.",
-    "users.confirm_role": "نقش {username} به {role} تغییر کند؟"
+    "users.confirm_role": "نقش {username} به {role} تغییر کند؟",
+    "titles.administration": "مدیریت",
+    "titles.database_operations": "عملیات پایگاه داده",
+    "titles.settings": "تنظیمات مدیریت",
+    "titles.install_demo": "نصب پایگاه دادهٔ نمایشی LWT",
+    "titles.server_data": "داده‌های سرور",
+    "titles.user_management": "مدیریت کاربران",
+    "titles.create_user": "ایجاد کاربر",
+    "titles.edit_user": "ویرایش کاربر"
 }

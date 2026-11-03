@@ -189,5 +189,13 @@
     "users.errors.load_failed": "ユーザーを読み込めませんでした",
     "users.errors.action_failed": "操作に失敗しました",
     "users.confirm_delete": "ユーザー「{username}」を削除しますか？元に戻せません。",
-    "users.confirm_role": "{username} を {role} に変更しますか？"
+    "users.confirm_role": "{username} を {role} に変更しますか？",
+    "titles.administration": "管理",
+    "titles.database_operations": "データベース操作",
+    "titles.settings": "管理設定",
+    "titles.install_demo": "LWT デモデータベースのインストール",
+    "titles.server_data": "サーバーデータ",
+    "titles.user_management": "ユーザー管理",
+    "titles.create_user": "ユーザーの作成",
+    "titles.edit_user": "ユーザーの編集"
 }

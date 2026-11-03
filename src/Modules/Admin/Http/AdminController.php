@@ -101,7 +101,7 @@ class AdminController extends BaseController
      */
     public function dashboard(array $params): void
     {
-        $this->render('Administration', true);
+        $this->render(__('admin.titles.administration'), true);
         include $this->viewPath . 'dashboard.php';
         $this->endRender();
     }
@@ -150,7 +150,7 @@ class AdminController extends BaseController
         }
 
         // Render page
-        $this->render('Database Operations', true);
+        $this->render(__('admin.titles.database_operations'), true);
         $this->message($message, true);
 
         include $this->viewPath . 'backup.php';
@@ -254,7 +254,7 @@ class AdminController extends BaseController
         $settings = $this->adminFacade->getAllSettings();
 
         // Render page
-        $this->render('Admin Settings', true);
+        $this->render(__('admin.titles.settings'), true);
         $this->message($message, true);
 
         include $this->viewPath . 'settings_form.php';
@@ -292,7 +292,7 @@ class AdminController extends BaseController
         $langcnt = $this->adminFacade->getLanguageCount();
 
         // Render page
-        $this->render('Install LWT Demo Database', true);
+        $this->render(__('admin.titles.install_demo'), true);
         $this->message($message, true);
 
         include $this->viewPath . 'install_demo.php';
@@ -315,7 +315,7 @@ class AdminController extends BaseController
         $data = $this->adminFacade->getServerData();
 
         // Render page
-        $this->render("Server Data", true);
+        $this->render(__('admin.titles.server_data'), true);
 
         include $this->viewPath . 'server_data.php';
 

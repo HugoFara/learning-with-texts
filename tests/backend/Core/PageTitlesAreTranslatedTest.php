@@ -21,7 +21,8 @@ use PHPUnit\Framework\TestCase;
  *
  * renderPageStart() and renderPageStartNobody() print their title as the page
  * heading and the browser-tab title. 29 call sites once passed a literal like
- * 'Texts' or "Term: " . $text, which stayed English in every locale.
+ * 'Texts' or "Term: " . $text, which stayed English in every locale, and nine
+ * more passed one to BaseController::render() (the admin pages, Statistics).
  */
 class PageTitlesAreTranslatedTest extends TestCase
 {
@@ -47,7 +48,14 @@ class PageTitlesAreTranslatedTest extends TestCase
                 $source,
                 $matches
             );
-            foreach ($matches[1] as $literal) {
+            // BaseController::render($title, $showMenu): a literal there is a
+            // title too. Module renderers that take ($view, $data) are not.
+            preg_match_all(
+                '/->render\(\s*(\'[^\']*\'|"[^"]*")\s*,\s*(?:true|false)\s*\)/',
+                $source,
+                $renderMatches
+            );
+            foreach (array_merge($matches[1], $renderMatches[1]) as $literal) {
                 if (!in_array($literal, self::ALLOWED, true)) {
                     $offenders[] = substr($file->getPathname(), strlen($root) + 1) . ': ' . $literal;
                 }

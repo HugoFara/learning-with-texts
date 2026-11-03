@@ -215,9 +215,12 @@ export function tn(
 }
 
 /**
- * The locale the loaded strings belong to.
+ * The interface locale: the one the loaded strings belong to.
+ *
+ * Use it for Intl formatting (dates, numbers) so they follow the interface
+ * language rather than the browser's.
  */
-function activeLocale(): string {
+export function activeLocale(): string {
   if (apiLocale) return apiLocale;
   if (typeof document !== 'undefined' && document.documentElement.lang) {
     return document.documentElement.lang;

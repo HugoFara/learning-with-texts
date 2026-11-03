@@ -96,6 +96,15 @@ ones are marked like "v1.0.0-fork".
 
 ### Fixed
 
+* **The statistics and admin pages are translated.** The streak ("1 day"),
+  the activity calendar's weekday and month labels, its tooltips and its
+  error message were English in every locale, as were the titles of the
+  Statistics page and the eight admin pages, which `render()` took as
+  literals. The calendar now names weekdays and months in the interface
+  language (Gregorian, also under Persian), and stays left to right in an
+  RTL interface so its labels no longer fall off the edge. The page-title
+  guard test now covers `render()` titles too.
+
 * **The text list no longer reports negative unknown words** (#313). Its
   statistics counted saved multi-word expressions among the saved terms but
   not in the total, so a text whose terms were all saved, one of them an

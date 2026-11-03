@@ -116,6 +116,11 @@
     "statistics.today_reviewed_other": "{count} términos repasados",
     "statistics.today_read_one": "{count} texto leído",
     "statistics.today_read_other": "{count} textos leídos",
+    "statistics.streak_days_one": "{count} día",
+    "statistics.streak_days_other": "{count} días",
+    "statistics.no_activity_on": "Sin actividad el {date}",
+    "statistics.day_summary": "{summary} — {date}",
+    "statistics.load_failed": "No se pudieron cargar los datos de actividad",
     "statistics.activity_last_12_months": "Actividad (últimos 12 meses)",
     "statistics.loading_activity": "Cargando actividad...",
     "statistics.intensity_title": "Intensidad de aprendizaje",
@@ -162,5 +167,6 @@
     "flash.microsoft_invalid_response": "Respuesta no válida de Microsoft.",
     "flash.microsoft_welcome": "¡Bienvenido! Has iniciado sesión con Microsoft.",
     "flash.microsoft_linked": "¡Cuenta de Microsoft vinculada correctamente!",
-    "flash.microsoft_invalid_password": "Contraseña incorrecta. Inténtalo de nuevo."
+    "flash.microsoft_invalid_password": "Contraseña incorrecta. Inténtalo de nuevo.",
+    "titles.statistics": "Estadísticas"
 }
