@@ -5,8 +5,9 @@ description: Centralize the scattered word-status model into a single source of 
 
 # Proposal: Term Status Model + FSRS Scheduling
 
-**Status:** **Phase 1 and phase 2a implemented** (#238). Phase 2b (retiring the
-legacy Leitner scoring and switching the review queue over) remains proposed.
+**Status:** **Phases 1, 2a and 2b implemented** (#238). The review queue reads
+the FSRS schedule, the review screen grades Again/Hard/Good/Easy, the legacy
+Leitner scoring is gone, and scheduling round-trips through `.apkg` files.
 Tracked in [issue #238](https://github.com/HugoFara/lwt/issues/238).
 
 The three open product questions have been decided — see
@@ -222,7 +223,7 @@ is no 4-grade UI, and interval fuzzing and the parameter optimiser are omitted
 (fuzzing only exists to spread Anki's daily load; the optimiser needs
 accumulated history).
 
-## Phase 2b — retire the legacy scoring (in progress)
+## Phase 2b — retire the legacy scoring ✅ implemented
 
 **Shipped so far:**
 
@@ -412,6 +413,19 @@ What remains open, all deferred to phase 2b or later:
 
 4. **Gates:** psalm 0 errors, phpcs PSR12 clean, full PHPUnit suite green.
 
-**Still to do for phase 2b:** E2E through a real review session across all four
-grades, and confirmation that reading-view colours are untouched on a populated
-upgrade (true by construction under decision 1, but worth seeing).
+**Done for phase 2b:**
+
+1. **E2E through the review screen** (`cypress/e2e/23-review-grades.cy.ts`).
+   It creates four due terms in a throwaway language, reveals each card on
+   `/review` and presses Again, Hard, Good and Easy, checking that the request
+   carries the grade pressed. It then re-reads `GET /review/intervals`: after
+   Easy the interval Good would schedule has grown, after Again it has not. That
+   last step is what would have caught the 2a shadow write never firing from the
+   review SPA. The terms are made due by backdating `WoStatusChanged` with
+   `cypress/support/backdate-terms.php`, since no grade schedules sooner than a
+   day.
+
+2. **Reading-view colours on upgrade.** Unchanged by construction: the colours
+   come from `WoStatus`, and `20260816_120000_drop_legacy_score_columns.sql`
+   only drops the three derived score columns, never touching `WoStatus` or
+   `WoStatusChanged`.
