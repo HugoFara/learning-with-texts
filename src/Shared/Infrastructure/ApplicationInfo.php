@@ -30,12 +30,12 @@ class ApplicationInfo
     /**
      * Version of this current LWT application.
      */
-    public const VERSION = '3.7.0-fork';
+    public const VERSION = '3.8.0-fork';
 
     /**
      * Date of the latest published release of LWT.
      */
-    public const RELEASE_DATE = '2026-09-04';
+    public const RELEASE_DATE = '2026-11-03';
 
     /**
      * Get the application version for display to humans.

@@ -7,7 +7,9 @@ ones are marked like "v1.0.0-fork".
 
 ## [Unreleased]
 
-### Added
+## [3.8.0-fork] - 2026-11-03
+
+### Added in 3.8.0-fork
 
 * **Right-to-left interface support** (#306). The page now sets `lang` and
   `dir` from the interface locale, and the layout mirrors under
@@ -62,7 +64,17 @@ ones are marked like "v1.0.0-fork".
   set as one key, and a test fails if code asks for a plural key that has
   no English `_other` form.
 
-### Changed
+### Changed in 3.8.0-fork
+
+* **Dependencies and images refreshed** (#307, #311). The Docker image moves
+  to PHP 8.5 on Debian trixie and Node 24 LTS, the NLP image to Python 3.14,
+  and the compose MariaDB to 12.3. Lock files take vite 8.3, vitest 5,
+  league/commonmark 2.10.7 and guzzle 8 (through the OAuth client; Google and
+  Microsoft sign-in checked), which closes the open security alerts for vite,
+  undici, markdown-it, @vitest/mocker and league/commonmark. GitHub Actions
+  move to their current majors. Cypress 16, TypeScript 7 and PHPUnit 12 are
+  held back: the first does not run the suite cleanly in any browser yet, and
+  the other two need what the 8.2 floor and typescript-eslint do not allow.
 
 * **The nine shipped locales are complete again** (#266). 3.7.0 moved the Anki
   import pages, the term-import notifications, the feed wizard's messages and
@@ -112,7 +124,7 @@ ones are marked like "v1.0.0-fork".
   workflow now passes `--fail-under=99`, which leaves roughly 18 keys of slack
   for strings in flight while catching accumulation long before a release.
 
-### Fixed
+### Fixed in 3.8.0-fork
 
 * **An Anki review older than LWT's latest is no longer dropped** (#264).
   Importing an `.apkg` used to skip any Anki review that happened before the
@@ -172,7 +184,15 @@ ones are marked like "v1.0.0-fork".
   counted in turn. Terms already saved keep their count; the fix applies to
   terms whose count is still unset, as new and imported terms are.
 
-### Removed
+* **Japanese parsing in the NLP service works** (#307). The MeCab wheel looks
+  for `/usr/local/etc/mecabrc` and Debian puts it in `/etc`, so every parse
+  through the NLP image failed; the image now sets `MECABRC`.
+
+* **Light panels stay readable in dark themes** (#324). The statistics cards,
+  the home page's empty last-text card and the term-import preview headers
+  showed light text on a light panel; they now follow the theme.
+
+### Removed in 3.8.0-fork
 
 * **The `MECAB` word-characters marker is no longer read** (#288). 3.7.0
   migrated every language holding the literal `MECAB` in
