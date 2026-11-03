@@ -2,8 +2,6 @@
     "page_title": "Повторение",
     "heading": "ПОВТОРЕНИЕ — {title}",
 
-    "header.words_due_today_one": "Слово на сегодня:",
-    "header.words_due_today_many": "Слов на сегодня:",
     "header.remaining": "осталось.",
     "header.read_words_aloud": "Произносить слова вслух",
     "header.button_table": "Таблица",
@@ -68,9 +66,8 @@
 
     "finished.nothing_more": "Больше нечего повторять здесь!",
     "finished.nothing": "Здесь нечего повторять!",
-    "finished.tomorrow_one": "повторение",
-    "finished.tomorrow_many": "повторений",
     "finished.tomorrow_count_one": "Завтра здесь будет {count} повторение!",
+    "finished.tomorrow_count_few": "Завтра здесь будет {count} повторения!",
     "finished.tomorrow_count_other": "Завтра здесь будет {count} повторений!",
 
     "table.no_words": "Нет слов для табличного повторения.",

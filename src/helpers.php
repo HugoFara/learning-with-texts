@@ -81,6 +81,51 @@ if (!function_exists('__e')) {
     }
 }
 
+if (!function_exists('__n')) {
+    /**
+     * Translate a count-dependent key in the plural form the locale needs.
+     *
+     * The translation files hold "{key}_one", "{key}_other", and whichever
+     * other CLDR categories (zero, two, few, many) the language uses.
+     *
+     * @param string                    $key    Dot-notated base key, without the
+     *                                          category suffix
+     * @param int                       $count  The number being counted
+     * @param array<string, string|int> $params Extra interpolation parameters;
+     *                                          {count} is filled in by default
+     *
+     * @return string Translated string, or the raw key if translator is unavailable
+     */
+    function __n(string $key, int $count, array $params = []): string
+    {
+        $container = Container::getInstance();
+        try {
+            if ($container->has(Translator::class)) {
+                return $container->getTyped(Translator::class)->translatePlural($key, $count, $params);
+            }
+        } catch (\Throwable $e) {
+            // Translator unavailable (e.g. in unit tests with no locale path bound)
+        }
+        return $key;
+    }
+}
+
+if (!function_exists('__ne')) {
+    /**
+     * Plural-aware translate, HTML-escaped for safe output in templates.
+     *
+     * @param string                    $key    Dot-notated base key
+     * @param int                       $count  The number being counted
+     * @param array<string, string|int> $params Extra interpolation parameters
+     *
+     * @return string HTML-escaped translated string
+     */
+    function __ne(string $key, int $count, array $params = []): string
+    {
+        return htmlspecialchars(__n($key, $count, $params), ENT_QUOTES, 'UTF-8');
+    }
+}
+
 if (!function_exists('base_path')) {
     /**
      * Get the configured application base path.

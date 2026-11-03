@@ -15,7 +15,7 @@ import { getReviewStore, initReviewStore } from '../stores/review_store';
 import { ReviewApi, type TableReviewWord } from '@modules/review/api/review_api';
 import { speechDispatcher } from '@shared/utils/user_interactions';
 import { saveSetting } from '@shared/utils/ajax_utilities';
-import { t } from '@shared/i18n/translator';
+import { t, tn } from '@shared/i18n/translator';
 import { openTermEditModal } from '@modules/vocabulary/components/term_edit_modal';
 
 /**
@@ -833,20 +833,8 @@ function registerReviewAppComponent(config: ReviewConfig): void {
       return this.store.tomorrowCount > 0;
     },
 
-    getTomorrowLabel(): string {
-      return this.store.tomorrowCount === 1
-        ? t('review.finished.tomorrow_one')
-        : t('review.finished.tomorrow_many');
-    },
-
     getTomorrowMessage(): string {
-      const count = this.store.tomorrowCount;
-      return t(
-        count === 1
-          ? 'review.finished.tomorrow_count_one'
-          : 'review.finished.tomorrow_count_other',
-        { count }
-      );
+      return tn('review.finished.tomorrow_count', this.store.tomorrowCount);
     },
 
     // Safe accessors (CSP-compatible - avoid ?. in templates)

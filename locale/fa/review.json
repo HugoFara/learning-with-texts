@@ -1,8 +1,6 @@
 {
     "page_title": "مرور",
     "heading": "مرور - {title}",
-    "header.words_due_today_one": "واژهٔ موعددار امروز:",
-    "header.words_due_today_many": "واژه‌های موعددار امروز:",
     "header.remaining": "باقی مانده.",
     "header.read_words_aloud": "خواندن واژه‌ها با صدای بلند",
     "header.button_table": "جدول",
@@ -60,8 +58,6 @@
     "modal.close": "بستن",
     "finished.nothing_more": "دیگر چیزی برای مرور اینجا نیست!",
     "finished.nothing": "چیزی برای مرور اینجا نیست!",
-    "finished.tomorrow_one": "مرور",
-    "finished.tomorrow_many": "مرور",
     "finished.tomorrow_count_one": "فردا {count} مرور در اینجا خواهید داشت!",
     "finished.tomorrow_count_other": "فردا {count} مرور در اینجا خواهید داشت!",
     "table.no_words": "واژه‌ای برای مرور جدولی در دسترس نیست.",

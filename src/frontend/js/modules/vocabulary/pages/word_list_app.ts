@@ -13,7 +13,7 @@
 
 import Alpine from 'alpinejs';
 import { initIcons } from '@shared/icons/lucide_icons';
-import { t } from '@shared/i18n/translator';
+import { t, tn } from '@shared/i18n/translator';
 import { getCsrfToken } from '@shared/api/client';
 import { statusTagClass } from '@shared/stores/statuses';
 import {
@@ -691,11 +691,7 @@ export function wordListData(): WordListData {
     },
 
     termCountLabel(): string {
-      const total = this.pagination.total;
-      return t(
-        total === 1 ? 'vocabulary.list.term_count_one' : 'vocabulary.list.term_count_other',
-        { count: total }
-      );
+      return tn('vocabulary.list.term_count', this.pagination.total);
     },
 
     pageLabel(): string {

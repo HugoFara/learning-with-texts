@@ -18,6 +18,7 @@ import { apiPost } from '@shared/api/client';
 import { escapeHtml, renderTags } from '@shared/utils/html_utils';
 import { statuses } from '@shared/stores/app_data';
 import { iconHtml } from '@shared/icons/icons';
+import { tn } from '@shared/i18n/translator';
 
 // Interface for imported term record
 interface ImportedTerm {
@@ -323,6 +324,7 @@ export interface WordUploadResultData {
 
   // Methods
   init(): void;
+  termCountLabel(): string;
   loadPage(page: number): Promise<void>;
   goToPage(page: number): void;
   goToPageFromEvent(event: Event): void;
@@ -373,6 +375,13 @@ export function wordUploadResultApp(config: UploadResultConfig = { lastUpdate: '
       if (this.hasTerms) {
         this.loadPage(1);
       }
+    },
+
+    /**
+     * "N terms", in the plural form the interface locale needs.
+     */
+    termCountLabel(): string {
+      return tn('vocabulary.list.term_count', this.recno);
     },
 
     /**

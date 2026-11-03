@@ -2,8 +2,6 @@
     "page_title": "المراجعة",
     "heading": "مراجعة - {title}",
 
-    "header.words_due_today_one": "الكلمات المستحقة اليوم:",
-    "header.words_due_today_many": "الكلمات المستحقة اليوم:",
     "header.remaining": "متبقية.",
     "header.read_words_aloud": "نطق الكلمات بصوت عالٍ",
     "header.button_table": "جدول",
@@ -68,10 +66,11 @@
 
     "finished.nothing_more": "لا شيء آخر للمراجعة هنا!",
     "finished.nothing": "لا شيء للمراجعة هنا!",
-    "finished.tomorrow_one": "مراجعة",
-    "finished.tomorrow_many": "مراجعة",
     "finished.tomorrow_count_one": "غدًا ستجد هنا مراجعة واحدة!",
-    "finished.tomorrow_count_other": "عدد المراجعات التي ستجدها هنا غدًا: {count}!",
+    "finished.tomorrow_count_two": "غدًا ستجد هنا مراجعتين!",
+    "finished.tomorrow_count_few": "غدًا ستجد هنا {count} مراجعات!",
+    "finished.tomorrow_count_many": "غدًا ستجد هنا {count} مراجعةً!",
+    "finished.tomorrow_count_other": "غدًا ستجد هنا {count} مراجعة!",
 
     "table.no_words": "لا توجد كلمات متاحة لمراجعة الجدول.",
     "table.col_edit": "تعديل",

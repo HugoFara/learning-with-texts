@@ -2,8 +2,6 @@
     "page_title": "Review",
     "heading": "REVIEW - {title}",
 
-    "header.words_due_today_one": "Word due today:",
-    "header.words_due_today_many": "Words due today:",
     "header.remaining": "remaining.",
     "header.read_words_aloud": "Read words aloud",
     "header.button_table": "Table",
@@ -68,8 +66,6 @@
 
     "finished.nothing_more": "Nothing more to review here!",
     "finished.nothing": "Nothing to review here!",
-    "finished.tomorrow_one": "review",
-    "finished.tomorrow_many": "reviews",
     "finished.tomorrow_count_one": "Tomorrow you'll find here {count} review!",
     "finished.tomorrow_count_other": "Tomorrow you'll find here {count} reviews!",
 
