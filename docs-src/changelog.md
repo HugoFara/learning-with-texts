@@ -12,7 +12,211 @@ ones are marked like "v1.0.0-fork".
 
 ## [Unreleased]
 
-### Added in Unreleased
+## [3.8.0-fork] - 2026-11-03
+
+### Added in 3.8.0-fork
+
+* **Right-to-left interface support** (#306). The page now sets `lang` and
+  `dir` from the interface locale, and the layout mirrors under
+  `dir="rtl"`: navigation, cards, forms, dropdowns, the mobile drawer and
+  directional icons follow the reading direction, while media players and
+  device safe-area insets deliberately do not. Study texts keep their own
+  direction inside it: a French text stays left to right in an RTL
+  interface, as a Hebrew one already stayed right to left in an English
+  interface, and user-supplied titles and terms pick their direction from
+  their content. Nothing changes for the existing left-to-right locales;
+  the first right-to-left locale follows separately.
+
+* **Persian (`fa`) interface locale** (#306), the first right-to-left one.
+  Complete, but machine-translated and not yet reviewed by a native
+  speaker: please open an issue for any string that reads wrong.
+
+* **Arabic (`ar`) interface locale**, the second right-to-left one. Also
+  complete and machine-translated, with the same invitation: please open
+  an issue for any string that reads wrong.
+
+* **Sync with Anki without a file** (#264). A new page,
+  `/vocabulary/anki/sync`, linked from the `.apkg` import page, talks to Anki
+  on your computer through the AnkiConnect add-on and keeps the two in step:
+  - reviews travel both ways and join each term's history where they
+    happened, and Anki's cards get LWT's due dates;
+  - translations, romanizations, notes, tags and suspension (↔ *ignored*)
+    travel both ways, edits to different fields of a term both survive, and a
+    field changed differently on both sides is listed rather than guessed;
+  - a term added to a language that has an `LWT::` deck in Anki appears
+    there, and a note you add to such a deck becomes a term;
+  - a term or note deleted on one side is only deleted on the other once you
+    confirm it, and not at all if the other side changed since.
+
+  Anki asks once whether to trust the page. Syncing again is safe. With FSRS
+  on in Anki, Anki's own memory estimates catch up when you next optimise,
+  since AnkiConnect cannot write them. On a hosted LWT the browser may ask for
+  local network access to reach Anki.
+
+* **Language-aware plural forms** (#319). Counted messages now take the
+  form the interface language needs, not just English's singular and
+  plural: Arabic's six forms (0, 1, 2, 3–10, 11–99, 100…), Russian's
+  one/few/many, and French, Portuguese and Persian's singular for zero.
+  Translators write `key_one`, `key_other` and whichever other CLDR
+  categories their language uses. In code, `__n()` / `__ne()` in PHP and
+  `tn()` in TypeScript (and `$tn()` in Alpine templates) replace the
+  `count === 1 ? … : …` key choice. Every counted message uses them: term
+  and tag counts and confirmations, import results, book flashes, due and
+  review intervals, feed updates, today's statistics, download counts and
+  more. The "term(s)" workarounds are gone, and messages that put a number
+  between word fragments ("Imported" N "words" "for" X) are now whole
+  sentences a translator can reorder. The locale checker counts a plural
+  set as one key, and a test fails if code asks for a plural key that has
+  no English `_other` form.
+
+### Changed in 3.8.0-fork
+
+* **Dependencies and images refreshed** (#307, #311). The Docker image moves
+  to PHP 8.5 on Debian trixie and Node 24 LTS, the NLP image to Python 3.14,
+  and the compose MariaDB to 12.3. Lock files take vite 8.3, vitest 5,
+  league/commonmark 2.10.7 and guzzle 8 (through the OAuth client; Google and
+  Microsoft sign-in checked), which closes the open security alerts for vite,
+  undici, markdown-it, @vitest/mocker and league/commonmark. GitHub Actions
+  move to their current majors. Cypress 16, TypeScript 7 and PHPUnit 12 are
+  held back: the first does not run the suite cleanly in any browser yet, and
+  the other two need what the 8.2 floor and typescript-eslint do not allow.
+
+* **The nine shipped locales are complete again** (#266). 3.7.0 moved the Anki
+  import pages, the term-import notifications, the feed wizard's messages and
+  three new `server_data` diagnostics out of hardcoded English and behind
+  `__()` — but the 102 keys it extracted only ever landed in `locale/en`, so a
+  reader in any other language saw exactly the English they saw before. The
+  refactor had moved the problem from the controllers into `locale/en/` rather
+  than solving it. All 102 are now translated in de, es, fr, it, ja, pt, ru and
+  zh, following each language's own Anki terminology (deck/mazo/paquet/デッキ/
+  колода/牌组) so a term matches what the user sees in Anki itself.
+
+* **The last notification fragments have one author, and are translated**
+  (#266). Tier 3 of the issue: six files still built Bulma notification markup
+  by hand, and none of the English in them went through the translator.
+  `NotificationHelper` gained the other two Bulma levels, so a warning or a
+  progress notice no longer needs its own copy of the markup, and the three
+  plain cases — the Google Translate page's "Term is not set!", the language
+  editor's and the starter-vocabulary page's "Language not found." — now render
+  through it. The starter-vocabulary page had spelled its message in English
+  next to a `language.errors.language_not_found` key that already said the same
+  thing in nine languages.
+
+* **The feed loader is a view, and the application layer renders nothing**
+  (#266). `FeedFacade::renderFeedLoadInterfaceModern()` echoed an Alpine
+  component wrapper, a progress notification and a Continue button — markup,
+  from a class in `Application/` — and `FeedLoadController` carried a
+  byte-identical second copy. Both are replaced by one `feed_loader.php` that
+  the controller renders. The labels were English literals, so every locale
+  read "UPDATING 0/3 FEEDS"; they resolve through `__()` now. The dead
+  delegation chain that reached the duplicate (`FeedController::
+  renderFeedLoadInterface`, routed from nowhere) is gone with it.
+
+* **The email-verification banner and the shared message renderer are
+  translated** (#266). `PageLayoutHelper` echoed the "Email not verified"
+  banner with its three strings written in English; it carries a form and an
+  emphasised opening, so it moved to `User/Views/email_verification_notice.php`
+  — the case `NotificationHelper` documents as belonging in a view.
+  `renderMessage()` stays where it is, being the one generic message renderer,
+  but its `Error:` prefix and `Go back and correct` button no longer bypass the
+  translator. What remains of hand-built notification markup outside `Views/`
+  is those two lines, which is the point of having them.
+
+* **Locale completion is enforced, not just reported** (#266).
+  `.github/workflows/locales.yml` ran `bin/check-locales.php` with no
+  `--fail-under`, so CI printed "94.5%" nine times and exited 0. That is how a
+  whole release's worth of untranslated keys accumulated unnoticed. The
+  workflow now passes `--fail-under=99`, which leaves roughly 18 keys of slack
+  for strings in flight while catching accumulation long before a release.
+
+### Fixed in 3.8.0-fork
+
+* **An Anki review older than LWT's latest is no longer dropped** (#264).
+  Importing an `.apkg` used to skip any Anki review that happened before the
+  term's last review in LWT, so studying in both apps between two imports lost
+  the Anki side. Reviews now join the history where they happened and the
+  later ones are recomputed on top, giving the schedule a single history
+  would have.
+
+* **The statistics and admin pages are translated.** The streak ("1 day"),
+  the activity calendar's weekday and month labels, its tooltips and its
+  error message were English in every locale, as were the titles of the
+  Statistics page and the eight admin pages, which `render()` took as
+  literals. The calendar now names weekdays and months in the interface
+  language (Gregorian, also under Persian), and stays left to right in an
+  RTL interface so its labels no longer fall off the edge. The page-title
+  guard test now covers `render()` titles too.
+
+* **The text list no longer reports negative unknown words** (#313). Its
+  statistics counted saved multi-word expressions among the saved terms but
+  not in the total, so a text whose terms were all saved, one of them an
+  expression, read "total 19, saved 20, unknown -1, -5%". The total now
+  includes saved expressions, as the reading view's counter always did.
+
+* **Page titles are translated** (#314). 28 pages, Home, Texts, Terms and
+  the feed pages among them, passed an English literal as their title, so the
+  heading and browser tab stayed English in every locale. They now use
+  `titles.*` keys in all nine locales, reusing each locale's existing word
+  where one existed ("Texts", "Print", "New Term") so terminology stays
+  consistent. Titles built from a name ("Edit Feed - …", "Term: …") take it
+  as a parameter, so a language can put it where its grammar wants. A test
+  now fails on any new literal title.
+
+* **CC-CEDICT imports again, as a dictionary rather than a broken CSV**
+  (discussion #308). MDBG moved the file under `/chinese/export/`, so the
+  curated download for Chinese failed outright. It could not have worked with
+  the right link either: the entry was tagged `csv`, the archive holds a
+  `cedict_ts.u8` that the CSV lookup (`.csv/.tsv/.txt`) never finds, and a
+  CEDICT line (`傳統 传统 [chuan2 tong3] /tradition/traditional/`) is not
+  comma-separated. A new `cedict` format reads it properly: pinyin goes to the
+  reading, senses are joined into the definition, and an entry is stored under
+  both its simplified and traditional headword when they differ (203,339
+  entries from the current file). It is also offered on both manual upload
+  forms.
+
+* **The Docker image accepts dictionary-sized uploads** (discussion #308). It
+  shipped `php.ini-production` untouched, so uploads stopped at 2 MB and POST
+  bodies at 8 MB — below most dictionaries, and surfacing as "No file was
+  uploaded" or a CSRF 403. `conf.d/lwt-uploads.ini` now raises them to the
+  100 MB the importers already allow.
+
+* **Every MeCab language gets MeCab word counts** (#310). The word-count
+  initialisation gathered the MeCab language IDs with `GROUP_CONCAT` and cast
+  the list to an integer, so `"12,13"` became `12`: only the first language
+  was counted by MeCab, and the terms of any other one fell through to the
+  regex count, which reads a run of kanji and kana as a single word
+  (`日本語の単語` counted as 1 instead of 3). Each MeCab language is now
+  counted in turn. Terms already saved keep their count; the fix applies to
+  terms whose count is still unset, as new and imported terms are.
+
+* **Japanese parsing in the NLP service works** (#307). The MeCab wheel looks
+  for `/usr/local/etc/mecabrc` and Debian puts it in `/etc`, so every parse
+  through the NLP image failed; the image now sets `MECABRC`.
+
+* **Light panels stay readable in dark themes** (#324). The statistics cards,
+  the home page's empty last-text card and the term-import preview headers
+  showed light text on a light panel; they now follow the theme.
+
+### Removed in 3.8.0-fork
+
+* **The `MECAB` word-characters marker is no longer read** (#288). 3.7.0
+  migrated every language holding the literal `MECAB` in
+  `LgRegexpWordCharacters` onto `LgParserType = 'mecab'` plus
+  `LgRemoveSpaces`, and logged a deprecation notice for one release. The
+  readers are now gone: a language tokenizes with MeCab when its parser type
+  says so, and the word-characters field holds a regex and nothing else. The
+  Server Data panel that listed languages still carrying the marker is removed
+  with them. An upgrade needs no action, since the 3.7.0 migration has already
+  run, and restoring an older backup re-runs it. Only a language whose marker
+  was written *after* that migration, by an API client sending the literal,
+  would now parse with the regex tokenizer instead; re-saving it with the MeCab
+  parser fixes it. Measured with `checkTextReport()` on every stored text
+  before and after: all languages, a migrated MeCab Japanese included, parse
+  byte-identically.
+
+## [3.7.0-fork] - 2026-09-04
+
+### Added in 3.7.0-fork
 
 * **One emitter and one reader for the values PHP hands a page** (#301). Server
   values reach a page as a JSON island because the CSP build of Alpine cannot
@@ -28,7 +232,200 @@ ones are marked like "v1.0.0-fork".
   `PHP_CLI_SERVER_WORKERS` set. Use it instead of a bare `php -S`, which serves
   one request at a time.
 
-### Changed in Unreleased
+### Changed in 3.7.0-fork
+
+* **The term-import page is translated, and its notifications have one
+  author** (#266). `TermImportController` reported every outcome — no language
+  selected, invalid language, nothing to import, no term column, no file, wrong
+  format, import failed, and both success cases — by echoing the notification
+  markup, ten hand-written copies of it. As with the Anki controllers, none of
+  the ten went through the translator, so all nine locales saw English. The
+  markup now lives in one `NotificationHelper`, which the Feed trait that had
+  the same problem also uses, every message resolves through `__()`, and the
+  one notification that genuinely carries markup — the dictionary a file
+  import created — is a view. The controller renders through `render()`
+  instead of `include`, so the last `UnresolvableInclude` suppressions in it
+  are gone.
+
+* **A dictionary imported into a language other than the current one no longer
+  redisplays a mislabelled form** (#266). After the import, the form was
+  rebuilt with its language *name* read from the current-language setting but
+  its language *id* taken from the submitted form, so it could show one
+  language's name while pointing its import and enrichment URLs at another.
+  One language now resolves both, and the block that built the form's data is
+  written once rather than twice.
+
+* **The import result page reports in the reader's language** (#266). Its term
+  counter spelled "Term"/"Terms" and its spinner "Loading..." directly into the
+  markup, and the controller handed it `1`/`0` for a flag its own assertion and
+  the TypeScript that reads it both declare as a boolean.
+
+* **The feed editor's language name is resolved by its controller** (#266),
+  not by a loop in the view scanning every language for a matching id. The
+  feed controllers' hand-written notification markup also moved into one
+  `renderNotification()` on the shared trait, so "Feed not found" is
+  translated rather than an English literal in a controller.
+
+* **The audio player's skip intervals moved into its Alpine component**
+  (#266). The view rendered them with a PHP loop over a literal array — client
+  UI configuration built by the server, in a file whose own header says it
+  carries no data.
+
+* **The Anki import pages are views, and are translated** (#266). Both
+  `/vocabulary/anki-deck/import` and `/vocabulary/apkg/import` were built
+  entirely from `echo` statements inside their controllers — forms, `<select>`
+  loops, result tables and all — with no view file at all. Neither had a
+  single `__()` call, so every label was hardcoded English for all nine
+  shipped locales. The markup now lives in `Views/`, every string resolves
+  through the translator, and the controllers do request parsing and nothing
+  else. The status names in the deck-import form and its summary come from
+  `TermStatus`, so they match the rest of the app.
+
+* **One status table for the frontend, and four fewer copies of it** (#238).
+  `shared/stores/statuses.ts` has been the intended single source of truth for
+  the word-status model since 3.2.2, but four components kept their own
+  status → Bulma-class mapping beside it, and they had drifted: status 3 was
+  `is-info` in the word popover and `is-warning` in the word list, and status 99
+  was `is-success is-light`, `is-success` and `is-info` in three different
+  places. They now all read `statusTagClass()`, so the word list's colours for
+  statuses 2, 3 and 99 change to match everywhere else.
+
+* **Status labels in the popover, the multi-word modal and the home tooltip are
+  translated** (#238). All three built their labels from hardcoded English
+  string literals, so "Learning (1)", "Well Known" and the reading-progress
+  tooltip stayed English whatever locale the user had chosen. They now come
+  from the shared store, which resolves the same `common.status_*` keys PHP
+  does.
+
+* **The admin statistics chart is painted in the reader's own colours** (#238).
+  It carried a private palette commented as "matching LWT's existing status
+  styles", which it had stopped doing: those were the old 2.x pastels while the
+  reading view moved to a saturated palette, so the same status was one colour
+  in a text and another in the chart, and a user reading in Dark got light-mode
+  pastels either way. Colours now resolve from the `--lwt-status*` custom
+  properties the text itself is painted with, so themes apply. Its dataset
+  labels also stop calling status 1 "Unknown" — an unknown word is one not in
+  the vocabulary at all; a status-1 word is one being learnt.
+
+* **The `MECAB` magic word has one reader instead of twelve** (#288).
+  `LgRegexpWordCharacters` is the field that should hold a word-characters
+  regex; historically it could instead hold the literal `MECAB`, saying two
+  unrelated things at once — *tokenize with MeCab*, and *this language has no
+  spaces between words*. `LgParserType` says the first properly, but nothing
+  said the second, so twelve sites spelled the comparison out by hand and three
+  of them got the normalisation wrong. `WordSpacing` now answers both questions,
+  and `SentenceService` asks whether a language separates its words with spaces
+  rather than what its word-characters field happens to contain. Behaviour is
+  unchanged for every combination of the three signals; only the three
+  mis-normalised sites move, and they move to what they meant.
+
+* **The `MECAB` magic word is retired from the database** (#288). A migration
+  gives its two jobs to the fields that mean them — `LgParserType = 'mecab'` and
+  `LgRemoveSpaces = 1` — and puts the Japanese preset's real regex back in
+  `LgRegexpWordCharacters`, so a migrated language ends up looking like a freshly
+  created one. Every reader moved to those fields first: clearing the marker
+  without that would have dropped Japanese onto the regex tokenizer, where the
+  text still opens and every word in it is wrong. Verified by parsing the same
+  Japanese text before and after the migration across all three legacy flag
+  combinations, with tokens, sentence split and phonetic reading unchanged.
+
+* **MeCab has one implementation again** (#288). `ParserRegistry` routed a
+  language naming `mecab` to `MecabParser`, a second tokenizer shelling out to
+  the same binary as the built-in `JapaneseTextParser` — and the two disagreed.
+  MeCab now always stays on the built-in pipeline, which is the one every
+  install has been using.
+
+* **The format current Anki exports by default is read, not refused** (#264).
+  Anki writes the collection zstd-compressed as `collection.anki21b` unless
+  *Support older Anki versions* is switched on, and leaves `collection.anki2`
+  behind as a stub holding a single "please update Anki" note. LWT read that
+  stub quite happily, reported one unrecognised note, and told the user the
+  import had succeeded. It now reads the real collection: the compressed file is
+  SQLite at **schema 18**, where note types live in `notetypes`/`fields` tables
+  rather than the `col.models` blob, so the field lookup follows `col.ver`
+  instead of assuming schema 11. Decompression needs `ext-zstd`, which PHP does
+  not bundle; without it the file is refused with a message naming Anki's own
+  export setting, and the import page stops giving that advice on servers where
+  the extension is present. Found by running the round-trip against real Anki
+  (pylib 26.08.1) rather than against our own reader.
+
+* **A due date set by hand in Anki comes back as one** (#264). "Set due date"
+  and "Forget" write a `revlog` row with no grade on it — `ease` 0, kind Manual
+  — so there is nothing to replay through the scheduler: what the learner said
+  is *when*, not *how well*. Those rows used to be dropped, and a card pushed
+  six months out in Anki came back due tomorrow. The due date now moves, no
+  review is invented to explain it, and stability and difficulty are left
+  untouched, so the next real review carries on from where the term already was.
+  Only when the reschedule is the newest thing that happened to the card — a
+  card postponed and then actually answered has been answered, and the answer
+  wins.
+
+* **Every card of a note counts** (#264). LWT's note type makes one card per
+  note, but a note type edited in Anki can make several, and the reader kept
+  only the first. Reviews on the others were silently discarded. A note's
+  history is now the union across its cards, its due date the earliest of them,
+  and it counts as suspended only when every card is — one card parked while
+  another is still in the queue is not a term to demote to *Ignored*.
+
+* **Notes created in Anki are pointed somewhere** (#264). They carry a random
+  guid and no language, so this page cannot create them; it reported a count
+  and left the user to work out where their words had gone. It now says
+  explicitly that those notes need
+  *Vocabulary → Import an Anki deck*, which asks which language they belong to.
+  Deletions are the case that stays impossible: an .apkg carries no record of
+  them at all — Anki's exporter builds a fresh collection holding only the notes
+  it gathered — so a term missing from a file is left alone rather than guessed
+  at, and the import page now says so.
+
+* **A round-trip check against real Anki** (#264). `composer test:anki-oracle`
+  drives `scripts/anki/anki_oracle.py` to push a deck through an actual Anki
+  collection — import, answer a card, set a due date by hand, re-export — and
+  asserts what comes back. It skips cleanly when Anki's Python library is
+  absent, since that is too heavy a dependency for `composer test`. It exists
+  because the stub bug above passed the entire suite: every other test of this
+  feature has LWT writing *and* reading, and the two agreed perfectly while the
+  round trip was broken.
+
+* **Reviews done in Anki come back** (#264). The `.apkg` exporter has carried
+  LWT's scheduling into Anki since 3.6.0, but the importer discarded everything
+  Anki sent back — study a deck there, re-import it, and none of it counted.
+  The importer now reads each card's `revlog` and replays the grades through
+  LWT's own scheduler, so the file path is a round-trip rather than a one-way
+  export. The card's own memory state is deliberately *not* copied: Anki
+  computes it with its own FSRS parameters, or with SM-2 and no memory state at
+  all, and `revlog` is the half that records what the learner actually did.
+
+  Only reviews later than LWT's own last review are replayed. That is the whole
+  conflict policy and it needs no sync protocol — both sides timestamp their
+  reviews, so the merge is "apply what happened after the state we already
+  hold, in the order it happened" — and it is what stops a re-import applying
+  each review a second time. The import summary now reports how many terms were
+  rescheduled, how many reviews were replayed, and how many due dates were set
+  by hand in Anki.
+
+* **The `MECAB` magic word is now deprecated, and says so** (#288). It keeps
+  working, but a reader that falls back to it logs a deprecation naming the
+  language's field value and what to set instead. The notice fires only where
+  the marker is *load-bearing* — a language carrying both the marker and a
+  `LgParserType` never consults it — so it means "removing the fallback would
+  change this install", which is what the removal will be decided on. It is
+  deduplicated per field value, because the spacing readers run once per
+  sentence and would otherwise bury the notice in its own output.
+
+* **Server Data lists languages still holding the marker** (#288), beside the
+  failed-migration and missing-foreign-key panels. The migration clears every
+  row an upgrade finds, so anything listed here was written afterwards — by an
+  API client sending the literal, or a language imported from an older install
+  — and needs re-saving. That page is what users paste into bug reports, which
+  is the half of the deprecation an install owner can actually act on; the log
+  line above is invisible unless someone goes looking for it.
+
+* **The language form no longer offers to overwrite a working regex** (#288).
+  The word-characters selector's "MeCab (recommended)" option wrote the literal
+  `mecab` over whatever regex the field held — and it only appeared once a
+  language was already named Japanese, by which point the parser dropdown had
+  the choice covered. Removing it stops new installs acquiring the magic word;
+  existing ones keep working, since every reader still accepts it.
 
 * **The annotated text view is rendered by the browser** (#302). `/text/{id}/display`
   was the last page building content in PHP. It now fetches
@@ -51,7 +448,7 @@ ones are marked like "v1.0.0-fork".
   docblocks also claimed PHP 8.1 while `composer.json` has required `^8.2` and
   CI tests 8.2 through 8.5.
 
-### Removed in Unreleased
+### Removed in 3.7.0-fork
 
 * **Server-side rendering paths nothing reaches** (#299), 800 lines: the
   word-by-word reading pane renderer superseded by `text_renderer.ts`, three
@@ -63,7 +460,77 @@ ones are marked like "v1.0.0-fork".
   though it did something. Also `Globals::query()`, a one-line forward to
   `QueryBuilder::table()`, and an error-display flag that was never switched on.
 
-### Fixed in Unreleased
+### Fixed in 3.7.0-fork
+
+* **The Anki .apkg import page loads again** (#266). `/vocabulary/apkg/import`
+  returned a 500 from the 3.6.0 release onwards: the router auto-wires the
+  controller, and one interface in its dependency graph
+  (`SchedulerInterface`) was never bound, so the container threw before the
+  page began. Nothing caught it — the unit tests build the controller directly
+  with their own services, which is exactly the step that was failing, and no
+  end-to-end test visited the route. It is now bound, there is an end-to-end
+  test for both Anki import pages, and the container no longer turns an
+  optional dependency into a required one: a constructor parameter written as
+  `?Foo $foo = null` falls back to its default when the container cannot
+  resolve it, instead of taking the whole page down.
+
+* **The Anki import forms send a CSRF token the middleware reads** (#266).
+  Both pages emitted the field as `csrf_token`; `CsrfMiddleware` only ever
+  looks for `_csrf_token`. They now use `FormHelper::csrfField()`, which is
+  the one place that knows the name.
+
+
+* **Japanese from the language preset parsed into almost nothing** (#288).
+  `MecabParser` read MeCab's character-type column with the test inverted, so
+  every word came out a non-word and every `。` came out a word: a text of
+  twelve words parsed to three, and — since 3.7.0 knows how to say so — raised
+  the "almost none of this text could be turned into words" banner. It affected
+  any language that actually reached that parser, which is one created from the
+  Japanese preset, since the preset names `mecab` and carries a real regex. The
+  built-in tokenizer has always read the column correctly; this now agrees.
+
+* **A Chinese text could parse into one unclickable word per sentence** (#278).
+  A language written without spaces gives a regex no gaps to match on, so it
+  took the longest run of word characters it could find — the whole sentence.
+  The reader got a text where `我昨天去了北京大学的图书馆看书` was a single term
+  that could not be clicked, looked up or learned, which is the reported
+  symptom. Reaching the regex parser at all means no tokenizer ran, so such a
+  language now falls back to splitting each character: what every spaceless
+  preset already asks for, and what `getOptedInParserFromRow()` already said it
+  relied on. The same text on two differently configured Chinese languages now
+  parses identically. Languages whose words really are space-separated are
+  untouched.
+
+* **A Japanese language spelled `MECAB` got no phonetic reading** (#288). Every
+  reader of the magic word normalised before comparing except
+  `GetPhoneticReading`, which tested `!== "mecab"` in lowercase, so an install
+  holding the marker in any other casing silently got its input back with no
+  error. `ExternalParser` had the mirror bug — it compared against uppercase
+  only, so the lowercase `mecab` the language form writes was taken for a
+  regex and compiled as the character class `[mecab]`, making exactly the
+  letters m, e, c, a and b the language's word characters. The reading-mode
+  choice in `LanguageApiHandler` had the lowercase version of the same bug.
+
+* **A text with no words was told its language was misconfigured** (#289). The
+  "none of this text could be turned into words" banner had no minimum length,
+  so `123`, `2024`, `3.14` and `?!...` each sent the reader to change a language
+  setting that was working correctly. A price list, a date exercise or a numbers
+  drill genuinely contains no words; the parse was right and now says nothing.
+
+* **Short non-Latin texts warned about nothing at all** (#289, #278). The
+  density test was switched off below 200 characters, so a 122-character Chinese
+  text on a Latin language — five stray clickable tokens in a wall of
+  unclickable characters — got no explanation, which is the experience #278
+  reports. The verdict no longer has a length threshold to fall through.
+
+* **One rule, three denominators** (#289). The reading view, the check-text page
+  and the API shared the rule for when a parse came out empty but not its input:
+  one measured the raw text, two summed token lengths, so the same text could
+  cross the floor on one surface and not another. `ParseCoverage` is now fed the
+  text token by token and does its own counting, so a caller cannot measure
+  differently. Coverage is judged as the share of a text's **letters** that
+  ended up inside words, which — unlike word-per-character density — does not
+  move with how spaced-out a script is, and reads the same at any length.
 
 * **Config blobs could break out of their script element** (#301). Six islands
   passed no escaping flags at all, so a value containing `</script>` closed the
