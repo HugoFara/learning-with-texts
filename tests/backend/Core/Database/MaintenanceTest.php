@@ -63,12 +63,12 @@ class MaintenanceTest extends TestCase
             "(SELECT LgID FROM languages WHERE LgName = 'Test Japanese')"
         );
         Connection::query("DELETE FROM languages WHERE LgName = 'Test Japanese'");
-        // Clean up any MECAB languages that could trigger the MeCab requirement
+        // Clean up any MeCab languages that could trigger the MeCab requirement
         Connection::query(
             "DELETE FROM words WHERE WoLgID IN " .
-            "(SELECT LgID FROM languages WHERE UPPER(LgRegexpWordCharacters) = 'MECAB')"
+            "(SELECT LgID FROM languages WHERE LOWER(LgParserType) = 'mecab')"
         );
-        Connection::query("DELETE FROM languages WHERE UPPER(LgRegexpWordCharacters) = 'MECAB'");
+        Connection::query("DELETE FROM languages WHERE LOWER(LgParserType) = 'mecab'");
         // Clean up split-each-char languages (Chinese) to avoid bug with initWordCount
         Connection::query("DELETE FROM words WHERE WoLgID IN (SELECT LgID FROM languages WHERE LgSplitEachChar = 1)");
         Connection::query("DELETE FROM languages WHERE LgSplitEachChar = 1");
@@ -372,17 +372,17 @@ class MaintenanceTest extends TestCase
             $this->markTestSkipped('MeCab not installed - skipping Japanese word count test');
         }
 
-        // Create a Japanese-like language with MECAB
+        // Create a Japanese-like language that tokenizes with MeCab
         $sql = "INSERT INTO languages (
             LgName, LgDict1URI, LgGoogleTranslateURI, LgTextSize,
             LgCharacterSubstitutions, LgRegexpSplitSentences,
             LgExceptionsSplitSentences, LgRegexpWordCharacters,
-            LgRemoveSpaces, LgSplitEachChar, LgRightToLeft
+            LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgParserType
         ) VALUES (
             'Test Japanese',
             'https://jisho.org/search/###',
             'https://translate.google.com/?text=###',
-            100, '', '。！？', '', 'MECAB', 0, 0, 0
+            100, '', '。！？', '', '\\\\x{4E00}-\\\\x{9FFF}\\\\x{3040}-\\\\x{30FF}', 1, 0, 0, 'mecab'
         )";
         Connection::query($sql);
         $japLangId = mysqli_insert_id(Globals::getDbConnection());

@@ -430,11 +430,6 @@ class Language
             return $this->parserType;
         }
 
-        // Legacy detection: check magic word in regexpWordCharacters
-        if (WordSpacing::usesMecabMagicWord($this->regexpWordCharacters)) {
-            return 'mecab';
-        }
-
         // Legacy detection: check splitEachChar flag
         if ($this->splitEachChar) {
             return 'character';

@@ -77,6 +77,23 @@ ones are marked like "v1.0.0-fork".
   uploaded" or a CSRF 403. `conf.d/lwt-uploads.ini` now raises them to the
   100 MB the importers already allow.
 
+### Removed
+
+* **The `MECAB` word-characters marker is no longer read** (#288). 3.7.0
+  migrated every language holding the literal `MECAB` in
+  `LgRegexpWordCharacters` onto `LgParserType = 'mecab'` plus
+  `LgRemoveSpaces`, and logged a deprecation notice for one release. The
+  readers are now gone: a language tokenizes with MeCab when its parser type
+  says so, and the word-characters field holds a regex and nothing else. The
+  Server Data panel that listed languages still carrying the marker is removed
+  with them. An upgrade needs no action, since the 3.7.0 migration has already
+  run, and restoring an older backup re-runs it. Only a language whose marker
+  was written *after* that migration, by an API client sending the literal,
+  would now parse with the regex tokenizer instead; re-saving it with the MeCab
+  parser fixes it. Measured with `checkTextReport()` on every stored text
+  before and after: all languages, a migrated MeCab Japanese included, parse
+  byte-identically.
+
 ## [3.7.0-fork] - 2026-09-04
 
 ### Added in 3.7.0-fork

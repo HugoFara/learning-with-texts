@@ -194,11 +194,7 @@ class Maintenance
          */
         $row = QueryBuilder::table('languages')
             ->selectRaw('GROUP_CONCAT(LgID) AS lang_ids')
-            ->whereRaw(
-                "LOWER(TRIM(COALESCE(LgParserType,''))) = 'mecab'"
-                . " OR (COALESCE(LgParserType,'') = ''"
-                . " AND UPPER(TRIM(LgRegexpWordCharacters)) = 'MECAB')"
-            )
+            ->whereRaw("LOWER(TRIM(COALESCE(LgParserType,''))) = 'mecab'")
             ->first();
         /** @var string|int|null $japid */
         $japid = $row !== null ? ($row['lang_ids'] ?? null) : null;

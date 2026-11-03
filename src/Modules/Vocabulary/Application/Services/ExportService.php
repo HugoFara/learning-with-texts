@@ -24,7 +24,6 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Vocabulary\Application\Services;
 
-use Lwt\Modules\Language\Domain\WordSpacing;
 use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Shared\Infrastructure\Utilities\CsvFormulaGuard;
 
@@ -186,11 +185,7 @@ class ExportService
      */
     private function formatAnkiRow(array $record): string
     {
-        if (WordSpacing::usesMecabMagicWord((string) $record['LgRegexpWordCharacters'])) {
-            $termchar = '一-龥ぁ-ヾ';
-        } else {
-            $termchar = (string)$record['LgRegexpWordCharacters'];
-        }
+        $termchar = (string)$record['LgRegexpWordCharacters'];
 
         $rtlScript = (int)$record['LgRightToLeft'] === 1;
         $span1 = ($rtlScript ? '<span dir="rtl">' : '');

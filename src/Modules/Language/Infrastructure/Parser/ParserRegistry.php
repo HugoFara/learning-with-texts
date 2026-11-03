@@ -17,7 +17,6 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Language\Infrastructure\Parser;
 
-use Lwt\Modules\Language\Domain\WordSpacing;
 use Lwt\Modules\Language\Domain\Language;
 use Lwt\Modules\Language\Domain\Parser\ParserInterface;
 
@@ -185,26 +184,18 @@ class ParserRegistry
     /**
      * The parser a language deliberately asked for, if any.
      *
-     * Only an explicit, non-default `LgParserType` counts. The legacy signals
-     * resolveParserTypeFromRow() also understands — the MECAB magic word and
-     * the split-each-character flag — are deliberately ignored here: the
-     * pipeline has always handled those itself, so returning null for them
-     * keeps their parsing byte-identical.
+     * Only an explicit, non-default `LgParserType` counts, and not every one
+     * of those: a type the built-in pipeline already implements stays there,
+     * so its parsing remains byte-identical.
      *
      * A stored parser type is not by itself evidence of a choice, which is the
      * subtle half. 20251223_120000_add_parser_type.sql *backfilled* the column
-     * from those same legacy signals — 'mecab' for the magic word, 'character'
-     * for LgSplitEachChar — so on every upgraded install the CJK languages
-     * already carry a type nobody picked. Routing those to the registry
-     * retokenizes them: measured on a real database, a character-split Chinese
-     * text goes from 103 words to 122 and Japanese from 46 to 60, which would
-     * silently desynchronise saved terms from new text occurrences. A value
-     * that merely restates the legacy signal beside it is therefore read as the
-     * legacy signal, not as intent.
-     *
-     * Deriving intent this way is a workaround for the magic word overloading
-     * LgRegexpWordCharacters; it goes away once that is retired and the column
-     * means only what a user chose.
+     * from legacy signals — 'mecab' for the old MECAB marker, 'character' for
+     * LgSplitEachChar — so on every upgraded install the CJK languages carry a
+     * type nobody picked. Routing those to the registry retokenizes them:
+     * measured on a real database, a character-split Chinese text goes from
+     * 103 words to 122 and Japanese from 46 to 60, which would silently
+     * desynchronise saved terms from new text occurrences (#281).
      *
      * @param array<string, mixed> $row Database row with Lg* prefixed columns
      *
@@ -218,7 +209,7 @@ class ParserRegistry
             return null;
         }
 
-        if (self::restatesALegacySignal($type, $row)) {
+        if (self::builtInPipelineHandles($type, $row)) {
             return null;
         }
 
@@ -250,15 +241,20 @@ class ParserRegistry
      * Two implementations of one tokenizer can only drift, and they had —
      * `MecabParser` classified every word as a non-word, and split one sentence
      * more than the built-in one did off the trailing paragraph marker. Whether
-     * the type was derived from the magic word or chosen from the dropdown, the
-     * language wants MeCab, and there is one MeCab worth running (#288).
+     * the type was backfilled from the old marker or chosen from the dropdown,
+     * the language wants MeCab, and there is one MeCab worth running.
+     *
+     * Neither rule depends on the MECAB marker, which is why retiring it in
+     * 3.8.0 (#288) left this method in place: dropping it would send MeCab
+     * languages to `MecabParser` and character-split languages to the
+     * registry's tokenizer, which is exactly the #281 regression.
      *
      * @param string               $type Trimmed, non-empty LgParserType
      * @param array<string, mixed> $row  Database row with Lg* prefixed columns
      *
      * @return bool True when the built-in pipeline should handle it
      */
-    private static function restatesALegacySignal(string $type, array $row): bool
+    private static function builtInPipelineHandles(string $type, array $row): bool
     {
         if ($type === 'mecab') {
             return true;
@@ -289,11 +285,6 @@ class ParserRegistry
             return $parserType;
         }
 
-        // Legacy detection: check magic word in regexpWordCharacters
-        if (WordSpacing::usesMecabMagicWord($language->regexpWordCharacters())) {
-            return 'mecab';
-        }
-
         // Legacy detection: check splitEachChar flag
         if ($language->splitEachChar()) {
             return 'character';
@@ -315,11 +306,6 @@ class ParserRegistry
         $parserType = $row['LgParserType'] ?? null;
         if ($parserType !== null && $parserType !== '') {
             return (string) $parserType;
-        }
-
-        // Legacy detection: check magic word
-        if (WordSpacing::usesMecabMagicWord((string) ($row['LgRegexpWordCharacters'] ?? ''))) {
-            return 'mecab';
         }
 
         // Legacy detection: check splitEachChar flag

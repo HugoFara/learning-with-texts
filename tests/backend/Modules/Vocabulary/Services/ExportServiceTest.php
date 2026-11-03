@@ -367,12 +367,12 @@ class ExportServiceTest extends TestCase
     }
 
     // ====================================
-    // MECAB Regex Pattern Test
+    // Japanese Regex Pattern Test
     // ====================================
 
-    public function testMaskTermWithMecabPattern(): void
+    public function testMaskTermWithJapanesePattern(): void
     {
-        // MECAB uses Japanese character range
+        // A Japanese character range
         $sentence = "日本語の{単語}です。";
         $mecabRegex = '一-龥ぁ-ヾ';
 
@@ -703,12 +703,14 @@ class ExportServiceTest extends TestCase
         $this->assertStringContainsString(']', $result); // RTL brackets reversed
     }
 
-    public function testFormatAnkiRowWithMecabRegex(): void
+    public function testFormatAnkiRowWithMigratedJapaneseRegex(): void
     {
+        // A MeCab language holds the Japanese preset's regex since the MECAB
+        // marker was retired (#288), so masking works from the field as is
         $method = new \ReflectionMethod(ExportService::class, 'formatAnkiRow');
 
         $record = [
-            'LgRegexpWordCharacters' => 'MECAB',
+            'LgRegexpWordCharacters' => '\x{4E00}-\x{9FFF}\x{F900}-\x{FAFF}\x{3040}-\x{30FF}\x{31F0}-\x{31FF}',
             'LgRightToLeft' => 0,
             'WoSentence' => '日本語の{単語}です。',
             'WoText' => '単語',
