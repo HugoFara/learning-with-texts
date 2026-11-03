@@ -266,17 +266,16 @@ endpoint was always fine.
   which is the durable half; replaying it keeps one model answering for the
   whole vocabulary and works the same whether the collection used FSRS or not.
 
-  Only reviews later than LWT's own last review are replayed, which is the
-  entire conflict policy and needs no sync protocol: both sides timestamp their
-  reviews, so the merge is "apply what happened after the state we already hold,
-  in the order it happened". It has to be there anyway — an exported file
-  carries LWT's history back out with it, so replaying everything would apply
-  each review twice and collapse the interval. Two limits: comparison is at the
-  second precision `review_log` stores, so an Anki review in the same second as
-  ours is dropped (the safe way round); and an Anki review that predates our
-  last one is skipped rather than interleaved, since catching those means
-  rebuilding state from both histories. Ignored and well-known terms are left
-  alone — they were never in the queue.
+  Reviews join the term's history in time order (`MergeReviewHistory`), which
+  is the entire conflict policy and needs no sync protocol: reviews are
+  timestamped facts, so the merge is their union. An exported file carries
+  LWT's history back out with it; those reviews return with the same second
+  and grade and are dropped, so nothing is applied twice. A review predating
+  LWT's latest is fitted in where it happened and the later history is
+  recomputed on top (#264). The one approximation: the seed a term had before
+  its first graded review is not stored, so a review older than a seeded
+  term's whole history starts from a fresh seed of its current status.
+  Ignored and well-known terms are left alone — they were never in the queue.
 
 - **The legacy scoring is retired.** `SCORE_FORMULA_*`,
   `makeScoreRandomInsertUpdate()` and the three columns are gone, along with

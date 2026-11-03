@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Lwt\Tests\Modules\Review\Infrastructure;
 
 use DateTimeImmutable;
+use Lwt\Modules\Review\Application\UseCases\MergeReviewHistory;
 use Lwt\Modules\Review\Application\UseCases\RecordScheduledReview;
 use Lwt\Modules\Review\Domain\Scheduling\Fsrs6Scheduler;
+use Lwt\Modules\Review\Domain\Scheduling\HistoricReview;
 use Lwt\Modules\Review\Domain\Scheduling\Rating;
 use Lwt\Modules\Review\Infrastructure\MySqlTermScheduleRepository;
 use Lwt\Shared\Infrastructure\Bootstrap\EnvLoader;
@@ -244,5 +246,51 @@ final class TermScheduleRepositoryIntegrationTest extends TestCase
 
         $this->assertNull($repo->find(999999999));
         $this->assertNull($repo->findOrSeed(999999999));
+    }
+
+    public function testAnOlderReviewIsInterleavedInTheStoredHistory(): void
+    {
+        // #264: an Anki review older than LWT's latest is merged in its place,
+        // and the log rows after it are recomputed in one go.
+        $repo = new MySqlTermScheduleRepository();
+        $record = new RecordScheduledReview(new Fsrs6Scheduler(), $repo);
+        $wordId = $this->createTerm('interleaveme', 3, '2026-01-01 12:00:00');
+        $record->execute($wordId, Rating::Good, new DateTimeImmutable('2026-02-01 09:00:00'));
+        $record->execute($wordId, Rating::Good, new DateTimeImmutable('2026-02-10 09:00:00'));
+
+        $result = (new MergeReviewHistory(new Fsrs6Scheduler(), $repo))->execute($wordId, [
+            new HistoricReview(new DateTimeImmutable('2026-02-05 09:00:00'), Rating::Again),
+            new HistoricReview(new DateTimeImmutable('2026-02-10 09:00:00'), Rating::Good),
+        ]);
+
+        $this->assertSame(['applied' => 1, 'duplicates' => 1, 'rebuilt' => true], $result);
+        $rows = Connection::preparedFetchAll(
+            'SELECT RlGrade, RlReviewedAt FROM review_log WHERE RlWoID = ? ORDER BY RlReviewedAt, RlID',
+            [$wordId]
+        );
+        $this->assertSame(
+            [[3, '2026-02-01 09:00:00'], [1, '2026-02-05 09:00:00'], [3, '2026-02-10 09:00:00']],
+            array_map(static fn(array $r) => [(int) $r['RlGrade'], (string) $r['RlReviewedAt']], $rows)
+        );
+        $stored = $repo->find($wordId);
+        $this->assertNotNull($stored);
+        $this->assertSame(3, $stored->reps);
+        $this->assertSame(1, $stored->lapses);
+    }
+
+    public function testSeedForAnchorsTheStatusAtCreation(): void
+    {
+        $repo = new MySqlTermScheduleRepository();
+        $wordId = $this->createTerm('seedforme', 4, '2026-03-01 12:00:00');
+
+        $seed = $repo->seedFor($wordId);
+
+        $this->assertNotNull($seed);
+        $this->assertEqualsWithDelta(27.0, $seed->stability, 1e-9);
+        $created = (string) Connection::preparedFetchValue(
+            'SELECT WoCreated AS value FROM words WHERE WoID = ?',
+            [$wordId]
+        );
+        $this->assertSame(substr($created, 0, 10), $seed->lastReview?->format('Y-m-d'));
     }
 }

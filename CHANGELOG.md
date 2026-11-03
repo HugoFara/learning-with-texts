@@ -28,6 +28,14 @@ ones are marked like "v1.0.0-fork".
   complete and machine-translated, with the same invitation: please open
   an issue for any string that reads wrong.
 
+* **Pull reviews from Anki without a file** (#264). A new page,
+  `/vocabulary/anki/sync`, linked from the `.apkg` import page, reads the reviews you did in Anki straight from Anki on your computer,
+  through the AnkiConnect add-on, and merges them into LWT's schedule. Anki
+  asks once whether to trust the page; nothing in Anki is changed. Pulling
+  again is safe, since reviews LWT already has are recognised and skipped.
+  Only cards LWT exported are matched. On a hosted LWT the browser may ask
+  for local network access to reach Anki.
+
 * **Language-aware plural forms** (#319). Counted messages now take the
   form the interface language needs, not just English's singular and
   plural: Arabic's six forms (0, 1, 2, 3–10, 11–99, 100…), Russian's
@@ -95,6 +103,13 @@ ones are marked like "v1.0.0-fork".
   for strings in flight while catching accumulation long before a release.
 
 ### Fixed
+
+* **An Anki review older than LWT's latest is no longer dropped** (#264).
+  Importing an `.apkg` used to skip any Anki review that happened before the
+  term's last review in LWT, so studying in both apps between two imports lost
+  the Anki side. Reviews now join the history where they happened and the
+  later ones are recomputed on top, giving the schedule a single history
+  would have.
 
 * **The statistics and admin pages are translated.** The streak ("1 day"),
   the activity calendar's weekday and month labels, its tooltips and its

@@ -50,3 +50,4 @@ import './pages/expression_interactable';
 import './pages/translation_page';
 import './pages/starter_vocab';
 import './pages/term_edit_page';
+import './pages/anki_sync';

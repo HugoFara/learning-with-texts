@@ -33,6 +33,7 @@ use Lwt\Modules\Review\Http\ReviewApiHandler;
 use Lwt\Modules\Tags\Http\TagApiHandler;
 use Lwt\Modules\Admin\Http\AdminApiHandler;
 use Lwt\Modules\Admin\Http\UserManagementApiHandler;
+use Lwt\Modules\Vocabulary\Http\AnkiApiHandler;
 use Lwt\Modules\Vocabulary\Http\VocabularyApiRouter;
 use Lwt\Modules\Vocabulary\Http\WordFamilyApiHandler;
 use Lwt\Modules\Text\Http\TextApiHandler;
@@ -88,6 +89,7 @@ class ApiV1
      * @var array<string, class-string<ApiRoutableInterface>>
      */
     private const HANDLER_MAP = [
+        'anki'               => AnkiApiHandler::class,
         'auth'               => UserApiHandler::class,
         'languages'          => LanguageApiHandler::class,
         'review'             => ReviewApiHandler::class,

@@ -90,4 +90,31 @@ interface TermScheduleRepositoryInterface
      * @return array<int, list<ReviewLogEntry>> Keyed by word ID
      */
     public function historyFor(array $wordIds): array;
+
+    /**
+     * Rewrite a term's history from a point in time onwards.
+     *
+     * Deletes the term's `review_log` rows at or after $from, appends one row
+     * per result in order, and sets the term's state to the last result's --
+     * all or nothing, in one transaction. Used when a review arrives that
+     * happened before reviews already recorded, so the later ones have to be
+     * recomputed on top of it (#264).
+     *
+     * @param int                                                             $wordId Term to rewrite
+     * @param DateTimeImmutable                                               $from   First moment rewritten
+     * @param list<array{result: SchedulingResult, rating: Rating, stateBefore: int}> $reviews In time order
+     *
+     * @return bool Whether the history was rewritten (false for a term the
+     *              current user does not own, or with no reviews to write)
+     */
+    public function replaceHistoryFrom(int $wordId, DateTimeImmutable $from, array $reviews): bool;
+
+    /**
+     * A starting state for a term whose earliest known review was seeded.
+     *
+     * The seed a term had before its first graded review is not stored, so
+     * this recomputes one from its current status, anchored at its creation.
+     * Null for a term that is not owned or not schedulable.
+     */
+    public function seedFor(int $wordId): ?MemoryState;
 }

@@ -39,6 +39,7 @@ class Endpoints
         'auth/logout' => ['POST'],
         'auth/me' => ['GET'],
 
+        'anki/reviews' => ['POST'],
         'languages' => ['GET', 'POST', 'PUT', 'DELETE'],
         'languages/definitions' => ['GET'],
         'languages/with-texts' => ['GET'],
