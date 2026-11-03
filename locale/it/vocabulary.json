@@ -428,5 +428,15 @@
     "anki.apkg.settings_scheduling": "senza di che le tue ripetizioni restano in Anki.",
     "anki.apkg.settings_import": "Nella direzione opposta, spunta <em>Importa i progressi di apprendimento</em> quando importi un mazzo LWT in Anki, altrimenti Anki ricomincia ogni carta da zero e scarta la pianificazione esportata da questa pagina.",
     "anki.apkg.deck_notice_title": "Stai importando un mazzo creato in Anki?",
-    "anki.apkg.deck_notice": "Questa pagina aggiorna solo i termini che LWT ha esportato in origine: un mazzo proveniente da Anki o AnkiWeb non ha nulla qui con cui essere confrontato, quindi non cambierebbe niente. Usa invece <a href=\"{url}\">Importa un mazzo Anki</a>, che crea nuovi termini e deduce quanto conosci ogni parola dalla pianificazione di Anki."
+    "anki.apkg.deck_notice": "Questa pagina aggiorna solo i termini che LWT ha esportato in origine: un mazzo proveniente da Anki o AnkiWeb non ha nulla qui con cui essere confrontato, quindi non cambierebbe niente. Usa invece <a href=\"{url}\">Importa un mazzo Anki</a>, che crea nuovi termini e deduce quanto conosci ogni parola dalla pianificazione di Anki.",
+    "titles.terms": "Termini",
+    "titles.term": "Termine",
+    "titles.term_named": "Termine: {term}",
+    "titles.edit_term": "Modifica termine: {term}",
+    "titles.new_term": "Nuovo termine",
+    "titles.starter": "Vocabolario iniziale",
+    "titles.not_found": "Non trovato",
+    "titles.error": "Errore",
+    "titles.status_changed": "Stato modificato",
+    "titles.status_set": "Stato impostato"
 }

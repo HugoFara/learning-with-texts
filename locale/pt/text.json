@@ -228,5 +228,12 @@
     "parse_warning.no_words": "Não foi possível extrair nenhuma palavra deste texto.",
     "parse_warning.almost_no_words": "Quase nada deste texto pôde ser convertido em palavras.",
     "parse_warning.check_language": "A definição \"Caracteres de palavra\" do idioma não corresponde a este texto, por isso nada nele pode ser clicado ou aprendido.",
-    "parse_warning.edit_language": "Verificar as definições do idioma"
+    "parse_warning.edit_language": "Verificar as definições do idioma",
+    "titles.texts": "Textos",
+    "titles.archived": "Textos Arquivados",
+    "titles.read": "Ler",
+    "titles.display": "Exibição",
+    "titles.print": "Imprimir",
+    "titles.annotated": "Texto Anotado",
+    "titles.check": "Verificar um texto"
 }

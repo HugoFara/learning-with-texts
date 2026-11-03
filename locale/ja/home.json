@@ -28,5 +28,6 @@
     "warning_php_outdated": "PHPバージョンは{phpVersion}ですが、バージョン{minVersion}が必要です。PHPを更新してください。",
     "warning_update_available": "LWTの更新が利用可能です：{latestVersion}（現在のバージョン：{currentVersion}）。",
     "download": "ダウンロード",
-    "dismiss": "閉じる"
+    "dismiss": "閉じる",
+    "titles.home": "ホーム"
 }

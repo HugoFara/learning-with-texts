@@ -80,7 +80,7 @@ class TextCrudController extends BaseController
             $currentLang = $resolved > 0 ? (string) $resolved : '';
         }
 
-        PageLayoutHelper::renderPageStart('Texts', true);
+        PageLayoutHelper::renderPageStart(__('text.titles.texts'), true);
         $this->showNewTextForm((int) $currentLang);
         PageLayoutHelper::renderPageEnd();
 
@@ -102,7 +102,7 @@ class TextCrudController extends BaseController
             InputValidator::getStringWithDb("filterlang", 'currentlanguage')
         );
 
-        PageLayoutHelper::renderPageStart('Texts', true);
+        PageLayoutHelper::renderPageStart(__('text.titles.texts'), true);
         $this->showEditTextForm($id);
         PageLayoutHelper::renderPageEnd();
 
@@ -168,7 +168,7 @@ class TextCrudController extends BaseController
             substr($this->param('op'), -8) == 'and Open');
 
         if (!$noPagestart) {
-            PageLayoutHelper::renderPageStart('Texts', true);
+            PageLayoutHelper::renderPageStart(__('text.titles.texts'), true);
         }
 
         $message = '';

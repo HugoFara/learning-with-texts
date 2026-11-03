@@ -28,5 +28,6 @@
     "warning_php_outdated": "Votre version de PHP est {phpVersion}, mais la version {minVersion} est requise. Veuillez mettre à jour PHP.",
     "warning_update_available": "Une mise à jour de LWT est disponible : {latestVersion} (votre version : {currentVersion}).",
     "download": "Télécharger",
-    "dismiss": "Ignorer"
+    "dismiss": "Ignorer",
+    "titles.home": "Accueil"
 }

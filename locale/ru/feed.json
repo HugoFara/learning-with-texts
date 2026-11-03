@@ -297,5 +297,10 @@
     "flash.deleted": "Лента успешно удалена",
     "flash.not_found": "Лента не найдена",
     "flash.delete_failed": "Не удалось удалить ленту",
-    "edit_feed_not_found": "Лента не найдена."
+    "edit_feed_not_found": "Лента не найдена.",
+    "titles.manager": "Управление лентами",
+    "titles.add": "Добавить ленту",
+    "titles.edit": "Изменить ленту - {name}",
+    "titles.updating": "Обновление лент - {name}",
+    "titles.loading": "Загрузка ленты - {name}"
 }

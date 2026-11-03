@@ -54,7 +54,7 @@ class FeedEditController
         $currentLanguageId = CurrentLanguage::resolveId();
         $currentLanguageName = $this->languageFacade->getLanguageName($currentLanguageId);
 
-        PageLayoutHelper::renderPageStart('Feed Manager', true);
+        PageLayoutHelper::renderPageStart(__('feed.titles.manager'), true);
         /** @psalm-suppress UnresolvableInclude */
         include $this->viewPath . 'spa.php';
         PageLayoutHelper::renderPageEnd();
@@ -77,7 +77,7 @@ class FeedEditController
      */
     public function newFeed(array $params): void
     {
-        PageLayoutHelper::renderPageStart('Add a Feed', true);
+        PageLayoutHelper::renderPageStart(__('feed.titles.add'), true);
 
         $this->showNewForm();
         PageLayoutHelper::renderPageEnd();
@@ -106,7 +106,7 @@ class FeedEditController
         }
 
         $langName = $this->languageFacade->getLanguageName($feed['NfLgID']);
-        PageLayoutHelper::renderPageStart('Edit Feed - ' . $langName, true);
+        PageLayoutHelper::renderPageStart(__('feed.titles.edit', ['name' => $langName]), true);
 
         $this->showEditForm($id);
         PageLayoutHelper::renderPageEnd();

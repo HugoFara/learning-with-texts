@@ -297,5 +297,10 @@
     "flash.deleted": "Flux supprimé avec succès",
     "flash.not_found": "Flux non trouvé",
     "flash.delete_failed": "Échec de la suppression du flux",
-    "edit_feed_not_found": "Flux introuvable."
+    "edit_feed_not_found": "Flux introuvable.",
+    "titles.manager": "Gestionnaire de flux",
+    "titles.add": "Ajouter un flux",
+    "titles.edit": "Modifier le flux - {name}",
+    "titles.updating": "Mise à jour des flux - {name}",
+    "titles.loading": "Chargement du flux - {name}"
 }

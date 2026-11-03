@@ -216,5 +216,12 @@
     "parse_warning.no_words": "无法从这段文本中提取出任何单词。",
     "parse_warning.almost_no_words": "几乎无法从这段文本中提取出单词。",
     "parse_warning.check_language": "该语言的“单词字符”设置与此文本不匹配，因此其中的内容无法点击或学习。",
-    "parse_warning.edit_language": "检查语言设置"
+    "parse_warning.edit_language": "检查语言设置",
+    "titles.texts": "文本",
+    "titles.archived": "已归档文本",
+    "titles.read": "阅读",
+    "titles.display": "显示",
+    "titles.print": "打印",
+    "titles.annotated": "注释文本",
+    "titles.check": "检查文本"
 }

@@ -231,7 +231,7 @@ class TermEditController extends VocabularyBaseController
         $dictLinksHtml = $this->dictionaryAdapter->createDictLinksInEditWin3($lang, 'WoSentence', 'WoText');
         $wordTagsHtml = TagsFacade::getWordTagsHtml(0);
 
-        PageLayoutHelper::renderPageStart('New Term', true, 'terms');
+        PageLayoutHelper::renderPageStart(__('vocabulary.titles.new_term'), true, 'terms');
 
         $this->render('form_new', [
             'lang' => $lang,

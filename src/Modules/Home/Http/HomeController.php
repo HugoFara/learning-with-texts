@@ -97,7 +97,7 @@ class HomeController extends BaseController
             ];
         }
 
-        PageLayoutHelper::renderPageStart("Home", true, 'home');
+        PageLayoutHelper::renderPageStart(__('home.titles.home'), true, 'home');
 
         include __DIR__ . '/../Views/index.php';
 

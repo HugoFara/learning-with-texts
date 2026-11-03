@@ -428,5 +428,15 @@
     "anki.apkg.settings_scheduling": "sans quoi vos révisions restent dans Anki.",
     "anki.apkg.settings_import": "Dans l'autre sens, cochez <em>Importer la progression d'apprentissage</em> lorsque vous importez un paquet LWT dans Anki, sinon Anki repart de zéro pour chaque carte et ignore la planification exportée par cette page.",
     "anki.apkg.deck_notice_title": "Vous importez un paquet créé dans Anki ?",
-    "anki.apkg.deck_notice": "Cette page ne met à jour que les termes exportés par LWT au départ — un paquet venant d'Anki ou d'AnkiWeb n'a rien ici à quoi correspondre, rien ne changerait donc. Utilisez plutôt <a href=\"{url}\">Importer un paquet Anki</a>, qui crée de nouveaux termes et détermine votre niveau de connaissance de chaque mot à partir de la planification d'Anki."
+    "anki.apkg.deck_notice": "Cette page ne met à jour que les termes exportés par LWT au départ — un paquet venant d'Anki ou d'AnkiWeb n'a rien ici à quoi correspondre, rien ne changerait donc. Utilisez plutôt <a href=\"{url}\">Importer un paquet Anki</a>, qui crée de nouveaux termes et détermine votre niveau de connaissance de chaque mot à partir de la planification d'Anki.",
+    "titles.terms": "Termes",
+    "titles.term": "Terme",
+    "titles.term_named": "Terme: {term}",
+    "titles.edit_term": "Modifier le terme: {term}",
+    "titles.new_term": "Nouveau terme",
+    "titles.starter": "Vocabulaire de démarrage",
+    "titles.not_found": "Introuvable",
+    "titles.error": "Erreur",
+    "titles.status_changed": "Statut modifié",
+    "titles.status_set": "Statut défini"
 }

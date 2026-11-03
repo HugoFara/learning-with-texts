@@ -65,6 +65,15 @@ ones are marked like "v1.0.0-fork".
   expression, read "total 19, saved 20, unknown -1, -5%". The total now
   includes saved expressions, as the reading view's counter always did.
 
+* **Page titles are translated** (#314). 28 pages, Home, Texts, Terms and
+  the feed pages among them, passed an English literal as their title, so the
+  heading and browser tab stayed English in every locale. They now use
+  `titles.*` keys in all nine locales, reusing each locale's existing word
+  where one existed ("Texts", "Print", "New Term") so terminology stays
+  consistent. Titles built from a name ("Edit Feed - …", "Term: …") take it
+  as a parameter, so a language can put it where its grammar wants. A test
+  now fails on any new literal title.
+
 * **CC-CEDICT imports again, as a dictionary rather than a broken CSV**
   (discussion #308). MDBG moved the file under `/chinese/export/`, so the
   curated download for Chinese failed outright. It could not have worked with

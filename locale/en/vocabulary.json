@@ -416,5 +416,15 @@
   "anki.apkg.settings_scheduling": "without which your reviews stay behind in Anki.",
   "anki.apkg.settings_import": "Going the other way, tick <em>Import any learning progress</em> when you import an LWT deck into Anki, or Anki starts every card from scratch and discards the schedule this page exported.",
   "anki.apkg.deck_notice_title": "Importing a deck you built in Anki?",
-  "anki.apkg.deck_notice": "This page only updates terms that LWT exported in the first place — a deck from Anki or AnkiWeb has nothing here to match against, so nothing would change. Use <a href=\"{url}\">Import an Anki deck</a> instead, which creates new terms and works out how well you know each word from Anki's own scheduling."
+  "anki.apkg.deck_notice": "This page only updates terms that LWT exported in the first place — a deck from Anki or AnkiWeb has nothing here to match against, so nothing would change. Use <a href=\"{url}\">Import an Anki deck</a> instead, which creates new terms and works out how well you know each word from Anki's own scheduling.",
+  "titles.terms": "Terms",
+  "titles.term": "Term",
+  "titles.term_named": "Term: {term}",
+  "titles.edit_term": "Edit Term: {term}",
+  "titles.new_term": "New Term",
+  "titles.starter": "Starter Vocabulary",
+  "titles.not_found": "Not Found",
+  "titles.error": "Error",
+  "titles.status_changed": "Status Changed",
+  "titles.status_set": "Status Set"
 }

@@ -428,5 +428,15 @@
     "anki.apkg.settings_scheduling": "sem isso, suas revisões ficam para trás no Anki.",
     "anki.apkg.settings_import": "No sentido inverso, marque <em>Importar qualquer progresso de aprendizagem</em> ao importar um baralho do LWT no Anki, ou o Anki começará cada cartão do zero e descartará o agendamento que esta página exportou.",
     "anki.apkg.deck_notice_title": "Vai importar um baralho que você criou no Anki?",
-    "anki.apkg.deck_notice": "Esta página só atualiza termos que o LWT exportou originalmente — um baralho vindo do Anki ou do AnkiWeb não tem nada aqui com que corresponder, então nada mudaria. Use <a href=\"{url}\">Importar um baralho do Anki</a>, que cria termos novos e deduz o quanto você conhece cada palavra a partir do próprio agendamento do Anki."
+    "anki.apkg.deck_notice": "Esta página só atualiza termos que o LWT exportou originalmente — um baralho vindo do Anki ou do AnkiWeb não tem nada aqui com que corresponder, então nada mudaria. Use <a href=\"{url}\">Importar um baralho do Anki</a>, que cria termos novos e deduz o quanto você conhece cada palavra a partir do próprio agendamento do Anki.",
+    "titles.terms": "Termos",
+    "titles.term": "Termo",
+    "titles.term_named": "Termo: {term}",
+    "titles.edit_term": "Editar Termo: {term}",
+    "titles.new_term": "Novo Termo",
+    "titles.starter": "Vocabulário Inicial",
+    "titles.not_found": "Não encontrado",
+    "titles.error": "Erro",
+    "titles.status_changed": "Status alterado",
+    "titles.status_set": "Status definido"
 }

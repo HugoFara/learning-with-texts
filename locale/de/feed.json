@@ -297,5 +297,10 @@
     "flash.deleted": "Feed erfolgreich gelöscht",
     "flash.not_found": "Feed nicht gefunden",
     "flash.delete_failed": "Feed konnte nicht gelöscht werden",
-    "edit_feed_not_found": "Feed nicht gefunden."
+    "edit_feed_not_found": "Feed nicht gefunden.",
+    "titles.manager": "Feed-Verwaltung",
+    "titles.add": "Einen Feed hinzufügen",
+    "titles.edit": "Feed bearbeiten - {name}",
+    "titles.updating": "Feeds werden aktualisiert - {name}",
+    "titles.loading": "Feed wird geladen - {name}"
 }

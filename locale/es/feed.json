@@ -297,5 +297,10 @@
     "flash.deleted": "Fuente eliminada correctamente",
     "flash.not_found": "Fuente no encontrada",
     "flash.delete_failed": "No se pudo eliminar la fuente",
-    "edit_feed_not_found": "Fuente no encontrada."
+    "edit_feed_not_found": "Fuente no encontrada.",
+    "titles.manager": "Gestor de fuentes",
+    "titles.add": "Añadir una fuente",
+    "titles.edit": "Editar fuente - {name}",
+    "titles.updating": "Actualizando fuentes - {name}",
+    "titles.loading": "Cargando fuente - {name}"
 }

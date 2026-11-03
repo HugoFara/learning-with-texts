@@ -428,5 +428,15 @@
     "anki.apkg.settings_scheduling": "andernfalls bleiben Ihre Wiederholungen in Anki zurück.",
     "anki.apkg.settings_import": "Umgekehrt aktivieren Sie <em>Lernfortschritt importieren</em>, wenn Sie ein LWT-Deck in Anki importieren, sonst beginnt Anki jede Karte von vorn und verwirft den von dieser Seite exportierten Lernplan.",
     "anki.apkg.deck_notice_title": "Möchten Sie ein in Anki erstelltes Deck importieren?",
-    "anki.apkg.deck_notice": "Diese Seite aktualisiert nur Begriffe, die ursprünglich von LWT exportiert wurden – ein Deck aus Anki oder AnkiWeb hat hier nichts, womit es abgeglichen werden könnte, es würde sich also nichts ändern. Verwenden Sie stattdessen <a href=\"{url}\">Ein Anki-Deck importieren</a>: Dort werden neue Begriffe erstellt und anhand von Ankis eigenem Lernplan ermittelt, wie gut Sie jedes Wort kennen."
+    "anki.apkg.deck_notice": "Diese Seite aktualisiert nur Begriffe, die ursprünglich von LWT exportiert wurden – ein Deck aus Anki oder AnkiWeb hat hier nichts, womit es abgeglichen werden könnte, es würde sich also nichts ändern. Verwenden Sie stattdessen <a href=\"{url}\">Ein Anki-Deck importieren</a>: Dort werden neue Begriffe erstellt und anhand von Ankis eigenem Lernplan ermittelt, wie gut Sie jedes Wort kennen.",
+    "titles.terms": "Begriffe",
+    "titles.term": "Begriff",
+    "titles.term_named": "Begriff: {term}",
+    "titles.edit_term": "Begriff bearbeiten: {term}",
+    "titles.new_term": "Neuer Begriff",
+    "titles.starter": "Starter-Vokabular",
+    "titles.not_found": "Nicht gefunden",
+    "titles.error": "Fehler",
+    "titles.status_changed": "Status geändert",
+    "titles.status_set": "Status gesetzt"
 }
