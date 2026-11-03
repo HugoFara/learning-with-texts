@@ -74,6 +74,7 @@ coverage.xml
 /cypress/screenshots/
 /cypress/videos/
 /cypress/downloads/
+/cypress/anki-exchange/
 /cypress/coverage/
 
 # Lighthouse reports

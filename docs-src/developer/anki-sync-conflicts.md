@@ -5,11 +5,13 @@ description: How LWT and Anki should merge when both change the same terms betwe
 
 # Spike: Conflict Resolution for Live Anki Sync
 
-**Status:** Spike result (#264). **Step 1 of the build order is implemented**:
-reviews are pulled from Anki over AnkiConnect at `/vocabulary/anki/sync`, and
-both that and the `.apkg` importer merge through `MergeReviewHistory`, which
-fits an older review into the history instead of skipping it. Steps 2 and 3
-are not built. The roadmap asked for
+**Status:** Spike result (#264). **Steps 1 and 2 of the build order are
+implemented**, and tested against a real Anki in a container (see
+[Testing against real Anki](#testing-against-real-anki)): `/vocabulary/anki/sync`
+pulls Anki's reviews into LWT through `MergeReviewHistory`, which fits an
+older review into the history instead of skipping it, then sends LWT's reviews
+and schedule back to Anki. The `.apkg` importer merges the same way. Step 3
+(fields, tags, flags, existence) is not built. The roadmap asked for
 this before any: *"Spike conflict resolution FIRST (the Anki problem) — it
 looks easy and isn't. Decide last-writer-wins+tombstones vs CRDT before
 committing."*
@@ -58,7 +60,8 @@ Checked in the code and in AnkiConnect's API.
 These details come from the typed client `yanki-connect` 4.0.6, written
 against AnkiConnect 25.11.9.0; the official README at
 `git.sr.ht/~foosoft/anki-connect` was unreachable when this was written.
-**Verify each against it before coding.**
+**Since verified** against AnkiConnect's own source (the AnkiWeb package) and
+by running it, for everything steps 1 and 2 use; see below.
 
 - `notesInfo` returns fields, tags, cards and a `mod` time per **note** — one
   timestamp for the whole note, not per field.
@@ -123,12 +126,22 @@ from the earliest unseen review rather than append after the latest.
   comes back in `cardReviews`. Key each review by (term, timestamp to the
   second, grade) and drop repeats. Exports already round-trip LWT's own history
   this way, and the importer already relies on it.
-- **Into Anki.** Push LWT's unseen reviews with `insertReviews`, then
-  `setDueDate` the card to LWT's due date so the next Anki session agrees. Anki
-  keeps its own memory state in `cards.data`; whether Anki recomputes it from
-  the inserted revlog, and when, **is unverified** and decides whether Anki's
-  next interval matches LWT's. If it does not, the due date is still right and
-  the next answer in either app re-converges.
+- **Into Anki.** Push LWT's unseen reviews with `insertReviews`, then set the
+  card's due date (`setDueDate`) and its interval, reps and lapses
+  (`setSpecificValueOfCard`, with `warning_check`) so the next Anki session
+  agrees. Measured against Anki 26.9.3 and AnkiConnect, FSRS on and off:
+  - `insertReviews` only appends history. The card's interval, due date, reps,
+    lapses and FSRS stability are untouched, and Anki's next answer comes out
+    exactly as on a twin card without the inserted review: Anki does not
+    replay revlog when answering. So the schedule has to be set separately.
+  - AnkiConnect refuses to write FSRS memory state ("Coupled scheduler state
+    must use native scheduling transitions"). With FSRS on, Anki's estimate
+    for a card therefore lags until the learner reoptimises, which recomputes
+    it from the history this push sends. The due date is right regardless.
+  - `setDueDate` adds Anki's own grade-less "rescheduled" revlog row, which
+    the pull ignores like any ease-0 row.
+  - `insertReviews` rejects a whole batch if one id already exists, so the
+    plan only ever sends ids Anki does not have.
 
 ### Everything else: three-way merge against a sync base
 
@@ -249,10 +262,11 @@ The spike's acceptance list, to become the merge function's unit tests:
 
 ## Open questions to settle before building
 
-- Does Anki recompute `cards.data` from inserted revlog rows, and when? Test
-  against real Anki, as `composer test:anki-oracle` does for files.
-- Confirm every AnkiConnect detail above against the official README.
-- Which Anki deck(s) map to which LWT language: one deck per language, chosen
+- ~~Does Anki recompute `cards.data` from inserted revlog rows?~~ Answered by
+  measurement: no; only reoptimising does. See *Into Anki* above.
+- ~~Confirm every AnkiConnect detail above.~~ Done for steps 1 and 2, against
+  AnkiConnect's source and a running Anki.
+- For step 3: which Anki deck(s) map to which LWT language: one deck per language, chosen
   once, is the simplest rule.
 - Whether status 1–5 should follow Anki at all, or stay derived from LWT's own
   schedule (phase 2 decision 1 says derived).
@@ -268,10 +282,35 @@ live sync is built, sequence it so each step is useful alone:
    `getReviewsOfCards` rather than `cardReviews` from a high-water mark, and
    the server drops those it already has. Simpler and needs no stored cursor;
    revisit if large collections make the pull slow.
-2. **Push LWT reviews** (`insertReviews` + `setDueDate`), once the
-   `cards.data` question is answered.
+2. **Push LWT reviews** (`insertReviews` + `setDueDate` +
+   `setSpecificValueOfCard`). ✅ Implemented: after the pull, the browser asks
+   `POST /api/v1/anki/push-plan` what Anki lacks (`AnkiPushPlan`) and writes
+   it. FSRS memory state cannot be written; see above.
 3. **Fields, tags, flags and existence** through the sync base, with the
    conflict report.
 
 Step 1 alone delivers most of what "sync with Anki" means to a learner who
 reviews on the phone and reads in LWT.
+
+## Testing against real Anki
+
+`scripts/anki/container` builds Anki 26.9.3 with AnkiConnect, headless (Qt's
+offscreen platform), from first-party sources: Anki from PyPI, AnkiConnect
+from AnkiWeb checked against a pinned hash. It trusts LWT's dev-server origins
+and shares `cypress/anki-exchange` as `/exchange` for package imports.
+
+```bash
+npm run anki:build        # once
+npm run anki:up           # Anki on 127.0.0.1:8765
+npm run serve             # LWT on :8000, in another terminal
+npx cypress run --spec cypress/e2e/24-anki-live.cy.ts
+npm run anki:down
+```
+
+`24-anki-live.cy.ts` runs the learner's loop for real: export terms from LWT,
+import them into Anki (`importPackage`), answer them there (`answerCards`),
+sync, answer one in LWT, sync again, and check Anki's history and card, then
+that a third sync changes nothing. It skips itself when nothing answers on
+8765, so CI is unaffected. `ANKI_FSRS=1` on `podman run` starts Anki with FSRS
+on; the spec passes in both modes.
+

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Pull reviews from Anki over AnkiConnect (#264).
+ * Sync reviews with Anki over AnkiConnect (#264).
  *
  * The page only explains and carries data: the ankiSync component talks to
  * AnkiConnect on the learner's own machine and posts the reviews it reads to
@@ -62,6 +62,8 @@ ConfigIsland::render('anki-sync-config', [
       <li x-text="termsLabel()"></li>
       <li x-text="duplicatesLabel()"></li>
       <li x-show="hasRebuilt()" x-text="rebuiltLabel()"></li>
+      <li x-text="pushedLabel()"></li>
+      <li x-text="cardsLabel()"></li>
       <li x-show="hasSkipped()" x-text="skippedLabel()"></li>
     </ul>
   </div>
@@ -69,6 +71,9 @@ ConfigIsland::render('anki-sync-config', [
   <?php // Contains <code> and <a>, so it is not escaped. ?>
   <div class="notification is-info is-light">
     <?= __('vocabulary.anki.sync.how_html') ?>
+  </div>
+  <div class="notification is-warning is-light">
+    <?= __('vocabulary.anki.sync.fsrs_html') ?>
   </div>
   <div class="notification is-warning is-light">
     <?= __('vocabulary.anki.sync.hosted_html') ?>

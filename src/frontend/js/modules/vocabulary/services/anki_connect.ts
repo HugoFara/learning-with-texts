@@ -58,6 +58,21 @@ export interface PulledReview {
   ease: number;
 }
 
+/** One Anki card of an LWT term, with its revlog as `[id, ease]` pairs. */
+export interface CardHistory {
+  term_id: number;
+  card_id: number;
+  reviews: [number, number][];
+}
+
+/** What LWT asks to be written to Anki (POST /api/v1/anki/push-plan). */
+export interface PushPlan {
+  /** revlog rows for insertReviews, Anki's nine-integer shape. */
+  reviews: number[][];
+  cards: { card_id: number; due_days: number; ivl: number; reps: number; lapses: number }[];
+  skipped: number;
+}
+
 export class AnkiConnect {
   constructor(private readonly url: string) {}
 
@@ -98,7 +113,10 @@ export class AnkiConnect {
   }
 
   /**
-   * Every review of every LWT note in the collection, as rows for LWT.
+   * Every review of every LWT note in the collection.
+   *
+   * Returned twice over: as rows for LWT to merge, and per card with every
+   * revlog row (answers or not), which the push plan compares against.
    *
    * @param noteType Anki note type LWT exports ("LWT Term")
    * @param idField  Field carrying the LWT term id ("LwtId")
@@ -108,7 +126,7 @@ export class AnkiConnect {
     noteType: string,
     idField: string,
     onProgress: (step: 'notes' | 'reviews', done: number, total: number) => void = () => {}
-  ): Promise<PulledReview[]> {
+  ): Promise<{ reviews: PulledReview[]; cards: CardHistory[] }> {
     const noteIds = await this.invoke<number[]>('findNotes', {
       query: `"note:${noteType.replace(/"/g, '\\"')}"`,
     });
@@ -129,6 +147,10 @@ export class AnkiConnect {
 
     const cards = [...termByCard.keys()];
     const reviews: PulledReview[] = [];
+    const histories = new Map<number, CardHistory>();
+    for (const [card, termId] of termByCard) {
+      histories.set(card, { term_id: termId, card_id: card, reviews: [] });
+    }
     for (let i = 0; i < cards.length; i += CHUNK) {
       const byCard = await this.invoke<Record<string, AnkiRevlogEntry[]>>('getReviewsOfCards', {
         cards: cards.slice(i, i + CHUNK).map(String),
@@ -137,6 +159,7 @@ export class AnkiConnect {
         const termId = termByCard.get(Number(card));
         if (termId === undefined) continue;
         for (const entry of entries) {
+          histories.get(Number(card))?.reviews.push([entry.id, entry.ease]);
           // Grade-less rows ("set due date", "forget") are not answers.
           if (entry.ease >= 1 && entry.ease <= 4) {
             reviews.push({ term_id: termId, reviewed_at: entry.id, ease: entry.ease });
@@ -146,6 +169,61 @@ export class AnkiConnect {
       onProgress('reviews', Math.min(i + CHUNK, cards.length), cards.length);
     }
 
-    return reviews;
+    return { reviews, cards: [...histories.values()] };
+  }
+
+  /**
+   * Write what LWT planned: missing reviews, then each card's schedule.
+   *
+   * insertReviews refuses a whole batch if one id already exists, so the plan
+   * only ever carries ids Anki does not have.
+   *
+   * @returns How many reviews and cards were written
+   */
+  async applyPushPlan(
+    plan: PushPlan,
+    onProgress: (done: number, total: number) => void = () => {}
+  ): Promise<{ reviews: number; cards: number }> {
+    const total = plan.reviews.length + plan.cards.length;
+    for (let i = 0; i < plan.reviews.length; i += CHUNK) {
+      await this.invoke('insertReviews', { reviews: plan.reviews.slice(i, i + CHUNK) });
+      onProgress(Math.min(i + CHUNK, plan.reviews.length), total);
+    }
+
+    // setDueDate takes one day count for many cards.
+    const byDays = new Map<number, number[]>();
+    for (const card of plan.cards) {
+      byDays.set(card.due_days, [...(byDays.get(card.due_days) ?? []), card.card_id]);
+    }
+    for (const [days, cards] of byDays) {
+      await this.invoke('setDueDate', { cards, days: String(days) });
+    }
+
+    // Interval, reps and lapses are protected fields: AnkiConnect wants
+    // warning_check to write them.
+    // Each answer inside multi is its own {result, error}, and this action
+    // reports a refused write as [[false, reason]] rather than as an error.
+    for (let i = 0; i < plan.cards.length; i += CHUNK) {
+      const replies = await this.invoke<AnkiResponse<unknown>[]>('multi', {
+        actions: plan.cards.slice(i, i + CHUNK).map((card) => ({
+          action: 'setSpecificValueOfCard',
+          params: {
+            card: card.card_id,
+            keys: ['ivl', 'reps', 'lapses'],
+            newValues: [card.ivl, card.reps, card.lapses],
+            warning_check: true,
+          },
+        })),
+      });
+      for (const reply of replies) {
+        const refused = Array.isArray(reply.result) && Array.isArray(reply.result[0]) ? reply.result[0][1] : null;
+        if (reply.error || refused) {
+          throw new AnkiConnectError(String(reply.error ?? refused));
+        }
+      }
+      onProgress(plan.reviews.length + Math.min(i + CHUNK, plan.cards.length), total);
+    }
+
+    return { reviews: plan.reviews.length, cards: plan.cards.length };
   }
 }
