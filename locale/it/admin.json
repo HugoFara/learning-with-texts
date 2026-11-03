@@ -50,8 +50,6 @@
     "server_data_failed_migrations_attempts": "tentativi",
     "server_data_missing_foreign_keys": "Chiavi esterne mancanti",
     "server_data_missing_foreign_keys_warning": "Nel database mancano vincoli di chiave esterna dichiarati dallo schema, quindi vengono accettate scritture che dovrebbero essere rifiutate. Vengono ricreati automaticamente al prossimo aggiornamento; segnala il problema se persiste.",
-    "server_data_deprecated_mecab": "Lingue che usano il marcatore MECAB deprecato",
-    "server_data_deprecated_mecab_warning": "Queste lingue memorizzano il letterale MECAB nel campo dei caratteri di parola anziché un'espressione regolare. Funziona ancora, ma il supporto verrà rimosso in una versione futura. Apri e salva ciascuna lingua per spostare l'impostazione nel campo dell'analizzatore, oppure imposta il suo analizzatore su MeCab tramite l'API.",
     "server_data_section_client_api": "API client",
     "server_data_loading_api": "Caricamento informazioni API...",
     "server_data_error_loading": "Errore durante il caricamento delle informazioni API",
