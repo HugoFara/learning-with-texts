@@ -1,0 +1,50 @@
+# Real Anki with AnkiConnect, headless, for testing LWT's Anki sync (#264).
+#
+#   podman build -t lwt-anki scripts/anki/container
+#   podman run --rm -d --name lwt-anki -p 127.0.0.1:8765:8765 \
+#       -v /tmp/lwt-anki-exchange:/exchange:Z lwt-anki
+#
+# Anki runs with Qt's offscreen platform, so no display is needed. Everything
+# comes from first-party sources: Anki from PyPI (published by Ankitects) and
+# AnkiConnect from AnkiWeb, the official add-on channel, checked against a
+# pinned hash. /exchange is where tests put .apkg files for importPackage.
+#
+# Test-only: AnkiConnect binds to every interface inside the container and
+# trusts LWT's dev-server origins, so never publish the port beyond loopback.
+
+FROM docker.io/library/python:3.12-slim-bookworm
+
+ARG ANKI_VERSION=26.9.3
+ARG ANKICONNECT_URL="https://ankiweb.net/shared/download/2055492159?v=2.1&p=260900"
+ARG ANKICONNECT_SHA256=456a546fd9e1bf53962c70618f7d72d10b1768690ce88fa5c9c6909ae5e9e1ec
+
+# Qt 6's runtime libraries; the offscreen platform still loads GL and fonts.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates curl \
+        libgl1 libegl1 libopengl0 libxkbcommon0 libfontconfig1 libfreetype6 \
+        libdbus-1-3 libglib2.0-0 libnss3 libasound2 libgbm1 libxshmfence1 \
+        libxcomposite1 libxdamage1 libxrandr2 libxtst6 libxkbfile1 libxi6 \
+        libxrender1 libxcursor1 libxcb-cursor0 fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir "aqt[qt6]==${ANKI_VERSION}"
+
+RUN useradd --create-home anki && mkdir /exchange && chown anki /exchange
+USER anki
+ENV ANKI_BASE=/home/anki/anki \
+    QT_QPA_PLATFORM=offscreen \
+    QTWEBENGINE_CHROMIUM_FLAGS=--no-sandbox \
+    PYTHONUNBUFFERED=1
+
+RUN mkdir -p "$ANKI_BASE/addons21/2055492159" \
+    && curl -fsSL -o /tmp/ankiconnect.zip "$ANKICONNECT_URL" \
+    && echo "$ANKICONNECT_SHA256  /tmp/ankiconnect.zip" | sha256sum -c - \
+    && python -m zipfile -e /tmp/ankiconnect.zip "$ANKI_BASE/addons21/2055492159" \
+    && rm /tmp/ankiconnect.zip
+
+COPY --chown=anki ankiconnect-meta.json /home/anki/anki/addons21/2055492159/meta.json
+COPY --chown=anki start.py /home/anki/start.py
+
+EXPOSE 8765
+CMD ["python", "/home/anki/start.py"]

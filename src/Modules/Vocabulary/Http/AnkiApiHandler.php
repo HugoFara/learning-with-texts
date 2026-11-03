@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace Lwt\Modules\Vocabulary\Http;
 
 use Lwt\Api\V1\Response;
+use Lwt\Modules\Vocabulary\Application\Services\Anki\AnkiPushPlan;
 use Lwt\Modules\Vocabulary\Application\Services\Anki\AnkiReviewPull;
 use Lwt\Shared\Http\ApiRoutableInterface;
 use Lwt\Shared\Infrastructure\Http\JsonResponse;
@@ -27,14 +28,22 @@ use Lwt\Shared\Infrastructure\Http\JsonResponse;
  * collection into LWT's schedules. Body: `{"reviews": [{"term_id": 12,
  * "reviewed_at": 1767225600000, "ease": 3}, ...]}`, at most
  * {@see AnkiReviewPull::MAX_REVIEWS} per request.
+ *
+ * POST /api/v1/anki/push-plan: after a pull, what to write to Anki so it has
+ * LWT's reviews and schedule. Body: `{"cards": [{"term_id": 12, "card_id":
+ * 1767..., "reviews": [[1767225600000, 3], ...]}, ...]}`, each card's revlog as
+ * Anki holds it. Answers with AnkiConnect-ready rows; the browser makes the
+ * calls ({@see AnkiPushPlan}).
  */
 class AnkiApiHandler implements ApiRoutableInterface
 {
     private AnkiReviewPull $pull;
+    private AnkiPushPlan $push;
 
-    public function __construct(?AnkiReviewPull $pull = null)
+    public function __construct(?AnkiReviewPull $pull = null, ?AnkiPushPlan $push = null)
     {
         $this->pull = $pull ?? AnkiReviewPull::default();
+        $this->push = $push ?? AnkiPushPlan::default();
     }
 
     /**
@@ -50,8 +59,17 @@ class AnkiApiHandler implements ApiRoutableInterface
      */
     public function routePost(array $fragments, array $params): JsonResponse
     {
-        if (($fragments[1] ?? '') !== 'reviews') {
-            return Response::error('Expected "reviews"', 404);
+        $route = $fragments[1] ?? '';
+        if ($route === 'push-plan') {
+            $cards = $params['cards'] ?? null;
+            if (!is_array($cards) || !array_is_list($cards)) {
+                return Response::error('"cards" must be a list', 400);
+            }
+
+            return Response::success($this->push->plan($cards));
+        }
+        if ($route !== 'reviews') {
+            return Response::error('Expected "reviews" or "push-plan"', 404);
         }
 
         $reviews = $params['reviews'] ?? null;

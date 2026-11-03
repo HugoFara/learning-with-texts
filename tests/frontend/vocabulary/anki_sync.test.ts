@@ -9,7 +9,7 @@ vi.mock('@shared/api/client', () => ({ apiPost: (...args: unknown[]) => apiPost(
 vi.mock('alpinejs', () => ({ default: { data: vi.fn() } }));
 
 import { AnkiConnect, AnkiConnectError } from '../../../src/frontend/js/modules/vocabulary/services/anki_connect';
-import { sendReviews } from '../../../src/frontend/js/modules/vocabulary/pages/anki_sync';
+import { planPush, sendReviews } from '../../../src/frontend/js/modules/vocabulary/pages/anki_sync';
 
 const originalFetch = global.fetch;
 
@@ -49,8 +49,13 @@ describe('AnkiConnect client', () => {
       }),
     });
 
-    const reviews = await new AnkiConnect('http://127.0.0.1:8765').pullReviews('LWT Term', 'LwtId');
+    const { reviews, cards } = await new AnkiConnect('http://127.0.0.1:8765').pullReviews('LWT Term', 'LwtId');
 
+    // Every revlog row per card, answers or not: the push plan needs them all.
+    expect(cards).toEqual([
+      { term_id: 7, card_id: 1000, reviews: [[1770000000000, 3], [1770086400000, 0]] },
+      { term_id: 8, card_id: 1001, reviews: [[1770000500000, 1]] },
+    ]);
     expect(reviews).toEqual([
       { term_id: 7, reviewed_at: 1770000000000, ease: 3 },
       { term_id: 8, reviewed_at: 1770000500000, ease: 1 },
@@ -117,5 +122,61 @@ describe('sendReviews', () => {
     apiPost.mockResolvedValueOnce({ error: 'Forbidden' });
 
     await expect(sendReviews([{ term_id: 7, reviewed_at: 1, ease: 3 }], 10)).rejects.toThrow('Forbidden');
+  });
+});
+
+describe('pushing to Anki', () => {
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  it('writes reviews, then due dates grouped by day, then card values', async () => {
+    const calls = ankiAnswering({
+      insertReviews: () => null,
+      setDueDate: () => true,
+      multi: (params) => (params.actions as unknown[]).map(() => ({ result: [true], error: null })),
+    });
+
+    const written = await new AnkiConnect('http://127.0.0.1:8765').applyPushPlan({
+      reviews: [[1770000000000, 1000, -1, 3, 2, 0, 2500, 0, 1]],
+      cards: [
+        { card_id: 1000, due_days: 2, ivl: 2, reps: 1, lapses: 0 },
+        { card_id: 1001, due_days: 2, ivl: 3, reps: 2, lapses: 1 },
+        { card_id: 1002, due_days: 9, ivl: 9, reps: 3, lapses: 0 },
+      ],
+      skipped: 0,
+    });
+
+    expect(written).toEqual({ reviews: 1, cards: 3 });
+    expect(calls.map((c) => c.action)).toEqual(['insertReviews', 'setDueDate', 'setDueDate', 'multi']);
+    expect(calls[1].params).toEqual({ cards: [1000, 1001], days: '2' });
+    const first = (calls[3].params.actions as { params: Record<string, unknown> }[])[0].params;
+    expect(first).toEqual({ card: 1000, keys: ['ivl', 'reps', 'lapses'], newValues: [2, 1, 0], warning_check: true });
+  });
+
+  it('fails when Anki refuses a card value', async () => {
+    ankiAnswering({
+      setDueDate: () => true,
+      multi: () => [{ result: [[false, 'Use native scheduling commands']], error: null }],
+    });
+
+    await expect(new AnkiConnect('http://127.0.0.1:8765').applyPushPlan({
+      reviews: [],
+      cards: [{ card_id: 1000, due_days: 2, ivl: 2, reps: 1, lapses: 0 }],
+      skipped: 0,
+    })).rejects.toThrow('Use native scheduling commands');
+  });
+
+  it('asks LWT for the plan in batches and joins them', async () => {
+    apiPost.mockReset();
+    apiPost.mockResolvedValue({ data: { reviews: [[1, 2, -1, 3, 1, 0, 2500, 0, 1]], cards: [], skipped: 1 } });
+    const cards = Array.from({ length: 2001 }, (_, i) => ({ term_id: i + 1, card_id: i + 1000, reviews: [] as [number, number][] }));
+
+    const plan = await planPush(cards);
+
+    expect(apiPost).toHaveBeenCalledTimes(2);
+    expect(apiPost.mock.calls[0][0]).toBe('/anki/push-plan');
+    expect(plan.reviews).toHaveLength(2);
+    expect(plan.skipped).toBe(2);
   });
 });

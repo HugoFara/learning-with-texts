@@ -28,13 +28,17 @@ ones are marked like "v1.0.0-fork".
   complete and machine-translated, with the same invitation: please open
   an issue for any string that reads wrong.
 
-* **Pull reviews from Anki without a file** (#264). A new page,
-  `/vocabulary/anki/sync`, linked from the `.apkg` import page, reads the reviews you did in Anki straight from Anki on your computer,
-  through the AnkiConnect add-on, and merges them into LWT's schedule. Anki
-  asks once whether to trust the page; nothing in Anki is changed. Pulling
-  again is safe, since reviews LWT already has are recognised and skipped.
-  Only cards LWT exported are matched. On a hosted LWT the browser may ask
-  for local network access to reach Anki.
+* **Sync reviews with Anki without a file** (#264). A new page,
+  `/vocabulary/anki/sync`, linked from the `.apkg` import page, talks to Anki
+  on your computer through the AnkiConnect add-on. It brings the reviews you
+  did in Anki into LWT's schedule, then sends the reviews you did in LWT to
+  Anki and gives the cards LWT's due dates. Anki asks once whether to trust
+  the page. Syncing again is safe: reviews either side already has are
+  skipped. Only cards LWT exported are matched, and only reviews and schedules
+  are synced, not translations or tags. With FSRS on in Anki, Anki's own
+  memory estimates catch up when you next optimise, since AnkiConnect cannot
+  write them. On a hosted LWT the browser may ask for local network access to
+  reach Anki.
 
 * **Language-aware plural forms** (#319). Counted messages now take the
   form the interface language needs, not just English's singular and

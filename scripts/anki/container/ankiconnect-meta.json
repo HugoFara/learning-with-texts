@@ -1,0 +1,14 @@
+{
+    "config": {
+        "apiKey": null,
+        "apiLogPath": null,
+        "webBindAddress": "0.0.0.0",
+        "webBindPort": 8765,
+        "webCorsOriginList": [
+            "http://localhost",
+            "http://localhost:8000",
+            "http://127.0.0.1:8000"
+        ],
+        "ignoreOriginList": []
+    }
+}
