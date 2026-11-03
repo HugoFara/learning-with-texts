@@ -34,10 +34,15 @@ ones are marked like "v1.0.0-fork".
   one/few/many, and French, Portuguese and Persian's singular for zero.
   Translators write `key_one`, `key_other` and whichever other CLDR
   categories their language uses. In code, `__n()` / `__ne()` in PHP and
-  `tn()` in TypeScript replace the `count === 1 ? … : …` key choice. The
-  term list, the term-import and Anki import results, and the review
-  completion message use it; the locale checker counts a plural set as
-  one key.
+  `tn()` in TypeScript (and `$tn()` in Alpine templates) replace the
+  `count === 1 ? … : …` key choice. Every counted message uses them: term
+  and tag counts and confirmations, import results, book flashes, due and
+  review intervals, feed updates, today's statistics, download counts and
+  more. The "term(s)" workarounds are gone, and messages that put a number
+  between word fragments ("Imported" N "words" "for" X) are now whole
+  sentences a translator can reorder. The locale checker counts a plural
+  set as one key, and a test fails if code asks for a plural key that has
+  no English `_other` form.
 
 ### Changed
 

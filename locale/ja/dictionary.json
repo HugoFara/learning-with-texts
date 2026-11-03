@@ -52,7 +52,7 @@
     "stardict_archive_required": "3つのファイルをまとめたアーカイブをアップロードしてください — FreeDictのダウンロードはそのまま使えます。",
     "stardict_archive_formats": "対応形式: .zip、.tar.gz、.tar.bz2、.tar.xz、.tgz",
     "deleted_success": "辞書を削除しました。",
-    "imported_count": "{count}件のエントリをインポートしました。",
+    "imported_count_other": "{count}件のエントリをインポートしました。",
     "local_mode_title": "ローカル辞書モード",
     "current_mode": "現在のモード：",
     "mode_online": "オンライン辞書のみ",

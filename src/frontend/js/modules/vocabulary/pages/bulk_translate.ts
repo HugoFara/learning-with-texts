@@ -14,7 +14,7 @@ import { createTheDictUrl, openDictionaryPopup } from '@modules/vocabulary/servi
 import { selectToggle } from '@shared/forms/bulk_actions';
 import { setDictionaryLinks } from '@modules/language/stores/language_config';
 import { apiGet, apiPost } from '@shared/api/client';
-import { t } from '@shared/i18n/translator';
+import { tn } from '@shared/i18n/translator';
 
 declare global {
   interface Window {
@@ -410,7 +410,7 @@ export function bulkTranslateApp(config: BulkTranslateConfig = {
      * @returns Localised "saved N terms" message
      */
     savedMessage(): string {
-      return t('vocabulary.result.bulk_saved', { count: this.savedCount });
+      return tn('vocabulary.result.bulk_saved', this.savedCount);
     },
 
     /**

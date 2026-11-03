@@ -131,7 +131,7 @@ $managerConfig = [
                     <div class="level-left">
                         <div class="level-item">
                             <span class="tag is-info is-medium"
-                                  x-text="selectedCount + ' ' + $t('feed.spa_selected_label')"></span>
+                                  x-text="$tn('feed.spa_selected', selectedCount)"></span>
                         </div>
                         <div class="level-item">
                             <div class="buttons">
@@ -308,7 +308,7 @@ $managerConfig = [
                 <div class="level-left">
                     <div class="level-item" x-show="selectedCount > 0">
                         <span class="tag is-info is-medium"
-                              x-text="selectedCount + ' ' + $t('feed.spa_selected_label')"></span>
+                              x-text="$tn('feed.spa_selected', selectedCount)"></span>
                     </div>
                     <div class="level-item">
                         <div class="buttons">
@@ -449,7 +449,7 @@ $managerConfig = [
                 <div class="level-right">
                     <div class="level-item">
                         <span class="tag is-info is-medium"
-                              x-text="selectedCount + ' ' + $t('feed.spa_selected_label')"></span>
+                              x-text="$tn('feed.spa_selected', selectedCount)"></span>
                     </div>
                 </div>
             </div>

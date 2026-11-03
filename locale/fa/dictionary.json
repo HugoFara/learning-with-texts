@@ -52,7 +52,7 @@
     "stardict_archive_required": "یک بایگانی حاوی هر سه فایل بارگذاری کنید — فایل‌های بارگیری‌شده از FreeDict مستقیماً کار می‌کنند.",
     "stardict_archive_formats": "پشتیبانی‌شده: .zip، .tar.gz، .tar.bz2، .tar.xz، .tgz",
     "deleted_success": "واژه‌نامه با موفقیت حذف شد.",
-    "imported_count": "{count} مدخل درون‌ریزی شد.",
+    "imported_count_other": "{count} مدخل درون‌ریزی شد.",
     "local_mode_title": "حالت واژه‌نامهٔ محلی",
     "current_mode": "حالت فعلی:",
     "mode_online": "فقط واژه‌نامه‌های برخط",

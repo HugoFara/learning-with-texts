@@ -43,7 +43,7 @@ if (!empty($message)) :
     $messageText = match ($message) {
         'deleted' => __('dictionary.deleted_success'),
         default => str_starts_with($message, 'imported_')
-            ? __('dictionary.imported_count', ['count' => substr($message, 9)])
+            ? __n('dictionary.imported_count', (int) substr($message, 9))
             : $message,
     };
     ?>

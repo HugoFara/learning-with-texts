@@ -49,7 +49,7 @@ use Lwt\Shared\UI\Helpers\IconHelper;
                                @click="selectAdvancedOption(option.value)" />
                         <span x-text="option.label"></span>
                         <span class="tag is-small is-light"
-                              x-text="'(' + option.count + ' ' + $t('feed.wizard.common.matches') + ')'"></span>
+                              x-text="$tn('feed.wizard.common.match_count', option.count)"></span>
                     </label>
                 </div>
             </template>

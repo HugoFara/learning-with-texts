@@ -73,7 +73,7 @@ class DeleteBook
 
         return [
             'success' => true,
-            'message' => __('book.flash.deleted', ['title' => $title, 'count' => $chapterCount]),
+            'message' => __n('book.flash.deleted', $chapterCount, ['title' => $title]),
         ];
     }
 }

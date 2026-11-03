@@ -244,4 +244,28 @@ class TranslatorTest extends TestCase
             $t->translatePlural('common.terms', 1200, ['count' => '1,200', 'lang' => 'French'])
         );
     }
+
+    public function testBundleKeepsEnglishPluralFormsOutOfALocalesOwnSet(): void
+    {
+        $this->writeNamespace('en', 'common', [
+            'terms_one' => '{count} term',
+            'terms_other' => '{count} terms',
+            'notes_one' => '{count} note',
+            'notes_other' => '{count} notes',
+        ]);
+        $this->writeNamespace('es', 'common', [
+            'terms_other' => '{count} términos',
+        ]);
+        $t = new Translator($this->localePath, 'es');
+
+        $all = $t->getAllTranslations('es', ['common']);
+        $this->assertArrayNotHasKey('common.terms_one', $all);
+        $this->assertSame('{count} términos', $all['common.terms_other']);
+        // A set the locale lacks entirely still falls back as a whole
+        $this->assertSame('{count} note', $all['common.notes_one']);
+
+        $page = $t->getNamespaceTranslations('common');
+        $this->assertArrayNotHasKey('terms_one', $page);
+        $this->assertSame('{count} note', $page['notes_one']);
+    }
 }

@@ -10,7 +10,7 @@
  */
 
 import Alpine from 'alpinejs';
-import { t } from '@shared/i18n/translator';
+import { t, tn } from '@shared/i18n/translator';
 import { readPageConfig } from '@shared/utils/page_config';
 import {
   TagsApi,
@@ -208,7 +208,7 @@ export function tagListAppData(): TagListAppData {
       if (this.selectedIds.length === 0) {
         return;
       }
-      if (!confirm(t('tags.confirm_delete_selected', { count: this.selectedIds.length }))) {
+      if (!confirm(tn('tags.confirm_delete_selected', this.selectedIds.length))) {
         return;
       }
       this.isBusy = true;
@@ -224,7 +224,7 @@ export function tagListAppData(): TagListAppData {
     },
 
     async deleteAllMatching(): Promise<void> {
-      if (!confirm(t('tags.confirm_delete_all', { count: this.pagination.total }))) {
+      if (!confirm(tn('tags.confirm_delete_all', this.pagination.total))) {
         return;
       }
       this.isBusy = true;

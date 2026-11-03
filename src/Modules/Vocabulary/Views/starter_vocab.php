@@ -47,6 +47,7 @@ $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 's
     'enrichUrl' => $enrichUrl,
     'csrfToken' => $csrfToken,
     'langId' => $langId,
+    'langName' => $langName,
     'curatedDictionaries' => $curatedDictionaries,
     'isAvailable' => $isAvailable,
 ]); ?>
@@ -194,11 +195,9 @@ $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 's
             </p>
             <progress class="progress is-success" :value="enrichProgress" max="100"></progress>
             <p class="is-size-7 mb-3">
-                <span x-text="enrichStats.done"></span> <?= __e('vocabulary.starter.of') ?>
-                <span x-text="enrichStats.total"></span> <?= __e('vocabulary.starter.words_enriched') ?>
+                <span x-text="enrichProgressLabel()"></span>
                 <template x-if="enrichStats.failed > 0">
-                    <span class="has-text-grey">(<span x-text="enrichStats.failed"></span>
-                        <?= __e('vocabulary.starter.not_found') ?>)</span>
+                    <span class="has-text-grey" x-text="notFoundLabel()"></span>
                 </template>
             </p>
 
@@ -226,8 +225,7 @@ $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 's
             <progress class="progress is-info"
                       :value="dictBatchCurrent" :max="dictBatchTotal"></progress>
             <p class="is-size-7 has-text-grey">
-                <?= __e('vocabulary.starter.dictionary') ?> <span x-text="dictBatchCurrent"></span>
-                <?= __e('vocabulary.starter.of') ?> <span x-text="dictBatchTotal"></span>
+                <span x-text="dictProgressLabel()"></span>
             </p>
         </div>
     </template>
@@ -238,22 +236,14 @@ $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 's
             <div class="notification is-success is-light">
                 <template x-if="wiktResult.imported > 0 || wiktResult.skipped > 0">
                     <p>
-                        <?= __e('vocabulary.starter.imported') ?>
-                        <strong x-text="wiktResult.imported"></strong>
-                        <?= __e('vocabulary.starter.words') ?>
+                        <span x-text="importedLabel()"></span>
                         <template x-if="wiktResult.skipped > 0">
-                            <span>(<span x-text="wiktResult.skipped"></span>
-                                <?= __e('vocabulary.starter.already_existed') ?>)</span>
+                            <span x-text="skippedLabel()"></span>
                         </template>
-                        <?= __e('vocabulary.starter.for_lang') ?> <strong><?= $escapedLangName ?></strong>.
                     </p>
                 </template>
                 <template x-if="enrichStats.done > 0">
-                    <p class="mt-1">
-                        <span x-text="enrichStats.done"></span>
-                        <?= __e('vocabulary.starter.enriched_with') ?>
-                        <span x-text="enrichedModeLabel()"></span>.
-                    </p>
+                    <p class="mt-1" x-text="enrichedLabel()"></p>
                 </template>
                 <template x-for="(msg, i) in dictMessages" :key="i">
                     <p class="mt-1" :class="msg.success ? '' : 'has-text-danger'" x-text="msg.text"></p>

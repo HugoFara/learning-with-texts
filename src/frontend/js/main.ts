@@ -57,7 +57,7 @@ import '@shared/components/theme_toggle';
 import '@shared/components/footer';
 
 // Shared i18n
-import { bootI18n, t } from '@shared/i18n/translator';
+import { bootI18n, t, tn } from '@shared/i18n/translator';
 
 // Shared accessibility
 import { initAriaLive } from '@shared/accessibility/aria_live';
@@ -152,6 +152,11 @@ Promise.all(loaders).then(async () => {
   // Register Alpine.js magic for translations: this.$t('common.save')
   Alpine.magic('t', () => (key: string, params?: Record<string, string | number>) => {
     return t(key, params);
+  });
+
+  // Plural-aware variant: $tn('feed.spa_selected', selectedCount)
+  Alpine.magic('tn', () => (key: string, count: number, params?: Record<string, string | number>) => {
+    return tn(key, count, params);
   });
 
   // Register Alpine.js magic method for inline Markdown parsing

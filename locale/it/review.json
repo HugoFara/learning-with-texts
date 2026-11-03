@@ -2,7 +2,6 @@
     "page_title": "Ripasso",
     "heading": "RIPASSO - {title}",
 
-    "header.remaining": "rimanenti.",
     "header.read_words_aloud": "Leggi parole ad alta voce",
     "header.button_table": "Tabella",
 
@@ -46,9 +45,10 @@
     "card.grade_good": "Buono",
     "card.grade_easy": "Facile",
     "card.interval_today": "oggi",
-    "card.interval_days": "{count} g",
-    "card.interval_months": "{count} mesi",
-    "card.interval_years": "{count} a",
+    "card.interval_days_other": "{count} g",
+    "card.interval_months_one": "{count} mese",
+    "card.interval_months_other": "{count} mesi",
+    "card.interval_years_other": "{count} a",
     "card.skip": "Salta",
     "card.set_status_directly": "Imposta lo stato direttamente:",
     "card.ignore": "Ignora",

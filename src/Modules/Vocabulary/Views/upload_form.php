@@ -214,13 +214,9 @@ echo PageLayoutHelper::buildActionCard($actions);
             </p>
             <progress class="progress is-success" :value="enrichProgress" max="100"></progress>
             <p class="is-size-7 mb-3">
-                <span x-text="enrichStats.done"></span>
-                <?= __e('vocabulary.upload.freq.words_enriched_of') ?>
-                <span x-text="enrichStats.total"></span>
-                <?= __e('vocabulary.upload.freq.words_enriched_suffix') ?>
+                <span x-text="freqEnrichProgressLabel()"></span>
                 <template x-if="enrichStats.failed > 0">
-                    <span class="has-text-grey">(<span x-text="enrichStats.failed"></span>
-                        <?= __e('vocabulary.upload.freq.not_found') ?>)</span>
+                    <span class="has-text-grey" x-text="freqNotFoundLabel()"></span>
                 </template>
             </p>
 
@@ -244,23 +240,14 @@ echo PageLayoutHelper::buildActionCard($actions);
             <div class="notification is-success is-light">
                 <template x-if="freqResult.imported > 0 || freqResult.skipped > 0">
                     <p>
-                        <?= __e('vocabulary.upload.freq.imported_words') ?>
-                        <strong x-text="freqResult.imported"></strong>
-                        <?= __e('vocabulary.upload.freq.words') ?>
+                        <span x-text="freqImportedLabel()"></span>
                         <template x-if="freqResult.skipped > 0">
-                            <span>(<span x-text="freqResult.skipped"></span>
-                                <?= __e('vocabulary.upload.freq.already_existed') ?>)</span>
+                            <span x-text="freqSkippedLabel()"></span>
                         </template>
-                        <?= __e('vocabulary.upload.freq.for_lang') ?>
-                        <strong><?php echo htmlspecialchars($currentLanguageName, ENT_QUOTES, 'UTF-8'); ?></strong>.
                     </p>
                 </template>
                 <template x-if="enrichStats.done > 0">
-                    <p class="mt-1">
-                        <span x-text="enrichStats.done"></span>
-                        <?= __e('vocabulary.upload.freq.enriched_with') ?>
-                        <span x-text="freqEnrichedModeLabel()"></span>.
-                    </p>
+                    <p class="mt-1" x-text="freqEnrichedLabel()"></p>
                 </template>
             </div>
 
@@ -323,9 +310,7 @@ echo PageLayoutHelper::buildActionCard($actions);
             <div class="notification is-info is-light mb-4">
                 <p class="mb-2">
                     <strong><?= __e('vocabulary.upload.dict.importing') ?></strong>
-                    <span x-text="batchCurrent"></span>
-                    <?= __e('vocabulary.upload.freq.words_enriched_of') ?>
-                    <span x-text="batchTotal"></span>
+                    <span x-text="batchProgressLabel()"></span>
                 </p>
                 <progress class="progress is-info is-small" :value="batchCurrent" :max="batchTotal"></progress>
             </div>
