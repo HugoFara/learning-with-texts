@@ -128,6 +128,18 @@ class ApkgController extends VocabularyBaseController
     }
 
     /**
+     * The page that pulls reviews from Anki over AnkiConnect (#264).
+     *
+     * @param array<string, string> $params Route params (unused).
+     */
+    public function sync(array $params): void
+    {
+        PageLayoutHelper::renderPageStart(__('vocabulary.titles.anki_sync'), true);
+        $this->render('anki_sync', []);
+        PageLayoutHelper::renderPageEnd();
+    }
+
+    /**
      * The upload form, plus the summary once an import has run.
      *
      * @param string|null       $error  Message to show above the form

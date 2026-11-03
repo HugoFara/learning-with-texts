@@ -138,8 +138,11 @@ class SecurityHeaders
             "img-src 'self' data: blob: https://content.digitallibrary.io",
             // Fonts: self only
             "font-src 'self'",
-            // AJAX/fetch requests: self + GitHub API for release checks
-            "connect-src 'self' https://api.github.com",
+            // AJAX/fetch requests: self + GitHub API for release checks, and
+            // AnkiConnect on the learner's own machine, which the Anki sync
+            // page calls from the browser (#264). Loopback only: a page can
+            // reach port 8765 on the viewer's computer, nothing else new.
+            "connect-src 'self' https://api.github.com http://127.0.0.1:8765 http://localhost:8765",
             // External scripts: Glosbe JSONP translation API
             "script-src-elem 'self' https://glosbe.com",
             // Audio/video: configurable, defaults to self + blob for TTS

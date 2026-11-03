@@ -304,6 +304,15 @@ function registerRoutes(Router $router): void
         AUTH_MIDDLEWARE
     );
 
+    // Pull reviews from the learner's Anki over AnkiConnect (#264). The page
+    // only carries data: the browser talks to AnkiConnect on localhost and
+    // posts what it read to POST /api/v1/anki/reviews.
+    $router->get(
+        '/vocabulary/anki/sync',
+        'Lwt\\Modules\\Vocabulary\\Http\\ApkgController@sync',
+        AUTH_MIDDLEWARE
+    );
+
     // Import a deck built in Anki as new terms (AnkiDeckImportController).
     // Distinct from the apkg routes above: those round-trip LWT's own export,
     // this one seeds terms from a foreign deck.

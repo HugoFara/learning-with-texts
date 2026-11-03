@@ -5,7 +5,11 @@ description: How LWT and Anki should merge when both change the same terms betwe
 
 # Spike: Conflict Resolution for Live Anki Sync
 
-**Status:** Spike result, no sync code written (#264). The roadmap asked for
+**Status:** Spike result (#264). **Step 1 of the build order is implemented**:
+reviews are pulled from Anki over AnkiConnect at `/vocabulary/anki/sync`, and
+both that and the `.apkg` importer merge through `MergeReviewHistory`, which
+fits an older review into the history instead of skipping it. Steps 2 and 3
+are not built. The roadmap asked for
 this before any: *"Spike conflict resolution FIRST (the Anki problem) — it
 looks easy and isn't. Decide last-writer-wins+tombstones vs CRDT before
 committing."*
@@ -258,9 +262,12 @@ The spike's acceptance list, to become the merge function's unit tests:
 The `.apkg` round trip already covers the common case without a protocol. If
 live sync is built, sequence it so each step is useful alone:
 
-1. **Pull Anki reviews** (`cardReviews` since the stored high-water mark) and
-   fold them in, with the interleaving fix. One direction, reviews only, no
-   field conflicts possible.
+1. **Pull Anki reviews** and fold them in, with the interleaving fix. One
+   direction, reviews only, no field conflicts possible. ✅ Implemented: the
+   browser reads every review of every `LWT Term` note with
+   `getReviewsOfCards` rather than `cardReviews` from a high-water mark, and
+   the server drops those it already has. Simpler and needs no stored cursor;
+   revisit if large collections make the pull slow.
 2. **Push LWT reviews** (`insertReviews` + `setDueDate`), once the
    `cards.data` question is answered.
 3. **Fields, tags, flags and existence** through the sync base, with the

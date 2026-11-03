@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Backend\Modules\Vocabulary\Application\Services\Anki;
 
 use DateTimeImmutable;
+use Lwt\Modules\Review\Application\UseCases\MergeReviewHistory;
 use Lwt\Modules\Review\Application\UseCases\RecordScheduledReview;
 use Lwt\Modules\Review\Domain\Scheduling\Fsrs6Scheduler;
 use Lwt\Modules\Review\Domain\Scheduling\MemoryState;
@@ -96,7 +97,7 @@ final class ScheduleReplayTest extends TestCase
         // An exported file carries LWT's own history back out with it. Without
         // this rule a re-import would replay every review a second time and
         // collapse the term's interval.
-        $this->schedules->states[7] = $this->stateLastReviewedOn('2026-02-06 10:00:00');
+        $this->reviewedHere(7, ['2026-02-01 10:00:00' => Rating::Good, '2026-02-06 10:00:00' => Rating::Easy]);
         $replay = $this->replayFor([7 => TermStatus::LEARNING_3]);
 
         $result = $replay->apply([$this->note(7, [
@@ -110,7 +111,7 @@ final class ScheduleReplayTest extends TestCase
 
     public function testOnlyTheReviewsNewerThanOursAreApplied(): void
     {
-        $this->schedules->states[7] = $this->stateLastReviewedOn('2026-02-06 10:00:00');
+        $this->reviewedHere(7, ['2026-02-01 10:00:00' => Rating::Good, '2026-02-06 10:00:00' => Rating::Easy]);
         $replay = $this->replayFor([7 => TermStatus::LEARNING_3]);
 
         $result = $replay->apply([$this->note(7, [
@@ -121,6 +122,55 @@ final class ScheduleReplayTest extends TestCase
 
         self::assertSame(['terms' => 1, 'reviews' => 1, 'dueDatesMoved' => 0], $result);
         self::assertSame(Rating::Hard, $this->schedules->saved[0]['rating']);
+    }
+
+    public function testAnAnkiReviewOlderThanOursIsInterleavedNotSkipped(): void
+    {
+        // Studied in Anki on the 3rd, in LWT on the 6th, imported after both.
+        // The Anki answer happened first, so the history is recomputed with it
+        // in its place rather than dropped (#264).
+        $this->reviewedHere(7, ['2026-02-01 10:00:00' => Rating::Good, '2026-02-06 10:00:00' => Rating::Good]);
+        $replay = $this->replayFor([7 => TermStatus::LEARNING_3]);
+
+        $result = $replay->apply([$this->note(7, [$this->review('2026-02-03 10:00:00', Rating::Again)])]);
+
+        self::assertSame(['terms' => 1, 'reviews' => 1, 'dueDatesMoved' => 0], $result);
+        $history = $this->schedules->history[7];
+        self::assertSame(
+            ['2026-02-01 10:00:00', '2026-02-03 10:00:00', '2026-02-06 10:00:00'],
+            array_map(static fn(ReviewLogEntry $e) => $e->reviewedAt->format('Y-m-d H:i:s'), $history)
+        );
+        self::assertSame([Rating::Good, Rating::Again, Rating::Good], array_map(
+            static fn(ReviewLogEntry $e) => $e->grade,
+            $history
+        ));
+        self::assertSame(3, $this->schedules->states[7]->reps);
+        self::assertSame(1, $this->schedules->states[7]->lapses);
+    }
+
+    public function testInterleavingGivesTheScheduleOfOneHistory(): void
+    {
+        // The merged result must equal doing all three reviews in one app.
+        $this->reviewedHere(7, ['2026-02-01 10:00:00' => Rating::Good, '2026-02-06 10:00:00' => Rating::Good]);
+        $this->replayFor([7 => TermStatus::LEARNING_3])
+            ->apply([$this->note(7, [$this->review('2026-02-03 10:00:00', Rating::Hard)])]);
+
+        $reference = new InMemoryTermScheduleRepository();
+        $record = new RecordScheduledReview(new Fsrs6Scheduler(), $reference);
+        $oneHistory = [
+            '2026-02-01 10:00:00' => Rating::Good,
+            '2026-02-03 10:00:00' => Rating::Hard,
+            '2026-02-06 10:00:00' => Rating::Good,
+        ];
+        foreach ($oneHistory as $at => $rating) {
+            $record->execute(7, $rating, new DateTimeImmutable($at));
+        }
+
+        $merged = $this->schedules->states[7];
+        $expected = $reference->states[7];
+        self::assertEqualsWithDelta($expected->stability, $merged->stability, 1e-9);
+        self::assertEqualsWithDelta($expected->difficulty, $merged->difficulty, 1e-9);
+        self::assertEquals($expected->due, $merged->due);
     }
 
     public function testReviewsOutOfOrderInTheFileAreAppliedInTimeOrder(): void
@@ -286,7 +336,7 @@ final class ScheduleReplayTest extends TestCase
         return new ScheduleReplay(
             $terms,
             $this->schedules,
-            new RecordScheduledReview(new Fsrs6Scheduler(), $this->schedules),
+            new MergeReviewHistory(new Fsrs6Scheduler(), $this->schedules),
         );
     }
 
@@ -358,6 +408,20 @@ final class ScheduleReplayTest extends TestCase
             intervalDays: 1,
             lastIntervalDays: 0,
         );
+    }
+
+    /**
+     * Record reviews done in LWT itself, through the real scheduler.
+     *
+     * @param array<string, Rating> $reviews Grade by review time
+     */
+    private function reviewedHere(int $termId, array $reviews): void
+    {
+        $record = new RecordScheduledReview(new Fsrs6Scheduler(), $this->schedules);
+        foreach ($reviews as $at => $rating) {
+            $record->execute($termId, $rating, new DateTimeImmutable($at));
+        }
+        $this->schedules->saved = [];
     }
 
     private function stateLastReviewedOn(string $at): MemoryState

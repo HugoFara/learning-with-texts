@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Lwt\Modules\Vocabulary\Application\Services\Anki;
 
 use DateTimeImmutable;
-use Lwt\Modules\Review\Application\UseCases\RecordScheduledReview;
+use Lwt\Modules\Review\Application\UseCases\MergeReviewHistory;
+use Lwt\Modules\Review\Domain\Scheduling\HistoricReview;
 use Lwt\Modules\Review\Domain\Scheduling\Rating;
 use Lwt\Modules\Review\Domain\TermScheduleRepositoryInterface;
 use Lwt\Modules\Review\Infrastructure\MySqlTermScheduleRepository;
@@ -27,29 +28,24 @@ use Lwt\Modules\Vocabulary\Infrastructure\MySqlTermRepository;
  * whether the collection used FSRS or not: `revlog` records what the learner
  * actually did, which is the durable half of a schedule.
  *
- * **Only reviews later than LWT's own last review are replayed.** An exported
- * file carries LWT's history back out with it, so replaying everything would
- * apply each review a second time and collapse the term's interval; and a
- * review predating LWT's latest one has already been overtaken by it.
+ * **Reviews join the term's history in time order** ({@see MergeReviewHistory}).
+ * An exported file carries LWT's history back out with it; those reviews come
+ * back with the same second and grade and are recognised and dropped, so
+ * nothing is applied twice. The rest are folded in where they happened: after
+ * LWT's own reviews they are appended, and before one of them the later
+ * history is recomputed on top, so studying in both places between two
+ * imports gives the schedule it would have had in one (#264).
  *
- * That rule is the whole conflict policy, and it needs no sync protocol: both
- * sides timestamp their reviews, so the merge is "apply what happened after the
- * state we already hold, in the order it happened". A term studied in only one
- * of the two places is the degenerate case of the same rule.
- *
- * Two limits worth stating. Comparison is at second precision, which is what
- * `review_log` stores, so an Anki review in the same second as LWT's most
- * recent one is dropped — the safe way round. And an Anki review that happened
- * *before* LWT's last review but was never seen here is skipped rather than
- * interleaved; catching those would mean rebuilding the term's state from both
- * histories, which is a bigger change than the one it would fix.
+ * That is the whole conflict policy, and it needs no sync protocol: reviews
+ * are facts with timestamps, so the merge is their union in time order. A term
+ * studied in only one of the two places is the degenerate case.
  */
 final class ScheduleReplay
 {
     public function __construct(
         private readonly TermRepositoryInterface $terms,
         private readonly TermScheduleRepositoryInterface $schedules,
-        private readonly RecordScheduledReview $reviews,
+        private readonly MergeReviewHistory $merge,
     ) {
     }
 
@@ -58,7 +54,7 @@ final class ScheduleReplay
         return new self(
             new MySqlTermRepository(),
             new MySqlTermScheduleRepository(),
-            new RecordScheduledReview(),
+            new MergeReviewHistory(),
         );
     }
 
@@ -88,7 +84,7 @@ final class ScheduleReplay
             }
 
             $since = $states[$termId]?->lastReview ?? null;
-            $applied = $this->replay($termId, $schedule->reviews, $since);
+            $applied = $this->replay($termId, $schedule->reviews);
             $moved = $this->applyManualDueDate($termId, $schedule, $since);
 
             if ($applied > 0 || $moved) {
@@ -185,36 +181,23 @@ final class ScheduleReplay
     }
 
     /**
-     * Replay one term's newer reviews through the scheduler, oldest first.
+     * Merge one term's reviews from the file into its history.
      *
-     * Each call reads back the state the previous one wrote, so a run of
-     * reviews compounds exactly as it would have had the user done them here.
+     * @param int              $termId  Term to reschedule
+     * @param list<ApkgReview> $reviews Its history from the file
      *
-     * @param int                    $termId  Term to reschedule
-     * @param list<ApkgReview>       $reviews Its history from the file
-     * @param DateTimeImmutable|null $since   LWT's own last review, if any
-     *
-     * @return int How many reviews were applied
+     * @return int How many reviews were new here
      */
-    private function replay(int $termId, array $reviews, ?DateTimeImmutable $since): int
+    private function replay(int $termId, array $reviews): int
     {
-        $newer = array_values(array_filter(
-            $reviews,
-            static fn(ApkgReview $review) => $since === null || $review->reviewedAt > $since
-        ));
-        usort($newer, static fn(ApkgReview $a, ApkgReview $b) => $a->reviewedAt <=> $b->reviewedAt);
-
-        $applied = 0;
-        foreach ($newer as $review) {
+        $historic = [];
+        foreach ($reviews as $review) {
             $rating = Rating::tryFrom($review->ease);
-            if ($rating === null) {
-                continue;
-            }
-            if ($this->reviews->execute($termId, $rating, $review->reviewedAt)) {
-                $applied++;
+            if ($rating !== null) {
+                $historic[] = new HistoricReview($review->reviewedAt, $rating);
             }
         }
 
-        return $applied;
+        return $this->merge->execute($termId, $historic)['applied'];
     }
 }

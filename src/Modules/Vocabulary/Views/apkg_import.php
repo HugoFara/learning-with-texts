@@ -101,6 +101,12 @@ $settingsExport = $needsLegacyExport
 <?php // Contains <em> around a status name, so it is not escaped. ?>
 <p class="help mt-4"><?= __('vocabulary.anki.apkg.help') ?></p>
 
+<p class="mt-4">
+  <a href="/vocabulary/anki/sync" class="button is-small is-link is-light">
+    <?= __e('vocabulary.anki.sync.link') ?>
+  </a>
+</p>
+
 <?php
 // Anki's export and import defaults both work against the round trip and both
 // fail quietly, so the settings are named in Anki's own wording rather than

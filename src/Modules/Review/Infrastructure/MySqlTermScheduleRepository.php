@@ -103,8 +103,67 @@ final class MySqlTermScheduleRepository implements TermScheduleRepositoryInterfa
             return;
         }
 
-        $state = $result->state;
+        $this->writeState($wordId, $result->state);
+        $this->writeLog($wordId, $result, $rating, $stateBefore);
+    }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function replaceHistoryFrom(int $wordId, DateTimeImmutable $from, array $reviews): bool
+    {
+        if ($reviews === [] || !ScheduleSql::hasScheduleTable() || !$this->ownsWord($wordId)) {
+            return false;
+        }
+
+        $db = Globals::getDbConnection();
+        $db?->begin_transaction();
+        try {
+            Connection::preparedExecute(
+                'DELETE FROM review_log WHERE RlWoID = ? AND RlReviewedAt >= ?',
+                [$wordId, $from->format(self::DATETIME_FORMAT)]
+            );
+            foreach ($reviews as $review) {
+                $this->writeLog($wordId, $review['result'], $review['rating'], $review['stateBefore']);
+            }
+            $this->writeState($wordId, $reviews[count($reviews) - 1]['result']->state);
+            $db?->commit();
+        } catch (\Throwable $e) {
+            $db?->rollback();
+            throw $e;
+        }
+
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function seedFor(int $wordId): ?MemoryState
+    {
+        $params = [$wordId];
+        $scope = $this->appendUserScope($params);
+
+        $row = Connection::preparedFetchOne(
+            'SELECT WoStatus, WoCreated FROM words WHERE WoID = ?' . $scope,
+            $params
+        );
+
+        if ($row === null) {
+            return null;
+        }
+
+        return LegacyStatusSeed::forStatus(
+            (int) $row['WoStatus'],
+            new DateTimeImmutable((string) $row['WoCreated'])
+        );
+    }
+
+    /**
+     * Upsert a term's current memory state.
+     */
+    private function writeState(int $wordId, MemoryState $state): void
+    {
         Connection::preparedExecute(
             'INSERT INTO term_schedule
                 (TsWoID, TsStability, TsDifficulty, TsDue, TsLastReview, TsReps, TsLapses, TsState)
@@ -128,6 +187,14 @@ final class MySqlTermScheduleRepository implements TermScheduleRepositoryInterfa
                 $state->state->value,
             ]
         );
+    }
+
+    /**
+     * Append one review_log row.
+     */
+    private function writeLog(int $wordId, SchedulingResult $result, Rating $rating, int $stateBefore): void
+    {
+        $state = $result->state;
 
         Connection::preparedExecute(
             'INSERT INTO review_log
