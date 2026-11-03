@@ -44,7 +44,7 @@ function previewSection(preview: string, rtlScript: boolean): HTMLElement {
   section.appendChild(el('h4', t('text.check.heading_text')));
 
   const paragraph = el('p', undefined);
-  if (rtlScript) paragraph.setAttribute('dir', 'rtl');
+  paragraph.setAttribute('dir', rtlScript ? 'rtl' : 'ltr');
 
   preview.split(PARAGRAPH_MARKER).forEach((part, index) => {
     if (index > 0) {
@@ -68,7 +68,7 @@ function sentenceSection(sentences: string[], rtlScript: boolean): HTMLElement {
   const list = document.createElement('ol');
   sentences.forEach((sentence) => {
     const item = el('li', sentence);
-    if (rtlScript) item.setAttribute('dir', 'rtl');
+    item.setAttribute('dir', rtlScript ? 'rtl' : 'ltr');
     list.appendChild(item);
   });
 
@@ -124,7 +124,7 @@ function tallySection(
   entries.forEach((entry) => {
     const translation = entry.length > 2 ? String(entry[2]) : '';
     const item = document.createElement('li');
-    if (rtlScript) item.setAttribute('dir', 'rtl');
+    item.setAttribute('dir', rtlScript ? 'rtl' : 'ltr');
 
     const span = el('span', `[${String(entry[0])}] — ${String(entry[1])}`);
     if (translation !== '') {

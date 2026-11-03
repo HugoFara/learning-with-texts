@@ -53,8 +53,8 @@ export function generateTextStyles(config: TextReadingConfig): string {
 
   // General annotation styling
   const textAlign = isRuby ? 'text-align: center;' : '';
-  const marginLeft = modeTrans === 1 ? 'margin-left: 0.2em;' : '';
-  const marginRight = modeTrans === 3 ? 'margin-right: 0.2em;' : '';
+  const marginLeft = modeTrans === 1 ? 'margin-inline-start: 0.2em;' : '';
+  const marginRight = modeTrans === 3 ? 'margin-inline-end: 0.2em;' : '';
 
   cssRules.push(`
 .word-ann {

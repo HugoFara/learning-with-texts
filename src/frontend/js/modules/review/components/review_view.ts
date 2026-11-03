@@ -85,7 +85,7 @@ function buildReviewToolbar(): string {
       <div class="level is-mobile">
         <div class="level-left">
           <div class="level-item">
-            <strong>${escapeHtml(t('review.toolbar.review_label'))} <span x-text="store.title"></span></strong>
+            <strong>${escapeHtml(t('review.toolbar.review_label'))} <span dir="auto" x-text="store.title"></span></strong>
           </div>
         </div>
         <div class="level-right">
@@ -258,7 +258,7 @@ function buildWordReviewArea(): string {
                       @click="gradeAnswer(${grade.value})"
                       title="${escapeHtml(t(grade.labelKey))} (${grade.value})">
                 <span>${escapeHtml(t(grade.labelKey))}</span>
-                <span class="is-size-7 ml-2 has-text-weight-normal"
+                <span class="is-size-7 ms-2 has-text-weight-normal"
                       x-text="intervalHint(${grade.value})"></span>
               </button>
             `).join('')}
@@ -344,7 +344,7 @@ function buildTableReview(): string {
           <label class="checkbox"><input type="checkbox" x-model="columns.sentence"
             @change="saveColumnSettings"> ${escapeHtml(t('review.table.col_sentence'))}</label>
         </div>
-        <div class="control ml-4">
+        <div class="control ms-4">
           <label class="checkbox"><input type="checkbox" x-model="hideTermContent"
             @change="saveColumnSettings"> ${escapeHtml(t('review.table.hide_terms'))}</label>
         </div>
@@ -356,7 +356,7 @@ function buildTableReview(): string {
       <!-- Context annotation toggles (affects sentence mode tests) -->
       <div class="field is-grouped is-grouped-multiline mb-4">
         <div class="control">
-          <span class="has-text-grey-dark is-size-7 mr-2">${escapeHtml(t('review.table.context_annotations'))}</span>
+          <span class="has-text-grey-dark is-size-7 me-2">${escapeHtml(t('review.table.context_annotations'))}</span>
         </div>
         <div class="control">
           <label class="checkbox"><input type="checkbox" x-model="contextAnnotations.rom"
@@ -413,13 +413,13 @@ function buildTableReview(): string {
                     class="has-text-centered"
                     :class="{ 'cell-hidden': hideTermContent && !revealedTerms[word.id] }"
                     @click="revealTerm(word.id)">
-                  <span x-text="word.text"></span>
+                  <span dir="auto" x-text="word.text"></span>
                 </td>
                 <td x-show="columns.trans"
                     class="has-text-centered"
                     :class="{ 'cell-hidden': hideTransContent && !revealedTrans[word.id] }"
                     @click="revealTrans(word.id)">
-                  <span x-text="word.translation"></span>
+                  <span dir="auto" x-text="word.translation"></span>
                 </td>
                 <td x-show="columns.rom" class="has-text-centered" x-text="word.romanization"></td>
                 <td x-show="columns.sentence" x-effect="setSentenceHtml($el, word)"></td>
@@ -449,7 +449,7 @@ function buildWordModal(): string {
             <div>
               <div class="is-flex is-justify-content-space-between is-align-items-center mb-4">
                 <span class="is-size-3 has-text-weight-bold"
-                      :style="store.langSettings.rtl ? 'direction: rtl' : ''"
+                      :dir="store.langSettings.rtl ? 'rtl' : 'ltr'"
                       x-text="store.currentWord.text"></span>
                 <button class="button is-small" @click="speakWord">
                   ${escapeHtml(t('review.modal.listen'))}

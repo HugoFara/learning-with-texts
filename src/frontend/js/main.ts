@@ -18,6 +18,8 @@ import 'bulma/css/bulma.min.css';
 import '../css/base/styles.css';
 import '../css/base/html5_audio_player.css';
 import '../css/base/icons.css';
+import '../css/base/logical.css';
+import '../css/base/rtl.css';
 
 // =============================================================================
 // SHARED INFRASTRUCTURE (always loaded)

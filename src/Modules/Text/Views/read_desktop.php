@@ -66,7 +66,7 @@ assert(is_string($title));
                     'external-link',
                     $sourceUriTyped,
                     ['alt' => 'Source'],
-                    ['target' => '_blank', 'rel' => 'noopener', 'class' => 'ml-2', 'title' => 'Source']
+                    ['target' => '_blank', 'rel' => 'noopener', 'class' => 'ms-2', 'title' => 'Source']
                 );
                 ?>
             <?php endif; ?>
@@ -100,7 +100,7 @@ assert(is_string($title));
                     <!-- Toggles -->
                     <a class="dropdown-item"
                       @click.prevent="toggleShowAll()">
-                      <span class="icon is-small mr-2">
+                      <span class="icon is-small me-2">
                         <i x-show="showAll" data-lucide="square-check-big"
                           style="width:14px;height:14px"></i>
                         <i x-show="!showAll" data-lucide="square"
@@ -110,7 +110,7 @@ assert(is_string($title));
                     </a>
                     <a class="dropdown-item"
                       @click.prevent="toggleTranslations()">
-                      <span class="icon is-small mr-2">
+                      <span class="icon is-small me-2">
                         <i x-show="showTranslations"
                           data-lucide="square-check-big"
                           style="width:14px;height:14px"></i>
@@ -171,7 +171,7 @@ assert(is_string($title));
                     <!-- Print -->
                     <a class="dropdown-item"
                       href="/text/<?php echo $textId; ?>/print-plain">
-                      <span class="icon is-small mr-2">
+                      <span class="icon is-small me-2">
                         <i data-lucide="printer"
                           style="width:14px;height:14px"></i>
                       </span>
@@ -244,7 +244,7 @@ assert(is_string($title));
       id="thetext"
       class="content"
       :class="{ 'hide-translations': !showTranslations }"
-      :style="store.rightToLeft ? 'direction: rtl' : ''"
+      :dir="store.rightToLeft ? 'rtl' : 'ltr'"
     >
       <!-- Content rendered by JavaScript via textReader.renderTextContent() -->
     </div>

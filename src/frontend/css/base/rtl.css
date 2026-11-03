@@ -1,0 +1,127 @@
+/*
+ * Right-to-left corrections for Bulma components (#306).
+ *
+ * Bulma 1.0 writes most of its layout with logical properties, which mirror
+ * by themselves under `dir="rtl"`. These are the components it still places
+ * with a physical side; each rule here moves that side to the other edge.
+ * Spacing and text-alignment helpers are handled by logical.css instead.
+ *
+ * Every selector is scoped to `[dir="rtl"]`, so nothing here applies to a
+ * left-to-right interface. A study text with its own `dir` inside the page
+ * is unaffected: these target interface controls, not reading content.
+ */
+
+/* Form fields with an icon inside the input ---------------------------- */
+
+[dir="rtl"] .control.has-icons-left .input,
+[dir="rtl"] .control.has-icons-left .select select {
+  padding-left: var(--bulma-control-padding-horizontal);
+  padding-right: var(--bulma-input-height);
+}
+
+[dir="rtl"] .control.has-icons-right .input,
+[dir="rtl"] .control.has-icons-right .select select {
+  padding-left: var(--bulma-input-height);
+  padding-right: var(--bulma-control-padding-horizontal);
+}
+
+[dir="rtl"] .control.has-icons-left.has-icons-right .input,
+[dir="rtl"] .control.has-icons-left.has-icons-right .select select {
+  padding-left: var(--bulma-input-height);
+  padding-right: var(--bulma-input-height);
+}
+
+[dir="rtl"] .control.has-icons-left .icon.is-left {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .control.has-icons-right .icon.is-right {
+  left: 0;
+  right: auto;
+}
+
+/* Horizontal form labels sit at the end, next to their field ----------- */
+
+[dir="rtl"] .field-label {
+  text-align: left;
+}
+
+/* Dropdowns open from the start edge, `is-right` from the end edge ------ */
+
+[dir="rtl"] .dropdown-menu {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .dropdown.is-right .dropdown-menu,
+[dir="rtl"] .navbar-dropdown.is-right {
+  left: 0;
+  right: auto;
+}
+
+/* Tables and menus align their text to the start edge ------------------ */
+
+[dir="rtl"] .table {
+  --bulma-table-cell-text-align: right;
+}
+
+[dir="rtl"] .menu-list a,
+[dir="rtl"] .menu-list button,
+[dir="rtl"] .menu-list .menu-item {
+  text-align: right;
+}
+
+/* The mobile navigation drawer slides in from the start edge ----------- */
+/* Mirrors the drawer in styles.css, which is written physically because its
+   safe-area padding refers to the device's physical notch. */
+
+@media screen and (max-width: 1023px) {
+  [dir="rtl"] .navbar-menu {
+    left: auto;
+    right: 0;
+    padding-left: 0;
+    padding-right: env(safe-area-inset-right, 0px);
+    box-shadow: -2px 0 16px rgba(0, 0, 0, 0.2);
+    transform: translateX(100%);
+  }
+
+  [dir="rtl"] .navbar-menu.is-active {
+    transform: translateX(0);
+  }
+}
+
+/* Media controls are not mirrored --------------------------------------- */
+/* Playback runs forward in time, and that does not change direction with
+   the script: a progress bar that fills from the right reads as rewinding. */
+
+[dir="rtl"] .audio-player-container,
+[dir="rtl"] .lwt-audio-player {
+  direction: ltr;
+}
+
+/* Directional icons point the other way ---------------------------------- */
+/* "Back", "previous" and "next" are positions in reading order, so their
+   arrows mirror with it. Icons whose direction is not about reading order
+   stay as drawn: media skip buttons (time), and external-link (a convention
+   both directions share). Lucide renders each icon with `lucide-<name>`. */
+
+[dir="rtl"] .lucide-arrow-left,
+[dir="rtl"] .lucide-arrow-right,
+[dir="rtl"] .lucide-chevron-left,
+[dir="rtl"] .lucide-chevron-right,
+[dir="rtl"] .lucide-chevrons-left,
+[dir="rtl"] .lucide-chevrons-right,
+[dir="rtl"] .lucide-log-in,
+[dir="rtl"] .lucide-log-out {
+  transform: scaleX(-1);
+}
+
+/* Signed numbers keep their sign in front --------------------------------- */
+/* A leading minus is a neutral character, so inside a right-to-left run the
+   bidi algorithm moves it to the right: "-5%" would read "5%-". Isolating
+   the value lets it take its own (left-to-right) direction. */
+
+[dir="rtl"] .stat-value {
+  unicode-bidi: plaintext;
+}

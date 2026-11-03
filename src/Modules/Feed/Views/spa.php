@@ -170,7 +170,7 @@ $managerConfig = [
                                                @change="toggleSelection(feed.id)">
                                     </td>
                                     <td>
-                                        <a href="#" @click.prevent="viewArticles(feed)" x-text="feed.name"
+                                        <a dir="auto" href="#" @click.prevent="viewArticles(feed)" x-text="feed.name"
                                            class="has-text-weight-semibold"></a>
                                     </td>
                                     <td class="has-text-centered">
@@ -366,7 +366,7 @@ $managerConfig = [
                                            @change="toggleSelection(article.id)">
                                 </td>
                                 <td>
-                                    <a :href="article.link" target="_blank" x-text="article.title"
+                                    <a dir="auto" :href="article.link" target="_blank" x-text="article.title"
                                        class="has-text-weight-semibold"></a>
                                     <p
                                         class="is-size-7 has-text-grey"
@@ -486,7 +486,7 @@ $managerConfig = [
                                             <select :value="pending.language_id"
                                                     @change="setLanguage(i, $event.target.value)">
                                                 <template x-for="language in languages" :key="language.id">
-                                                    <option :value="language.id"
+                                                    <option dir="auto" :value="language.id"
                                                             :selected="language.id === pending.language_id"
                                                             x-text="language.name"></option>
                                                 </template>

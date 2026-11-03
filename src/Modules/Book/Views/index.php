@@ -38,7 +38,7 @@ $actions = [
 
 <h2 class="title is-4">
     <?php echo __('book.my_books'); ?>
-    <a target="_blank" href="docs/info.html#howtotext" class="ml-2">
+    <a target="_blank" href="docs/info.html#howtotext" class="ms-2">
         <?php
         echo IconHelper::render('help-circle', [
             'title' => __('common.help'),
@@ -81,7 +81,7 @@ $actions = [
                                     <?php echo __('book.all_languages_option'); ?>
                                 </option>
                                 <template x-for="lang in languages" :key="lang.id">
-                                    <option :value="lang.id" :selected="isSelectedLanguage(lang)"
+                                    <option dir="auto" :value="lang.id" :selected="isSelectedLanguage(lang)"
                                             x-text="lang.name"></option>
                                 </template>
                             </select>
@@ -120,8 +120,8 @@ $actions = [
                 <template x-for="book in books" :key="book.id">
                     <tr>
                         <td>
-                            <a :href="bookHref(book)"><strong x-text="book.title"></strong></a>
-                            <span class="tag is-small is-info ml-2"
+                            <a :href="bookHref(book)"><strong dir="auto" x-text="book.title"></strong></a>
+                            <span class="tag is-small is-info ms-2"
                                   x-show="book.sourceType === 'epub'">EPUB</span>
                         </td>
                         <td x-text="authorLabel(book)"></td>

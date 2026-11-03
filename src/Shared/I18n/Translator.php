@@ -88,6 +88,30 @@ class Translator
     }
 
     /**
+     * Languages whose script runs right to left, by ISO 639 primary subtag.
+     *
+     * Arabic, Central Kurdish (Sorani), Dhivehi, Persian, Hebrew, Pashto,
+     * Sindhi, Uyghur, Urdu and Yiddish. Only the primary subtag decides, so
+     * "ar-EG" and "fa_IR" resolve like "ar" and "fa".
+     */
+    private const RTL_LANGUAGES = ['ar', 'ckb', 'dv', 'fa', 'he', 'ps', 'sd', 'ug', 'ur', 'yi'];
+
+    /**
+     * The writing direction of a locale, as an HTML `dir` value (#306).
+     *
+     * @param string|null $locale Locale code; the active locale when null
+     *
+     * @return 'ltr'|'rtl'
+     */
+    public function getTextDirection(?string $locale = null): string
+    {
+        $code = strtolower($locale ?? $this->locale);
+        $primary = preg_split('/[-_]/', $code, 2)[0] ?? $code;
+
+        return in_array($primary, self::RTL_LANGUAGES, true) ? 'rtl' : 'ltr';
+    }
+
+    /**
      * Translate a dot-notated key with optional parameter interpolation.
      *
      * @param string                    $key    Dot-notated key (e.g. "common.save")

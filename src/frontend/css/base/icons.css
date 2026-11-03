@@ -165,7 +165,7 @@ button .icon,
 .button .icon {
   width: 14px;
   height: 14px;
-  margin-right: 4px;
+  margin-inline-end: 4px;
 }
 
 /**
@@ -318,7 +318,7 @@ img[src*="test_notyet"] + .icon {
   width: 10px;
   height: 10px;
   vertical-align: super;
-  margin-left: 2px;
+  margin-inline-start: 2px;
 }
 
 /**
@@ -338,7 +338,7 @@ img[src*="test_notyet"] + .icon {
 .notempty + .icon,
 input:required + .icon {
   color: #dc3545;
-  margin-left: 4px;
+  margin-inline-start: 4px;
 }
 
 /* ==========================================================================

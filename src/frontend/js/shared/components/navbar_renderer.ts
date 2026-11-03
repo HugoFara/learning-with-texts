@@ -150,7 +150,7 @@ function userDropdown(data: NavbarData, currentPage: string): string {
   return (
     `<div class="navbar-item has-dropdown${userActive}" :class="{ 'is-active': activeDropdown === 'user' }">`
     + '<a class="navbar-link" @click.prevent="toggleDropdown(\'user\')">'
-    + `${icon('user')}<span class="ml-1">${t('navbar.user')}</span></a>`
+    + `${icon('user')}<span class="ms-1">${t('navbar.user')}</span></a>`
     + '<div class="navbar-dropdown is-right">'
     + `<a class="navbar-item" href="${base}/profile/preferences">${t('navbar.preferences')}</a>`
     + profile
@@ -177,7 +177,7 @@ export function renderNavbar(data: NavbarData, currentPage = ''): string {
     + '<div class="navbar-brand">'
     + `<a class="navbar-item" href="${base}/">`
     + `<img src="${escapeHtml(data.logoUrl)}" alt="LWT" width="28" height="28">`
-    + '<span class="ml-2 has-text-weight-semibold">LWT</span></a>'
+    + '<span class="ms-2 has-text-weight-semibold">LWT</span></a>'
     + `<a role="button" class="navbar-burger" aria-label="${escapeHtml(t('navbar.menu'))}"`
     + ' aria-expanded="false" :class="{ \'is-active\': isOpen }" @click="toggle()">'
     + '<span aria-hidden="true"></span><span aria-hidden="true"></span>'

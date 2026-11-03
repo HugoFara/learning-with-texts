@@ -210,7 +210,7 @@ $connSocket = $connObj->socket ?? '';
                 <div class="field">
                     <label class="label" for="socket">
                         Socket Name
-                        <span class="tag is-light is-small ml-2">Optional</span>
+                        <span class="tag is-light is-small ms-2">Optional</span>
                     </label>
                     <div class="control has-icons-left">
                         <input type="text"

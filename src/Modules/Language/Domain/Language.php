@@ -529,13 +529,16 @@ class Language
     }
 
     /**
-     * Get RTL direction attribute for HTML.
+     * Get the direction attribute for HTML text in this language.
      *
-     * @return string ' dir="rtl" ' or empty string
+     * Always explicit, so a left-to-right text keeps its direction inside a
+     * right-to-left interface (#306).
+     *
+     * @return string ' dir="rtl" ' or ' dir="ltr" '
      */
     public function getDirectionAttribute(): string
     {
-        return $this->rightToLeft ? ' dir="rtl" ' : '';
+        return $this->rightToLeft ? ' dir="rtl" ' : ' dir="ltr" ';
     }
 
     /**

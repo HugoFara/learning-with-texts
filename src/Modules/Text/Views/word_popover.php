@@ -104,11 +104,11 @@ namespace Lwt\Views\Text;
               <div class="buttons are-small mb-0">
                 <button class="button is-success is-small" :disabled="isLoading" @click="markWellKnown">
                   <?php echo \Lwt\Shared\UI\Helpers\IconHelper::render('check', ['size' => 12]); ?>
-                  <span class="ml-1">Known</span>
+                  <span class="ms-1">Known</span>
                 </button>
                 <button class="button is-warning is-small" :disabled="isLoading" @click="markIgnored">
                   <?php echo \Lwt\Shared\UI\Helpers\IconHelper::render('x', ['size' => 12]); ?>
-                  <span class="ml-1">Ignore</span>
+                  <span class="ms-1">Ignore</span>
                 </button>
               </div>
             </div>
@@ -120,7 +120,7 @@ namespace Lwt\Views\Text;
               <!-- Edit button -->
               <button class="button is-info is-outlined is-small" @click="openEditForm" :disabled="isLoading">
                 <?php echo \Lwt\Shared\UI\Helpers\IconHelper::render('edit', ['size' => 12]); ?>
-                <span class="ml-1" x-text="wordLabel"></span>
+                <span class="ms-1" x-text="wordLabel"></span>
               </button>
               <!-- Delete button for known words -->
               <template x-if="!isUnknown && hasWordId">

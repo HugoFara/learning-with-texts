@@ -395,8 +395,8 @@ body
   margin: 0;
   padding: 0px;
   max-width: 900px;
-  margin-left: auto;
-  margin-right: auto;
+  margin-inline-start: auto;
+  margin-inline-end: auto;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -801,7 +801,7 @@ span.status98
 /* Words and multi-words hints */
 span.wsty, span.mwsty
 {
-  margin-right: 2px;
+  margin-inline-end: 2px;
   color: var(--lwt-wsty-fg);
 }
 
@@ -809,7 +809,7 @@ span.wsty, span.mwsty
 .punc
 {
   /* Negative margin closes the gap created by word's margin-right */
-  margin-left: -2px;
+  margin-inline-start: -2px;
 }
 
 /* Word groups - prevent line breaks between word and punctuation */
@@ -823,14 +823,14 @@ span.wsty, span.mwsty
 /* Inside word groups, restore normal margin for punctuation */
 .word-group .punc
 {
-  margin-left: -2px;
+  margin-inline-start: -2px;
 }
 
 /* Remove margin from last element in word group */
 .word-group > span:last-child.wsty,
 .word-group > span:last-child.mwsty
 {
-  margin-right: 0;
+  margin-inline-end: 0;
 }
 
 /* Multi-words hint */
@@ -844,8 +844,8 @@ span.mwsty
 /* Multi-word mark */
 .mword
 {
-  padding-left: 4px;
-  padding-right: 4px;
+  padding-inline-start: 4px;
+  padding-inline-end: 4px;
 }
 
 /* Multi-word expression group wrapper - connected underline */
@@ -902,7 +902,7 @@ table.tab1
   margin-bottom: 10px;
   margin-top: 10px;
   border-top: 1px solid var(--lwt-table-border);
-  border-left: 1px solid var(--lwt-table-border);
+  border-inline-start: 1px solid var(--lwt-table-border);
   width: 95%;
   max-width: 850px;
 }
@@ -913,7 +913,7 @@ table.tab2
   margin-bottom: 10px;
   margin-top: 10px;
   border-top: 1px solid var(--lwt-table-border);
-  border-left: 1px solid var(--lwt-table-border);
+  border-inline-start: 1px solid var(--lwt-table-border);
   width: 100%;
 }
 
@@ -923,28 +923,28 @@ table.tab3
   margin-bottom: 10px;
   margin-top: 10px;
   border-top: 1px solid var(--lwt-table-border);
-  border-left: 1px solid var(--lwt-table-border);
+  border-inline-start: 1px solid var(--lwt-table-border);
   width: auto;
 }
 
 td.td1
 {
   border-bottom: 1px solid var(--lwt-table-border);
-  border-right: 1px solid var(--lwt-table-border);
+  border-inline-end: 1px solid var(--lwt-table-border);
   vertical-align: top;
 }
 
 td.td1bot
 {
   border-bottom: 1px solid var(--lwt-table-border);
-  border-right: 1px solid var(--lwt-table-border);
+  border-inline-end: 1px solid var(--lwt-table-border);
   vertical-align: bottom;
 }
 
 th.th1
 {
   border-bottom: 1px solid var(--lwt-table-border);
-  border-right: 1px solid var(--lwt-table-border);
+  border-inline-end: 1px solid var(--lwt-table-border);
   background-color: var(--lwt-th-bg);
   vertical-align: top;
 }
@@ -1001,16 +1001,16 @@ img
 
 img.lwtlogo
 {
-  margin-right: 15px;
-  float: left;
+  margin-inline-end: 15px;
+  float: inline-start;
   width: 48px;
   height: 48px;
 }
 
 img.lwtlogoright
 {
-  margin-left: 30px;
-  float: right;
+  margin-inline-start: 30px;
+  float: inline-end;
 }
 
 /**
@@ -1019,7 +1019,7 @@ img.lwtlogoright
 #floatdiv {
   position: fixed;
   top: 10px;
-  right: 10px;
+  inset-inline-end: 10px;
   padding: 5px;
   z-index: 2;
   font-size: 10pt;
@@ -1125,7 +1125,7 @@ footer
 {
   position: fixed;
   width: 100%;
-  left: 0;
+  inset-inline-start: 0;
   bottom: 0;
   background-color: var(--lwt-footer-bg);
   text-align: center;
@@ -1144,7 +1144,7 @@ footer
 
 .borderl
 {
-  border-left: 1px solid var(--lwt-footer-border);
+  border-inline-start: 1px solid var(--lwt-footer-border);
   border-top: 1px solid var(--lwt-footer-border);
   border-bottom: 1px solid var(--lwt-footer-border);
 }
@@ -1153,7 +1153,7 @@ footer
 {
   border-top: 1px solid var(--lwt-footer-border);
   border-bottom: 1px solid var(--lwt-footer-border);
-  border-right: 1px solid var(--lwt-footer-border);
+  border-inline-end: 1px solid var(--lwt-footer-border);
 }
 
 .uwordmarked
@@ -1161,8 +1161,8 @@ footer
   font-weight: bold;
   border-top: 3px solid red;
   border-bottom: 3px solid red;
-  border-right: 3px solid red;
-  border-left: 3px solid red;
+  border-inline-end: 3px solid red;
+  border-inline-start: 3px solid red;
 }
 
 .kwordmarked
@@ -1170,8 +1170,8 @@ footer
   font-weight: bold;
   border-top: 3px solid black;
   border-bottom: 3px solid black;
-  border-left: 3px solid black;
-  border-right: 3px solid black;
+  border-inline-start: 3px solid black;
+  border-inline-end: 3px solid black;
 }
 
 #termtags
@@ -1179,7 +1179,7 @@ footer
   max-width: 340px;
   margin-top: 0px;
   margin-bottom: 0px;
-  margin-left: 2px;
+  margin-inline-start: 2px;
 }
 
 #texttags
@@ -1187,7 +1187,7 @@ footer
   max-width: 340px;
   margin-top: 0px;
   margin-bottom: 0px;
-  margin-left: 2px;
+  margin-inline-start: 2px;
 }
 
 .editable_textarea
@@ -1198,12 +1198,12 @@ footer
 .nowrap
 {
   white-space: nowrap;
-  margin-left: 20pt;
+  margin-inline-start: 20pt;
 }
 
 .borderleft
 {
-  border-left: 1px solid var(--lwt-borderleft-border);
+  border-inline-start: 1px solid var(--lwt-borderleft-border);
   border-top: 1px solid var(--lwt-borderleft-border);
   border-bottom: 1px solid var(--lwt-borderleft-border);
   background-color: var(--lwt-borderleft-bg);
@@ -1218,7 +1218,7 @@ footer
 
 .borderright
 {
-  border-right: 1px solid var(--lwt-borderleft-border);
+  border-inline-end: 1px solid var(--lwt-borderleft-border);
   border-top: 1px solid var(--lwt-borderleft-border);
   border-bottom: 1px solid var(--lwt-borderleft-border);
   background-color: var(--lwt-borderleft-bg);
@@ -1247,7 +1247,7 @@ footer
 */
 #quickmenu
 {
-  float: right;
+  float: inline-end;
 }
 
 /**
@@ -1625,7 +1625,7 @@ Text Cards (Active and Archived Texts)
 .text-card .card-dropdown {
   position: absolute;
   bottom: 100%;
-  right: 0;
+  inset-inline-end: 0;
   min-width: 160px;
   z-index: 20;
   margin-bottom: 4px;
@@ -1722,8 +1722,8 @@ Feed Wizard UI (RSS feed import interface)
 {
   position: fixed;
   top: 0px;
-  left: 0px;
-  right: 0px;
+  inset-inline-start: 0px;
+  inset-inline-end: 0px;
   background: var(--lwt-panel-bg);
   overflow: auto;
   text-align: center;
@@ -1747,8 +1747,8 @@ Feed Wizard UI (RSS feed import interface)
   display: none;
   position: fixed;
   top: 0px;
-  left: 0px;
-  right: 0px;
+  inset-inline-start: 0px;
+  inset-inline-end: 0px;
   height: 180px;
   background: var(--lwt-panel-bg);
   overflow: auto;
@@ -1759,14 +1759,14 @@ Feed Wizard UI (RSS feed import interface)
 
 #settings .settings-content
 {
-  margin-left: 150px;
-  text-align: left;
+  margin-inline-start: 150px;
+  text-align: start;
 }
 
 #settings .settings-ok
 {
   position: relative;
-  left: 150px;
+  inset-inline-start: 150px;
 }
 
 #adv
@@ -1774,8 +1774,8 @@ Feed Wizard UI (RSS feed import interface)
   display: none;
   position: fixed;
   top: 0px;
-  left: 0px;
-  right: 0px;
+  inset-inline-start: 0px;
+  inset-inline-end: 0px;
   height: 180px;
   background: var(--lwt-panel-bg);
   overflow: auto;
@@ -1788,7 +1788,7 @@ Feed Wizard UI (RSS feed import interface)
 #lwt_sel,
 #lwt_container .tab2
 {
-  margin-left: 77px;
+  margin-inline-start: 77px;
 }
 
 /* Feed wizard controls table */
@@ -1806,7 +1806,7 @@ Feed Wizard UI (RSS feed import interface)
 .wizard-controls .actions-cell
 {
   width: 270px;
-  text-align: right;
+  text-align: end;
 }
 
 .wizard-controls .spacer-cell
@@ -1818,7 +1818,7 @@ Feed Wizard UI (RSS feed import interface)
 .wizard-minmax
 {
   position: absolute;
-  right: 10px;
+  inset-inline-end: 10px;
   top: 10px;
 }
 
@@ -1936,7 +1936,7 @@ input[name="WoTranslation"]
 .del_trans
 {
   cursor: pointer;
-  float: right;
+  float: inline-end;
 }
 
 .del_trans:after
@@ -1974,7 +1974,7 @@ Test page styles
 {
   position: fixed;
   top: 2%;
-  right: 0;
+  inset-inline-end: 0;
   height: 90%;
 }
 
@@ -1983,7 +1983,7 @@ Test page styles
 {
   position: fixed;
   top: 0;
-  right: -100%;
+  inset-inline-end: -100%;
   width: 100%;
   height: 100%;
 }
@@ -1991,7 +1991,7 @@ Test page styles
 /* Mobile frames inner container */
 .test-frames-mobile-inner
 {
-  margin-left: 50%;
+  margin-inline-start: 50%;
   height: 99%;
 }
 
@@ -2017,8 +2017,8 @@ Test page styles
 /* Test footer stats spans */
 .test-footer-stat
 {
-  margin-left: 15px;
-  margin-right: 15px;
+  margin-inline-start: 15px;
+  margin-inline-end: 15px;
 }
 
 /* Table test sentence cell color */
@@ -2166,7 +2166,7 @@ Word Show View Styles
 .word-show-term
 {
   font-size: 120%;
-  border-top-right-radius: inherit;
+  border-start-end-radius: inherit;
 }
 
 /* Annotation highlight color */
@@ -2215,7 +2215,7 @@ Language View Styles
 /* Last column in language table (remove top-right radius) */
 .language-last-col
 {
-  border-top-right-radius: 0;
+  border-start-end-radius: 0;
 }
 
 /**************************************************************
@@ -2329,7 +2329,7 @@ Navigation Bar Styles (Alpine.js + Bulma)
    some bots skip. */
 .lwt-hp {
   position: absolute !important;
-  left: -9999px !important;
+  inset-inline-start: -9999px !important;
   width: 1px;
   height: 1px;
   overflow: hidden;
@@ -2438,8 +2438,8 @@ Navigation Bar Styles (Alpine.js + Bulma)
   .navbar-overlay {
     position: fixed;
     top: calc(var(--bulma-navbar-height, 3.25rem) + env(safe-area-inset-top, 0px));
-    left: 0;
-    right: 0;
+    inset-inline-start: 0;
+    inset-inline-end: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.4);
     opacity: 0;
@@ -2456,7 +2456,7 @@ Navigation Bar Styles (Alpine.js + Bulma)
   .navbar-item.has-dropdown .navbar-dropdown {
     position: static;
     box-shadow: none;
-    padding-left: 1rem;
+    padding-inline-start: 1rem;
   }
 
   .navbar-item.has-dropdown.is-active .navbar-dropdown {
@@ -2505,8 +2505,8 @@ Navigation Bar Styles (Alpine.js + Bulma)
   }
 
   .navbar-dropdown.is-right {
-    right: 0;
-    left: auto;
+    inset-inline-end: 0;
+    inset-inline-start: auto;
   }
 }
 
@@ -2585,7 +2585,7 @@ Action Card Styles (Alpine.js + Bulma)
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-right: 0.25rem;
+  margin-inline-end: 0.25rem;
 }
 
 .action-card .button .icon svg,
@@ -3064,8 +3064,8 @@ Settings Page - Collapsible Sections
 @media screen and (max-width: 768px) {
   .reading-modal .modal-card {
     position: fixed;
-    left: 0;
-    right: 0;
+    inset-inline-start: 0;
+    inset-inline-end: 0;
     max-width: 100%;
     min-width: 100%;
     max-height: 50vh;
@@ -3157,7 +3157,7 @@ Searchable Select Component (Alpine.js)
   display: flex;
   justify-content: space-between;
   align-items: center;
-  text-align: left;
+  text-align: start;
   background-color: var(--lwt-ss-trigger-bg);
   border: 1px solid var(--lwt-input-border);
   border-radius: 4px;
@@ -3185,14 +3185,14 @@ Searchable Select Component (Alpine.js)
 
 .searchable-select__trigger .icon {
   flex-shrink: 0;
-  margin-left: 0.5em;
+  margin-inline-start: 0.5em;
 }
 
 .searchable-select__dropdown {
   position: absolute;
   top: 100%;
-  left: 0;
-  right: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
   z-index: 50;
   margin-top: 4px;
   background-color: var(--lwt-ss-dropdown-bg);

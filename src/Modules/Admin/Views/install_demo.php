@@ -108,7 +108,7 @@ $base = UrlUtilities::getBasePath();
                 <span class="icon is-medium has-text-info">
                     <span class="loader"></span>
                 </span>
-                <span class="ml-2"><?= __('admin.install_demo_installing') ?></span>
+                <span class="ms-2"><?= __('admin.install_demo_installing') ?></span>
             </p>
             <p class="has-text-grey is-size-7"><?= __('admin.install_demo_installing_help') ?></p>
         </div>

@@ -104,9 +104,9 @@ echo PageLayoutHelper::buildActionCard(
             <!-- Collapsible header -->
             <header class="card-header is-clickable" @click="toggleLanguage(lang.id)" style="user-select: none;">
                 <p class="card-header-title">
-                    <span x-text="lang.name"></span>
+                    <span dir="auto" x-text="lang.name"></span>
                     <span
-                        class="tag is-warning ml-2"
+                        class="tag is-warning ms-2"
                         x-text="archivedCountLabel(lang.text_count)"></span>
                 </p>
                 <button
@@ -129,7 +129,7 @@ echo PageLayoutHelper::buildActionCard(
                     <span class="icon">
                         <i data-lucide="loader-2" class="icon-spin"></i>
                     </span>
-                    <span class="ml-2">Loading...</span>
+                    <span class="ms-2">Loading...</span>
                 </div>
 
                 <!-- Per-language bulk actions -->
@@ -139,15 +139,15 @@ echo PageLayoutHelper::buildActionCard(
                             <div class="buttons are-small">
                                 <button type="button" class="button" @click="markAll(lang.id, true)">
                                     <?php echo IconHelper::render('check-square', ['size' => 14]); ?>
-                                    <span class="ml-1"><?= __e('text.common.mark_all') ?></span>
+                                    <span class="ms-1"><?= __e('text.common.mark_all') ?></span>
                                 </button>
                                 <button type="button" class="button" @click="markAll(lang.id, false)">
                                     <?php echo IconHelper::render('square', ['size' => 14]); ?>
-                                    <span class="ml-1"><?= __e('text.common.mark_none') ?></span>
+                                    <span class="ms-1"><?= __e('text.common.mark_none') ?></span>
                                 </button>
                                 <span
                                     x-show="hasMarkedInLanguage(lang.id)"
-                                    class="tag is-warning ml-2"
+                                    class="tag is-warning ms-2"
                                     x-text="getMarkedCount(lang.id) + ' selected'"></span>
                             </div>
                         </div>
@@ -158,7 +158,7 @@ echo PageLayoutHelper::buildActionCard(
                                 <div class="control">
                                     <span class="button is-static is-small">
                                         <?php echo IconHelper::render('zap', ['size' => 14]); ?>
-                                        <span class="ml-1"><?= __e('text.common.actions') ?></span>
+                                        <span class="ms-1"><?= __e('text.common.actions') ?></span>
                                     </span>
                                 </div>
                                 <div class="control">
@@ -191,7 +191,7 @@ echo PageLayoutHelper::buildActionCard(
                                                :checked="isMarked(lang.id, text.id)"
                                                @change="toggleMark(lang.id, text.id, $event.target.checked)" />
                                     </label>
-                                    <p class="card-header-title" x-text="text.title"></p>
+                                    <p dir="auto" class="card-header-title" x-text="text.title"></p>
                                     <div class="card-header-icon card-icons">
                                         <span x-show="text.has_audio" title="<?= __e('text.common.with_audio') ?>">
                                             <?php echo IconHelper::render('volume-2', ['size' => 16]); ?>
@@ -224,7 +224,7 @@ echo PageLayoutHelper::buildActionCard(
                                     <div class="archive-badge">
                                         <span class="tag is-warning is-light">
                                             <?php echo IconHelper::render('archive', ['size' => 12]); ?>
-                                            <span class="ml-1"><?= __e('text.common.archived') ?></span>
+                                            <span class="ms-1"><?= __e('text.common.archived') ?></span>
                                         </span>
                                     </div>
                                 </div>

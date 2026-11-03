@@ -87,7 +87,7 @@ $actions = [
                     <a :href="continueHref()" class="button is-primary is-medium"
                        x-show="chapters.length > 0">
                         <?php echo IconHelper::render('book-open', ['alt' => __('book.continue_reading')]); ?>
-                        <span class="ml-2"><?php echo __('book.continue_reading'); ?></span>
+                        <span class="ms-2"><?php echo __('book.continue_reading'); ?></span>
                     </a>
                 </div>
 
@@ -95,7 +95,7 @@ $actions = [
                     <div class="buttons">
                         <button type="button" class="button is-danger is-outlined" @click="remove()">
                             <?php echo IconHelper::render('trash-2', ['alt' => __('common.delete')]); ?>
-                            <span class="ml-2"><?php echo __('book.delete_book'); ?></span>
+                            <span class="ms-2"><?php echo __('book.delete_book'); ?></span>
                         </button>
                     </div>
                 </div>
@@ -123,8 +123,8 @@ $actions = [
                         <tr :class="isCurrentChapter(chapter) ? 'is-selected' : ''">
                             <td x-text="chapter.num"></td>
                             <td>
-                                <a :href="readHref(chapter)" x-text="chapter.title"></a>
-                                <span class="tag is-small is-info ml-2"
+                                <a dir="auto" :href="readHref(chapter)" x-text="chapter.title"></a>
+                                <span class="tag is-small is-info ms-2"
                                       x-show="isCurrentChapter(chapter)">
                                     <?php echo __('common.current'); ?>
                                 </span>

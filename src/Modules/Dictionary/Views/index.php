@@ -199,7 +199,7 @@ echo PageLayoutHelper::buildActionCard([
                 <template x-for="dict in dictionaries" :key="dict.id">
                     <tr>
                         <td>
-                            <strong x-text="dict.name"></strong>
+                            <strong dir="auto" x-text="dict.name"></strong>
                             <template x-if="hasDescription(dict)">
                                 <span>
                                     <br><span class="is-size-7 has-text-grey"

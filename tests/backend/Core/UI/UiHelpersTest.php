@@ -78,13 +78,33 @@ final class UiHelpersTest extends TestCase
 
         // Should output HTML document structure
         $this->assertStringContainsString('<!DOCTYPE html>', $output);
-        $this->assertStringContainsString('<html lang="en">', $output);
+        $this->assertStringContainsString('<html lang="en" dir="ltr">', $output);
         $this->assertStringContainsString('<head>', $output);
         $this->assertStringContainsString('<title>LWT :: Test Page</title>', $output);
 
         // Should have meta tags
         $this->assertStringContainsString('charset=utf-8', $output);
         $this->assertStringContainsString('viewport', $output);
+    }
+
+    /**
+     * The interface locale sets both lang and dir on <html> (#306).
+     */
+    public function testHtmlTagFollowsTheInterfaceLocale(): void
+    {
+        $translator = \Lwt\Shared\Infrastructure\Container\Container::getInstance()
+            ->getTyped(\Lwt\Shared\I18n\Translator::class);
+        $previous = $translator->getLocale();
+
+        try {
+            $translator->setLocale('fr');
+            $this->assertSame('<html lang="fr" dir="ltr">', PageLayoutHelper::buildHtmlOpenTag());
+
+            $translator->setLocale('ar');
+            $this->assertSame('<html lang="ar" dir="rtl">', PageLayoutHelper::buildHtmlOpenTag());
+        } finally {
+            $translator->setLocale($previous);
+        }
     }
 
     /**

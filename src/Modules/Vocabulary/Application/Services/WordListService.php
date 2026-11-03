@@ -633,7 +633,7 @@ class WordListService
             'LgName' => $record['LgName'],
             'LgRightToLeft' => $record['LgRightToLeft'],
             'LgShowRomanization' => $record['LgShowRomanization'],
-            'scrdir' => $record['LgRightToLeft'] ? ' dir="rtl" ' : '',
+            'scrdir' => $record['LgRightToLeft'] ? ' dir="rtl" ' : ' dir="ltr" ',
         ];
     }
 

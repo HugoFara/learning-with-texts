@@ -425,7 +425,7 @@ class TextAnnotationApiHandler
                         <td class="has-text-centered" style="font-size:' . $textsize . '%;">' .
                             $nontermbuffer .
                         '</td>
-                        <td class="has-text-right" colspan="3">
+                        <td class="has-text-end" colspan="3">
                         ' . IconHelper::render(
                             'check',
                             [
@@ -476,7 +476,7 @@ class TextAnnotationApiHandler
                 $termText = $vals[1] ?? '';
                 $r .= '<tr>
                     <td class="has-text-centered" style="font-size:' . $textsize . '%;"' .
-                    ($rtlScript ? ' dir="rtl"' : '') . '>
+                    ' dir="' . ($rtlScript ? 'rtl' : 'ltr') . '">
                         <span id="term' . $i . '">' . htmlspecialchars($termText, ENT_QUOTES, 'UTF-8') .
                         '</span>
                     </td>
@@ -505,7 +505,7 @@ class TextAnnotationApiHandler
                 <td class="has-text-centered" style="font-size:' . $textsize . '%;">' .
                 $nontermbuffer .
                 '</td>
-                <td class="has-text-right" colspan="3">
+                <td class="has-text-end" colspan="3">
                     ' . IconHelper::render(
                     'check',
                     [

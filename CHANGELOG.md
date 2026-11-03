@@ -7,6 +7,19 @@ ones are marked like "v1.0.0-fork".
 
 ## [Unreleased]
 
+### Added
+
+* **Right-to-left interface support** (#306). The page now sets `lang` and
+  `dir` from the interface locale, and the layout mirrors under
+  `dir="rtl"`: navigation, cards, forms, dropdowns, the mobile drawer and
+  directional icons follow the reading direction, while media players and
+  device safe-area insets deliberately do not. Study texts keep their own
+  direction inside it: a French text stays left to right in an RTL
+  interface, as a Hebrew one already stayed right to left in an English
+  interface, and user-supplied titles and terms pick their direction from
+  their content. Nothing changes for the existing left-to-right locales;
+  the first right-to-left locale follows separately.
+
 ### Changed
 
 * **The nine shipped locales are complete again** (#266). 3.7.0 moved the Anki

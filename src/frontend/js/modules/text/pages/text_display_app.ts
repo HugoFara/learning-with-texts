@@ -145,11 +145,9 @@ export function textDisplayData(): TextDisplayData {
         return;
       }
 
-      if (rtlScript) {
-        container.setAttribute('dir', 'rtl');
-      } else {
-        container.removeAttribute('dir');
-      }
+      // Always explicit: an LTR text inside an RTL interface must not
+      // inherit the page's direction (#306)
+      container.setAttribute('dir', rtlScript ? 'rtl' : 'ltr');
 
       const parts = [paragraphTag(textSize, '1.35')];
       for (const item of items) {

@@ -191,7 +191,7 @@ $missingForeignKeys = $data['missing_foreign_keys'] ?? [];
             <span class="icon is-medium">
                 <span class="loader"></span>
             </span>
-            <span class="ml-2"><?= __('admin.server_data_loading_api') ?></span>
+            <span class="ms-2"><?= __('admin.server_data_loading_api') ?></span>
         </div>
 
         <!-- Error State -->

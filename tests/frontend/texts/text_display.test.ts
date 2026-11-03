@@ -138,7 +138,7 @@ describe('textDisplayData', () => {
     expect(paragraphs[1].getAttribute('style')).toContain('font-size:120%');
   });
 
-  it('marks the container right-to-left only for RTL languages', async () => {
+  it('states the text direction explicitly, both ways', async () => {
     respond([item()], { rtlScript: true });
     await textDisplayData().init();
     expect(document.getElementById('print')!.getAttribute('dir')).toBe('rtl');
@@ -146,7 +146,8 @@ describe('textDisplayData', () => {
     setupDom();
     respond([item()], { rtlScript: false });
     await textDisplayData().init();
-    expect(document.getElementById('print')!.hasAttribute('dir')).toBe(false);
+    // An LTR text must say so, or it inherits an RTL interface's direction (#306)
+    expect(document.getElementById('print')!.getAttribute('dir')).toBe('ltr');
   });
 
   it('reports an error instead of rendering when the text has no annotation', async () => {

@@ -92,7 +92,7 @@ if (!$isNew) {
 <?php if (!$isNew) : ?>
 <h2 class="title is-4 is-flex is-align-items-center">
     <?= __e('text.edit.heading') ?>
-    <a target="_blank" href="docs/info.html#howtotext" class="ml-2">
+    <a target="_blank" href="docs/info.html#howtotext" class="ms-2">
         <?php echo IconHelper::render(
             'help-circle',
             ['title' => __('text.common.help'), 'alt' => __('text.common.help')]
@@ -129,7 +129,7 @@ if (!$isNew) {
                 <header class="is-flex is-align-items-center is-justify-content-space-between is-clickable"
                         @click="open = !open">
                     <h4 class="title is-6 mb-0 is-flex is-align-items-center">
-                        <span class="icon mr-2">
+                        <span class="icon me-2">
                             <?php echo IconHelper::render('lightbulb', ['alt' => __('text.new.where_to_find')]); ?>
                         </span>
                         <?= __e('text.new.where_to_find') ?>
@@ -312,7 +312,7 @@ if (!$isNew) {
                     <p>
                         <?php echo IconHelper::render(
                             'book',
-                            ['alt' => '', 'class' => 'mr-2']
+                            ['alt' => '', 'class' => 'me-2']
                         ); ?>
                         <?= __e('text.new.file.epub_detected') ?>
                     </p>
@@ -324,7 +324,7 @@ if (!$isNew) {
                         <strong>
                             <?php echo IconHelper::render(
                                 'alert-circle',
-                                ['alt' => __('common.error'), 'class' => 'mr-2']
+                                ['alt' => __('common.error'), 'class' => 'me-2']
                             ); ?>
                             <?php echo __('book.zip_required_title'); ?>
                         </strong>
@@ -594,7 +594,7 @@ if (!$isNew) {
                             style="display: flex; flex-direction: column;
                                    justify-content: space-between; min-height: 160px;">
                             <div>
-                                <p class="has-text-weight-semibold is-size-7" x-text="book.title"
+                                <p dir="auto" class="has-text-weight-semibold is-size-7" x-text="book.title"
                                    style="overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
                                           -webkit-line-clamp: 2; -webkit-box-orient: vertical;"></p>
                                 <div class="mb-1">
@@ -717,7 +717,7 @@ if (!$isNew) {
                                     <img :src="book.thumbnail" :alt="book.title" loading="lazy"
                                          style="width: 100%; height: 110px; object-fit: cover;" />
                                 </figure>
-                                <p class="has-text-weight-semibold is-size-7" x-text="book.title"
+                                <p dir="auto" class="has-text-weight-semibold is-size-7" x-text="book.title"
                                    style="overflow: hidden; text-overflow: ellipsis; display: -webkit-box;
                                           -webkit-line-clamp: 2; -webkit-box-orient: vertical;"></p>
                                 <div class="mb-1">
@@ -795,7 +795,7 @@ if (!$isNew) {
                                style="cursor: pointer; text-decoration: none;"
                                @click="selectFeed(feed)">
                                 <div>
-                                    <p class="has-text-weight-semibold is-size-7" x-text="feed.name"></p>
+                                    <p dir="auto" class="has-text-weight-semibold is-size-7" x-text="feed.name"></p>
                                     <p class="has-text-grey is-size-7" x-text="feedInfo(feed)"></p>
                                 </div>
                                 <span class="icon has-text-grey">
@@ -838,7 +838,7 @@ if (!$isNew) {
                                     class="is-flex is-align-items-start is-justify-content-space-between"
                                     style="gap: 0.5rem;">
                                     <div style="flex: 1; min-width: 0;">
-                                        <p class="has-text-weight-semibold is-size-7" x-text="article.title"
+                                        <p dir="auto" class="has-text-weight-semibold is-size-7" x-text="article.title"
                                            style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></p>
                                         <p class="has-text-grey is-size-7" x-text="article.date"></p>
                                         <span class="tag is-rounded mt-1" style="font-size: 0.6rem;"
@@ -869,7 +869,7 @@ if (!$isNew) {
                                 <?= __e('text.edit.feeds.page') ?>
                                 <span x-text="articlePage" class="mx-1"></span>
                                 <?= __e('text.edit.feeds.of') ?>
-                                <span x-text="articleTotalPages" class="ml-1"></span>
+                                <span x-text="articleTotalPages" class="ms-1"></span>
                             </span>
                             <button type="button" class="button is-small"
                                     :disabled="canGoNext()"
@@ -1010,7 +1010,7 @@ if (!$isNew) {
             <header class="is-flex is-align-items-center is-justify-content-space-between is-clickable"
                     @click="open = !open">
                 <h4 class="title is-6 mb-0 is-flex is-align-items-center">
-                    <span class="icon mr-2">
+                    <span class="icon me-2">
                         <?php echo IconHelper::render('settings', ['alt' => __('text.new.advanced')]); ?>
                     </span>
                     <?= __e('text.new.advanced') ?>

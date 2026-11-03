@@ -41,7 +41,7 @@ $submitDisabled = $zipMissing ? ' disabled title="ZIP extension required"' : '';
 
 <h2 class="title is-4">
     <?php echo __('book.import_epub'); ?>
-    <a target="_blank" href="docs/info.html#howtotext" class="ml-2">
+    <a target="_blank" href="docs/info.html#howtotext" class="ms-2">
         <?php
         echo IconHelper::render('help-circle', [
             'title' => __('common.help'),
@@ -55,20 +55,20 @@ $submitDisabled = $zipMissing ? ' disabled title="ZIP extension required"' : '';
 
 <div class="notification is-warning is-light">
     <p class="mb-2">
-        <?php echo IconHelper::render('alert-triangle', ['alt' => '', 'class' => 'mr-2']); ?>
+        <?php echo IconHelper::render('alert-triangle', ['alt' => '', 'class' => 'me-2']); ?>
         <strong><?php echo __('book.deprecated_page_title'); ?></strong>
     </p>
     <p class="mb-3"><?php echo __('book.deprecated_page_body'); ?></p>
     <a href="/texts/new" class="button is-primary is-small">
         <?php echo IconHelper::render('circle-plus', ['alt' => '']); ?>
-        <span class="ml-2"><?php echo __('book.go_to_new_text'); ?></span>
+        <span class="ms-2"><?php echo __('book.go_to_new_text'); ?></span>
     </a>
 </div>
 
 <?php if ($showFromTextNotice) : ?>
 <div class="notification is-info is-light">
     <p>
-        <?php echo IconHelper::render('info', ['alt' => 'Info', 'class' => 'mr-2']); ?>
+        <?php echo IconHelper::render('info', ['alt' => 'Info', 'class' => 'me-2']); ?>
         <?php echo __('book.epub_intro_notice'); ?>
     </p>
 </div>
@@ -78,7 +78,7 @@ $submitDisabled = $zipMissing ? ' disabled title="ZIP extension required"' : '';
 <div class="notification is-danger">
     <p>
         <strong><?php
-            echo IconHelper::render('alert-circle', ['alt' => __('common.error'), 'class' => 'mr-2']);
+            echo IconHelper::render('alert-circle', ['alt' => __('common.error'), 'class' => 'me-2']);
         ?>
         <?php echo __('book.zip_required_title'); ?></strong>
     </p>
@@ -118,18 +118,18 @@ sudo systemctl restart httpd  # or nginx</code></pre>
         <template x-if="hasBook()">
             <a :href="bookUrl()" class="button is-primary">
                 <?php echo IconHelper::render('book', ['alt' => __('book.view_book')]); ?>
-                <span class="ml-2"><?php echo __('book.view_book'); ?></span>
+                <span class="ms-2"><?php echo __('book.view_book'); ?></span>
             </a>
         </template>
 
         <a href="/texts/new" class="button is-info is-outlined">
             <?php echo IconHelper::render('upload', ['alt' => __('book.import_another_epub')]); ?>
-            <span class="ml-2"><?php echo __('book.import_another_epub'); ?></span>
+            <span class="ms-2"><?php echo __('book.import_another_epub'); ?></span>
         </a>
 
         <a href="/books" class="button is-light">
             <?php echo IconHelper::render('library', ['alt' => __('book.all_books')]); ?>
-            <span class="ml-2"><?php echo __('book.all_books'); ?></span>
+            <span class="ms-2"><?php echo __('book.all_books'); ?></span>
         </a>
     </div>
 </div>
@@ -233,7 +233,7 @@ sudo systemctl restart httpd  # or nginx</code></pre>
                     :class="submitButtonClass()"
                     :disabled="isSubmitting"<?php echo $submitDisabled; ?>>
                 <?php echo IconHelper::render('upload', ['alt' => __('common.import')]); ?>
-                <span class="ml-2"><?php echo __('book.import_epub'); ?></span>
+                <span class="ms-2"><?php echo __('book.import_epub'); ?></span>
             </button>
         </div>
     </div>

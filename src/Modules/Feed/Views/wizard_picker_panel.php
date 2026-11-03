@@ -80,7 +80,7 @@ use Lwt\Shared\UI\Helpers\IconHelper;
     <div class="modal-card">
         <header class="modal-card-head">
             <p class="modal-card-title">
-                <span class="icon mr-2">
+                <span class="icon me-2">
                     <?php echo IconHelper::render('settings', ['alt' => __('feed.wizard.common.settings')]); ?>
                 </span>
                 <?php echo __e('feed.wizard.common.settings_title'); ?>

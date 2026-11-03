@@ -45,7 +45,7 @@ $settings = array_map(
 <div class="notification is-info is-light mb-5">
     <span class="icon-text">
         <?php echo IconHelper::render('settings', ['alt' => 'Preferences']); ?>
-        <span class="ml-2">
+        <span class="ms-2">
             <?= __('admin.settings_preferences_link') ?>
             <a href="/profile/preferences"><strong><?= __('admin.settings_preferences_link_target') ?></strong></a>
         </span>
@@ -60,7 +60,7 @@ $settings = array_map(
         <header class="card-header is-clickable" @click="open = !open">
             <p class="card-header-title">
                 <?php echo IconHelper::render('rss', ['alt' => 'Newsfeeds']); ?>
-                <span class="ml-2"><?= __('admin.settings_section_newsfeeds') ?></span>
+                <span class="ms-2"><?= __('admin.settings_section_newsfeeds') ?></span>
             </p>
             <button
                 type="button"
@@ -191,7 +191,7 @@ $settings = array_map(
         <header class="card-header is-clickable" @click="open = !open">
             <p class="card-header-title">
                 <?php echo IconHelper::render('users', ['alt' => 'Multi-User']); ?>
-                <span class="ml-2"><?= __('admin.settings_section_multi_user') ?></span>
+                <span class="ms-2"><?= __('admin.settings_section_multi_user') ?></span>
             </p>
             <button
                 type="button"
