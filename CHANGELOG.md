@@ -24,6 +24,10 @@ ones are marked like "v1.0.0-fork".
   Complete, but machine-translated and not yet reviewed by a native
   speaker: please open an issue for any string that reads wrong.
 
+* **Arabic (`ar`) interface locale**, the second right-to-left one. Also
+  complete and machine-translated, with the same invitation: please open
+  an issue for any string that reads wrong.
+
 ### Changed
 
 * **The nine shipped locales are complete again** (#266). 3.7.0 moved the Anki
