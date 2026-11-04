@@ -80,7 +80,7 @@ class TermApiController
             'romanization' => $term->romanization(),
             'sentence' => $term->sentence(),
             'status' => $term->status()->toInt(),
-            'langId' => $term->languageId(),
+            'langId' => $term->languageId()->toInt(),
         ])->send();
     }
 
