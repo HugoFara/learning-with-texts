@@ -217,7 +217,7 @@ class TermStatusApiHandler
             SET WoStatus = ?, WoStatusChanged = NOW()
             WHERE WoID = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
-            [$status, $wid]
+            $bindings
         );
     }
 

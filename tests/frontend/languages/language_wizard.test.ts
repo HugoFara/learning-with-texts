@@ -218,6 +218,7 @@ describe('language_wizard.ts', () => {
         <select id="l1"><option value="">Select...</option><option value="English">English</option></select>
         <select id="l2"><option value="">Select...</option><option value="French">French</option></select>
         <input name="LgTargetLang" />
+        <input name="LgTargetLang" />
         <input name="LgDict1URI" />
         <input name="LgDict1PopUp" type="checkbox" />
         <input name="LgGoogleTranslateURI" />
@@ -285,6 +286,7 @@ describe('language_wizard.ts', () => {
           <option value="French">French</option>
           <option value="German">German</option>
         </select>
+        <input name="LgTargetLang" />
         <input name="LgDict1URI" />
         <input name="LgDict1PopUp" type="checkbox" />
         <input name="LgGoogleTranslateURI" />
@@ -358,9 +360,7 @@ describe('language_wizard.ts', () => {
       expect(popupInput.checked).toBe(true);
     });
 
-    it('sets Google Translate URL when available', () => {
-      (window as any).GGTRANSLATE = 'https://translate.google.com/?source=fr&target=en';
-
+    it('sets the Google Translate URL and target language', () => {
       const l1Select = document.getElementById('l1') as HTMLSelectElement;
       const l2Select = document.getElementById('l2') as HTMLSelectElement;
       l1Select.value = 'English';
@@ -368,8 +368,97 @@ describe('language_wizard.ts', () => {
 
       languageWizard.updateDictionaryUrls();
 
-      const input = document.querySelector('input[name="LgGoogleTranslateURI"]') as HTMLInputElement;
-      expect(input.value).toBe('https://translate.google.com/?source=fr&target=en');
+      const url = new URL((document.querySelector('input[name="LgGoogleTranslateURI"]') as HTMLInputElement).value);
+      expect(url.hostname).toBe('translate.google.com');
+      expect(url.searchParams.get('sl')).toBe('fr');
+      expect(url.searchParams.get('tl')).toBe('en');
+      expect((document.querySelector('input[name="LgTargetLang"]') as HTMLInputElement).value).toBe('en');
+    });
+  });
+
+  // ===========================================================================
+  // Alpine form state
+  // ===========================================================================
+
+  describe('keeping the x-model state in step', () => {
+    /** What Alpine would hold after reading the events x-model listens to. */
+    function trackModel(): Record<string, string | boolean> {
+      const model: Record<string, string | boolean> = {};
+      document.querySelectorAll<HTMLInputElement>('[name^="Lg"]').forEach((el) => {
+        const onChange = el.type === 'checkbox' || el.tagName === 'SELECT';
+        el.addEventListener(onChange ? 'change' : 'input', () => {
+          model[el.name] = el.type === 'checkbox' ? el.checked : el.value;
+        });
+      });
+      return model;
+    }
+
+    beforeEach(() => {
+      languageWizard.langDefs = {
+        'English': ['en', 'en', false, 'a-z', '.!?', false, false, false],
+        'French': ['fr', 'fr', false, 'a-z', '.!?', false, false, false],
+        'Japanese': ['ja', 'ja', true, 'kana', '。', true, true, false, 'mecab']
+      };
+      document.body.innerHTML = `
+        <select id="l1"><option value="English">English</option></select>
+        <select id="l2">
+          <option value="French">French</option>
+          <option value="Japanese">Japanese</option>
+        </select>
+        <input name="LgName" />
+        <input name="LgSourceLang" />
+        <input name="LgTargetLang" />
+        <input name="LgDict1URI" />
+        <input name="LgDict1PopUp" type="checkbox" />
+        <input name="LgGoogleTranslateURI" />
+        <input name="LgTextSize" />
+        <input name="LgRegexpSplitSentences" />
+        <input name="LgRegexpWordCharacters" />
+        <input name="LgSplitEachChar" type="checkbox" />
+        <input name="LgRemoveSpaces" type="checkbox" />
+        <input name="LgRightToLeft" type="checkbox" />
+        <select name="LgParserType">
+          <option value="">Automatic</option>
+          <option value="regex">Regex</option>
+          <option value="mecab">MeCab</option>
+        </select>
+      `;
+    });
+
+    it('reports every preset field to the form state', () => {
+      const model = trackModel();
+      (document.getElementById('l1') as HTMLSelectElement).value = 'English';
+      (document.getElementById('l2') as HTMLSelectElement).value = 'Japanese';
+
+      languageWizard.onL2Change();
+
+      expect(model).toMatchObject({
+        LgName: 'Japanese',
+        LgSourceLang: 'ja',
+        LgTargetLang: 'en',
+        LgDict1URI: 'https://glosbe.com/ja/en/lwt_term',
+        LgDict1PopUp: true,
+        LgRegexpWordCharacters: 'kana',
+        LgRegexpSplitSentences: '。',
+        LgSplitEachChar: true,
+        LgRemoveSpaces: true,
+        LgRightToLeft: false,
+        LgParserType: 'mecab'
+      });
+      expect(model.LgGoogleTranslateURI).toContain('translate.google.com');
+    });
+
+    it('clears the parser when the next preset does not name one', () => {
+      const model = trackModel();
+      const l2 = document.getElementById('l2') as HTMLSelectElement;
+      (document.getElementById('l1') as HTMLSelectElement).value = 'English';
+      l2.value = 'Japanese';
+      languageWizard.onL2Change();
+      l2.value = 'French';
+
+      languageWizard.onL2Change();
+
+      expect(model.LgParserType).toBe('');
     });
   });
 
