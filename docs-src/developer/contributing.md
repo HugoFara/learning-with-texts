@@ -327,7 +327,7 @@ php bin/check-locales.php --json         # Machine-readable output
 php bin/check-locales.php --fail-under=90  # Exit 1 if a locale drops below 90%
 ```
 
-The same script runs in CI on every push and pull request, so a missing key shows
+The same script runs in CI on every push to `main` and on pull requests that touch `locale/`, so a missing key shows
 up in the `Locale completion` workflow before it reaches a reader.
 
 ### Improving a Translation
