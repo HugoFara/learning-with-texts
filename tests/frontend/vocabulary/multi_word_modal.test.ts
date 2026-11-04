@@ -1,6 +1,7 @@
 /**
  * Tests for multi_word_modal.ts - Alpine.js component for multi-word expression editing.
  */
+import * as focusTrap from '../../../src/frontend/js/shared/accessibility/focus_trap';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Alpine from 'alpinejs';
 
@@ -192,6 +193,24 @@ describe('multi_word_modal.ts', () => {
         component.close();
 
         expect(mockStore.close).toHaveBeenCalled();
+      });
+
+      it('keeps the focus trap when the user keeps editing', async () => {
+        mockStore.close = vi.fn().mockResolvedValue(false);
+        const releaseFocus = vi.spyOn(focusTrap, 'releaseFocus');
+
+        await multiWordModalData().close();
+
+        expect(releaseFocus).not.toHaveBeenCalled();
+      });
+
+      it('releases the focus trap once closed', async () => {
+        mockStore.close = vi.fn().mockResolvedValue(true);
+        const releaseFocus = vi.spyOn(focusTrap, 'releaseFocus');
+
+        await multiWordModalData().close();
+
+        expect(releaseFocus).toHaveBeenCalled();
       });
     });
 

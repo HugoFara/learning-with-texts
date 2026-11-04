@@ -3353,3 +3353,24 @@ Searchable Select Component (Alpine.js)
   border-bottom: none;
   padding-bottom: 0;
 }
+
+/* In-app confirmation, above the term dialogs and .lwt-modal */
+.confirm-dialog {
+  z-index: 10001;
+}
+
+.confirm-dialog .modal-background {
+  background-color: rgba(10, 10, 10, 0.6);
+}
+
+.confirm-dialog .modal-card {
+  border-radius: 0.75rem;
+  max-width: 28rem;
+  overflow: hidden;
+  width: calc(100% - 2rem);
+}
+
+.confirm-dialog__actions {
+  gap: 0.5rem;
+  justify-content: flex-end;
+}

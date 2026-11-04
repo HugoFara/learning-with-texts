@@ -45,5 +45,9 @@
     "status_learned": "Aprendida",
     "status_well_known": "Bem conhecida",
     "status_ignored": "Ignorada",
-    "status_unknown": "Desconhecida"
+    "status_unknown": "Desconhecida",
+    "dialog.discard_title": "Descartar as alterações?",
+    "dialog.discard_message": "As alterações neste termo não foram guardadas.",
+    "dialog.discard": "Descartar",
+    "dialog.keep_editing": "Continuar a editar"
 }

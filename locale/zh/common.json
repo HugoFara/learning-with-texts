@@ -45,5 +45,9 @@
     "status_learned": "已学会",
     "status_well_known": "熟知",
     "status_ignored": "已忽略",
-    "status_unknown": "未知"
+    "status_unknown": "未知",
+    "dialog.discard_title": "放弃更改？",
+    "dialog.discard_message": "您对此词条的更改尚未保存。",
+    "dialog.discard": "放弃",
+    "dialog.keep_editing": "继续编辑"
 }

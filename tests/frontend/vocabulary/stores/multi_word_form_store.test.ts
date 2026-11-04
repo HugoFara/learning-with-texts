@@ -3,6 +3,12 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
+// In-app confirmation
+const mockConfirmDiscard = vi.hoisted(() => vi.fn());
+vi.mock('../../../../src/frontend/js/shared/components/confirm_dialog', () => ({
+  confirmDiscardChanges: mockConfirmDiscard
+}));
+
 // Mock Alpine.js
 const mockAlpineStore = vi.fn();
 vi.mock('alpinejs', () => ({
@@ -305,7 +311,7 @@ describe('multi_word_form_store.ts', () => {
       expect(storeData.isVisible).toBe(false);
     });
 
-    it('prompts confirmation when dirty and resets on confirm', () => {
+    it('prompts confirmation when dirty and resets on confirm', async () => {
       storeData.originalData = {
         text: 'test',
         textLc: 'test',
@@ -318,15 +324,15 @@ describe('multi_word_form_store.ts', () => {
       storeData.formData.translation = 'changed';
       storeData.isVisible = true;
 
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      mockConfirmDiscard.mockResolvedValue(true);
 
-      storeData.close();
+      await expect(storeData.close()).resolves.toBe(true);
 
-      expect(window.confirm).toHaveBeenCalled();
+      expect(mockConfirmDiscard).toHaveBeenCalled();
       expect(storeData.isVisible).toBe(false);
     });
 
-    it('does not close when dirty and user cancels', () => {
+    it('does not close when dirty and user cancels', async () => {
       storeData.originalData = {
         text: 'test',
         textLc: 'test',
@@ -339,11 +345,11 @@ describe('multi_word_form_store.ts', () => {
       storeData.formData.translation = 'changed';
       storeData.isVisible = true;
 
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      mockConfirmDiscard.mockResolvedValue(false);
 
-      storeData.close();
+      await expect(storeData.close()).resolves.toBe(false);
 
-      expect(window.confirm).toHaveBeenCalled();
+      expect(mockConfirmDiscard).toHaveBeenCalled();
       expect(storeData.isVisible).toBe(true);
     });
   });

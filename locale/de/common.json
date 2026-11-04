@@ -45,5 +45,9 @@
     "status_learned": "Gelernt",
     "status_well_known": "Bekannt",
     "status_ignored": "Ignoriert",
-    "status_unknown": "Unbekannt"
+    "status_unknown": "Unbekannt",
+    "dialog.discard_title": "Änderungen verwerfen?",
+    "dialog.discard_message": "Ihre Änderungen an diesem Begriff wurden nicht gespeichert.",
+    "dialog.discard": "Verwerfen",
+    "dialog.keep_editing": "Weiter bearbeiten"
 }

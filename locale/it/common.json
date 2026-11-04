@@ -45,5 +45,9 @@
     "status_learned": "Appresa",
     "status_well_known": "Ben conosciuta",
     "status_ignored": "Ignorata",
-    "status_unknown": "Sconosciuta"
+    "status_unknown": "Sconosciuta",
+    "dialog.discard_title": "Annullare le modifiche?",
+    "dialog.discard_message": "Le modifiche a questo termine non sono state salvate.",
+    "dialog.discard": "Annulla modifiche",
+    "dialog.keep_editing": "Continua a modificare"
 }

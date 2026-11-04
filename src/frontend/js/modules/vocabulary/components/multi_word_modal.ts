@@ -66,7 +66,7 @@ export interface MultiWordModalData {
   init(): void;
 
   // Methods
-  close(): void;
+  close(): Promise<void>;
   save(): Promise<void>;
   setStatus(status: number): void;
   clearGeneralError(): void;
@@ -224,9 +224,11 @@ export function multiWordModalData(): MultiWordModalData {
     /**
      * Close the modal.
      */
-    close(): void {
-      releaseFocus();
-      this.store.close();
+    async close(): Promise<void> {
+      // Only once it has closed: the user may choose to keep editing.
+      if (await this.store.close()) {
+        releaseFocus();
+      }
     },
 
     /**

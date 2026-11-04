@@ -45,5 +45,9 @@
     "status_learned": "مُتعلَّم",
     "status_well_known": "معروف جيدًا",
     "status_ignored": "متجاهَل",
-    "status_unknown": "غير معروف"
+    "status_unknown": "غير معروف",
+    "dialog.discard_title": "هل تريد تجاهل التغييرات؟",
+    "dialog.discard_message": "لم تُحفظ تغييراتك على هذا المصطلح.",
+    "dialog.discard": "تجاهل",
+    "dialog.keep_editing": "متابعة التعديل"
 }

@@ -15,6 +15,9 @@ ones are marked like "v1.0.0-fork".
 
 ### Fixed in Unreleased
 
+* The unsaved-changes prompt in the term dialogs is now an in-app dialog that
+  follows the theme and the interface language, instead of the browser's.
+
 * The "Email not verified" banner no longer follows accounts that have no
   email address.
 

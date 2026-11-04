@@ -45,5 +45,9 @@
     "status_learned": "یادگرفته",
     "status_well_known": "کاملاً شناخته‌شده",
     "status_ignored": "نادیده‌گرفته",
-    "status_unknown": "ناشناخته"
+    "status_unknown": "ناشناخته",
+    "dialog.discard_title": "تغییرات کنار گذاشته شوند؟",
+    "dialog.discard_message": "تغییرات شما در این واژه ذخیره نشده است.",
+    "dialog.discard": "کنار گذاشتن",
+    "dialog.keep_editing": "ادامهٔ ویرایش"
 }
