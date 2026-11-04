@@ -141,6 +141,30 @@ class Settings
     }
 
     /**
+     * Get the value the current user saved themselves.
+     *
+     * Unlike getWithDefault(), this tells "chose the default" from "never
+     * chose", which matters when a choice has to beat another source.
+     *
+     * @param string $key Setting key
+     *
+     * @return string The user's own value, '' if they have none or nobody is signed in
+     */
+    public static function getOwnValue(string $key): string
+    {
+        $userId = Globals::getCurrentUserId();
+        if ($key === '' || $userId === null) {
+            return '';
+        }
+
+        return trim((string) Connection::preparedFetchValue(
+            "SELECT StValue FROM settings WHERE StKey = ? AND StUsID = ?",
+            [$key, $userId],
+            'StValue'
+        ));
+    }
+
+    /**
      * Save the setting identified by a key with a specific value.
      *
      * @param string $k Setting key

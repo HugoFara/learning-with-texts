@@ -874,7 +874,7 @@ class InputValidator
 
         if (self::has($reqKey)) {
             $value = self::getString($reqKey);
-            \Lwt\Shared\Infrastructure\Database\Settings::save($dbKey, $value);
+            \Lwt\Shared\Infrastructure\Database\Settings::savePerUser($dbKey, $value);
             return $value;
         }
 
@@ -906,7 +906,7 @@ class InputValidator
 
         if (self::has($reqKey)) {
             $value = self::getInt($reqKey, $default);
-            \Lwt\Shared\Infrastructure\Database\Settings::save($dbKey, (string) ($value ?? $default));
+            \Lwt\Shared\Infrastructure\Database\Settings::savePerUser($dbKey, (string) ($value ?? $default));
             return $value ?? $default;
         }
 

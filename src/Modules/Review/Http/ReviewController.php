@@ -23,6 +23,7 @@ use Lwt\Shared\Http\BaseController;
 use Lwt\Modules\Review\Application\ReviewFacade;
 use Lwt\Modules\Review\Infrastructure\SessionStateManager;
 use Lwt\Modules\Language\Application\LanguageFacade;
+use Lwt\Shared\Infrastructure\Language\CurrentLanguage;
 use Lwt\Shared\Infrastructure\Language\LanguagePresets;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 
@@ -122,6 +123,9 @@ class ReviewController extends BaseController
     private function renderReviewPage(): void
     {
         $langId = $this->param('lang') !== '' ? (int) $this->param('lang') : null;
+        if ($langId !== null) {
+            CurrentLanguage::follow($langId);
+        }
         $textId = $this->param('text') !== '' ? (int) $this->param('text') : null;
         $selection = $this->param('selection') !== '' ? (int) $this->param('selection') : null;
 

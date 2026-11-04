@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace Lwt\Shared\Infrastructure\Routing\Middleware;
 
 use Lwt\Modules\User\Domain\User;
+use Lwt\Shared\I18n\UserLocale;
 use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Modules\User\Application\UserFacade;
 use Lwt\Shared\Infrastructure\Container\Container;
@@ -90,6 +91,7 @@ class AdminMiddleware implements MiddlewareInterface
             return false;
         }
 
+        UserLocale::apply();
         return true;
     }
 

@@ -23,10 +23,10 @@ use Lwt\Shared\Infrastructure\Database\Settings;
 /**
  * Resolves the language the user is currently working in.
  *
- * The `currentlanguage` setting is only written when the user actively picks a
- * language from the navbar dropdown. Two situations leave it unset or stale, and
- * both used to surface as "no language selected" even though the navbar showed
- * one:
+ * The `currentlanguage` setting is written when the user picks a language from
+ * the navbar dropdown, or when they start working in one (see follow()). Two
+ * situations can still leave it unset or stale, and both used to surface as
+ * "no language selected" even though the navbar showed one:
  *
  * - A user who has just created their first language has never fired the
  *   dropdown's `change` event. With exactly one language there is no other
@@ -39,8 +39,8 @@ use Lwt\Shared\Infrastructure\Database\Settings;
  * browser falls back to displaying the first option. The display and the stored
  * state disagreed, and every server-side consumer read 0.
  *
- * This resolver is the single answer to "which language is active?". It is
- * read-only on purpose: it never writes the setting, so a plain GET has no side
+ * resolveId() is the single answer to "which language is active?". It is
+ * read-only on purpose: it never writes the setting, so resolving has no side
  * effects and the same request always resolves the same way.
  *
  * Callers that need the id to agree with what the navbar displays must use this
@@ -69,6 +69,27 @@ class CurrentLanguage
             return self::firstAvailableId();
         } catch (\Throwable $e) {
             return 0;
+        }
+    }
+
+    /**
+     * Make a language current because the user started working in it.
+     *
+     * Keeps the navbar in step with the page: without this, opening a text in
+     * another language leaves the navbar and the next filtered page on the old
+     * one. Only the user's own languages count, since the lookup is user-scoped.
+     *
+     * @param int $languageId Language the user is now working in
+     *
+     * @return void
+     */
+    public static function follow(int $languageId): void
+    {
+        if ($languageId <= 0 || (int) Settings::get('currentlanguage') === $languageId) {
+            return;
+        }
+        if (self::exists($languageId)) {
+            Settings::savePerUser('currentlanguage', (string) $languageId);
         }
     }
 
