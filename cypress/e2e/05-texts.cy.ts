@@ -285,3 +285,23 @@ describe('Texts Management', () => {
     });
   });
 });
+
+describe('Leaving a changed text form', () => {
+  it('asks in the page before a link discards the text', () => {
+    startPastedText();
+    cy.get('input[name="TxTitle"]').type('Unsaved').blur();
+
+    // Keeping the edit stays on the form with the text intact.
+    cy.contains('a', 'Cancel').click();
+    cy.get('.confirm-dialog').should('contain.text', 'this page');
+    cy.get('.confirm-dialog .button').not('.is-danger').click();
+    cy.get('.confirm-dialog').should('not.exist');
+    cy.location('pathname').should('eq', '/texts/new');
+    cy.get('input[name="TxTitle"]').should('have.value', 'Unsaved');
+
+    // Discarding leaves, and no native prompt stands in the way.
+    cy.contains('a', 'Cancel').click();
+    cy.get('.confirm-dialog .button.is-danger').click();
+    cy.location('pathname').should('eq', '/');
+  });
+});

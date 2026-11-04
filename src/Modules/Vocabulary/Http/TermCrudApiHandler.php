@@ -118,7 +118,7 @@ class TermCrudApiHandler
             'sentence' => $term->sentence(),
             'status' => $term->status()->toInt(),
             'statusLabel' => TermStatusService::getStatusName($term->status()->toInt()),
-            'langId' => $term->languageId(),
+            'langId' => $term->languageId()->toInt(),
             'wordCount' => $term->wordCount(),
         ];
     }

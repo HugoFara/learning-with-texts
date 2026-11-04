@@ -48,6 +48,7 @@
     "status_unknown": "غير معروف",
     "dialog.discard_title": "هل تريد تجاهل التغييرات؟",
     "dialog.discard_message": "لم تُحفظ تغييراتك على هذا المصطلح.",
+    "dialog.leave_message": "لم تُحفظ تغييراتك في هذه الصفحة.",
     "dialog.discard": "تجاهل",
     "dialog.keep_editing": "متابعة التعديل",
     "dialog.confirm": "تأكيد",

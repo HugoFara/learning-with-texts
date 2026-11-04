@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   lwtFormCheck,
 } from '../../../src/frontend/js/shared/forms/unloadformcheck';
+import { settle } from '../helpers/confirm_answers';
 
 describe('unloadformcheck.ts', () => {
   beforeEach(() => {
@@ -310,6 +311,123 @@ describe('unloadformcheck.ts', () => {
     it('tagChanged returns void', () => {
       const result = lwtFormCheck.tagChanged(false);
       expect(result).toBeUndefined();
+    });
+  });
+
+  // ===========================================================================
+  // Links on a changed form
+  // ===========================================================================
+
+  describe('following a link from a changed form', () => {
+    const assign = vi.fn();
+
+    function dialogButton(selector: string): HTMLButtonElement {
+      const found = document.querySelector<HTMLButtonElement>(`.confirm-dialog ${selector}`);
+      if (!found) throw new Error(`No button "${selector}"`);
+      return found;
+    }
+
+    function click(link: Element, init: MouseEventInit = {}): MouseEvent {
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true, ...init });
+      link.dispatchEvent(event);
+      return event;
+    }
+
+    function linkTo(href: string, attributes: Record<string, string> = {}): HTMLAnchorElement {
+      const link = document.createElement('a');
+      link.href = href;
+      Object.entries(attributes).forEach(([name, value]) => link.setAttribute(name, value));
+      document.body.appendChild(link);
+      return link;
+    }
+
+    beforeEach(() => {
+      vi.stubGlobal('location', Object.assign(new URL(window.location.href), { assign }));
+      lwtFormCheck.askBeforeExit();
+      lwtFormCheck.dirty = true;
+    });
+
+    afterEach(async () => {
+      document.querySelector<HTMLElement>('.confirm-dialog .button.is-danger')?.click();
+      await settle();
+      vi.unstubAllGlobals();
+      assign.mockClear();
+      lwtFormCheck.dirty = false;
+    });
+
+    it('asks in the page and stays when the user keeps editing', async () => {
+      const event = click(linkTo('/texts'));
+
+      expect(event.defaultPrevented).toBe(true);
+      expect(document.querySelector('.confirm-dialog')).not.toBeNull();
+
+      dialogButton('.button:not(.is-danger)').click();
+      await settle();
+
+      expect(assign).not.toHaveBeenCalled();
+      expect(lwtFormCheck.dirty).toBe(true);
+    });
+
+    it('leaves without the native prompt when the user discards', async () => {
+      const link = linkTo('/texts');
+      click(link);
+
+      dialogButton('.button.is-danger').click();
+      await settle();
+
+      expect(assign).toHaveBeenCalledWith(link.href);
+      expect(lwtFormCheck.dirty).toBe(false);
+    });
+
+    it('does not ask when nothing changed', () => {
+      lwtFormCheck.dirty = false;
+
+      expect(click(linkTo('/texts')).defaultPrevented).toBe(false);
+      expect(document.querySelector('.confirm-dialog')).toBeNull();
+    });
+
+    it('does not ask for a click on anything but a link', () => {
+      document.body.innerHTML = '<button type="button">Tab</button>';
+
+      click(document.querySelector('button') as Element);
+
+      expect(document.querySelector('.confirm-dialog')).toBeNull();
+    });
+
+    it('does not ask when the link handles its own click', () => {
+      const link = linkTo('/texts');
+      link.addEventListener('click', (event) => event.preventDefault());
+
+      click(link);
+
+      expect(document.querySelector('.confirm-dialog')).toBeNull();
+    });
+
+    it.each([
+      ['an in-page anchor', '#section', {}],
+      ['a new tab', '/texts', { target: '_blank' }],
+      ['a download', '/export.csv', { download: '' }],
+      ['a mail link', 'mailto:someone@example.test', {}]
+    ])('does not ask for %s', (_name, href, attributes) => {
+      expect(click(linkTo(href, attributes)).defaultPrevented).toBe(false);
+      expect(document.querySelector('.confirm-dialog')).toBeNull();
+    });
+
+    it.each([
+      ['Ctrl', { ctrlKey: true }],
+      ['Cmd', { metaKey: true }],
+      ['Shift', { shiftKey: true }]
+    ])('does not ask for %s-click, which opens elsewhere', (_name, init) => {
+      expect(click(linkTo('/texts'), init).defaultPrevented).toBe(false);
+    });
+
+    it('adds one listener however often forms ask', () => {
+      lwtFormCheck.askBeforeExit();
+      lwtFormCheck.askBeforeExit();
+
+      click(linkTo('/texts'));
+
+      expect(document.querySelectorAll('.confirm-dialog').length).toBe(1);
     });
   });
 });

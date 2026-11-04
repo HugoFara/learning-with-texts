@@ -19,6 +19,7 @@ import { ProfileApi } from '../api/profile_api';
 /** Alpine state for the preferences page. */
 export interface PreferencesAppData {
   settings: Record<string, string>;
+  loadedLocale: string | undefined;
   isLoading: boolean;
   isSaving: boolean;
   error: string;
@@ -41,6 +42,7 @@ export interface PreferencesAppData {
 export function preferencesAppData(): PreferencesAppData {
   return {
     settings: {},
+    loadedLocale: undefined,
     isLoading: false,
     isSaving: false,
     error: '',
@@ -63,6 +65,7 @@ export function preferencesAppData(): PreferencesAppData {
       }
 
       this.settings = response.data.settings;
+      this.loadedLocale = this.settings.app_language;
     },
 
     async save(): Promise<void> {
@@ -78,6 +81,12 @@ export function preferencesAppData(): PreferencesAppData {
         this.error = (body && body.error)
           ? body.error
           : (response.error || t('user.flash.preferences_failed'));
+        return;
+      }
+
+      if (this.settings.app_language !== this.loadedLocale) {
+        // The page is already rendered in the old language.
+        window.location.reload();
         return;
       }
 

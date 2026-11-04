@@ -30,7 +30,7 @@ class ApplicationInfo
     /**
      * Version of this current LWT application.
      */
-    public const VERSION = '3.8.1-fork';
+    public const VERSION = '3.8.2-fork';
 
     /**
      * Date of the latest published release of LWT.

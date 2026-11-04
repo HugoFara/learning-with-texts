@@ -51,12 +51,9 @@ describe('Sync reviews with a real Anki', () => {
   const extraDecks: string[] = [];
 
   before(() => {
-    cy.request({ method: 'POST', url: anki, body: { action: 'version', version: 6 }, failOnStatusCode: false, timeout: 3000 })
-      .then((response) => {
-        ankiUp = response.status === 200 && (response.body as { result?: number }).result === 6;
-      }, () => {
-        ankiUp = false;
-      });
+    cy.task<number | null>('ankiConnectVersion', anki).then((version) => {
+      ankiUp = version === 6;
+    });
   });
 
   beforeEach(function () {

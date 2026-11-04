@@ -48,6 +48,7 @@
     "status_unknown": "ناشناخته",
     "dialog.discard_title": "تغییرات کنار گذاشته شوند؟",
     "dialog.discard_message": "تغییرات شما در این واژه ذخیره نشده است.",
+    "dialog.leave_message": "تغییرات شما در این صفحه ذخیره نشده است.",
     "dialog.discard": "کنار گذاشتن",
     "dialog.keep_editing": "ادامهٔ ویرایش",
     "dialog.confirm": "تأیید",

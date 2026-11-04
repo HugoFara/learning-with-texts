@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace Lwt\Shared\Infrastructure\Routing\Middleware;
 
+use Lwt\Shared\I18n\UserLocale;
 use Lwt\Shared\Infrastructure\Globals;
 use Lwt\Modules\User\Application\UserFacade;
 use Lwt\Shared\Infrastructure\Container\Container;
@@ -84,11 +85,13 @@ class AuthMiddleware implements MiddlewareInterface
 
         // Try session authentication
         if ($this->validateSession()) {
+            UserLocale::apply();
             return true;
         }
 
         // Try API token authentication
         if ($this->validateApiToken()) {
+            UserLocale::apply();
             return true;
         }
 

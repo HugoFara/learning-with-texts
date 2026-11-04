@@ -22,6 +22,7 @@ use Lwt\Modules\Text\Application\TextFacade;
 use Lwt\Modules\Text\Application\Services\TextDisplayService;
 use Lwt\Modules\Text\Application\Services\TextNavigationService;
 use Lwt\Shared\Infrastructure\Database\Settings;
+use Lwt\Shared\Infrastructure\Language\CurrentLanguage;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 use Lwt\Shared\Infrastructure\Http\RedirectResponse;
 use Lwt\Modules\Activity\Infrastructure\MySqlActivityRepository;
@@ -148,6 +149,7 @@ class TextReadController extends BaseController
         // neither is rendered server-side here.
 
         Settings::savePerUser('currenttext', $textId);
+        CurrentLanguage::follow($langId);
 
         PageLayoutHelper::renderPageStartNobody(__('text.titles.read'), 'full-width');
         include self::MODULE_VIEWS . '/read_desktop.php';

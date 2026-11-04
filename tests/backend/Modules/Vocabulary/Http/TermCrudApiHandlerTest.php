@@ -124,6 +124,7 @@ class TermCrudApiHandlerTest extends TestCase
         $this->assertArrayHasKey('status', $result);
         $this->assertArrayHasKey('statusLabel', $result);
         $this->assertArrayHasKey('langId', $result);
+        $this->assertIsInt($result['langId']);
         $this->assertArrayHasKey('wordCount', $result);
     }
 

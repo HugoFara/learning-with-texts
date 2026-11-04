@@ -26,6 +26,7 @@ use Lwt\Shared\Http\ApiRoutableTrait;
 use Lwt\Shared\Infrastructure\Http\JsonResponse;
 use Lwt\Api\V1\Response;
 use Lwt\Modules\Language\Application\LanguageFacade;
+use Lwt\Shared\Infrastructure\Language\CurrentLanguage;
 use Lwt\Shared\Infrastructure\Language\LanguagePresets;
 use Lwt\Modules\Text\Application\Services\SentenceService;
 use Lwt\Modules\Vocabulary\Application\UseCases\FindSimilarTerms;
@@ -368,6 +369,7 @@ class LanguageApiHandler implements ApiRoutableInterface
 
         $id = $this->languageFacade->createFromData($data);
         if ($id > 0) {
+            CurrentLanguage::follow($id);
             return ['success' => true, 'id' => $id];
         }
 
@@ -501,7 +503,7 @@ class LanguageApiHandler implements ApiRoutableInterface
      */
     public function formatSetDefault(int $id): array
     {
-        Settings::save('currentlanguage', (string)$id);
+        Settings::savePerUser('currentlanguage', (string)$id);
         return ['success' => true];
     }
 

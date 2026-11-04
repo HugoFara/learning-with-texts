@@ -48,6 +48,7 @@
     "status_unknown": "不明",
     "dialog.discard_title": "変更を破棄しますか？",
     "dialog.discard_message": "この用語への変更は保存されていません。",
+    "dialog.leave_message": "このページの変更は保存されていません。",
     "dialog.discard": "破棄",
     "dialog.keep_editing": "編集を続ける",
     "dialog.confirm": "確認",
