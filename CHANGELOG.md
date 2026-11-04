@@ -7,7 +7,31 @@ ones are marked like "v1.0.0-fork".
 
 ## [Unreleased]
 
+### Changed in Unreleased
+
+* **The sign-in pages are one centred card** on every screen size. Login,
+  registration and password recovery no longer repeat the logo and title
+  above a narrow form.
+
 ### Fixed in Unreleased
+
+* The "Email not verified" banner no longer follows accounts that have no
+  email address.
+
+* Opening the Add Text page no longer loads every suggested Gutenberg book
+  in the background, and book previews have their own request quota, so
+  they cannot make saving a text fail with "Too Many Requests".
+
+* Terms added from the reader now count towards "terms created", and a text
+  counts as read once a day rather than on every page load.
+
+* A new term's translation appears under the word straight away, not after
+  a reload.
+
+* Dark theme: readable reader annotations, home cards and starter vocabulary
+  cards, and a darker background for empty days on the activity calendar.
+
+* The Anki import pages no longer show their heading twice.
 
 * **New languages lost their settings.** The language wizard filled the form
   on screen but not the form's state, so Save reported a missing name, and

@@ -99,9 +99,28 @@ export function gutenbergBrowserData(): GutenbergBrowserData {
     importing: null,
 
     init() {
-      const langId = getSelectedLanguageId();
-      if (langId > 0) {
-        this.fetchBooks(1);
+      let shown = false;
+      const start = () => {
+        shown = true;
+        if (getSelectedLanguageId() > 0) {
+          this.fetchBooks(1);
+        }
+      };
+
+      // The browser sits in the Add Text form from the start, hidden until
+      // the user picks Gutenberg, and each book it lists costs a request for
+      // its vocabulary stats. Hold off until it is actually on screen.
+      const root = document.querySelector('[x-data="gutenbergBrowser"]');
+      if (!root || typeof IntersectionObserver === 'undefined') {
+        start();
+      } else {
+        const observer = new IntersectionObserver((entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) {
+            observer.disconnect();
+            start();
+          }
+        });
+        observer.observe(root);
       }
 
       // Re-fetch when language selector changes (delegated on document)
@@ -109,7 +128,7 @@ export function gutenbergBrowserData(): GutenbergBrowserData {
         this.books = [];
         this.page = 1;
         this.error = '';
-        if (newLangId > 0) {
+        if (shown && newLangId > 0) {
           this.fetchBooks(1);
         }
       });

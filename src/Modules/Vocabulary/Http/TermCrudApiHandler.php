@@ -24,6 +24,7 @@ use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Shared\Infrastructure\Database\Maintenance;
 use Lwt\Shared\Infrastructure\Database\QueryBuilder;
 use Lwt\Shared\Infrastructure\Database\UserScopedQuery;
+use Lwt\Modules\Activity\Infrastructure\MySqlActivityRepository;
 use Lwt\Modules\Vocabulary\Application\VocabularyFacade;
 use Lwt\Modules\Vocabulary\Application\UseCases\FindSimilarTerms;
 use Lwt\Modules\Vocabulary\Application\Services\TermStatusService;
@@ -814,6 +815,8 @@ class TermCrudApiHandler
         }
 
         $wordId = $stmt->insertId();
+
+        (new MySqlActivityRepository())->incrementTermsCreated();
 
         // Update text items to link to this word
         // word_occurrences inherits user context via Ti2TxID -> texts FK

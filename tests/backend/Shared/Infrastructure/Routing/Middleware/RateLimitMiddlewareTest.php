@@ -176,6 +176,20 @@ class RateLimitMiddlewareTest extends TestCase
         $this->assertNotNull($this->storage->get('rate_limit:api:192.168.1.100'));
     }
 
+    public function testLibraryPreviewsCannotUseUpTheGeneralQuota(): void
+    {
+        $middleware = new RateLimitMiddleware($this->storage, 1, 60);
+
+        $_SERVER['REQUEST_URI'] = '/api/v1/texts/library-preview?url=x';
+        $this->assertTrue($middleware->handle());
+
+        $this->assertNotNull($this->storage->get('rate_limit:preview:192.168.1.100'));
+        $this->assertNull($this->storage->get('rate_limit:api:192.168.1.100'));
+
+        $_SERVER['REQUEST_URI'] = '/api/v1/texts';
+        $this->assertTrue($middleware->handle());
+    }
+
     public function testForwardedIpHeader(): void
     {
         $middleware = new RateLimitMiddleware($this->storage, 10, 60);

@@ -236,7 +236,13 @@ export function calendarHeatmap(): CalendarHeatmapState {
         rect.setAttribute('width', String(CELL_SIZE));
         rect.setAttribute('height', String(CELL_SIZE));
         rect.setAttribute('rx', '2');
-        rect.setAttribute('fill', COLORS[colorLevel(day.total, maxVal)]);
+        const level = colorLevel(day.total, maxVal);
+        rect.setAttribute('fill', COLORS[level]);
+        if (level === 0) {
+          // A fill attribute cannot read a CSS variable, and this one follows
+          // the theme, so that a dark page does not show a wall of white.
+          rect.style.fill = 'var(--bulma-border, #ebedf0)';
+        }
 
         const label = formatTooltip(day);
         rect.addEventListener('mouseenter', (e: MouseEvent) => {
