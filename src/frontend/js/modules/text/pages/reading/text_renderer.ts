@@ -57,6 +57,9 @@ function shouldShowTransForStatus(status: number, displayStatTrans: number): boo
   }
 }
 
+/** Settings of the latest render, for words annotated after the fact. */
+let lastSettings: RenderSettings | null = null;
+
 /**
  * Build annotation span HTML for a word.
  *
@@ -64,7 +67,10 @@ function shouldShowTransForStatus(status: number, displayStatTrans: number): boo
  * @param settings Render settings
  * @returns Annotation span HTML or empty string
  */
-function buildAnnotationSpan(word: WordData, settings: RenderSettings): string {
+function buildAnnotationSpan(
+  word: Pick<WordData, 'translation' | 'status'>,
+  settings: RenderSettings
+): string {
   const { showLearning, displayStatTrans } = settings;
 
   // Check if annotations should be shown for this word
@@ -307,6 +313,7 @@ export function renderParseWarning(warning: ParseWarning | null): string {
 }
 
 export function renderText(words: WordData[], settings: RenderSettings): string {
+  lastSettings = settings;
   if (words.length === 0) return '';
 
   const parts: string[] = [];
@@ -518,6 +525,14 @@ export function updateWordTranslationInDOM(
       } else {
         annSpan.remove();
       }
+    } else if (translation && lastSettings) {
+      // A word that was unknown when the text rendered has no span yet.
+      const status = Number(el.getAttribute('data_status'));
+      const before = (lastSettings.modeTrans ?? 1) >= 3;
+      el.insertAdjacentHTML(
+        before ? 'afterbegin' : 'beforeend',
+        buildAnnotationSpan({ translation, status }, lastSettings)
+      );
     }
   });
 }

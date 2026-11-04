@@ -3,6 +3,12 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
+// In-app confirmation
+const mockConfirmDiscard = vi.hoisted(() => vi.fn());
+vi.mock('../../../../src/frontend/js/shared/components/confirm_dialog', () => ({
+  confirmDiscardChanges: mockConfirmDiscard
+}));
+
 // Mock Alpine.js
 vi.mock('alpinejs', () => ({
   default: {
@@ -378,32 +384,29 @@ describe('word_edit_form.ts', () => {
       expect(mockFormStore.shouldReturnToInfo).toBe(true);
     });
 
-    it('shows confirmation when dirty', () => {
+    it('shows confirmation when dirty', async () => {
       mockFormStore.isDirty = true;
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      mockConfirmDiscard.mockResolvedValue(false);
 
-      const component = wordEditFormData();
-      component.cancel();
+      await wordEditFormData().cancel();
 
-      expect(confirmSpy).toHaveBeenCalled();
+      expect(mockConfirmDiscard).toHaveBeenCalled();
     });
 
-    it('does not cancel if user declines confirmation', () => {
+    it('does not cancel if user declines confirmation', async () => {
       mockFormStore.isDirty = true;
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      mockConfirmDiscard.mockResolvedValue(false);
 
-      const component = wordEditFormData();
-      component.cancel();
+      await wordEditFormData().cancel();
 
       expect(mockFormStore.shouldReturnToInfo).toBe(false);
     });
 
-    it('cancels if user confirms', () => {
+    it('cancels if user confirms', async () => {
       mockFormStore.isDirty = true;
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      mockConfirmDiscard.mockResolvedValue(true);
 
-      const component = wordEditFormData();
-      component.cancel();
+      await wordEditFormData().cancel();
 
       expect(mockFormStore.shouldReturnToInfo).toBe(true);
     });

@@ -97,8 +97,8 @@ describe('Books', () => {
         cy.get('table tbody tr', { timeout: 10000 }).should('have.length.at.least', 1);
         cy.contains('table tbody tr', 'EPUB').should('exist');
 
-        cy.on('window:confirm', () => true);
         cy.contains('table tbody tr', 'EPUB').find('button.is-danger').click();
+        cy.get('.confirm-dialog .button.is-danger').click();
 
         cy.get('.notification.is-info', { timeout: 10000 }).should('be.visible');
 

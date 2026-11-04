@@ -9,6 +9,7 @@
  * @since   3.4.0
  */
 
+import { confirmDeletion } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import { t } from '@shared/i18n/translator';
 import { BooksApi, type Book, type BookChapter } from '../api/books_api';
@@ -84,7 +85,7 @@ export function bookDetailData(): BookDetailData {
     },
 
     async remove() {
-      if (!this.book || !window.confirm(t('book.confirm_delete_book'))) {
+      if (!this.book || !await confirmDeletion(t('book.confirm_delete_book'))) {
         return;
       }
 

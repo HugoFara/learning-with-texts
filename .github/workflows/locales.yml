@@ -1,10 +1,21 @@
 name: Locale completion
 
+# Pull requests run what the change can affect; a push to main runs everything.
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
     branches: [ main, develop ]
+    paths:
+      - 'locale/**'
+      - 'bin/check-locales.php'
+      - '.github/workflows/locales.yml'
+
+# A new push to a pull request replaces the run in progress. Runs on main are
+# left to finish: they are the last full check before a release.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   check:

@@ -187,28 +187,35 @@ describe('Languages Management', () => {
     });
 
     it('should persist wizard-derived settings after saving', () => {
+      // The language keeps the name the wizard gave it, so clear what an
+      // interrupted run left behind.
+      const deleteDanish = () =>
+        cy.request('/api/v1/languages').then((response) => {
+          const languages = response.body.languages as Array<{ id: number; name: string }>;
+          languages.filter((l) => l.name === 'Danish').forEach((l) => {
+            cy.apiRequest({ method: 'DELETE', url: `/api/v1/languages/${l.id}` });
+          });
+        });
+      deleteDanish();
+
       cy.visit('/languages/new');
       cy.wait(500);
+
+      cy.get('input#l1').closest('.searchable-select').within(() => {
+        cy.get('.searchable-select__trigger').click();
+        cy.get('.searchable-select__dropdown input[type="text"]').type('English');
+        cy.get('.searchable-select__options li').contains('English').click();
+      });
 
       cy.get('input#l2').closest('.searchable-select').within(() => {
         cy.get('.searchable-select__trigger').click();
         cy.get('.searchable-select__dropdown input[type="text"]').type('Danish');
+        cy.get('.searchable-select__options li').contains('Danish').click();
       });
-      cy.get('.searchable-select__options li').contains('Danish').click();
       cy.wait(300);
 
-      const uniqueLangName = `Danish Test ${Date.now()}`;
-      cy.get('input[name="LgName"]').clear().type(uniqueLangName);
-
-      // The embedded wizard fills the parsing settings but not the dictionary
-      // URI, which is required — supply it the way a user would before saving.
-      cy.contains('Advanced Settings').click();
-      cy.get('input[name="LgDict1URI"]').then(($input) => {
-        if (!$input.val()) {
-          cy.wrap($input).type('https://example.com/###');
-        }
-      });
-
+      // Saved exactly as the wizard filled it in: retyping any field here
+      // would hide a wizard write that never reached the form's state.
       cy.get('form[name="lg_form"] button[type="submit"]').click();
 
       // Creating a language now hands off to the starter-vocabulary step.
@@ -218,15 +225,21 @@ describe('Languages Management', () => {
       // Alpine root and then for the card itself rather than a fixed delay.
       cy.visit('/languages');
       cy.get('[x-data="languageList"]').should('exist');
-      cy.contains(LANG_ROW, uniqueLangName, { timeout: 10000 })
+      cy.contains(LANG_ROW, 'Danish', { timeout: 10000 })
         .within(() => {
           cy.get('a[href*="/edit"]').click();
         });
 
-      cy.get('input[name="LgName"]').should('have.value', uniqueLangName);
+      cy.get('input[name="LgName"]').should('have.value', 'Danish');
       cy.contains('Advanced Settings').click();
+      cy.get('input[name="LgDict1URI"]').should('have.value', 'https://glosbe.com/da/en/lwt_term');
+      cy.get('input[name="LgGoogleTranslateURI"]').invoke('val').should('contain', 'translate.google.com');
+      cy.get('input[name="LgSourceLang"]').should('have.value', 'da');
+      cy.get('input[name="LgTargetLang"]').should('have.value', 'en');
       cy.get('input[name="LgRightToLeft"]').should('not.be.checked');
       cy.get('input[name="LgRegexpWordCharacters"]').invoke('val').should('not.be.empty');
+
+      deleteDanish();
     });
   });
 

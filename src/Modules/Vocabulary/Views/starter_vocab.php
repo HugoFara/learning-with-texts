@@ -94,7 +94,7 @@ $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 's
             <?php if ($isAvailable) : ?>
             <!-- Wiktionary frequency words source -->
             <label class="box mb-3 p-4" style="cursor: pointer;"
-                   :class="useWiktionary ? 'has-background-success-light' : ''">
+                   :class="useWiktionary ? 'has-background-success-soft' : ''">
                 <div class="is-flex is-align-items-center">
                     <input type="checkbox" class="me-3"
                            :checked="useWiktionary"
@@ -129,7 +129,7 @@ $externalLinkIcon = IconHelper::render('external-link', ['alt' => 'Download', 's
             <!-- Curated dictionaries -->
             <template x-for="source in dictSources" :key="source.name">
                 <label class="box mb-3 p-4" style="cursor: pointer;"
-                       :class="isSourceSelected(source.url) ? 'has-background-success-light' : ''">
+                       :class="isSourceSelected(source.url) ? 'has-background-success-soft' : ''">
                     <div class="is-flex is-align-items-center">
                         <input type="checkbox" class="me-3"
                                :checked="isSourceSelected(source.url)"

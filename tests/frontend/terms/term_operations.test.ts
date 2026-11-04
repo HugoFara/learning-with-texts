@@ -1,6 +1,7 @@
 /**
  * Tests for term_operations.ts - Translation updates, term editing, and annotations
  */
+import { dismissAlerts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Use vi.hoisted to define mocks that need to be available during module loading
@@ -457,11 +458,12 @@ describe('term_operations.ts', () => {
     });
 
     it('alerts on error response', async () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = dismissAlerts();
       mockApiPost.mockResolvedValue({ error: 'Test error message' });
 
       await saveImprovedTextAnnotation(123, 'rg1', '{}');
 
+      await settle();
       expect(alertSpy).toHaveBeenCalledWith(
         expect.stringContaining('Test error message')
       );
@@ -482,10 +484,11 @@ describe('term_operations.ts', () => {
 
     it('alerts when translation is empty', async () => {
       document.body.innerHTML = '<input id="trans-field" value="" />';
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = dismissAlerts();
 
       await updateTermTranslation(1, '#trans-field');
 
+      await settle();
       expect(alertSpy).toHaveBeenCalledWith(
         expect.stringContaining('empty')
       );
@@ -493,12 +496,13 @@ describe('term_operations.ts', () => {
 
     it('alerts when translation is asterisk', async () => {
       document.body.innerHTML = '<input id="trans-field" value="*" />';
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = dismissAlerts();
 
       await updateTermTranslation(1, '#trans-field');
 
+      await settle();
       expect(alertSpy).toHaveBeenCalledWith(
-        expect.stringContaining("'*'")
+        expect.stringContaining('*')
       );
     });
 
@@ -521,11 +525,12 @@ describe('term_operations.ts', () => {
     });
 
     it('alerts on error response', async () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = dismissAlerts();
       mockTermsApi.updateTranslation.mockResolvedValue({ error: 'DB error' });
 
       await updateTermTranslation(1, '#trans-field');
 
+      await settle();
       expect(alertSpy).toHaveBeenCalledWith(
         expect.stringContaining('DB error')
       );
@@ -546,10 +551,11 @@ describe('term_operations.ts', () => {
 
     it('alerts when translation is empty', async () => {
       document.body.innerHTML = '<input id="trans-field" value="" />';
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = dismissAlerts();
 
       await addTermTranslation('#trans-field', 'word', 1);
 
+      await settle();
       expect(alertSpy).toHaveBeenCalledWith(
         expect.stringContaining('empty')
       );
@@ -564,11 +570,12 @@ describe('term_operations.ts', () => {
     });
 
     it('alerts on error response', async () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = dismissAlerts();
       mockTermsApi.addWithTranslation.mockResolvedValue({ error: 'Creation failed' });
 
       await addTermTranslation('#trans-field', 'word', 1);
 
+      await settle();
       expect(alertSpy).toHaveBeenCalledWith(
         expect.stringContaining('Creation failed')
       );

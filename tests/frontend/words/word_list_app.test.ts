@@ -1,6 +1,7 @@
 /**
  * Tests for words/word_list_app.ts - Word List Alpine.js component
  */
+import { answerConfirms, answerPrompts, confirmPrompts, dismissAlerts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { wordListData, initWordListAlpine } from '../../../src/frontend/js/modules/vocabulary/pages/word_list_app';
 
@@ -53,9 +54,7 @@ describe('words/word_list_app.ts', () => {
     Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
     // Mock alert and confirm
-    vi.spyOn(window, 'alert').mockImplementation(() => {});
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-    vi.spyOn(window, 'prompt').mockReturnValue('test-tag');
+    answerPrompts('test-tag', 'test-tag');
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
 
     // Set default mock return values for API calls to prevent unhandled rejections
@@ -559,7 +558,7 @@ describe('words/word_list_app.ts', () => {
       const data = wordListData();
       data.marked.add(1);
 
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      answerConfirms(false);
 
       const select = document.createElement('select');
       select.value = 'del';
@@ -586,7 +585,8 @@ describe('words/word_list_app.ts', () => {
 
       await data.handleAllAction(event);
 
-      expect(window.confirm).not.toHaveBeenCalled();
+      await settle();
+      expect(confirmPrompts).not.toHaveBeenCalled();
     });
   });
 
@@ -706,7 +706,7 @@ describe('words/word_list_app.ts', () => {
   describe('saveEdit error handling', () => {
     it('shows alert on API error', async () => {
       const data = wordListData();
-      const alertSpy = vi.spyOn(window, 'alert');
+      const alertSpy = dismissAlerts();
       data.words = [{ id: 1, translation: 'old', romanization: '' } as never];
       data.editingWord = { id: 1, field: 'translation' };
       data.editValue = 'new';
@@ -718,6 +718,7 @@ describe('words/word_list_app.ts', () => {
 
       await data.saveEdit();
 
+      await settle();
       expect(alertSpy).toHaveBeenCalledWith('Update failed');
     });
 

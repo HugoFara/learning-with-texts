@@ -1,6 +1,7 @@
 /**
  * Tests for texts_grouped_app.ts - Texts list Alpine component (single language)
  */
+import { dismissAlerts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Mock Alpine.js
@@ -573,8 +574,8 @@ describe('texts_grouped_app.ts', () => {
       expect(confirmDelete).toHaveBeenCalled();
     });
 
-    it('resets select when delete cancelled', () => {
-      (confirmDelete as ReturnType<typeof vi.fn>).mockReturnValue(false);
+    it('resets select when delete cancelled', async () => {
+      (confirmDelete as ReturnType<typeof vi.fn>).mockResolvedValue(false);
 
       const component = textsGroupedData();
       component.markedTexts = new Set([10]);
@@ -582,7 +583,7 @@ describe('texts_grouped_app.ts', () => {
       const selectEl = { value: 'del' };
       const event = { target: selectEl } as unknown as Event;
 
-      component.handleMultiAction(event);
+      await component.handleMultiAction(event);
 
       expect(selectEl.value).toBe('');
     });
@@ -624,24 +625,24 @@ describe('texts_grouped_app.ts', () => {
       expect(TextsApi.bulkAction).toHaveBeenCalledWith('archive', [10, 20]);
     });
 
-    it('routes confirmed delete to the JSON API', () => {
-      (confirmDelete as ReturnType<typeof vi.fn>).mockReturnValue(true);
+    it('routes confirmed delete to the JSON API', async () => {
+      (confirmDelete as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
       const component = textsGroupedData();
       component.markedTexts = new Set([7]);
 
-      component.handleMultiAction({ target: { value: 'del' } } as unknown as Event);
+      await component.handleMultiAction({ target: { value: 'del' } } as unknown as Event);
 
       expect(TextsApi.bulkAction).toHaveBeenCalledWith('delete', [7]);
     });
 
-    it('does not call the API when delete is cancelled', () => {
-      (confirmDelete as ReturnType<typeof vi.fn>).mockReturnValue(false);
+    it('does not call the API when delete is cancelled', async () => {
+      (confirmDelete as ReturnType<typeof vi.fn>).mockResolvedValue(false);
 
       const component = textsGroupedData();
       component.markedTexts = new Set([7]);
 
-      component.handleMultiAction({ target: { value: 'del' } } as unknown as Event);
+      await component.handleMultiAction({ target: { value: 'del' } } as unknown as Event);
 
       expect(TextsApi.bulkAction).not.toHaveBeenCalled();
     });
@@ -656,15 +657,14 @@ describe('texts_grouped_app.ts', () => {
       (TextsApi.bulkAction as ReturnType<typeof vi.fn>).mockResolvedValue({
         error: 'boom'
       });
-      const alertMock = vi.fn();
-      vi.stubGlobal('alert', alertMock);
+      const alertSpy = dismissAlerts();
 
       const component = textsGroupedData();
       await component.submitBulkApiAction('delete', [10]);
 
-      expect(alertMock).toHaveBeenCalled();
+      await settle();
+      expect(alertSpy).toHaveBeenCalledWith('Action failed. Please try again.');
       expect(reloadMock).not.toHaveBeenCalled();
-      vi.unstubAllGlobals();
     });
   });
 

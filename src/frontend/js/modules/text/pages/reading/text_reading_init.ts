@@ -11,6 +11,8 @@
  * @since 3.0.0
  */
 
+import { t } from '@shared/i18n/translator';
+import { showError } from '@shared/components/confirm_dialog';
 import { onDomReady } from '@shared/utils/dom_ready';
 import { getLangFromDict } from '@modules/vocabulary/services/dictionary';
 import {
@@ -137,7 +139,7 @@ export function initTTS(): void {
  */
 function initReading(): void {
   if (!('speechSynthesis' in window)) {
-    alert('Your browser does not support speechSynthesis!');
+    void showError(t('common.dialog.no_speech'));
     return;
   }
   if (!text_reader) {
@@ -164,7 +166,7 @@ function initReading(): void {
 export function toggleReading(): void {
   const synth = window.speechSynthesis;
   if (synth === undefined) {
-    alert('Your browser does not support speechSynthesis!');
+    void showError(t('common.dialog.no_speech'));
     return;
   }
   if (synth.speaking) {

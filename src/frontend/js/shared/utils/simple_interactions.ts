@@ -13,6 +13,8 @@
  * @since   3.0.0
  */
 
+import { t } from '@shared/i18n/translator';
+import { confirmAction, confirmBeforeSubmit, confirmDeletion, showError } from '@shared/components/confirm_dialog';
 import { lwtFormCheck } from '@shared/forms/unloadformcheck';
 import { getCsrfToken } from '@shared/api/client';
 import { showAllwordsClick } from './ui_utilities';
@@ -116,11 +118,14 @@ export function cancelAndGoBack(): void {
  * Show a confirmation dialog before form submission.
  *
  * @param message - The confirmation message to display
- * @returns true if user confirmed, false otherwise
+ * @returns Promise resolving to true if the user confirmed
  */
-export function confirmSubmit(message: string = 'Are you sure?'): boolean {
-  return confirm(message);
+export function confirmSubmit(message: string = t('common.dialog.are_you_sure')): Promise<boolean> {
+  return confirmAction(message);
 }
+
+/** Elements whose next click is the confirmed one. */
+const confirmedClicks = new WeakSet<HTMLElement>();
 
 /**
  * Initialize simple interaction handlers using data attributes.
@@ -145,9 +150,19 @@ export function initSimpleInteractions(): void {
     const url = el.dataset.url;
     const confirmMsg = el.dataset.confirm;
 
-    // Check for confirmation first
-    if (confirmMsg && !confirm(confirmMsg)) {
+    // Check for confirmation first. The answer comes too late to let this
+    // click through, so cancel it and click again once confirmed.
+    if (confirmMsg && !confirmedClicks.has(el)) {
       e.preventDefault();
+      e.stopImmediatePropagation();
+      void confirmAction(confirmMsg).then((confirmed) => {
+        if (confirmed) {
+          confirmedClicks.add(el);
+          el.click();
+          // Clicking runs synchronously, and every listener has now seen it.
+          confirmedClicks.delete(el);
+        }
+      });
       return;
     }
 
@@ -177,16 +192,13 @@ export function initSimpleInteractions(): void {
       break;
 
     case 'confirm-delete':
-      // Uses the existing confirmDelete function pattern
-      if (!confirm('CONFIRM\n\nAre you sure you want to delete?')) {
-        e.preventDefault();
-        return;
-      }
-      // If confirmed and has URL, navigate
-      if (url) {
-        e.preventDefault();
-        navigateTo(url);
-      }
+      // Asks first, then navigates if there is a URL
+      e.preventDefault();
+      void confirmDeletion().then((confirmed) => {
+        if (confirmed && url) {
+          navigateTo(url);
+        }
+      });
       break;
 
     case 'cancel-form':
@@ -242,21 +254,24 @@ export function initSimpleInteractions(): void {
       e.preventDefault();
       {
         const textId = el.dataset.textId;
-        if (textId && confirm('Are you sure?')) {
-          el.classList.add('is-loading');
-          markAllWellKnown(textId)
-            .then(data => {
-              data.words.forEach(word => {
-                markWordWellKnownInDOM(word.wid, word.hex, word.term);
+        if (textId) {
+          void confirmAction(t('common.dialog.mark_all_known')).then((confirmed) => {
+            if (!confirmed) return;
+            el.classList.add('is-loading');
+            markAllWellKnown(textId)
+              .then(data => {
+                data.words.forEach(word => {
+                  markWordWellKnownInDOM(word.wid, word.hex, word.term);
+                });
+              })
+              .catch(err => {
+                console.error('Failed to mark all as well-known:', err);
+                void showError(t('common.dialog.mark_failed'));
+              })
+              .finally(() => {
+                el.classList.remove('is-loading');
               });
-            })
-            .catch(err => {
-              console.error('Failed to mark all as well-known:', err);
-              alert('Failed to mark words. Please try again.');
-            })
-            .finally(() => {
-              el.classList.remove('is-loading');
-            });
+          });
         }
       }
       break;
@@ -266,21 +281,24 @@ export function initSimpleInteractions(): void {
       e.preventDefault();
       {
         const textId = el.dataset.textId;
-        if (textId && confirm('Are you sure?')) {
-          el.classList.add('is-loading');
-          markAllIgnored(textId)
-            .then(data => {
-              data.words.forEach(word => {
-                markWordIgnoredInDOM(word.wid, word.hex, word.term);
+        if (textId) {
+          void confirmAction(t('common.dialog.mark_all_ignored')).then((confirmed) => {
+            if (!confirmed) return;
+            el.classList.add('is-loading');
+            markAllIgnored(textId)
+              .then(data => {
+                data.words.forEach(word => {
+                  markWordIgnoredInDOM(word.wid, word.hex, word.term);
+                });
+              })
+              .catch(err => {
+                console.error('Failed to mark all as ignored:', err);
+                void showError(t('common.dialog.mark_failed'));
+              })
+              .finally(() => {
+                el.classList.remove('is-loading');
               });
-            })
-            .catch(err => {
-              console.error('Failed to mark all as ignored:', err);
-              alert('Failed to mark words. Please try again.');
-            })
-            .finally(() => {
-              el.classList.remove('is-loading');
-            });
+          });
         }
       }
       break;
@@ -340,18 +358,19 @@ export function initSimpleInteractions(): void {
     }
   });
 
-  // Handle form submission confirmation and auto-submit
+  // Form submission confirmation. Capturing, so that it comes before the
+  // form's own handlers: they should not run until the user has confirmed.
   document.addEventListener('submit', (e) => {
     const form = e.target as HTMLFormElement;
-
-    // Form submission confirmation
     if (form.dataset.confirmSubmit !== undefined) {
-      const message = form.dataset.confirmSubmit || 'Are you sure?';
-      if (!confirm(message)) {
-        e.preventDefault();
-        return;
-      }
+      const message = form.dataset.confirmSubmit || t('common.dialog.are_you_sure');
+      confirmBeforeSubmit(e, form, () => confirmAction(message, { danger: true }));
     }
+  }, true);
+
+  // Handle auto-submit and loading state
+  document.addEventListener('submit', (e) => {
+    const form = e.target as HTMLFormElement;
 
     // Forms that auto-submit by clicking a button
     if (form.dataset.autoSubmitButton) {

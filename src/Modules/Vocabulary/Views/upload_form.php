@@ -347,7 +347,7 @@ echo PageLayoutHelper::buildActionCard($actions);
                 <h3 class="title is-5 mb-3" x-text="group.languageName"></h3>
                 <template x-for="source in group.sources" :key="source.name">
                     <label class="box mb-3 p-4" style="cursor: pointer;"
-                           :class="isSelected(source.url) ? 'has-background-success-light' : ''">
+                           :class="isSelected(source.url) ? 'has-background-success-soft' : ''">
                         <div class="is-flex is-align-items-center">
                             <input type="checkbox" class="me-3"
                                    :checked="isSelected(source.url)"

@@ -7,6 +7,57 @@ ones are marked like "v1.0.0-fork".
 
 ## [Unreleased]
 
+## [3.8.1-fork] - 2026-11-04
+
+### Changed in 3.8.1-fork
+
+* **The sign-in pages are one centred card** on every screen size. Login,
+  registration and password recovery no longer repeat the logo and title
+  above a narrow form.
+
+### Fixed in 3.8.1-fork
+
+* **New languages lost their settings.** The language wizard filled the form
+  on screen but not the form's state, so Save reported a missing name, and
+  retyping the name stored the language without its dictionary, language
+  codes, parsing rules or parser. The wizard now also fills in the translator
+  URL, which it never did. Languages already saved this way keep their
+  settings: repair them from the language's edit page.
+
+* **Term status changes and term edits failed on multi-user installs.** Both
+  returned an HTTP 500, and a failed status change showed the user nothing.
+
+* **Starter vocabulary stayed invisible to the reader.** Imported words were
+  shown as unknown in every text, and they are now linked to existing texts
+  and to new ones. A migration repairs earlier imports.
+
+* Confirmations, alerts and text prompts are now in-app dialogs that follow the
+  theme and the interface language, instead of the browser's, and messages that
+  were English in every locale are translated. Entering an invalid tag shows
+  what is wrong without closing the dialog. The browser's own dialogs remain
+  only as a fallback, and for the warning when leaving a page with unsaved
+  changes.
+
+* Cancelling a database restore no longer leaves the page showing "restoring".
+
+* The "Email not verified" banner no longer follows accounts that have no
+  email address.
+
+* Opening the Add Text page no longer loads every suggested Gutenberg book
+  in the background, and book previews have their own request quota, so
+  they cannot make saving a text fail with "Too Many Requests".
+
+* Terms added from the reader now count towards "terms created", and a text
+  counts as read once a day rather than on every page load.
+
+* A new term's translation appears under the word straight away, not after
+  a reload.
+
+* Dark theme: readable reader annotations, home cards and starter vocabulary
+  cards, and a darker background for empty days on the activity calendar.
+
+* The Anki import pages no longer show their heading twice.
+
 ## [3.8.0-fork] - 2026-11-03
 
 ### Added in 3.8.0-fork

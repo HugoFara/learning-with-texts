@@ -9,6 +9,9 @@
  * @since 3.0.0
  */
 
+import { t } from '@shared/i18n/translator';
+import { showError } from '@shared/components/confirm_dialog';
+import { setBoundChecked, setBoundValue } from './bound_fields';
 import { onDomReady } from '@shared/utils/dom_ready';
 import { getLibreTranslateTranslation } from '@modules/vocabulary/services/translation_api';
 import { deepFindValue, readTextWithExternal } from '@shared/utils/user_interactions';
@@ -121,9 +124,7 @@ export const languageForm = {
       const lgForm = document.forms.namedItem('lg_form') as HTMLFormElement | null;
       if (lgForm) {
         const translatorUri = lgForm.elements.namedItem('LgGoogleTranslateURI') as HTMLInputElement | null;
-        if (translatorUri) {
-          translatorUri.value = result;
-        }
+        setBoundValue(translatorUri, result);
       }
     }
 
@@ -379,48 +380,12 @@ export function checkDuplicateLanguage(
 
   if (lgName in allLangs) {
     if (langId !== allLangs[lgName]) {
-      alert(
-        'Language "' + lgName + '" already exists. Please change the language name!'
-      );
-      lgNameEl?.focus();
+      void showError(t('common.dialog.language_exists', { name: lgName }))
+        .then(() => lgNameEl?.focus());
       return false;
     }
   }
   return true;
-}
-
-/**
- * Set an input's value and tell Alpine about it.
- *
- * The language fields are bound with `x-model`, which reads from the DOM only
- * when an input/change event fires. Assigning `.value` alone updates what the
- * user sees but leaves `lang` holding the old value, so the preset would be
- * discarded the moment the form is saved.
- *
- * @param input Field to write to, if it exists
- * @param value Value to set
- */
-function setBoundValue(
-  input: HTMLInputElement | HTMLSelectElement | null,
-  value: string
-): void {
-  if (!input) return;
-  input.value = value;
-  input.dispatchEvent(new Event('input', { bubbles: true }));
-  // Alpine binds a <select> on change, not input
-  input.dispatchEvent(new Event('change', { bubbles: true }));
-}
-
-/**
- * Check or uncheck a bound checkbox and tell Alpine about it.
- *
- * @param input   Checkbox to write to, if it exists
- * @param checked Desired state
- */
-function setBoundChecked(input: HTMLInputElement | null, checked: boolean): void {
-  if (!input) return;
-  input.checked = checked;
-  input.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 /**

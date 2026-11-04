@@ -1,6 +1,7 @@
 /**
  * Tests for simple_interactions.ts - Navigation and confirmation utilities.
  */
+import { answerConfirms, confirmPrompts, settle, trackSubmissions } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Mock the dependencies
@@ -153,29 +154,32 @@ describe('simple_interactions.ts', () => {
   });
 
   describe('confirmSubmit', () => {
-    it('shows confirmation dialog with default message', () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+    it('shows confirmation dialog with default message', async () => {
+      answerConfirms(true);
 
-      const result = confirmSubmit();
+      const result = await confirmSubmit();
 
-      expect(window.confirm).toHaveBeenCalledWith('Are you sure?');
+      await settle();
+      expect(confirmPrompts).toHaveBeenCalledWith('Are you sure?');
       expect(result).toBe(true);
     });
 
-    it('shows confirmation dialog with custom message', () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+    it('shows confirmation dialog with custom message', async () => {
+      answerConfirms(true);
 
-      const result = confirmSubmit('Delete this item?');
+      const result = await confirmSubmit('Delete this item?');
 
-      expect(window.confirm).toHaveBeenCalledWith('Delete this item?');
+      await settle();
+      expect(confirmPrompts).toHaveBeenCalledWith('Delete this item?');
       expect(result).toBe(true);
     });
 
-    it('returns false when user cancels', () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+    it('returns false when user cancels', async () => {
+      answerConfirms(false);
 
-      const result = confirmSubmit('Test message');
+      const result = await confirmSubmit('Test message');
 
+      await settle();
       expect(result).toBe(false);
     });
   });
@@ -263,8 +267,8 @@ describe('simple_interactions.ts', () => {
     });
 
     describe('data-action="confirm-delete"', () => {
-      it('shows confirmation and navigates if confirmed', () => {
-        vi.spyOn(window, 'confirm').mockReturnValue(true);
+      it('shows confirmation and navigates if confirmed', async () => {
+        answerConfirms(true);
         document.body.innerHTML = `
           <button data-action="confirm-delete" data-url="/delete/item">Delete</button>
         `;
@@ -272,12 +276,13 @@ describe('simple_interactions.ts', () => {
         const button = document.querySelector('[data-action="confirm-delete"]') as HTMLElement;
         button.dispatchEvent(new Event('click', { bubbles: true }));
 
-        expect(window.confirm).toHaveBeenCalledWith('CONFIRM\n\nAre you sure you want to delete?');
+        await settle();
+        expect(confirmPrompts).toHaveBeenCalledWith('Are you sure you want to delete this?');
         expect(window.location.href).toBe('/delete/item');
       });
 
-      it('does nothing if user cancels', () => {
-        vi.spyOn(window, 'confirm').mockReturnValue(false);
+      it('does nothing if user cancels', async () => {
+        answerConfirms(false);
         document.body.innerHTML = `
           <button data-action="confirm-delete" data-url="/delete/item">Delete</button>
         `;
@@ -286,7 +291,8 @@ describe('simple_interactions.ts', () => {
         const button = document.querySelector('[data-action="confirm-delete"]') as HTMLElement;
         button.dispatchEvent(new Event('click', { bubbles: true }));
 
-        expect(window.confirm).toHaveBeenCalled();
+        await settle();
+        expect(confirmPrompts).toHaveBeenCalled();
         expect(window.location.href).toBe('http://localhost/original');
       });
     });
@@ -347,8 +353,8 @@ describe('simple_interactions.ts', () => {
     });
 
     describe('data-confirm attribute', () => {
-      it('shows confirmation before executing action', () => {
-        vi.spyOn(window, 'confirm').mockReturnValue(true);
+      it('shows confirmation before executing action', async () => {
+        answerConfirms(true);
         document.body.innerHTML = `
           <button data-action="navigate" data-url="/page" data-confirm="Are you sure you want to navigate?">Go</button>
         `;
@@ -356,12 +362,13 @@ describe('simple_interactions.ts', () => {
         const button = document.querySelector('[data-action="navigate"]') as HTMLElement;
         button.dispatchEvent(new Event('click', { bubbles: true }));
 
-        expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to navigate?');
+        await settle();
+        expect(confirmPrompts).toHaveBeenCalledWith('Are you sure you want to navigate?');
         expect(window.location.href).toBe('/page');
       });
 
-      it('prevents action if confirmation is cancelled', () => {
-        vi.spyOn(window, 'confirm').mockReturnValue(false);
+      it('prevents action if confirmation is cancelled', async () => {
+        answerConfirms(false);
         document.body.innerHTML = `
           <button data-action="navigate" data-url="/page" data-confirm="Are you sure?">Go</button>
         `;
@@ -370,30 +377,50 @@ describe('simple_interactions.ts', () => {
         const button = document.querySelector('[data-action="navigate"]') as HTMLElement;
         button.dispatchEvent(new Event('click', { bubbles: true }));
 
-        expect(window.confirm).toHaveBeenCalled();
+        await settle();
+        expect(confirmPrompts).toHaveBeenCalled();
         expect(window.location.href).toBe('http://localhost/original');
       });
     });
 
     describe('form submission confirmation', () => {
-      it('shows confirmation before form submission', () => {
-        vi.spyOn(window, 'confirm').mockReturnValue(true);
+      it('shows confirmation before form submission', async () => {
+        answerConfirms(true);
         document.body.innerHTML = `
           <form data-confirm-submit="Submit this form?">
             <button type="submit">Submit</button>
           </form>
         `;
 
-        const form = document.querySelector('form')!;
-        const event = new Event('submit', { bubbles: true, cancelable: true });
-        form.dispatchEvent(event);
+        const submissions = trackSubmissions();
+        document.querySelector('form')!.requestSubmit();
 
-        expect(window.confirm).toHaveBeenCalledWith('Submit this form?');
-        expect(event.defaultPrevented).toBe(false);
+        expect(submissions).toHaveLength(0);
+        await settle();
+        expect(confirmPrompts).toHaveBeenCalledWith('Submit this form?');
+        expect(submissions).toHaveLength(1);
       });
 
-      it('prevents submission if confirmation is cancelled', () => {
-        vi.spyOn(window, 'confirm').mockReturnValue(false);
+      it('asks before the form\'s own handlers run', async () => {
+        answerConfirms(false);
+        document.body.innerHTML = `
+          <form data-confirm-submit="Restore?">
+            <button type="submit">Submit</button>
+          </form>
+        `;
+        const form = document.querySelector('form')!;
+        const ownHandler = vi.fn();
+        form.addEventListener('submit', ownHandler);
+
+        form.requestSubmit();
+        await settle();
+
+        expect(confirmPrompts).toHaveBeenCalledWith('Restore?');
+        expect(ownHandler).not.toHaveBeenCalled();
+      });
+
+      it('prevents submission if confirmation is cancelled', async () => {
+        answerConfirms(false);
         document.body.innerHTML = `
           <form data-confirm-submit="Submit this form?">
             <button type="submit">Submit</button>
@@ -404,12 +431,13 @@ describe('simple_interactions.ts', () => {
         const event = new Event('submit', { bubbles: true, cancelable: true });
         form.dispatchEvent(event);
 
-        expect(window.confirm).toHaveBeenCalled();
+        await settle();
+        expect(confirmPrompts).toHaveBeenCalled();
         expect(event.defaultPrevented).toBe(true);
       });
 
-      it('uses default message if not specified', () => {
-        vi.spyOn(window, 'confirm').mockReturnValue(true);
+      it('uses default message if not specified', async () => {
+        answerConfirms(true);
         document.body.innerHTML = `
           <form data-confirm-submit>
             <button type="submit">Submit</button>
@@ -420,7 +448,8 @@ describe('simple_interactions.ts', () => {
         const event = new Event('submit', { bubbles: true, cancelable: true });
         form.dispatchEvent(event);
 
-        expect(window.confirm).toHaveBeenCalledWith('Are you sure?');
+        await settle();
+        expect(confirmPrompts).toHaveBeenCalledWith('Are you sure?');
       });
     });
 
@@ -501,7 +530,7 @@ describe('simple_interactions.ts', () => {
 
     describe('data-action="know-all"', () => {
       it('calls API to mark all well-known and updates DOM', async () => {
-        vi.spyOn(window, 'confirm').mockReturnValue(true);
+        answerConfirms(true);
         const mockWords = [
           { wid: 1, hex: 'abc', term: 'word1', status: 99 },
           { wid: 2, hex: 'def', term: 'word2', status: 99 }
@@ -518,7 +547,8 @@ describe('simple_interactions.ts', () => {
         const button = document.querySelector('[data-action="know-all"]') as HTMLElement;
         button.dispatchEvent(new Event('click', { bubbles: true }));
 
-        expect(window.confirm).toHaveBeenCalledWith('Are you sure?');
+        await settle();
+        expect(confirmPrompts).toHaveBeenCalledWith('Mark all unknown words as Well Known?');
         expect(fetchSpy).toHaveBeenCalledWith('/api/v1/texts/42/mark-all-wellknown', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' }
@@ -533,8 +563,8 @@ describe('simple_interactions.ts', () => {
         fetchSpy.mockRestore();
       });
 
-      it('does nothing if cancelled', () => {
-        vi.spyOn(window, 'confirm').mockReturnValue(false);
+      it('does nothing if cancelled', async () => {
+        answerConfirms(false);
         const fetchSpy = vi.spyOn(globalThis, 'fetch');
         document.body.innerHTML = `
           <button data-action="know-all" data-text-id="42">Know All</button>
@@ -543,6 +573,7 @@ describe('simple_interactions.ts', () => {
         const button = document.querySelector('[data-action="know-all"]') as HTMLElement;
         button.dispatchEvent(new Event('click', { bubbles: true }));
 
+        await settle();
         expect(fetchSpy).not.toHaveBeenCalled();
         fetchSpy.mockRestore();
       });
@@ -550,7 +581,7 @@ describe('simple_interactions.ts', () => {
 
     describe('data-action="ignore-all"', () => {
       it('calls API to mark all ignored and updates DOM', async () => {
-        vi.spyOn(window, 'confirm').mockReturnValue(true);
+        answerConfirms(true);
         const mockWords = [
           { wid: 3, hex: 'ghi', term: 'word3', status: 98 }
         ];
@@ -566,7 +597,8 @@ describe('simple_interactions.ts', () => {
         const button = document.querySelector('[data-action="ignore-all"]') as HTMLElement;
         button.dispatchEvent(new Event('click', { bubbles: true }));
 
-        expect(window.confirm).toHaveBeenCalledWith('Are you sure?');
+        await settle();
+        expect(confirmPrompts).toHaveBeenCalledWith('Mark all unknown words as Ignored?');
         expect(fetchSpy).toHaveBeenCalledWith('/api/v1/texts/42/mark-all-ignored', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' }

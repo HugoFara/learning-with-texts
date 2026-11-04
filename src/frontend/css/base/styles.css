@@ -3306,3 +3306,75 @@ Searchable Select Component (Alpine.js)
     max-height: 190px;
   }
 }
+
+/* Reader annotations: the #006699 set in text_styles.ts is unreadable on black */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .word-ann {
+    color: #7cc4ff;
+  }
+}
+
+:root[data-theme="dark"] .word-ann {
+  color: #7cc4ff;
+}
+
+/* Sign-in pages: one centred card, on every screen size */
+.auth-page main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 0;
+}
+
+.auth-page .section {
+  padding: 1.5rem 1rem;
+}
+
+.auth-page .section > .container {
+  padding: 0;
+}
+
+.auth-page .section > .container > .columns {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+}
+
+.auth-page .section > .container > .columns > .column {
+  flex: 0 1 26rem;
+  max-width: 26rem;
+  padding: 0;
+  width: 100%;
+}
+
+.auth-page .box h1.title {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* In-app confirmation, above the term dialogs and .lwt-modal */
+.confirm-dialog {
+  z-index: 10001;
+}
+
+.confirm-dialog .modal-background {
+  background-color: rgba(10, 10, 10, 0.6);
+}
+
+.confirm-dialog .modal-card {
+  border-radius: 0.75rem;
+  max-width: 28rem;
+  overflow: hidden;
+  width: calc(100% - 2rem);
+}
+
+#confirm-dialog-message {
+  white-space: pre-line;
+}
+
+.confirm-dialog__actions {
+  gap: 0.5rem;
+  justify-content: flex-end;
+}

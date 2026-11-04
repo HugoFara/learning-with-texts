@@ -1,6 +1,7 @@
 /**
  * Tests for core utility functions
  */
+import { confirmPrompts, dismissAlerts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   getStatusName,
@@ -417,14 +418,15 @@ describe('pgm.ts', () => {
   // ===========================================================================
 
   describe('validateTablePrefix', () => {
-    let alertSpy: ReturnType<typeof vi.spyOn>;
+    const alertSpy = confirmPrompts;
 
     beforeEach(() => {
-      alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      dismissAlerts();
     });
 
-    it('returns true for valid alphanumeric prefix', () => {
+    it('returns true for valid alphanumeric prefix', async () => {
       expect(validateTablePrefix('myprefix')).toBe(true);
+      await settle();
       expect(alertSpy).not.toHaveBeenCalled();
     });
 
@@ -436,13 +438,15 @@ describe('pgm.ts', () => {
       expect(validateTablePrefix('prefix123')).toBe(true);
     });
 
-    it('returns false for empty prefix', () => {
+    it('returns false for empty prefix', async () => {
       expect(validateTablePrefix('')).toBe(false);
+      await settle();
       expect(alertSpy).toHaveBeenCalled();
     });
 
-    it('returns false for prefix longer than 20 characters', () => {
+    it('returns false for prefix longer than 20 characters', async () => {
       expect(validateTablePrefix('a'.repeat(21))).toBe(false);
+      await settle();
       expect(alertSpy).toHaveBeenCalled();
     });
 

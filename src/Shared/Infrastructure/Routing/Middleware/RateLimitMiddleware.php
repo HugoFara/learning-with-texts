@@ -200,7 +200,7 @@ class RateLimitMiddleware implements MiddlewareInterface
     /**
      * Get the endpoint type for rate limiting.
      *
-     * @return string Endpoint type: 'auth', 'whisper', or 'api'
+     * @return string Endpoint type: 'auth', 'whisper', 'preview', or 'api'
      */
     private function getEndpointType(): string
     {
@@ -221,6 +221,13 @@ class RateLimitMiddleware implements MiddlewareInterface
         // and stay on the general API limit.
         if (preg_match('#/api(?:\.php)?/v1/whisper/transcribe$#', $requestPath)) {
             return 'whisper';
+        }
+
+        // Library previews arrive in bursts, one per suggested book. They keep
+        // the default limit but count separately, so browsing books cannot
+        // use up the quota that saving a text needs.
+        if (preg_match('#/api(?:\.php)?/v1/texts/library-preview$#', $requestPath)) {
+            return 'preview';
         }
 
         return 'api';

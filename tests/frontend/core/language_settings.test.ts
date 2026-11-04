@@ -1,6 +1,7 @@
 /**
  * Tests for core/language_settings.ts - Language settings utilities
  */
+import { answerConfirms, dismissAlerts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 
 // Mock dependencies
@@ -248,51 +249,57 @@ describe('core/language_settings.ts', () => {
     });
 
     it('shows confirmation dialog', async () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const confirmSpy = answerConfirms(true);
 
       await iknowall(1);
 
-      expect(confirmSpy).toHaveBeenCalledWith('Are you sure?');
+      await settle();
+      expect(confirmSpy).toHaveBeenCalledWith('Mark all unknown words as Well Known?');
     });
 
     it('calls API when confirmed', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       await iknowall(1);
 
+      await settle();
       expect(apiPut).toHaveBeenCalledWith('/texts/1/mark-all-wellknown', {});
     });
 
     it('does not call API when cancelled', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      answerConfirms(false);
       vi.mocked(apiPut).mockClear();
 
       await iknowall(1);
 
+      await settle();
       expect(apiPut).not.toHaveBeenCalled();
     });
 
     it('handles string text ID', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       await iknowall('42');
 
+      await settle();
       expect(apiPut).toHaveBeenCalledWith('/texts/42/mark-all-wellknown', {});
     });
 
     it('handles numeric text ID', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       await iknowall(123);
 
+      await settle();
       expect(apiPut).toHaveBeenCalledWith('/texts/123/mark-all-wellknown', {});
     });
 
     it('reloads page after successful API call', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       await iknowall(1);
 
+      await settle();
       expect(reloadSpy).toHaveBeenCalled();
     });
   });
@@ -332,58 +339,64 @@ describe('core/language_settings.ts', () => {
       expect(result).toBe(true);
     });
 
-    it('returns false for empty prefix', () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    it('returns false for empty prefix', async () => {
+      const alertSpy = dismissAlerts();
 
       const result = validateTablePrefix('');
 
       expect(result).toBe(false);
+      await settle();
       expect(alertSpy).toHaveBeenCalled();
     });
 
-    it('returns false for prefix longer than 20 characters', () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    it('returns false for prefix longer than 20 characters', async () => {
+      const alertSpy = dismissAlerts();
 
       const result = validateTablePrefix('a'.repeat(21));
 
       expect(result).toBe(false);
+      await settle();
       expect(alertSpy).toHaveBeenCalled();
     });
 
-    it('returns false for prefix with special characters', () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    it('returns false for prefix with special characters', async () => {
+      const alertSpy = dismissAlerts();
 
       const result = validateTablePrefix('my-prefix');
 
       expect(result).toBe(false);
+      await settle();
       expect(alertSpy).toHaveBeenCalled();
     });
 
-    it('returns false for prefix with spaces', () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    it('returns false for prefix with spaces', async () => {
+      const alertSpy = dismissAlerts();
 
       const result = validateTablePrefix('my prefix');
 
       expect(result).toBe(false);
+      await settle();
       expect(alertSpy).toHaveBeenCalled();
     });
 
-    it('returns false for prefix with dots', () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    it('returns false for prefix with dots', async () => {
+      const alertSpy = dismissAlerts();
 
       const result = validateTablePrefix('my.prefix');
 
       expect(result).toBe(false);
+      await settle();
       expect(alertSpy).toHaveBeenCalled();
     });
 
-    it('shows error message for invalid prefix', () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    it('shows error message for invalid prefix', async () => {
+      const alertSpy = dismissAlerts();
 
       validateTablePrefix('invalid!');
 
+      await settle();
       expect(alertSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Table Set Name')
+        expect.stringContaining('table set name')
       );
     });
 
@@ -399,12 +412,13 @@ describe('core/language_settings.ts', () => {
       expect(result).toBe(true);
     });
 
-    it('returns false for Unicode characters', () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    it('returns false for Unicode characters', async () => {
+      const alertSpy = dismissAlerts();
 
       const result = validateTablePrefix('日本語');
 
       expect(result).toBe(false);
+      await settle();
       expect(alertSpy).toHaveBeenCalled();
     });
 
@@ -426,11 +440,12 @@ describe('core/language_settings.ts', () => {
       expect(result).toBe(true);
     });
 
-    it('does not show alert for valid prefix', () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    it('does not show alert for valid prefix', async () => {
+      const alertSpy = dismissAlerts();
 
       validateTablePrefix('validprefix');
 
+      await settle();
       expect(alertSpy).not.toHaveBeenCalled();
     });
   });
@@ -507,16 +522,17 @@ describe('core/language_settings.ts', () => {
       expect(validateTablePrefix(exactLength)).toBe(true);
 
       const tooLong = 'a'.repeat(21);
-      vi.spyOn(window, 'alert').mockImplementation(() => {});
+      dismissAlerts();
       expect(validateTablePrefix(tooLong)).toBe(false);
     });
 
     it('iknowall handles zero text ID', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
       vi.spyOn(console, 'error').mockImplementation(() => {}); // Suppress expected error
 
       await iknowall(0);
 
+      await settle();
       expect(apiPut).toHaveBeenCalledWith('/texts/0/mark-all-wellknown', {});
     });
 

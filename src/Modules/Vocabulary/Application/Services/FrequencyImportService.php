@@ -6,6 +6,7 @@ namespace Lwt\Modules\Vocabulary\Application\Services;
 
 use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Shared\Infrastructure\Database\DB;
+use Lwt\Shared\Infrastructure\Database\Maintenance;
 use Lwt\Shared\Infrastructure\Database\UserScopedQuery;
 
 /**
@@ -102,9 +103,38 @@ class FrequencyImportService
             throw $e;
         }
 
+        if ($inserted > 0) {
+            $this->makeVisibleToReader($langId);
+        }
+
         $skipped = $total - $inserted;
 
         return ['imported' => $inserted, 'skipped' => $skipped, 'total' => $total];
+    }
+
+    /**
+     * Make freshly imported terms visible to the reader.
+     *
+     * The rows go in with WoWordCount = 0, "not counted yet": text parsing
+     * only links terms counted as 1, so without this an imported word stays
+     * unknown in every text. The count comes from the language's own parsing
+     * rules, MeCab included, so it cannot be a constant in the INSERT.
+     *
+     * The words are already committed, so a failure here, such as a missing
+     * tokenizer, is logged rather than reported as a failed import.
+     *
+     * @param int $langId Language ID
+     *
+     * @return void
+     */
+    private function makeVisibleToReader(int $langId): void
+    {
+        try {
+            Maintenance::initWordCount();
+            Maintenance::linkOccurrencesToTerms($langId);
+        } catch (\Throwable $e) {
+            error_log('Could not link imported starter words: ' . $e->getMessage());
+        }
     }
 
     /**

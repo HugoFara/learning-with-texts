@@ -349,6 +349,31 @@ describe('reading/text_renderer.ts', () => {
       expect(element.getAttribute('data_trans')).toBe('translation');
     });
 
+    it('adds the annotation to a word that had none when the text rendered', () => {
+      renderText([], {
+        showAll: false, showTranslations: true, rightToLeft: false, textSize: 100,
+        showLearning: true, displayStatTrans: 1, modeTrans: 1
+      } as RenderSettings);
+      document.body.innerHTML = '<span data_hex="123" data_status="1">word</span>';
+
+      updateWordTranslationInDOM('123', 'basket', '');
+
+      expect(document.querySelector('[data_hex="123"]')?.innerHTML)
+        .toBe('word<span class="word-ann">basket</span>');
+    });
+
+    it('leaves a word unannotated when its status is not annotated', () => {
+      renderText([], {
+        showAll: false, showTranslations: true, rightToLeft: false, textSize: 100,
+        showLearning: true, displayStatTrans: 1, modeTrans: 1
+      } as RenderSettings);
+      document.body.innerHTML = '<span data_hex="123" data_status="99">word</span>';
+
+      updateWordTranslationInDOM('123', 'basket', '');
+
+      expect(document.querySelector('.word-ann')).toBeNull();
+    });
+
     it('sets data_rom attribute', () => {
       document.body.innerHTML = '<span data_hex="123">word</span>';
       const element = document.querySelector('[data_hex="123"]') as HTMLElement;

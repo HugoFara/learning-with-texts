@@ -6,6 +6,8 @@
  * @since   2.10.0-fork Extracted from legacy/pgm.ts
  */
 
+import { t as translate } from '@shared/i18n/translator';
+import { confirmAction, showError } from '@shared/components/confirm_dialog';
 import { onDomReady } from '@shared/utils/dom_ready';
 import { apiPut, getCsrfToken } from '@shared/api/client';
 
@@ -179,8 +181,7 @@ export async function resetAll(url: string): Promise<void> {
  * @param t Text ID
  */
 export async function iknowall(t: string | number): Promise<void> {
-  const answer = confirm('Are you sure?');
-  if (!answer) return;
+  if (!await confirmAction(translate('common.dialog.mark_all_known'))) return;
 
   const textId = typeof t === 'string' ? parseInt(t, 10) : t;
 
@@ -190,7 +191,7 @@ export async function iknowall(t: string | number): Promise<void> {
     window.location.reload();
   } catch (error) {
     console.error('Failed to mark all words as well-known:', error);
-    alert('Failed to mark words. Please try again.');
+    void showError(translate('common.dialog.mark_failed'));
   }
 }
 
@@ -205,11 +206,7 @@ export function validateTablePrefix(p: string): boolean {
   const re = /^[_a-zA-Z0-9]*$/;
   const r = p.length <= 20 && p.length > 0 && re.test(p);
   if (!r) {
-    alert(
-      'Table Set Name (= Table Prefix) must' +
-      '\ncontain 1 to 20 characters (only 0-9, a-z, A-Z and _).' +
-      '\nPlease correct your input.'
-    );
+    void showError(translate('common.dialog.table_prefix_invalid'));
   }
   return r;
 }

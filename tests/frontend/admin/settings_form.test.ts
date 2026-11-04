@@ -1,6 +1,7 @@
 /**
  * Tests for settings_form.ts - Settings form interactions
  */
+import { answerConfirms, confirmPrompts, settle, trackSubmissions } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   settingsFormApp,
@@ -73,20 +74,25 @@ describe('settings_form.ts', () => {
       expect(backSpy).toHaveBeenCalled();
     });
 
-    it('confirmSubmit returns true and sets isSubmitting when confirmed', () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
-
+    it('confirmSubmit submits and sets isSubmitting once confirmed', async () => {
+      answerConfirms(true);
+      const submissions = trackSubmissions();
+      document.body.innerHTML = '<form></form>';
+      const form = document.querySelector('form') as HTMLFormElement;
       const app = settingsFormApp();
-      const event = new Event('submit', { cancelable: true });
-      const result = app.confirmSubmit(event, 'Are you sure?');
+      form.addEventListener('submit', (event) => app.confirmSubmit(event, 'Are you sure?'));
 
-      expect(result).toBe(true);
+      form.requestSubmit();
+
+      expect(submissions).toHaveLength(0);
+      await settle();
+      expect(submissions).toHaveLength(1);
       expect(app.isSubmitting).toBe(true);
-      expect(window.confirm).toHaveBeenCalledWith('Are you sure?');
+      expect(confirmPrompts).toHaveBeenCalledWith('Are you sure?');
     });
 
-    it('confirmSubmit returns false and prevents default when cancelled', () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+    it('confirmSubmit returns false and prevents default when cancelled', async () => {
+      answerConfirms(false);
 
       const app = settingsFormApp();
       const event = new Event('submit', { cancelable: true });
@@ -94,19 +100,25 @@ describe('settings_form.ts', () => {
 
       const result = app.confirmSubmit(event, 'Continue?');
 
+      await settle();
       expect(result).toBe(false);
       expect(preventDefaultSpy).toHaveBeenCalled();
       expect(app.isSubmitting).toBe(false);
     });
 
-    it('confirmSubmit uses default message when not provided', () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+    it('confirmSubmit uses default message when not provided', async () => {
+      answerConfirms(true);
 
+      trackSubmissions();
+      document.body.innerHTML = '<form></form>';
+      const form = document.querySelector('form') as HTMLFormElement;
       const app = settingsFormApp();
-      const event = new Event('submit', { cancelable: true });
-      app.confirmSubmit(event);
+      form.addEventListener('submit', (event) => app.confirmSubmit(event));
 
-      expect(window.confirm).toHaveBeenCalledWith('Are you sure?');
+      form.requestSubmit();
+
+      await settle();
+      expect(confirmPrompts).toHaveBeenCalledWith('Are you sure?');
     });
   });
 
@@ -174,48 +186,50 @@ describe('settings_form.ts', () => {
   // ===========================================================================
 
   describe('initConfirmSubmitForms', () => {
-    it('shows confirmation dialog on form submit', () => {
+    it('shows confirmation dialog on form submit', async () => {
       document.body.innerHTML = `
         <form data-action="confirm-submit" data-confirm-message="Are you sure you want to proceed?">
           <button type="submit">Submit</button>
         </form>
       `;
 
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const confirmSpy = answerConfirms(true);
 
       initConfirmSubmitForms();
 
       const form = document.querySelector('form') as HTMLFormElement;
       form.dispatchEvent(new Event('submit', { bubbles: true }));
 
+      await settle();
       expect(confirmSpy).toHaveBeenCalledWith('Are you sure you want to proceed?');
     });
 
-    it('uses default message when data-confirm-message is not set', () => {
+    it('uses default message when data-confirm-message is not set', async () => {
       document.body.innerHTML = `
         <form data-action="confirm-submit">
           <button type="submit">Submit</button>
         </form>
       `;
 
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const confirmSpy = answerConfirms(true);
 
       initConfirmSubmitForms();
 
       const form = document.querySelector('form') as HTMLFormElement;
       form.dispatchEvent(new Event('submit', { bubbles: true }));
 
+      await settle();
       expect(confirmSpy).toHaveBeenCalledWith('Are you sure?');
     });
 
-    it('prevents form submission when user cancels', () => {
+    it('prevents form submission when user cancels', async () => {
       document.body.innerHTML = `
         <form data-action="confirm-submit">
           <button type="submit">Submit</button>
         </form>
       `;
 
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      const confirmSpy = answerConfirms(false);
 
       initConfirmSubmitForms();
 
@@ -225,79 +239,85 @@ describe('settings_form.ts', () => {
 
       form.dispatchEvent(submitEvent);
 
+      await settle();
       expect(confirmSpy).toHaveBeenCalled();
       expect(preventDefaultSpy).toHaveBeenCalled();
     });
 
-    it('allows form submission when user confirms', () => {
+    it('submits once when user confirms', async () => {
       document.body.innerHTML = `
         <form data-action="confirm-submit">
           <button type="submit">Submit</button>
         </form>
       `;
 
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const confirmSpy = answerConfirms(true);
+      const submissions = trackSubmissions();
 
       initConfirmSubmitForms();
 
       const form = document.querySelector('form') as HTMLFormElement;
-      const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
-      const preventDefaultSpy = vi.spyOn(submitEvent, 'preventDefault');
+      form.requestSubmit();
 
-      form.dispatchEvent(submitEvent);
-
+      expect(submissions).toHaveLength(0);
+      await settle();
       expect(confirmSpy).toHaveBeenCalled();
-      expect(preventDefaultSpy).not.toHaveBeenCalled();
+      expect(submissions).toHaveLength(1);
     });
 
-    it('ignores non-confirm-submit forms', () => {
+    it('ignores non-confirm-submit forms', async () => {
       document.body.innerHTML = `
         <form>
           <button type="submit">Submit</button>
         </form>
       `;
 
-      const confirmSpy = vi.spyOn(window, 'confirm');
+      const confirmSpy = answerConfirms(true);
 
       initConfirmSubmitForms();
 
       const form = document.querySelector('form') as HTMLFormElement;
       form.dispatchEvent(new Event('submit', { bubbles: true }));
 
+      await settle();
       expect(confirmSpy).not.toHaveBeenCalled();
     });
 
-    it('adds loading state to submit button after confirmation', () => {
+    it('adds loading state to submit button after confirmation', async () => {
       document.body.innerHTML = `
         <form data-action="confirm-submit">
           <input type="submit" value="Submit" />
         </form>
       `;
 
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       initConfirmSubmitForms();
 
       const form = document.querySelector('form') as HTMLFormElement;
       const submitButton = form.querySelector('input[type="submit"]') as HTMLInputElement;
 
+      await settle();
       expect(submitButton.classList.contains('is-loading')).toBe(false);
       expect(submitButton.disabled).toBe(false);
 
-      form.dispatchEvent(new Event('submit', { bubbles: true }));
+      trackSubmissions();
+      form.requestSubmit();
 
+      expect(submitButton.classList.contains('is-loading')).toBe(false);
+      await settle();
       expect(submitButton.classList.contains('is-loading')).toBe(true);
       expect(submitButton.disabled).toBe(true);
     });
 
-    it('does not add loading state when user cancels', () => {
+    it('does not add loading state when user cancels', async () => {
       document.body.innerHTML = `
         <form data-action="confirm-submit">
           <button type="submit">Submit</button>
         </form>
       `;
 
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      answerConfirms(false);
 
       initConfirmSubmitForms();
 
@@ -306,6 +326,7 @@ describe('settings_form.ts', () => {
 
       form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
+      await settle();
       expect(submitButton.classList.contains('is-loading')).toBe(false);
       expect(submitButton.disabled).toBe(false);
     });

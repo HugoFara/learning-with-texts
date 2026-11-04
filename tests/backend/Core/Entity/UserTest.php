@@ -87,6 +87,23 @@ class UserTest extends TestCase
         $this->assertInstanceOf(DateTimeImmutable::class, $user->created());
     }
 
+    public function testAnAccountWithoutEmailHasNothingToVerify(): void
+    {
+        $user = User::create('testuser', null, 'hashedpassword');
+
+        $this->assertFalse($user->needsEmailVerification());
+    }
+
+    public function testAnEmailNeedsVerifyingUntilItIsVerified(): void
+    {
+        $user = User::create('testuser', 'test@example.com', 'hashedpassword');
+        $this->assertTrue($user->needsEmailVerification());
+
+        $user->markEmailVerified();
+
+        $this->assertFalse($user->needsEmailVerification());
+    }
+
     public function testCreateUserTrimsInputs(): void
     {
         $user = User::create('  testuser  ', '  test@example.com  ', 'hashedpassword');

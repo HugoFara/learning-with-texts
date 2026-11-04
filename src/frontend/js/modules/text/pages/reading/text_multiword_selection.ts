@@ -8,6 +8,8 @@
  * @license Unlicense <http://unlicense.org/>
  */
 
+import { t } from '@shared/i18n/translator';
+import { showError } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import type { MultiWordFormStoreState } from '@modules/vocabulary/stores/multi_word_form_store';
 import { getTextId as getTextIdFromConfig } from '@modules/text/stores/text_config';
@@ -188,7 +190,7 @@ export function handleTextSelection(container: HTMLElement): void {
   const text = getSelectedText(selectedWords, container);
 
   if (text.length > 250) {
-    alert('Selected text is too long!!!');
+    void showError(t('common.dialog.selection_too_long'));
     clearSelection();
     return;
   }

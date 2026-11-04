@@ -1,6 +1,7 @@
 /**
  * Tests for translation_api.ts - Translation API functions
  */
+import { answerConfirms, dismissAlerts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   deleteTranslation,
@@ -139,7 +140,7 @@ describe('translation_api.ts', () => {
   // ===========================================================================
 
   describe('addTranslation', () => {
-    it('alerts when no frame is available', () => {
+    it('alerts when no frame is available', async () => {
       Object.defineProperty(window, 'parent', {
         value: { frames: { ro: undefined } },
         writable: true,
@@ -151,11 +152,12 @@ describe('translation_api.ts', () => {
         configurable: true,
       });
 
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = dismissAlerts();
 
       addTranslation('test');
 
-      expect(alertSpy).toHaveBeenCalledWith('Translation can not be copied!');
+      await settle();
+      expect(alertSpy).toHaveBeenCalledWith('The translation could not be copied.');
     });
 
     it('sets translation when field is empty', () => {
@@ -205,7 +207,7 @@ describe('translation_api.ts', () => {
       expect(mockInput.value).toBe('existing / additional');
     });
 
-    it('prompts for confirmation when translation already exists', () => {
+    it('prompts for confirmation when translation already exists', async () => {
       const mockInput = { value: 'duplicate', name: 'WoTranslation' };
       const mockForm = { WoTranslation: mockInput };
       const makeDirtySpy = vi.fn();
@@ -221,14 +223,15 @@ describe('translation_api.ts', () => {
       });
 
       // User confirms
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       addTranslation('duplicate');
 
+      await settle();
       expect(mockInput.value).toBe('duplicate / duplicate');
     });
 
-    it('does not add when user declines duplicate', () => {
+    it('does not add when user declines duplicate', async () => {
       const mockInput = { value: 'duplicate', name: 'WoTranslation' };
       const mockForm = { WoTranslation: mockInput };
       const makeDirtySpy = vi.fn();
@@ -244,16 +247,17 @@ describe('translation_api.ts', () => {
       });
 
       // User declines
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      answerConfirms(false);
 
       addTranslation('duplicate');
 
       // Value should remain unchanged
+      await settle();
       expect(mockInput.value).toBe('duplicate');
       expect(makeDirtySpy).not.toHaveBeenCalled();
     });
 
-    it('alerts when form WoTranslation is not an object', () => {
+    it('alerts when form WoTranslation is not an object', async () => {
       // WoTranslation is undefined/not an object
       const mockForm = {};
       const mockFrame = {
@@ -267,11 +271,12 @@ describe('translation_api.ts', () => {
         configurable: true,
       });
 
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = dismissAlerts();
 
       addTranslation('test');
 
-      expect(alertSpy).toHaveBeenCalledWith('Translation can not be copied!');
+      await settle();
+      expect(alertSpy).toHaveBeenCalledWith('The translation could not be copied.');
     });
   });
 

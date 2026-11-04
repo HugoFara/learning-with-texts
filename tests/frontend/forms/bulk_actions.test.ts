@@ -1,6 +1,7 @@
 /**
  * Tests for bulk_actions.ts - Bulk action utilities for LWT
  */
+import { answerConfirms, answerPrompts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   selectToggle,
@@ -136,7 +137,7 @@ describe('bulk_actions.ts', () => {
       expect(select.value).toBe('');
     });
 
-    it('prompts for tag when action is addtag', () => {
+    it('prompts for tag when action is addtag', async () => {
       document.body.innerHTML = `
         <form name="testform">
           <input type="hidden" name="data" value="" />
@@ -152,16 +153,17 @@ describe('bulk_actions.ts', () => {
       (form as any).data = form.querySelector('input[name="data"]');
       const select = document.querySelector('select') as HTMLSelectElement;
       const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
-      const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('mytag');
+      const promptSpy = answerPrompts('mytag');
 
       multiActionGo(form, select);
 
+      await settle();
       expect(promptSpy).toHaveBeenCalled();
       expect(submitSpy).toHaveBeenCalled();
       expect((form as any).data.value).toBe('mytag');
     });
 
-    it('prompts for tag when action is deltag', () => {
+    it('prompts for tag when action is deltag', async () => {
       document.body.innerHTML = `
         <form name="testform">
           <input type="hidden" name="data" value="" />
@@ -176,14 +178,15 @@ describe('bulk_actions.ts', () => {
       (form as any).data = form.querySelector('input[name="data"]');
       const select = document.querySelector('select') as HTMLSelectElement;
       const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
-      vi.spyOn(window, 'prompt').mockReturnValue('removetag');
+      answerPrompts('removetag');
 
       multiActionGo(form, select);
 
+      await settle();
       expect(submitSpy).toHaveBeenCalled();
     });
 
-    it('does not submit when tag prompt is cancelled', () => {
+    it('does not submit when tag prompt is cancelled', async () => {
       document.body.innerHTML = `
         <form name="testform">
           <input type="hidden" name="data" value="" />
@@ -197,14 +200,15 @@ describe('bulk_actions.ts', () => {
       const form = document.querySelector('form') as HTMLFormElement;
       const select = document.querySelector('select') as HTMLSelectElement;
       const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
-      vi.spyOn(window, 'prompt').mockReturnValue('');
+      answerPrompts('');
 
       multiActionGo(form, select);
 
+      await settle();
       expect(submitSpy).not.toHaveBeenCalled();
     });
 
-    it('re-prompts when tag contains spaces', () => {
+    it('re-prompts when tag contains spaces', async () => {
       document.body.innerHTML = `
         <form name="testform">
           <input type="hidden" name="data" value="" />
@@ -219,18 +223,15 @@ describe('bulk_actions.ts', () => {
       (form as any).data = form.querySelector('input[name="data"]');
       const select = document.querySelector('select') as HTMLSelectElement;
       vi.spyOn(form, 'submit').mockImplementation(() => {});
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-      const promptSpy = vi.spyOn(window, 'prompt')
-        .mockReturnValueOnce('tag with space')
-        .mockReturnValueOnce('validtag');
+      const alertSpy = answerPrompts('tag with space', 'validtag');
 
       multiActionGo(form, select);
 
-      expect(alertSpy).toHaveBeenCalledWith('Please no spaces or commas!');
-      expect(promptSpy).toHaveBeenCalledTimes(2);
+      await settle();
+      expect(alertSpy).toHaveBeenCalledWith('A tag can have 20 characters at most, with no spaces or commas.');
     });
 
-    it('re-prompts when tag contains commas', () => {
+    it('re-prompts when tag contains commas', async () => {
       document.body.innerHTML = `
         <form name="testform">
           <input type="hidden" name="data" value="" />
@@ -245,17 +246,15 @@ describe('bulk_actions.ts', () => {
       (form as any).data = form.querySelector('input[name="data"]');
       const select = document.querySelector('select') as HTMLSelectElement;
       vi.spyOn(form, 'submit').mockImplementation(() => {});
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-      vi.spyOn(window, 'prompt')
-        .mockReturnValueOnce('tag,comma')
-        .mockReturnValueOnce('validtag');
+      const alertSpy = answerPrompts('tag,comma', 'validtag');
 
       multiActionGo(form, select);
 
-      expect(alertSpy).toHaveBeenCalledWith('Please no spaces or commas!');
+      await settle();
+      expect(alertSpy).toHaveBeenCalledWith('A tag can have 20 characters at most, with no spaces or commas.');
     });
 
-    it('re-prompts when tag is too long', () => {
+    it('re-prompts when tag is too long', async () => {
       document.body.innerHTML = `
         <form name="testform">
           <input type="hidden" name="data" value="" />
@@ -270,17 +269,15 @@ describe('bulk_actions.ts', () => {
       (form as any).data = form.querySelector('input[name="data"]');
       const select = document.querySelector('select') as HTMLSelectElement;
       vi.spyOn(form, 'submit').mockImplementation(() => {});
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-      vi.spyOn(window, 'prompt')
-        .mockReturnValueOnce('thistagiswaytoolongmorethan20chars')
-        .mockReturnValueOnce('shorttag');
+      const alertSpy = answerPrompts('thistagiswaytoolongmorethan20chars', 'shorttag');
 
       multiActionGo(form, select);
 
-      expect(alertSpy).toHaveBeenCalledWith('Please no tags longer than 20 char.!');
+      await settle();
+      expect(alertSpy).toHaveBeenCalledWith('A tag can have 20 characters at most, with no spaces or commas.');
     });
 
-    it('confirms for del action', () => {
+    it('confirms for del action', async () => {
       document.body.innerHTML = `
         <form name="testform"></form>
         <select id="action">
@@ -293,15 +290,16 @@ describe('bulk_actions.ts', () => {
       const form = document.querySelector('form') as HTMLFormElement;
       const select = document.querySelector('select') as HTMLSelectElement;
       const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const confirmSpy = answerConfirms(true);
 
       multiActionGo(form, select);
 
+      await settle();
       expect(confirmSpy).toHaveBeenCalled();
       expect(submitSpy).toHaveBeenCalled();
     });
 
-    it('does not submit when confirmation is cancelled', () => {
+    it('does not submit when confirmation is cancelled', async () => {
       document.body.innerHTML = `
         <form name="testform"></form>
         <select id="action">
@@ -313,16 +311,17 @@ describe('bulk_actions.ts', () => {
       const form = document.querySelector('form') as HTMLFormElement;
       const select = document.querySelector('select') as HTMLSelectElement;
       const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      answerConfirms(false);
 
       multiActionGo(form, select);
 
+      await settle();
       expect(submitSpy).not.toHaveBeenCalled();
     });
 
     it.each(['smi1', 'spl1', 's1', 's5', 's98', 's99', 'today', 'delsent', 'lower', 'cap'])(
       'confirms for %s action',
-      (action) => {
+      async (action) => {
         document.body.innerHTML = `
           <form name="testform"></form>
           <select id="action">
@@ -334,10 +333,11 @@ describe('bulk_actions.ts', () => {
         const form = document.querySelector('form') as HTMLFormElement;
         const select = document.querySelector('select') as HTMLSelectElement;
         const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
-        const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+        const confirmSpy = answerConfirms(true);
 
         multiActionGo(form, select);
 
+        await settle();
         expect(confirmSpy).toHaveBeenCalled();
         expect(submitSpy).toHaveBeenCalled();
       }
@@ -381,7 +381,7 @@ describe('bulk_actions.ts', () => {
       expect(() => allActionGo(form, undefined, 10)).not.toThrow();
     });
 
-    it('prompts for tag when action is addtagall', () => {
+    it('prompts for tag when action is addtagall', async () => {
       document.body.innerHTML = `
         <form name="testform">
           <input type="hidden" name="data" value="" />
@@ -395,16 +395,17 @@ describe('bulk_actions.ts', () => {
       (form as any).data = form.querySelector('input[name="data"]');
       const select = document.querySelector('select') as HTMLSelectElement;
       const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
-      const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('alltag');
+      const promptSpy = answerPrompts('alltag');
 
       allActionGo(form, select, 50);
 
+      await settle();
       expect(promptSpy).toHaveBeenCalled();
       expect(submitSpy).toHaveBeenCalled();
       expect((form as any).data.value).toBe('alltag');
     });
 
-    it('prompts for tag when action is deltagall', () => {
+    it('prompts for tag when action is deltagall', async () => {
       document.body.innerHTML = `
         <form name="testform">
           <input type="hidden" name="data" value="" />
@@ -418,14 +419,15 @@ describe('bulk_actions.ts', () => {
       (form as any).data = form.querySelector('input[name="data"]');
       const select = document.querySelector('select') as HTMLSelectElement;
       const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
-      vi.spyOn(window, 'prompt').mockReturnValue('removetag');
+      answerPrompts('removetag');
 
       allActionGo(form, select, 100);
 
+      await settle();
       expect(submitSpy).toHaveBeenCalled();
     });
 
-    it('shows record count in prompt for all actions', () => {
+    it('shows record count in prompt for all actions', async () => {
       document.body.innerHTML = `
         <form name="testform">
           <input type="hidden" name="data" value="" />
@@ -439,17 +441,17 @@ describe('bulk_actions.ts', () => {
       (form as any).data = form.querySelector('input[name="data"]');
       const select = document.querySelector('select') as HTMLSelectElement;
       vi.spyOn(form, 'submit').mockImplementation(() => {});
-      const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('tag');
+      const promptSpy = answerPrompts('tag');
 
       allActionGo(form, select, 42);
 
+      await settle();
       expect(promptSpy).toHaveBeenCalledWith(
-        expect.stringContaining('42 Record(s)'),
-        ''
+        expect.stringContaining('Records affected: 42')
       );
     });
 
-    it('confirms for delall action', () => {
+    it('confirms for delall action', async () => {
       document.body.innerHTML = `
         <form name="testform"></form>
         <select id="action">
@@ -460,19 +462,20 @@ describe('bulk_actions.ts', () => {
       const form = document.querySelector('form') as HTMLFormElement;
       const select = document.querySelector('select') as HTMLSelectElement;
       const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const confirmSpy = answerConfirms(true);
 
       allActionGo(form, select, 25);
 
+      await settle();
       expect(confirmSpy).toHaveBeenCalledWith(
-        expect.stringContaining('25 Record(s)')
+        expect.stringContaining('Records affected: 25')
       );
       expect(submitSpy).toHaveBeenCalled();
     });
 
     it.each(['smi1all', 'spl1all', 's1all', 's5all', 's98all', 's99all', 'todayall', 'delsentall', 'capall', 'lowerall'])(
       'confirms for %s action',
-      (action) => {
+      async (action) => {
         document.body.innerHTML = `
           <form name="testform"></form>
           <select id="action">
@@ -483,16 +486,17 @@ describe('bulk_actions.ts', () => {
         const form = document.querySelector('form') as HTMLFormElement;
         const select = document.querySelector('select') as HTMLSelectElement;
         const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
-        const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+        const confirmSpy = answerConfirms(true);
 
         allActionGo(form, select, 10);
 
+        await settle();
         expect(confirmSpy).toHaveBeenCalled();
         expect(submitSpy).toHaveBeenCalled();
       }
     );
 
-    it('shows warning about all pages in confirm dialog', () => {
+    it('shows warning about all pages in confirm dialog', async () => {
       document.body.innerHTML = `
         <form name="testform"></form>
         <select id="action">
@@ -503,12 +507,13 @@ describe('bulk_actions.ts', () => {
       const form = document.querySelector('form') as HTMLFormElement;
       const select = document.querySelector('select') as HTMLSelectElement;
       vi.spyOn(form, 'submit').mockImplementation(() => {});
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const confirmSpy = answerConfirms(true);
 
       allActionGo(form, select, 10);
 
+      await settle();
       expect(confirmSpy).toHaveBeenCalledWith(
-        expect.stringContaining('ALL PAGES')
+        expect.stringContaining('all pages')
       );
     });
 
@@ -531,7 +536,7 @@ describe('bulk_actions.ts', () => {
       expect(select.value).toBe('');
     });
 
-    it('validates tag input for allActionGo same as multiActionGo', () => {
+    it('validates tag input for allActionGo same as multiActionGo', async () => {
       document.body.innerHTML = `
         <form name="testform">
           <input type="hidden" name="data" value="" />
@@ -545,14 +550,12 @@ describe('bulk_actions.ts', () => {
       (form as any).data = form.querySelector('input[name="data"]');
       const select = document.querySelector('select') as HTMLSelectElement;
       vi.spyOn(form, 'submit').mockImplementation(() => {});
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-      vi.spyOn(window, 'prompt')
-        .mockReturnValueOnce('invalid tag')
-        .mockReturnValueOnce('validtag');
+      const alertSpy = answerPrompts('invalid tag', 'validtag');
 
       allActionGo(form, select, 10);
 
-      expect(alertSpy).toHaveBeenCalledWith('Please no spaces or commas!');
+      await settle();
+      expect(alertSpy).toHaveBeenCalledWith('A tag can have 20 characters at most, with no spaces or commas.');
     });
   });
 });

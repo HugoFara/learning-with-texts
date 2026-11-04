@@ -1,6 +1,7 @@
 /**
  * Tests for text_print_app.ts - Alpine.js Text Print Component
  */
+import { answerConfirms, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { textPrintAppData, type TextPrintAppData } from '../../../src/frontend/js/modules/text/pages/text_print_app';
 
@@ -379,11 +380,12 @@ describe('text_print_app.ts', () => {
       expect(() => component.navigateTo('/texts')).not.toThrow();
     });
 
-    it('confirmNavigateTo shows confirm dialog', () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    it('confirmNavigateTo shows confirm dialog', async () => {
+      const confirmSpy = answerConfirms(false);
 
       component.confirmNavigateTo('/delete', 'Are you sure?');
 
+      await settle();
       expect(confirmSpy).toHaveBeenCalledWith('Are you sure?');
     });
 

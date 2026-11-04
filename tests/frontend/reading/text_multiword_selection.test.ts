@@ -4,6 +4,7 @@
  * @vitest-environment jsdom
  */
 
+import { dismissAlerts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
 // Mock Alpine.js
@@ -174,7 +175,7 @@ describe('text_multiword_selection.ts', () => {
       expect(mockStore.loadForEdit).toHaveBeenCalledWith(1, 1, 'Hello World', 2);
     });
 
-    it('shows alert when selected text is too long', () => {
+    it('shows alert when selected text is too long', async () => {
       // Words are stored consecutively without space elements
       document.body.innerHTML = `
         <div id="thetext">
@@ -199,11 +200,12 @@ describe('text_multiword_selection.ts', () => {
         removeAllRanges: vi.fn()
       };
       vi.spyOn(window, 'getSelection').mockReturnValue(mockSelection as unknown as Selection);
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = dismissAlerts();
 
       handleTextSelection(container);
 
-      expect(alertSpy).toHaveBeenCalledWith('Selected text is too long!!!');
+      await settle();
+      expect(alertSpy).toHaveBeenCalledWith('The selected text is too long.');
       expect(mockStore.loadForEdit).not.toHaveBeenCalled();
     });
   });

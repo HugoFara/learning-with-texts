@@ -1,6 +1,7 @@
 /**
  * Tests for shared/offline/offline-indicator.ts - Alpine.js offline status indicator component
  */
+import { answerConfirms, confirmPrompts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Mock dependencies before importing
@@ -41,7 +42,7 @@ describe('shared/offline/offline-indicator.ts', () => {
   let addEventListenerSpy: ReturnType<typeof vi.spyOn>;
   let removeEventListenerSpy: ReturnType<typeof vi.spyOn>;
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
-  let confirmSpy: ReturnType<typeof vi.spyOn>;
+  const confirmSpy = confirmPrompts;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -49,7 +50,7 @@ describe('shared/offline/offline-indicator.ts', () => {
     addEventListenerSpy = vi.spyOn(window, 'addEventListener');
     removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    answerConfirms(true);
 
     vi.mocked(isOfflineStorageAvailable).mockReturnValue(true);
     vi.mocked(getOfflineSummary).mockResolvedValue({
@@ -71,7 +72,6 @@ describe('shared/offline/offline-indicator.ts', () => {
     addEventListenerSpy.mockRestore();
     removeEventListenerSpy.mockRestore();
     consoleErrorSpy.mockRestore();
-    confirmSpy.mockRestore();
   });
 
   // ===========================================================================
@@ -273,7 +273,7 @@ describe('shared/offline/offline-indicator.ts', () => {
     });
 
     it('clears data when confirmed', async () => {
-      confirmSpy.mockReturnValue(true);
+      answerConfirms(true);
 
       const component = offlineIndicator();
       await component.clearAllOfflineData();
@@ -282,7 +282,7 @@ describe('shared/offline/offline-indicator.ts', () => {
     });
 
     it('does not clear data when cancelled', async () => {
-      confirmSpy.mockReturnValue(false);
+      answerConfirms(false);
 
       const component = offlineIndicator();
       await component.clearAllOfflineData();
@@ -301,6 +301,7 @@ describe('shared/offline/offline-indicator.ts', () => {
       const component = offlineIndicator();
       const clearPromise = component.clearAllOfflineData();
 
+      await settle();
       expect(component.isClearing).toBe(true);
 
       resolveClear!();

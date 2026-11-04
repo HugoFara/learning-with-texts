@@ -1,6 +1,7 @@
 /**
  * Tests for ui_utilities.ts - DOM manipulation, tooltips, and form wrapping
  */
+import { answerConfirms, confirmPrompts, dismissAlerts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Now import the module
@@ -73,20 +74,23 @@ describe('ui_utilities.ts', () => {
   // ===========================================================================
 
   describe('confirmDelete', () => {
-    it('returns true when user confirms', () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+    it('returns true when user confirms', async () => {
+      answerConfirms(true);
 
-      const result = confirmDelete();
+      const result = await confirmDelete();
 
+      await settle();
       expect(result).toBe(true);
-      expect(window.confirm).toHaveBeenCalledWith('CONFIRM\n\nAre you sure you want to delete?');
+      await settle();
+      expect(confirmPrompts).toHaveBeenCalledWith('Are you sure you want to delete this?');
     });
 
-    it('returns false when user cancels', () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+    it('returns false when user cancels', async () => {
+      answerConfirms(false);
 
-      const result = confirmDelete();
+      const result = await confirmDelete();
 
+      await settle();
       expect(result).toBe(false);
     });
   });
@@ -339,7 +343,7 @@ describe('ui_utilities.ts', () => {
 
     it('reverts checkbox states and shows alert on error', async () => {
       fetchSpy.mockRejectedValue(new Error('Network error'));
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = dismissAlerts();
 
       document.body.innerHTML = `
         <input type="checkbox" id="showallwords" checked />
@@ -348,15 +352,14 @@ describe('ui_utilities.ts', () => {
 
       await showAllwordsClick();
 
-      expect(alertSpy).toHaveBeenCalledWith('Failed to save settings. Please try again.');
+      await settle();
+      expect(alertSpy).toHaveBeenCalledWith('Failed to save. Please try again.');
       // Checkboxes should be reverted (were checked, now should be unchecked)
       const showAllEl = document.getElementById('showallwords') as HTMLInputElement;
       const showLearningEl = document.getElementById('showlearningtranslations') as HTMLInputElement;
       expect(showAllEl.checked).toBe(false);
       expect(showLearningEl.checked).toBe(false);
       expect(reloadMock).not.toHaveBeenCalled();
-
-      alertSpy.mockRestore();
     });
   });
 
@@ -599,8 +602,8 @@ describe('ui_utilities.ts', () => {
       expect(radioInput).not.toBeNull();
     });
 
-    it('handles confirm delete elements', () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+    it('handles confirm delete elements', async () => {
+      answerConfirms(false);
       document.body.innerHTML = '<a class="confirmdelete" href="#">Delete</a>';
 
       prepareMainAreas();
@@ -608,7 +611,8 @@ describe('ui_utilities.ts', () => {
       const deleteLink = document.querySelector('.confirmdelete') as HTMLElement;
       deleteLink.click();
 
-      expect(window.confirm).toHaveBeenCalled();
+      await settle();
+      expect(confirmPrompts).toHaveBeenCalled();
     });
   });
 

@@ -719,6 +719,22 @@ HTML;
     }
 
     /**
+     * Start a sign-in page.
+     *
+     * These pages carry their own logo and heading inside a centred card, so
+     * they take neither the page logo nor the page title.
+     *
+     * @param string $title Browser-tab title
+     *
+     * @return void
+     */
+    public static function renderAuthPageStart(string $title): void
+    {
+        self::renderPageStartNobody($title, 'auth-page');
+        echo '<main id="main-content">';
+    }
+
+    /**
      * Build a compact UI-language switcher for the pre-login pages.
      *
      * A no-JS GET form (CSP-safe): a native-name `<select name="lang">` plus a
@@ -860,8 +876,9 @@ HTML;
     /**
      * Render a warning banner when the current user's email is not verified.
      *
-     * Only shows in multi-user mode when the user is authenticated
-     * but has not yet verified their email address.
+     * Only shows in multi-user mode when the user is authenticated and has an
+     * email address they have not yet verified. Email is optional at
+     * registration, and an account without one has nothing to verify.
      *
      * @return void
      */
@@ -879,7 +896,7 @@ HTML;
             return;
         }
 
-        if ($user === null || $user->isEmailVerified()) {
+        if ($user === null || !$user->needsEmailVerification()) {
             return;
         }
 

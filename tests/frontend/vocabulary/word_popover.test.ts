@@ -1,6 +1,7 @@
 /**
  * Tests for word_popover.ts - Alpine.js component for non-blocking word info display.
  */
+import { answerConfirms, confirmPrompts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Alpine from 'alpinejs';
 
@@ -96,7 +97,7 @@ describe('word_popover.ts', () => {
     });
 
     // Mock confirm
-    global.confirm = vi.fn().mockReturnValue(true);
+    answerConfirms(true);
 
     // Mock window dimensions
     Object.defineProperty(window, 'innerHeight', { value: 768, writable: true });
@@ -391,21 +392,23 @@ describe('word_popover.ts', () => {
 
     describe('deleteWord', () => {
       it('confirms and calls store.deleteWord when user confirms', async () => {
-        vi.mocked(confirm).mockReturnValue(true);
+        answerConfirms(true);
         const component = wordPopoverData();
 
         await component.deleteWord();
 
-        expect(confirm).toHaveBeenCalledWith('Delete this term?');
+        await settle();
+        expect(confirmPrompts).toHaveBeenCalledWith('Delete this term?');
         expect(mockStore.deleteWord).toHaveBeenCalledWith('abc123');
       });
 
       it('does not delete when user cancels', async () => {
-        vi.mocked(confirm).mockReturnValue(false);
+        answerConfirms(false);
         const component = wordPopoverData();
 
         await component.deleteWord();
 
+        await settle();
         expect(mockStore.deleteWord).not.toHaveBeenCalled();
       });
 
@@ -415,7 +418,7 @@ describe('word_popover.ts', () => {
 
         await component.deleteWord();
 
-        expect(confirm).not.toHaveBeenCalled();
+        expect(confirmPrompts).not.toHaveBeenCalled();
       });
     });
 

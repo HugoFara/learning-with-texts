@@ -1,6 +1,7 @@
 /**
  * Tests for form_validation.ts - Input validation and form checking utilities
  */
+import { confirmPrompts, dismissAlerts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   containsCharacterOutsideBasicMultilingualPlane,
@@ -62,34 +63,38 @@ describe('form_validation.ts', () => {
   // ===========================================================================
 
   describe('alertFirstCharacterOutsideBasicMultilingualPlane', () => {
-    let alertSpy: ReturnType<typeof vi.spyOn>;
+    const alertSpy = confirmPrompts;
 
     beforeEach(() => {
-      alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      dismissAlerts();
     });
 
-    it('returns 0 and does not alert for valid BMP text', () => {
+    it('returns 0 and does not alert for valid BMP text', async () => {
       const result = alertFirstCharacterOutsideBasicMultilingualPlane('Hello', 'Test Field');
       expect(result).toBe(0);
+      await settle();
       expect(alertSpy).not.toHaveBeenCalled();
     });
 
-    it('returns 1 and alerts for text with emoji', () => {
+    it('returns 1 and alerts for text with emoji', async () => {
       const result = alertFirstCharacterOutsideBasicMultilingualPlane('Hello 😀 World', 'Test Field');
       expect(result).toBe(1);
+      await settle();
       expect(alertSpy).toHaveBeenCalledTimes(1);
       expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('Test Field'));
-      expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('invalid character'));
+      expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('not supported'));
     });
 
-    it('includes position information in alert', () => {
+    it('includes position information in alert', async () => {
       alertFirstCharacterOutsideBasicMultilingualPlane('AB😀CD', 'Field');
+      await settle();
       expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('position'));
     });
 
-    it('returns 0 for empty string', () => {
+    it('returns 0 for empty string', async () => {
       const result = alertFirstCharacterOutsideBasicMultilingualPlane('', 'Empty Field');
       expect(result).toBe(0);
+      await settle();
       expect(alertSpy).not.toHaveBeenCalled();
     });
   });
@@ -173,16 +178,17 @@ describe('form_validation.ts', () => {
   // ===========================================================================
 
   describe('check', () => {
-    let alertSpy: ReturnType<typeof vi.spyOn>;
+    const alertSpy = confirmPrompts;
 
     beforeEach(() => {
-      alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      dismissAlerts();
     });
 
     describe('notempty validation', () => {
-      it('returns true when no notempty fields exist', () => {
+      it('returns true when no notempty fields exist', async () => {
         document.body.innerHTML = '<input type="text" value="test" />';
         expect(check()).toBe(true);
+        await settle();
         expect(alertSpy).not.toHaveBeenCalled();
       });
 
@@ -191,10 +197,11 @@ describe('form_validation.ts', () => {
         expect(check()).toBe(true);
       });
 
-      it('returns false when notempty field is empty', () => {
+      it('returns false when notempty field is empty', async () => {
         document.body.innerHTML = '<input class="notempty" value="" />';
         expect(check()).toBe(false);
-        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('must not be empty'));
+        await settle();
+        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('are empty'));
       });
 
       it('returns false when notempty field has only whitespace', () => {
@@ -202,17 +209,18 @@ describe('form_validation.ts', () => {
         expect(check()).toBe(false);
       });
 
-      it('counts multiple empty notempty fields', () => {
+      it('counts multiple empty notempty fields', async () => {
         document.body.innerHTML = `
           <input class="notempty" value="" />
           <input class="notempty" value="" />
           <input class="notempty" value="" />
         `;
         check();
-        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('3 field(s)'));
+        await settle();
+        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('are empty: 3'));
       });
 
-      it('skips notempty fields hidden under an Alpine x-show ancestor', () => {
+      it('skips notempty fields hidden under an Alpine x-show ancestor', async () => {
         // /texts/new: TxText is `notempty` but hidden via x-show when the user
         // is importing a file. Alpine sets display:none on the wrapper.
         document.body.innerHTML = `
@@ -222,16 +230,18 @@ describe('form_validation.ts', () => {
           <input class="notempty" value="filled" />
         `;
         expect(check()).toBe(true);
+        await settle();
         expect(alertSpy).not.toHaveBeenCalled();
       });
 
-      it('skips notempty fields with the hidden attribute on an ancestor', () => {
+      it('skips notempty fields with the hidden attribute on an ancestor', async () => {
         document.body.innerHTML = `
           <div hidden>
             <input class="notempty" value="" />
           </div>
         `;
         expect(check()).toBe(true);
+        await settle();
         expect(alertSpy).not.toHaveBeenCalled();
       });
     });
@@ -257,9 +267,10 @@ describe('form_validation.ts', () => {
         expect(check()).toBe(true);
       });
 
-      it('returns false for URL without protocol', () => {
+      it('returns false for URL without protocol', async () => {
         document.body.innerHTML = '<input class="checkurl" data_info="URL Field" value="example.com" />';
         expect(check()).toBe(false);
+        await settle();
         expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('http://'));
       });
     });
@@ -275,10 +286,11 @@ describe('form_validation.ts', () => {
         expect(check()).toBe(true);
       });
 
-      it('returns false for zero', () => {
+      it('returns false for zero', async () => {
         document.body.innerHTML = '<input class="posintnumber" data_info="Count" value="0" />';
         expect(check()).toBe(false);
-        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('> 0'));
+        await settle();
+        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('greater than 0'));
       });
 
       it('returns false for negative number', () => {
@@ -308,10 +320,11 @@ describe('form_validation.ts', () => {
         expect(check()).toBe(true);
       });
 
-      it('returns false for negative number', () => {
+      it('returns false for negative number', async () => {
         document.body.innerHTML = '<input class="zeroposintnumber" data_info="Count" value="-1" />';
         expect(check()).toBe(false);
-        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('>= 0'));
+        await settle();
+        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('0 or greater'));
       });
     });
 
@@ -321,10 +334,11 @@ describe('form_validation.ts', () => {
         expect(check()).toBe(true);
       });
 
-      it('returns false for text with spaces', () => {
+      it('returns false for text with spaces', async () => {
         document.body.innerHTML = '<input class="noblanksnocomma" data_info="Tag" value="hello world" />';
         expect(check()).toBe(false);
-        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('No spaces or commas'));
+        await settle();
+        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('must not contain spaces or commas'));
       });
 
       it('returns false for text with commas', () => {
@@ -344,10 +358,11 @@ describe('form_validation.ts', () => {
         expect(check()).toBe(true);
       });
 
-      it('returns false for text with emoji', () => {
+      it('returns false for text with emoji', async () => {
         document.body.innerHTML = '<input class="checkoutsidebmp" data_info="Text" value="Hello 😀" />';
         expect(check()).toBe(false);
-        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('invalid character'));
+        await settle();
+        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('not supported'));
       });
 
       it('returns true for empty field', () => {
@@ -362,9 +377,10 @@ describe('form_validation.ts', () => {
         expect(check()).toBe(true);
       });
 
-      it('returns false when text exceeds limit', () => {
+      it('returns false when text exceeds limit', async () => {
         document.body.innerHTML = '<textarea class="checklength" data_maxlength="5" data_info="Description">Hello World</textarea>';
         expect(check()).toBe(false);
+        await settle();
         expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('too long'));
       });
     });
@@ -375,10 +391,11 @@ describe('form_validation.ts', () => {
         expect(check()).toBe(true);
       });
 
-      it('returns false when bytes exceed limit', () => {
+      it('returns false when bytes exceed limit', async () => {
         // "日本語" is 9 bytes in UTF-8
         document.body.innerHTML = '<textarea class="checkbytes" data_maxlength="5" data_info="Text">日本語</textarea>';
         expect(check()).toBe(false);
+        await settle();
         expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('bytes'));
       });
     });
@@ -471,7 +488,7 @@ describe('form_validation.ts', () => {
           <input type="submit" value="Submit" />
         </form>
       `;
-      vi.spyOn(window, 'alert').mockImplementation(() => {});
+      dismissAlerts();
 
       const clickSpy = vi.fn();
       const submitBtn = document.querySelector('input[type="submit"]') as HTMLInputElement;

@@ -9,6 +9,7 @@
  * @since   3.4.0
  */
 
+import { confirmDeletion } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import { t, tn } from '@shared/i18n/translator';
 import { readPageConfig } from '@shared/utils/page_config';
@@ -190,7 +191,7 @@ export function tagListAppData(): TagListAppData {
     },
 
     async deleteOne(tag: TagRecord): Promise<void> {
-      if (!confirm(t('tags.confirm_delete', { text: tag.text }))) {
+      if (!await confirmDeletion(t('tags.confirm_delete', { text: tag.text }))) {
         return;
       }
       this.isBusy = true;
@@ -208,7 +209,7 @@ export function tagListAppData(): TagListAppData {
       if (this.selectedIds.length === 0) {
         return;
       }
-      if (!confirm(tn('tags.confirm_delete_selected', this.selectedIds.length))) {
+      if (!await confirmDeletion(tn('tags.confirm_delete_selected', this.selectedIds.length))) {
         return;
       }
       this.isBusy = true;
@@ -224,7 +225,7 @@ export function tagListAppData(): TagListAppData {
     },
 
     async deleteAllMatching(): Promise<void> {
-      if (!confirm(tn('tags.confirm_delete_all', this.pagination.total))) {
+      if (!await confirmDeletion(tn('tags.confirm_delete_all', this.pagination.total))) {
         return;
       }
       this.isBusy = true;

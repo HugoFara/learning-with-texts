@@ -1,22 +1,42 @@
 name: PHP CI
 
+# Pull requests run what the change can affect; a push to main runs everything.
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
     branches: [ main, develop ]
+    paths:
+      - '**.php'
+      - 'src/**'
+      - 'locale/**'
+      - 'db/**'
+      - 'tests/backend/**'
+      - 'tests/fixtures/**'
+      - 'tests/sql/**'
+      - 'tests/tools/**'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'phpunit.xml'
+      - '.github/workflows/php.yml'
+
+# A new push to a pull request replaces the run in progress. Runs on main are
+# left to finish: they are the last full check before a release.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
     name: PHPUnit Tests
-    runs-on: ${{ matrix.config.os }}
+    runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
-        config:
-          - os: ubuntu-latest
-          - os: windows-latest
+        # Windows takes about 30 times as long as Ubuntu for the same tests, so
+        # it runs on main only, as the check before a release.
+        os: ${{ fromJSON(github.event_name == 'push' && '["ubuntu-latest", "windows-latest"]' || '["ubuntu-latest"]') }}
         php-version: [ '8.2', '8.3', '8.4', '8.5' ]
 
     steps:
@@ -28,7 +48,8 @@ jobs:
         with:
           php-version: ${{ matrix.php-version }}
           extensions: mbstring, mysqli, dom, zip, pdo_sqlite
-          coverage: xdebug
+          # The job runs test:no-coverage; a loaded Xdebug only slows it down.
+          coverage: none
 
       - name: Validate composer.json and composer.lock
         run: composer validate --strict

@@ -6,6 +6,8 @@
  * @since   1.6.16-fork
  */
 
+import { t } from '@shared/i18n/translator';
+import { confirmAction, showError } from '@shared/components/confirm_dialog';
 import { iconHtml } from '@shared/icons/icons';
 import { escapeHtml } from '@shared/utils/html_utils';
 
@@ -65,18 +67,18 @@ export function deleteTranslation(): void {
   }
 }
 
-export function addTranslation(s: string): void {
+export async function addTranslation(s: string): Promise<void> {
   let frame: LwtFrame | undefined = (window.parent as Window & { frames: FramesCollection }).frames.ro;
   if (frame === undefined) {
     frame = window.opener as LwtFrame | undefined;
   }
   if (frame === undefined) {
-    alert('Translation can not be copied!');
+    void showError(t('common.dialog.translation_not_copied'));
     return;
   }
   const word_trans = (frame.document.forms[0] as HTMLFormElement & { WoTranslation: HTMLInputElement }).WoTranslation;
   if (typeof word_trans !== 'object') {
-    alert('Translation can not be copied!');
+    void showError(t('common.dialog.translation_not_copied'));
     return;
   }
   const oldValue = word_trans.value;
@@ -88,10 +90,7 @@ export function addTranslation(s: string): void {
       word_trans.value = oldValue + ' / ' + s;
       frame.lwtFormCheck.makeDirty();
     } else {
-      if (confirm(
-        '"' + s + '" seems already to exist as a translation.\n' +
-        'Insert anyway?'
-      )) {
+      if (await confirmAction(t('common.dialog.translation_exists', { text: s }))) {
         word_trans.value = oldValue + ' / ' + s;
         frame.lwtFormCheck.makeDirty();
       }
