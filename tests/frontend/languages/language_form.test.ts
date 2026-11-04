@@ -1,6 +1,7 @@
 /**
  * Tests for language_form.ts - Language form configuration
  */
+import { confirmPrompts, dismissAlerts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   languageForm,
@@ -457,7 +458,7 @@ describe('language_form.ts', () => {
 
   describe('checkDuplicateLanguage', () => {
     beforeEach(() => {
-      vi.spyOn(window, 'alert').mockImplementation(() => {});
+      dismissAlerts();
     });
 
     it('returns true when language does not exist', () => {
@@ -486,7 +487,7 @@ describe('language_form.ts', () => {
       expect(result).toBe(true);
     });
 
-    it('returns false when creating duplicate language', () => {
+    it('returns false when creating duplicate language', async () => {
       languageForm.languageId = 0;
       languageForm.allLanguages = { 'English': 1 };
 
@@ -497,7 +498,22 @@ describe('language_form.ts', () => {
       const result = checkDuplicateLanguage();
 
       expect(result).toBe(false);
-      expect(window.alert).toHaveBeenCalled();
+      await settle();
+      expect(confirmPrompts).toHaveBeenCalled();
+    });
+
+    it('returns the focus to the name once the error is dismissed', async () => {
+      languageForm.languageId = 0;
+      languageForm.allLanguages = { 'English': 1 };
+      document.body.innerHTML = `
+        <input id="LgName" value="English">
+      `;
+      dismissAlerts();
+
+      checkDuplicateLanguage();
+      await settle();
+
+      expect(document.activeElement).toBe(document.getElementById('LgName'));
     });
 
     it('accepts custom language ID and languages map', () => {
@@ -627,7 +643,7 @@ describe('language_form.ts', () => {
 
     it('sets up form submit handler for duplicate check', () => {
       languageForm.allLanguages = { 'English': 1 };
-      vi.spyOn(window, 'alert').mockImplementation(() => {});
+      dismissAlerts();
 
       document.body.innerHTML = `
         <script type="application/json" id="language-form-config">

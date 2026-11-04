@@ -6,6 +6,9 @@
  * @since   1.6.16-fork
  */
 
+import { showError } from '@shared/components/confirm_dialog';
+import { t } from '@shared/i18n/translator';
+
 /**
  * Helper to safely get an HTML attribute value as a string.
  *
@@ -50,15 +53,11 @@ export function alertFirstCharacterOutsideBasicMultilingualPlane(s: string, info
   }
   const match = /[\uD800-\uDFFF]/.exec(s);
   if (!match) return 0;
-  alert(
-    'ERROR\n\nText "' + info + '" contains invalid character(s) ' +
-    '(in the Unicode Supplementary Multilingual Planes, > U+FFFF) like emojis ' +
-    'or very rare characters.\n\nFirst invalid character: "' +
-    s.substring(match.index, match.index + 2) + '" at position ' +
-    (match.index + 1) + '.\n\n' +
-    'More info: https://en.wikipedia.org/wiki/Plane_(Unicode)\n\n' +
-    'Please remove this/these character(s) and try again.'
-  );
+  void showError(t('common.dialog.field_unsupported_char', {
+    field: info,
+    char: s.substring(match.index, match.index + 2),
+    position: match.index + 1
+  }));
   return 1;
 }
 
@@ -114,7 +113,7 @@ export function check(): boolean {
     if (el.value.trim() === '') count++;
   });
   if (count > 0) {
-    alert('ERROR\n\n' + count + ' field(s) - marked with * - must not be empty!');
+    void showError(t('common.dialog.fields_empty', { count }));
     return false;
   }
 
@@ -127,10 +126,7 @@ export function check(): boolean {
       if ((val.indexOf('http://') !== 0) &&
           (val.indexOf('https://') !== 0) &&
           (val.indexOf('#') !== 0)) {
-        alert(
-          'ERROR\n\nField "' + el.getAttribute('data_info') +
-          '" must start with "http://" or "https://" if not empty.'
-        );
+        void showError(t('common.dialog.field_url', { field: el.getAttribute('data_info') ?? '' }));
         count++;
       }
     }
@@ -146,7 +142,7 @@ export function check(): boolean {
       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       xhr.send('action=&action_type=check_regexp&regex=' + encodeURIComponent(regexp));
       if (xhr.responseText !== '') {
-        alert(xhr.responseText);
+        void showError(xhr.responseText);
         count++;
       }
     }
@@ -160,10 +156,10 @@ export function check(): boolean {
     const val = el.value.trim();
     if (val.length > 0) {
       if (parseInt(val, 10) > maxvalue) {
-        alert(
-          'ERROR\n\n Max Value of Field "' + el.getAttribute('data_info') +
-          '" is ' + maxvalue
-        );
+        void showError(t('common.dialog.field_max', {
+          field: el.getAttribute('data_info') ?? '',
+          max: maxvalue
+        }));
         count++;
       }
     }
@@ -184,10 +180,7 @@ export function check(): boolean {
         new URL(refinned);
       } catch (err) {
         if (err instanceof TypeError) {
-          alert(
-            'ERROR\n\nField "' + el.getAttribute('data_info') +
-            '" should be an URL if not empty.'
-          );
+          void showError(t('common.dialog.field_dict_url', { field: el.getAttribute('data_info') ?? '' }));
           count++;
         }
       }
@@ -199,10 +192,7 @@ export function check(): boolean {
     const val = el.value.trim();
     if (val.length > 0) {
       if (!(isInt(val) && (parseInt(val, 10) > 0))) {
-        alert(
-          'ERROR\n\nField "' + el.getAttribute('data_info') +
-          '" must be an integer number > 0.'
-        );
+        void showError(t('common.dialog.field_positive', { field: el.getAttribute('data_info') ?? '' }));
         count++;
       }
     }
@@ -213,10 +203,7 @@ export function check(): boolean {
     const val = el.value.trim();
     if (val.length > 0) {
       if (!(isInt(val) && (parseInt(val, 10) >= 0))) {
-        alert(
-          'ERROR\n\nField "' + el.getAttribute('data_info') +
-          '" must be an integer number >= 0.'
-        );
+        void showError(t('common.dialog.field_nonnegative', { field: el.getAttribute('data_info') ?? '' }));
         count++;
       }
     }
@@ -239,11 +226,10 @@ export function check(): boolean {
     const maxLength = parseInt(getAttr(el, 'data_maxlength') || '0', 10);
     const val = getVal(el);
     if (val.trim().length > maxLength) {
-      alert(
-        'ERROR\n\nText is too long in field "' + getAttr(el, 'data_info') +
-        '", please make it shorter! (Maximum length: ' +
-        getAttr(el, 'data_maxlength') + ' char.)'
-      );
+      void showError(t('common.dialog.field_too_long_chars', {
+        field: getAttr(el, 'data_info'),
+        max: getAttr(el, 'data_maxlength')
+      }));
       count++;
     }
   });
@@ -263,11 +249,10 @@ export function check(): boolean {
     const maxLength = parseInt(getAttr(el, 'data_maxlength') || '0', 10);
     const val = getVal(el);
     if (getUTF8Length(val.trim()) > maxLength) {
-      alert(
-        'ERROR\n\nText is too long in field "' + getAttr(el, 'data_info') +
-        '", please make it shorter! (Maximum length: ' +
-        getAttr(el, 'data_maxlength') + ' bytes.)'
-      );
+      void showError(t('common.dialog.field_too_long_bytes', {
+        field: getAttr(el, 'data_info'),
+        max: getAttr(el, 'data_maxlength')
+      }));
       count++;
     }
   });
@@ -276,10 +261,7 @@ export function check(): boolean {
   document.querySelectorAll<HTMLInputElement>('input.noblanksnocomma').forEach(el => {
     const val = el.value;
     if (val.indexOf(' ') > 0 || val.indexOf(',') > 0) {
-      alert(
-        'ERROR\n\nNo spaces or commas allowed in field "' +
-        el.getAttribute('data_info') + '", please remove!'
-      );
+      void showError(t('common.dialog.field_no_spaces', { field: el.getAttribute('data_info') ?? '' }));
       count++;
     }
   });

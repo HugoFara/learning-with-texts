@@ -1,7 +1,7 @@
 /**
  * Tests for translation_api.ts - Translation API functions
  */
-import { answerConfirms, settle } from '../helpers/confirm_answers';
+import { answerConfirms, dismissAlerts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   deleteTranslation,
@@ -140,7 +140,7 @@ describe('translation_api.ts', () => {
   // ===========================================================================
 
   describe('addTranslation', () => {
-    it('alerts when no frame is available', () => {
+    it('alerts when no frame is available', async () => {
       Object.defineProperty(window, 'parent', {
         value: { frames: { ro: undefined } },
         writable: true,
@@ -152,11 +152,12 @@ describe('translation_api.ts', () => {
         configurable: true,
       });
 
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = dismissAlerts();
 
       addTranslation('test');
 
-      expect(alertSpy).toHaveBeenCalledWith('Translation can not be copied!');
+      await settle();
+      expect(alertSpy).toHaveBeenCalledWith('The translation could not be copied.');
     });
 
     it('sets translation when field is empty', () => {
@@ -256,7 +257,7 @@ describe('translation_api.ts', () => {
       expect(makeDirtySpy).not.toHaveBeenCalled();
     });
 
-    it('alerts when form WoTranslation is not an object', () => {
+    it('alerts when form WoTranslation is not an object', async () => {
       // WoTranslation is undefined/not an object
       const mockForm = {};
       const mockFrame = {
@@ -270,11 +271,12 @@ describe('translation_api.ts', () => {
         configurable: true,
       });
 
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = dismissAlerts();
 
       addTranslation('test');
 
-      expect(alertSpy).toHaveBeenCalledWith('Translation can not be copied!');
+      await settle();
+      expect(alertSpy).toHaveBeenCalledWith('The translation could not be copied.');
     });
   });
 

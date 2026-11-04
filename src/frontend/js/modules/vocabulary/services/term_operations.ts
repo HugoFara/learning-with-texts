@@ -6,6 +6,8 @@
  * @since   1.6.16-fork
  */
 
+import { t } from '@shared/i18n/translator';
+import { showError } from '@shared/components/confirm_dialog';
 import { onDomReady } from '@shared/utils/dom_ready';
 import { escapeHtml } from '@shared/utils/html_utils';
 import { isInt } from '@shared/forms/form_validation';
@@ -99,10 +101,9 @@ export async function saveImprovedTextAnnotation(textid: number, elem_name: stri
     waitEl.innerHTML = iconHtml('empty');
   }
   if (response.error || response.data?.error) {
-    alert(
-      'Saving your changes failed, please reload the page and try again! ' +
-      'Error message: "' + (response.error || response.data?.error) + '".'
-    );
+    void showError(t('common.dialog.term_save_failed', {
+      error: String(response.error || response.data?.error)
+    }));
   }
 }
 
@@ -144,16 +145,15 @@ export async function updateTermTranslation(wordid: number, txid: string): Promi
   const translation = (el?.value || '').trim();
   const pagepos = window.scrollY || document.documentElement.scrollTop || 0;
   if (translation === '' || translation === '*') {
-    alert('Text Field is empty or = \'*\'!');
+    void showError(t('common.dialog.text_field_empty'));
     return;
   }
-  const failure = 'Updating translation of term failed!' +
-  'Please reload page and try again.';
+  const failure = t('common.dialog.translation_update_failed');
 
   const response = await TermsApi.updateTranslation(wordid, translation);
 
   if (response.error) {
-    alert(failure + '\n' + response.error);
+    void showError(failure + '\n' + response.error);
     return;
   }
   if (response.data?.update) {
@@ -173,16 +173,15 @@ export async function addTermTranslation(txid: string, word: string, lang: numbe
   const translation = (el?.value || '').trim();
   const pagepos = window.scrollY || document.documentElement.scrollTop || 0;
   if (translation === '' || translation === '*') {
-    alert('Text Field is empty or = \'*\'!');
+    void showError(t('common.dialog.text_field_empty'));
     return;
   }
-  const failure = 'Adding translation to term failed!' +
-  'Please reload page and try again.';
+  const failure = t('common.dialog.translation_add_failed');
 
   const response = await TermsApi.addWithTranslation(word, lang, translation);
 
   if (response.error) {
-    alert(failure + '\n' + response.error);
+    void showError(failure + '\n' + response.error);
     return;
   }
   if (response.data?.add && response.data?.term_id !== undefined) {
@@ -341,7 +340,7 @@ export async function loadTermTranslations(pagepos: number, word: string, term_i
   );
 
   if (response.error || response.data?.error) {
-    alert(response.error || response.data?.error);
+    void showError(String(response.error || response.data?.error));
   } else if (response.data) {
     editTermAnnotationTranslations(response.data, textid);
     scrollTo(pagepos);

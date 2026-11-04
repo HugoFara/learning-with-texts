@@ -9,6 +9,8 @@
  * @since 3.0.0
  */
 
+import { t } from '@shared/i18n/translator';
+import { showError } from '@shared/components/confirm_dialog';
 import { setBoundChecked, setBoundValue } from './bound_fields';
 import { onDomReady } from '@shared/utils/dom_ready';
 import { getLibreTranslateTranslation } from '@modules/vocabulary/services/translation_api';
@@ -378,10 +380,8 @@ export function checkDuplicateLanguage(
 
   if (lgName in allLangs) {
     if (langId !== allLangs[lgName]) {
-      alert(
-        'Language "' + lgName + '" already exists. Please change the language name!'
-      );
-      lgNameEl?.focus();
+      void showError(t('common.dialog.language_exists', { name: lgName }))
+        .then(() => lgNameEl?.focus());
       return false;
     }
   }

@@ -1,6 +1,7 @@
 /**
  * Tests for text_reading_init.ts - Text reading initialization
  */
+import { dismissAlerts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   initTTS,
@@ -126,18 +127,19 @@ describe('text_reading_init.ts', () => {
   // ===========================================================================
 
   describe('toggleReading', () => {
-    it('alerts when speechSynthesis is undefined', () => {
+    it('alerts when speechSynthesis is undefined', async () => {
       Object.defineProperty(window, 'speechSynthesis', {
         value: undefined,
         writable: true,
         configurable: true
       });
 
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = dismissAlerts();
 
       toggleReading();
 
-      expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('speechSynthesis'));
+      await settle();
+      expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('speech synthesis'));
     });
 
     it('cancels speech when already speaking', () => {

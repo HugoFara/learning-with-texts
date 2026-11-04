@@ -2,7 +2,7 @@
  * Tests for confirm_dialog.ts - in-app confirmation dialog
  */
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { confirmBeforeSubmit, confirmDialog } from '../../../src/frontend/js/shared/components/confirm_dialog';
+import { confirmBeforeSubmit, confirmDialog, promptDialog, showAlert, showError } from '../../../src/frontend/js/shared/components/confirm_dialog';
 import { settle, trackSubmissions } from '../helpers/confirm_answers';
 import { readdirSync, readFileSync, statSync } from 'fs';
 import { join } from 'path';
@@ -206,7 +206,170 @@ describe('confirm_dialog.ts', () => {
     });
   });
 
-  it('is the only code that opens a native confirmation', () => {
+  describe('showAlert', () => {
+    it('shows one button and resolves when dismissed', async () => {
+      const closed = showAlert('Saved.');
+
+      const buttons = document.querySelectorAll('.confirm-dialog button');
+      expect(buttons).toHaveLength(1);
+      expect(document.activeElement).toBe(buttons[0]);
+
+      (buttons[0] as HTMLButtonElement).click();
+
+      await closed;
+      expect(document.querySelector('.confirm-dialog')).toBeNull();
+    });
+
+    it('resolves on Escape', async () => {
+      const closed = showAlert('Saved.');
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      await expect(closed).resolves.toBeUndefined();
+    });
+
+    it('gives errors a heading', () => {
+      void showError('It broke.');
+
+      expect(document.querySelector('#confirm-dialog-title')?.textContent).toBe('Error');
+      button('OK').click();
+    });
+
+    it('is not dismissed by the Enter press that opened it', async () => {
+      const closed = vi.fn();
+      void showAlert('Saved.').then(closed);
+
+      // The browser sends keypress after keydown, to whatever now has focus.
+      const press = new KeyboardEvent('keypress', { key: 'Enter', bubbles: true, cancelable: true });
+      document.activeElement?.dispatchEvent(press);
+
+      expect(press.defaultPrevented).toBe(true);
+      await settle();
+      expect(closed).not.toHaveBeenCalled();
+      button('OK').click();
+    });
+
+    it('lets a later Enter press through', async () => {
+      void showAlert('Saved.');
+      await settle();
+
+      const press = new KeyboardEvent('keypress', { key: 'Enter', bubbles: true, cancelable: true });
+      document.activeElement?.dispatchEvent(press);
+
+      expect(press.defaultPrevented).toBe(false);
+      button('OK').click();
+    });
+  });
+
+  describe('one dialog at a time', () => {
+    it('shows queued alerts in order, so none is lost', async () => {
+      const first = showAlert('First');
+      const second = showAlert('Second');
+
+      expect(document.querySelectorAll('.confirm-dialog')).toHaveLength(1);
+      expect(document.querySelector('.confirm-dialog')?.textContent).toContain('First');
+
+      button('OK').click();
+      await first;
+
+      expect(document.querySelector('.confirm-dialog')?.textContent).toContain('Second');
+      button('OK').click();
+      await second;
+    });
+
+    it('does not let an alert answer a confirmation', async () => {
+      const alerted = showAlert('Heads up');
+      const answer = confirmDialog(options);
+
+      button('OK').click();
+      await alerted;
+      button('Discard').click();
+
+      await expect(answer).resolves.toBe(true);
+    });
+  });
+
+  describe('promptDialog', () => {
+    function field(): HTMLInputElement {
+      return document.querySelector('.confirm-dialog input') as HTMLInputElement;
+    }
+
+    it('focuses the field and returns what was typed', async () => {
+      const answer = promptDialog('Enter tag:', { value: 'start' });
+
+      expect(document.activeElement).toBe(field());
+      expect(field().value).toBe('start');
+
+      field().value = 'mytag';
+      button('OK').click();
+
+      await expect(answer).resolves.toBe('mytag');
+    });
+
+    it('submits on Enter', async () => {
+      const answer = promptDialog('Enter tag:');
+
+      field().value = 'mytag';
+      field().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      await expect(answer).resolves.toBe('mytag');
+    });
+
+    it('returns null when cancelled', async () => {
+      const answer = promptDialog('Enter tag:');
+
+      button('Cancel').click();
+
+      await expect(answer).resolves.toBeNull();
+    });
+
+    it('keeps the dialog open and says what is wrong', async () => {
+      const answer = promptDialog('Enter tag:', {
+        validate: (value) => (value.includes(' ') ? 'No spaces.' : null)
+      });
+
+      field().value = 'two words';
+      button('OK').click();
+
+      expect(document.querySelector('.confirm-dialog .help')?.textContent).toBe('No spaces.');
+      expect(document.activeElement).toBe(field());
+
+      field().value = 'oneword';
+      button('OK').click();
+
+      await expect(answer).resolves.toBe('oneword');
+    });
+
+    it('keeps Tab inside, through the field and both buttons', () => {
+      void promptDialog('Enter tag:');
+      const tab = () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+
+      tab();
+      expect(document.activeElement).toBe(button('Cancel'));
+      tab();
+      expect(document.activeElement).toBe(button('OK'));
+      tab();
+      expect(document.activeElement).toBe(field());
+
+      button('Cancel').click();
+    });
+  });
+
+  it('falls back to native alert and prompt when they cannot be built', async () => {
+    vi.spyOn(document, 'createElement').mockImplementation(() => {
+      throw new Error('no DOM');
+    });
+    const nativeAlert = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
+    const nativePrompt = vi.spyOn(window, 'prompt').mockReturnValue('typed');
+
+    await showAlert('Saved.');
+    await expect(promptDialog('Enter tag:', { value: 'start' })).resolves.toBe('typed');
+
+    expect(nativeAlert).toHaveBeenCalledWith('Saved.');
+    expect(nativePrompt).toHaveBeenCalledWith('Enter tag:', 'start');
+  });
+
+  it('is the only code that opens a native dialog', () => {
     const offenders: string[] = [];
     const walk = (dir: string): void => {
       for (const name of readdirSync(dir)) {
@@ -214,7 +377,7 @@ describe('confirm_dialog.ts', () => {
         if (statSync(path).isDirectory()) {
           walk(path);
         } else if (path.endsWith('.ts') && !path.endsWith('confirm_dialog.ts')) {
-          if (/(^|[^.\w])(window\.)?confirm\(/m.test(readFileSync(path, 'utf8'))) {
+          if (/(^|[^.\w])(window\.)?(confirm|alert|prompt)\(/m.test(readFileSync(path, 'utf8'))) {
             offenders.push(path);
           }
         }
