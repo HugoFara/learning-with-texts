@@ -7,13 +7,29 @@ ones are marked like "v1.0.0-fork".
 
 ## [Unreleased]
 
-### Changed in Unreleased
+## [3.8.1-fork] - 2026-11-04
+
+### Changed in 3.8.1-fork
 
 * **The sign-in pages are one centred card** on every screen size. Login,
   registration and password recovery no longer repeat the logo and title
   above a narrow form.
 
-### Fixed in Unreleased
+### Fixed in 3.8.1-fork
+
+* **New languages lost their settings.** The language wizard filled the form
+  on screen but not the form's state, so Save reported a missing name, and
+  retyping the name stored the language without its dictionary, language
+  codes, parsing rules or parser. The wizard now also fills in the translator
+  URL, which it never did. Languages already saved this way keep their
+  settings: repair them from the language's edit page.
+
+* **Term status changes and term edits failed on multi-user installs.** Both
+  returned an HTTP 500, and a failed status change showed the user nothing.
+
+* **Starter vocabulary stayed invisible to the reader.** Imported words were
+  shown as unknown in every text, and they are now linked to existing texts
+  and to new ones. A migration repairs earlier imports.
 
 * Confirmations, alerts and text prompts are now in-app dialogs that follow the
   theme and the interface language, instead of the browser's, and messages that
@@ -41,20 +57,6 @@ ones are marked like "v1.0.0-fork".
   cards, and a darker background for empty days on the activity calendar.
 
 * The Anki import pages no longer show their heading twice.
-
-* **New languages lost their settings.** The language wizard filled the form
-  on screen but not the form's state, so Save reported a missing name, and
-  retyping the name stored the language without its dictionary, language
-  codes, parsing rules or parser. The wizard now also fills in the translator
-  URL, which it never did. Languages already saved this way keep their
-  settings: repair them from the language's edit page.
-
-* **Term status changes and term edits failed on multi-user installs.** Both
-  returned an HTTP 500, and a failed status change showed the user nothing.
-
-* **Starter vocabulary stayed invisible to the reader.** Imported words were
-  shown as unknown in every text, and they are now linked to existing texts
-  and to new ones. A migration repairs earlier imports.
 
 ## [3.8.0-fork] - 2026-11-03
 
