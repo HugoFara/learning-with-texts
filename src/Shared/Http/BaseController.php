@@ -58,7 +58,11 @@ abstract class BaseController
      */
     protected function render(string $title, bool $showMenu = true): void
     {
-        PageLayoutHelper::renderPageStart($title, $showMenu);
+        if ($showMenu) {
+            PageLayoutHelper::renderPageStart($title, true);
+            return;
+        }
+        PageLayoutHelper::renderAuthPageStart($title);
     }
 
     /**

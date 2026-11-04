@@ -25,7 +25,6 @@ use Lwt\Shared\UI\Helpers\FormHelper;
 assert($error === null || is_string($error));
 
 ?>
-<h1><?= __e('vocabulary.anki.deck.title') ?></h1>
 
 <?php if ($error !== null) { ?>
   <div class="notification is-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>

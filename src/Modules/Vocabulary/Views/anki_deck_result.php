@@ -37,7 +37,6 @@ $statusName = static function (int $status): string {
 };
 
 ?>
-<h1><?= __e('vocabulary.anki.deck.title') ?></h1>
 
 <div class="notification is-success">
   <p><strong><?= __ne('vocabulary.anki.deck.imported', $result->created) ?></strong></p>

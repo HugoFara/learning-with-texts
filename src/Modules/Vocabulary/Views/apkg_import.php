@@ -56,7 +56,6 @@ $settingsExport = $needsLegacyExport
     : 'vocabulary.anki.apkg.settings_export';
 
 ?>
-<h1><?= __e('vocabulary.anki.apkg.title') ?></h1>
 
 <?php if ($error !== null) { ?>
   <div class="notification is-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>

@@ -109,7 +109,7 @@ $base = UrlUtilities::getBasePath();
             <!-- Current text card -->
             <div style="flex-shrink: 0;">
                 <template x-if="lastText">
-                    <div class="box has-background-link-light" style="width: 280px; min-height: 180px;">
+                    <div class="box has-background-link-soft" style="width: 280px; min-height: 180px;">
                         <p dir="auto" class="title is-5 mb-3" x-text="lastText.title"></p>
                         <!-- Statistics bar - colors match word status highlights -->
                         <div
@@ -194,7 +194,7 @@ $base = UrlUtilities::getBasePath();
             <div style="flex-shrink: 0;">
                 <a
                     href="<?php echo $base; ?>/texts/new"
-                    class="box has-background-primary-light has-text-centered"
+                    class="box has-background-primary-soft has-text-centered"
                     style="width: 180px; min-height: 180px; display: flex;
                         flex-direction: column; justify-content: center; align-items: center;"
                 >
@@ -209,12 +209,12 @@ $base = UrlUtilities::getBasePath();
             <div style="flex-shrink: 0;">
                 <div
                     data-action="open-library-search"
-                    class="box has-background-warning-light has-text-centered"
+                    class="box has-background-warning-soft has-text-centered"
                     style="width: 180px; min-height: 180px; display: flex;
                         flex-direction: column; justify-content: center; align-items: center;
                         cursor: pointer;"
                 >
-                    <span class="icon is-large has-text-warning-dark">
+                    <span class="icon is-large has-text-warning">
                         <i data-lucide="search" style="width: 48px; height: 48px;"></i>
                     </span>
                     <p class="mt-3 has-text-weight-semibold"><?= __('home.search_library') ?></p>

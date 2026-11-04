@@ -71,7 +71,6 @@ $fieldSelect = static function (string $name, string $label, array $fields, bool
 };
 
 ?>
-<h1><?= __e('vocabulary.anki.deck.title') ?></h1>
 
 <?php if ($error !== null) { ?>
   <div class="notification is-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>

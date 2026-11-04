@@ -3306,3 +3306,50 @@ Searchable Select Component (Alpine.js)
     max-height: 190px;
   }
 }
+
+/* Reader annotations: the #006699 set in text_styles.ts is unreadable on black */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .word-ann {
+    color: #7cc4ff;
+  }
+}
+
+:root[data-theme="dark"] .word-ann {
+  color: #7cc4ff;
+}
+
+/* Sign-in pages: one centred card, on every screen size */
+.auth-page main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 0;
+}
+
+.auth-page .section {
+  padding: 1.5rem 1rem;
+}
+
+.auth-page .section > .container {
+  padding: 0;
+}
+
+.auth-page .section > .container > .columns {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+}
+
+.auth-page .section > .container > .columns > .column {
+  flex: 0 1 26rem;
+  max-width: 26rem;
+  padding: 0;
+  width: 100%;
+}
+
+.auth-page .box h1.title {
+  border-bottom: none;
+  padding-bottom: 0;
+}

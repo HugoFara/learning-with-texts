@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace Lwt\Modules\Vocabulary\Application\Services;
 
+use Lwt\Modules\Activity\Infrastructure\MySqlActivityRepository;
 use Lwt\Shared\Infrastructure\Utilities\StringUtils;
 use Lwt\Shared\Infrastructure\Database\Connection;
 use Lwt\Shared\Infrastructure\Database\Escaping;
@@ -206,6 +207,8 @@ class WordDiscoveryService
                 . ")";
 
             $wid = (int) Connection::preparedInsert($sql, $bindings);
+
+            (new MySqlActivityRepository())->incrementTermsCreated();
         } else {
             /** @var list<int|string> $updateBindings */
             $updateBindings = [$status, $wid];

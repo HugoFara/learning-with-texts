@@ -18,6 +18,7 @@ export interface ProfileAppData {
   username: string;
   email: string;
   emailVerified: boolean;
+  showsUnverifiedNotice(): boolean;
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
@@ -74,6 +75,10 @@ export function profileAppData(): ProfileAppData {
       this.username = response.data.profile.username;
       this.email = response.data.profile.email || '';
       this.emailVerified = response.data.profile.emailVerified;
+    },
+
+    showsUnverifiedNotice(): boolean {
+      return this.email !== '' && !this.emailVerified;
     },
 
     async saveProfile(): Promise<void> {

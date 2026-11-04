@@ -95,6 +95,32 @@ class TextReadController extends BaseController
     }
 
     /**
+     * Count a text as read once per day, however often its page is opened.
+     *
+     * @param int $textId Text ID
+     *
+     * @return void
+     */
+    private function countTextAsRead(int $textId): void
+    {
+        $today = date('Y-m-d');
+        /** @var mixed $counted */
+        $counted = $_SESSION['texts_read_counted'] ?? null;
+        if (!is_array($counted) || ($counted['date'] ?? null) !== $today) {
+            $counted = ['date' => $today, 'ids' => []];
+        }
+        /** @var list<int> $ids */
+        $ids = is_array($counted['ids'] ?? null) ? $counted['ids'] : [];
+        if (in_array($textId, $ids, true)) {
+            return;
+        }
+
+        $ids[] = $textId;
+        $_SESSION['texts_read_counted'] = ['date' => $today, 'ids' => $ids];
+        (new MySqlActivityRepository())->incrementTextsRead();
+    }
+
+    /**
      * Render the text reading page.
      *
      * @param int $textId Text ID
@@ -110,7 +136,7 @@ class TextReadController extends BaseController
             return $this->redirect('/text/edit');
         }
 
-        (new MySqlActivityRepository())->incrementTextsRead();
+        $this->countTextAsRead($textId);
 
         $title = (string) $headerData['TxTitle'];
         $langId = (int) $headerData['TxLgID'];

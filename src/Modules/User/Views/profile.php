@@ -64,7 +64,7 @@ $t = static fn(string $key): string => htmlspecialchars(__('user.' . $key), ENT_
                         <?php echo $t('profile.email_verified'); ?>
                     </div>
                     <div class="notification is-warning is-light is-size-7 py-2 px-3 mb-4"
-                         x-show="!emailVerified" x-cloak>
+                         x-show="showsUnverifiedNotice()" x-cloak>
                         <?php echo $t('profile.email_not_verified'); ?>
                     </div>
 

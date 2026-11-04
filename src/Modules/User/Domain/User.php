@@ -592,6 +592,18 @@ class User
     }
 
     /**
+     * Whether the user has an email address still waiting for verification.
+     *
+     * Email is optional, and an account without one has nothing to verify.
+     *
+     * @return bool
+     */
+    public function needsEmailVerification(): bool
+    {
+        return $this->email !== null && !$this->isEmailVerified();
+    }
+
+    /**
      * Mark the email as verified.
      *
      * @return void
