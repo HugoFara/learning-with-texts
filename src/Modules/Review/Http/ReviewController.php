@@ -23,6 +23,7 @@ use Lwt\Shared\Http\BaseController;
 use Lwt\Modules\Review\Application\ReviewFacade;
 use Lwt\Modules\Review\Infrastructure\SessionStateManager;
 use Lwt\Modules\Language\Application\LanguageFacade;
+use Lwt\Shared\Infrastructure\Language\CurrentLanguage;
 use Lwt\Shared\Infrastructure\Language\LanguagePresets;
 use Lwt\Shared\UI\Helpers\PageLayoutHelper;
 
@@ -177,6 +178,7 @@ class ReviewController extends BaseController
         // Get language settings
         $langIdFromSql = $this->reviewFacade->getLanguageIdFromReviewSql($reviewsql, $reviewParams);
         if ($langIdFromSql === null) {
+            CurrentLanguage::follow($langId ?? 0);
             PageLayoutHelper::renderPageStartNobody(__('review.page_title'), 'full-width');
             include __DIR__ . '/../Views/no_terms.php';
             PageLayoutHelper::renderPageEnd();
@@ -235,6 +237,7 @@ class ReviewController extends BaseController
             'property' => $testData['property']
         ];
 
+        CurrentLanguage::follow($langIdFromSql);
         PageLayoutHelper::renderPageStartNobody(__('review.page_title'), 'full-width');
         include __DIR__ . '/../Views/review_desktop.php';
         PageLayoutHelper::renderPageEnd();

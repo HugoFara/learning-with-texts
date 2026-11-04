@@ -12,6 +12,20 @@ ones are marked like "v1.0.0-fork".
 
 ## [Unreleased]
 
+### Fixed
+
+* **The interface language setting had no effect on multi-user installs.** The
+  language was read before the signed-in user was known, so everyone got the
+  default. It now applies to every signed-in page, and the preferences page
+  reloads to show it as soon as it is saved.
+
+* **The language picker fell out of step with the page.** On multi-user installs
+  `?filterlang=` links never changed the current language, and creating a
+  language, opening a text or reviewing a language left the picker on the old
+  one. All of these now update it. Remembered sort orders had the same fault
+  and now persist per user, and none of these values reach the shared defaults
+  any more.
+
 ## [3.8.1-fork] - 2026-11-04
 
 ### Changed in 3.8.1-fork
