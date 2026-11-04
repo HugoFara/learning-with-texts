@@ -203,11 +203,11 @@ function handleResetAll(): void {
 /**
  * Handle delete confirmation with navigation.
  */
-function handleConfirmDelete(e: Event, actionEl: HTMLElement): void {
+async function handleConfirmDelete(e: Event, actionEl: HTMLElement): Promise<void> {
   e.preventDefault();
   const url = actionEl.dataset.url;
 
-  if (url && confirmDelete()) {
+  if (url && await confirmDelete()) {
     location.href = url;
   }
 }

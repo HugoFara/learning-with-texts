@@ -49,5 +49,19 @@
     "dialog.discard_title": "Discard your changes?",
     "dialog.discard_message": "Your changes to this term have not been saved.",
     "dialog.discard": "Discard",
-    "dialog.keep_editing": "Keep editing"
+    "dialog.keep_editing": "Keep editing",
+    "dialog.confirm": "Confirm",
+    "dialog.are_you_sure": "Are you sure?",
+    "dialog.delete_term": "Delete this term?",
+    "dialog.mark_all_known": "Mark all unknown words as Well Known?",
+    "dialog.mark_all_ignored": "Mark all unknown words as Ignored?",
+    "dialog.delete_feed": "Delete feed \"{name}\"?",
+    "dialog.delete_selected_feeds": "Delete the selected feeds? ({count})",
+    "dialog.delete_selected_articles": "Delete the selected articles? ({count})",
+    "dialog.delete_all_articles": "Delete all articles from \"{name}\"?",
+    "dialog.clear_offline": "Remove all offline data? This cannot be undone.",
+    "dialog.translation_exists": "\"{text}\" already seems to be a translation. Insert it anyway?",
+    "dialog.records_affected": "Records affected: {count}",
+    "dialog.all_records_warning": "This applies to all records on all pages of the current query.",
+    "dialog.delete_table_set": "Delete table set \"{name}\"? All its data will be lost."
 }

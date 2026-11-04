@@ -15,8 +15,12 @@ ones are marked like "v1.0.0-fork".
 
 ### Fixed in Unreleased
 
-* The unsaved-changes prompt in the term dialogs is now an in-app dialog that
-  follows the theme and the interface language, instead of the browser's.
+* Confirmation prompts are now an in-app dialog that follows the theme and the
+  interface language, instead of the browser's, and prompts that were English
+  in every locale are translated. The browser's own dialog remains only as a
+  fallback, and for its warning when leaving a page with unsaved changes.
+
+* Cancelling a database restore no longer leaves the page showing "restoring".
 
 * The "Email not verified" banner no longer follows accounts that have no
   email address.

@@ -49,5 +49,19 @@
     "dialog.discard_title": "Abandonner vos modifications ?",
     "dialog.discard_message": "Vos modifications de ce terme n'ont pas été enregistrées.",
     "dialog.discard": "Abandonner",
-    "dialog.keep_editing": "Continuer à modifier"
+    "dialog.keep_editing": "Continuer à modifier",
+    "dialog.confirm": "Confirmer",
+    "dialog.are_you_sure": "Êtes-vous sûr ?",
+    "dialog.delete_term": "Supprimer ce terme ?",
+    "dialog.mark_all_known": "Marquer tous les mots inconnus comme bien connus ?",
+    "dialog.mark_all_ignored": "Marquer tous les mots inconnus comme ignorés ?",
+    "dialog.delete_feed": "Supprimer le flux « {name} » ?",
+    "dialog.delete_selected_feeds": "Supprimer les flux sélectionnés ? ({count})",
+    "dialog.delete_selected_articles": "Supprimer les articles sélectionnés ? ({count})",
+    "dialog.delete_all_articles": "Supprimer tous les articles de « {name} » ?",
+    "dialog.clear_offline": "Supprimer toutes les données hors ligne ? Cette action est irréversible.",
+    "dialog.translation_exists": "« {text} » semble déjà être une traduction. L'insérer quand même ?",
+    "dialog.records_affected": "Enregistrements concernés : {count}",
+    "dialog.all_records_warning": "Cela s'applique à tous les enregistrements de toutes les pages de la requête en cours.",
+    "dialog.delete_table_set": "Supprimer le jeu de tables « {name} » ? Toutes ses données seront perdues."
 }

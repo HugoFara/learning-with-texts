@@ -6,6 +6,8 @@
  * @since   2.10.0-fork Extracted from legacy/pgm.ts
  */
 
+import { t as translate } from '@shared/i18n/translator';
+import { confirmAction } from '@shared/components/confirm_dialog';
 import { onDomReady } from '@shared/utils/dom_ready';
 import { apiPut, getCsrfToken } from '@shared/api/client';
 
@@ -179,8 +181,7 @@ export async function resetAll(url: string): Promise<void> {
  * @param t Text ID
  */
 export async function iknowall(t: string | number): Promise<void> {
-  const answer = confirm('Are you sure?');
-  if (!answer) return;
+  if (!await confirmAction(translate('common.dialog.mark_all_known'))) return;
 
   const textId = typeof t === 'string' ? parseInt(t, 10) : t;
 

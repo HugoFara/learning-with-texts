@@ -9,6 +9,8 @@
  * @since   3.0.0
  */
 
+import { t } from '@shared/i18n/translator';
+import { confirmBeforeSubmit, confirmDeletion } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 
 interface TableManagementState {
@@ -83,14 +85,9 @@ export function tableManagementApp(): TableManagementState {
         return;
       }
 
-      const confirmMessage =
-        `*** DELETING TABLE SET: ${this.deletePrefix} ***\n\n` +
-        `ALL DATA IN THIS TABLE SET WILL BE LOST!\n\n` +
-        `Are you sure?`;
-
-      if (!confirm(confirmMessage)) {
-        event.preventDefault();
-      }
+      confirmBeforeSubmit(event, event.target as HTMLFormElement, () =>
+        confirmDeletion(t('common.dialog.delete_table_set', { name: this.deletePrefix }))
+      );
     }
   };
 }

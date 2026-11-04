@@ -1,6 +1,7 @@
 /**
  * Tests for table_management.ts - Table set management Alpine component
  */
+import { answerConfirms, settle, trackSubmissions } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   tableManagementApp,
@@ -128,21 +129,26 @@ describe('table_management.ts', () => {
         expect(event.defaultPrevented).toBe(true);
       });
 
-      it('shows confirmation dialog when deleting', () => {
-        const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      it('deletes only after the user confirms', async () => {
+        const confirmSpy = answerConfirms(true);
+        const submissions = trackSubmissions();
+        document.body.innerHTML = '<form></form>';
+        const form = document.querySelector('form') as HTMLFormElement;
         const app = tableManagementApp();
         app.deletePrefix = 'test_prefix';
         app.confirmDelete = true;
+        form.addEventListener('submit', (event) => app.submitDelete(event));
 
-        const event = new Event('submit', { cancelable: true });
-        app.submitDelete(event);
+        form.requestSubmit();
 
+        expect(submissions).toHaveLength(0);
+        await settle();
         expect(confirmSpy).toHaveBeenCalled();
-        expect(event.defaultPrevented).toBe(false);
+        expect(submissions).toHaveLength(1);
       });
 
-      it('prevents submission when confirmation is cancelled', () => {
-        const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      it('prevents submission when confirmation is cancelled', async () => {
+        const confirmSpy = answerConfirms(false);
         const app = tableManagementApp();
         app.deletePrefix = 'test_prefix';
         app.confirmDelete = true;
@@ -150,6 +156,7 @@ describe('table_management.ts', () => {
         const event = new Event('submit', { cancelable: true });
         app.submitDelete(event);
 
+        await settle();
         expect(confirmSpy).toHaveBeenCalled();
         expect(event.defaultPrevented).toBe(true);
       });

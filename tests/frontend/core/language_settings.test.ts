@@ -1,6 +1,7 @@
 /**
  * Tests for core/language_settings.ts - Language settings utilities
  */
+import { answerConfirms, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 
 // Mock dependencies
@@ -248,51 +249,57 @@ describe('core/language_settings.ts', () => {
     });
 
     it('shows confirmation dialog', async () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const confirmSpy = answerConfirms(true);
 
       await iknowall(1);
 
-      expect(confirmSpy).toHaveBeenCalledWith('Are you sure?');
+      await settle();
+      expect(confirmSpy).toHaveBeenCalledWith('Mark all unknown words as Well Known?');
     });
 
     it('calls API when confirmed', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       await iknowall(1);
 
+      await settle();
       expect(apiPut).toHaveBeenCalledWith('/texts/1/mark-all-wellknown', {});
     });
 
     it('does not call API when cancelled', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      answerConfirms(false);
       vi.mocked(apiPut).mockClear();
 
       await iknowall(1);
 
+      await settle();
       expect(apiPut).not.toHaveBeenCalled();
     });
 
     it('handles string text ID', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       await iknowall('42');
 
+      await settle();
       expect(apiPut).toHaveBeenCalledWith('/texts/42/mark-all-wellknown', {});
     });
 
     it('handles numeric text ID', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       await iknowall(123);
 
+      await settle();
       expect(apiPut).toHaveBeenCalledWith('/texts/123/mark-all-wellknown', {});
     });
 
     it('reloads page after successful API call', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       await iknowall(1);
 
+      await settle();
       expect(reloadSpy).toHaveBeenCalled();
     });
   });
@@ -512,11 +519,12 @@ describe('core/language_settings.ts', () => {
     });
 
     it('iknowall handles zero text ID', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
       vi.spyOn(console, 'error').mockImplementation(() => {}); // Suppress expected error
 
       await iknowall(0);
 
+      await settle();
       expect(apiPut).toHaveBeenCalledWith('/texts/0/mark-all-wellknown', {});
     });
 

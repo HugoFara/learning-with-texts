@@ -5,6 +5,7 @@
  * pagination bounds, the page-collapse after deleting a page's last row, and
  * the null-author case that would otherwise print the string "null".
  */
+import { answerConfirms, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 vi.mock('alpinejs', () => ({
@@ -153,7 +154,7 @@ describe('book_list.ts', () => {
 
   describe('deleting', () => {
     it('steps back a page when the last row on it is removed', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
       removeMock.mockResolvedValue({ data: { success: true, message: 'gone' } });
       listMock.mockResolvedValue(pageOf([aBook(9)], 2, 2));
 
@@ -163,21 +164,23 @@ describe('book_list.ts', () => {
 
       await component.confirmDelete(aBook(9));
 
+      await settle();
       expect(component.page).toBe(1);
       expect(component.notification).toBe('gone');
     });
 
     it('does nothing when the confirmation is declined', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      answerConfirms(false);
 
       const component = bookListData();
       await component.confirmDelete(aBook(1));
 
+      await settle();
       expect(removeMock).not.toHaveBeenCalled();
     });
 
     it('reports a failed delete rather than dropping the row silently', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
       removeMock.mockResolvedValue({ data: { success: false, error: 'in use' } });
       listMock.mockResolvedValue(pageOf([aBook(1), aBook(2)]));
 
@@ -185,6 +188,7 @@ describe('book_list.ts', () => {
       await component.load();
       await component.confirmDelete(aBook(1));
 
+      await settle();
       expect(component.error).toBe('in use');
     });
   });

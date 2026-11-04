@@ -99,9 +99,9 @@ export interface TextsGroupedData {
   isTextMarked(textId: number): boolean;
 
   // Actions
-  handleMultiAction(event: Event): void;
+  handleMultiAction(event: Event): Promise<void>;
   submitBulkApiAction(action: 'archive' | 'delete', ids: number[]): Promise<void>;
-  handleRestDelete(event: Event, url: string): void;
+  handleRestDelete(event: Event, url: string): Promise<void>;
   handleRestDeleteFromEvent(event: Event): void;
   handlePostAction(event: Event, url: string): void;
   handlePostActionFromEvent(event: Event): void;
@@ -242,7 +242,7 @@ export function textsGroupedData(): TextsGroupedData {
     },
 
     // Actions
-    handleMultiAction(event: Event) {
+    async handleMultiAction(event: Event) {
       const select = event.target as HTMLSelectElement;
       const action = select.value;
       if (!action) return;
@@ -257,7 +257,7 @@ export function textsGroupedData(): TextsGroupedData {
       // a configurable server (a form POST would hit the page origin instead).
       // Tag / review / reparse stay on the form path below.
       if (action === 'arch' || action === 'del') {
-        if (action === 'del' && !confirmDelete()) {
+        if (action === 'del' && !await confirmDelete()) {
           select.value = '';
           return;
         }
@@ -313,9 +313,9 @@ export function textsGroupedData(): TextsGroupedData {
       window.location.reload();
     },
 
-    handleRestDelete(event: Event, url: string) {
+    async handleRestDelete(event: Event, url: string) {
       event.preventDefault();
-      if (confirmDelete()) {
+      if (await confirmDelete()) {
         const headers: Record<string, string> = {
           'X-Requested-With': 'XMLHttpRequest',
         };
@@ -356,7 +356,7 @@ export function textsGroupedData(): TextsGroupedData {
     /** CSP-friendly: read data-url from element */
     handleRestDeleteFromEvent(event: Event) {
       const el = event.currentTarget as HTMLElement;
-      this.handleRestDelete(event, el.dataset.url || '');
+      void this.handleRestDelete(event, el.dataset.url || '');
     },
 
     /** CSP-friendly: read data-url from element */

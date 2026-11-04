@@ -1,6 +1,7 @@
 /**
  * Tests for text_reader.ts - Text reading view Alpine component
  */
+import { answerConfirms, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Mock Alpine.js
@@ -433,29 +434,32 @@ describe('text_reader.ts', () => {
 
   describe('markAllWellKnown', () => {
     it('shows confirmation dialog', async () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      const confirmSpy = answerConfirms(false);
 
       const component = textReaderData();
       await component.markAllWellKnown();
 
+      await settle();
       expect(confirmSpy).toHaveBeenCalled();
     });
 
     it('does nothing when cancelled', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      answerConfirms(false);
 
       const component = textReaderData();
       await component.markAllWellKnown();
 
+      await settle();
       expect(TextsApi.markAllWellKnown).not.toHaveBeenCalled();
     });
 
     it('calls API when confirmed', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       const component = textReaderData();
       await component.markAllWellKnown();
 
+      await settle();
       expect(TextsApi.markAllWellKnown).toHaveBeenCalledWith(123);
     });
   });
@@ -466,29 +470,32 @@ describe('text_reader.ts', () => {
 
   describe('markAllIgnored', () => {
     it('shows confirmation dialog', async () => {
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      const confirmSpy = answerConfirms(false);
 
       const component = textReaderData();
       await component.markAllIgnored();
 
+      await settle();
       expect(confirmSpy).toHaveBeenCalled();
     });
 
     it('does nothing when cancelled', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      answerConfirms(false);
 
       const component = textReaderData();
       await component.markAllIgnored();
 
+      await settle();
       expect(TextsApi.markAllIgnored).not.toHaveBeenCalled();
     });
 
     it('calls API when confirmed', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       const component = textReaderData();
       await component.markAllIgnored();
 
+      await settle();
       expect(TextsApi.markAllIgnored).toHaveBeenCalledWith(123);
     });
   });
@@ -712,7 +719,7 @@ describe('text_reader.ts', () => {
   describe('markAllWellKnown edge cases', () => {
     it('handles API error response', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       vi.mocked(TextsApi.markAllWellKnown).mockResolvedValue({
         error: 'API Error',
@@ -722,12 +729,13 @@ describe('text_reader.ts', () => {
       const component = textReaderData();
       await component.markAllWellKnown();
 
+      await settle();
       expect(consoleSpy).toHaveBeenCalledWith('Failed to mark all well-known:', 'API Error');
       expect(component.statusMessage).toBe('Failed to mark words as well-known.');
     });
 
     it('updates words in DOM and store on success', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       vi.mocked(TextsApi.markAllWellKnown).mockResolvedValue({
         data: {
@@ -742,6 +750,7 @@ describe('text_reader.ts', () => {
       const component = textReaderData();
       await component.markAllWellKnown();
 
+      await settle();
       expect(updateWordStatusInDOM).toHaveBeenCalledWith('ABC123', 99, 1);
       expect(updateWordStatusInDOM).toHaveBeenCalledWith('DEF456', 99, 2);
       expect(mockWordStore.updateWordInStore).toHaveBeenCalledTimes(2);
@@ -750,13 +759,14 @@ describe('text_reader.ts', () => {
 
     it('handles exception during API call', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       vi.mocked(TextsApi.markAllWellKnown).mockRejectedValue(new Error('Network error'));
 
       const component = textReaderData();
       await component.markAllWellKnown();
 
+      await settle();
       expect(consoleSpy).toHaveBeenCalledWith('Error marking all well-known:', expect.any(Error));
       expect(component.statusMessage).toBe('Error marking words as well-known.');
     });
@@ -769,7 +779,7 @@ describe('text_reader.ts', () => {
   describe('markAllIgnored edge cases', () => {
     it('handles API error response', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       vi.mocked(TextsApi.markAllIgnored).mockResolvedValue({
         error: 'API Error',
@@ -779,12 +789,13 @@ describe('text_reader.ts', () => {
       const component = textReaderData();
       await component.markAllIgnored();
 
+      await settle();
       expect(consoleSpy).toHaveBeenCalledWith('Failed to mark all ignored:', 'API Error');
       expect(component.statusMessage).toBe('Failed to mark words as ignored.');
     });
 
     it('updates words in DOM and store on success', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       vi.mocked(TextsApi.markAllIgnored).mockResolvedValue({
         data: {
@@ -799,6 +810,7 @@ describe('text_reader.ts', () => {
       const component = textReaderData();
       await component.markAllIgnored();
 
+      await settle();
       expect(updateWordStatusInDOM).toHaveBeenCalledWith('ABC123', 98, 1);
       expect(updateWordStatusInDOM).toHaveBeenCalledWith('DEF456', 98, 2);
       expect(mockWordStore.updateWordInStore).toHaveBeenCalledTimes(2);
@@ -807,13 +819,14 @@ describe('text_reader.ts', () => {
 
     it('handles exception during API call', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       vi.mocked(TextsApi.markAllIgnored).mockRejectedValue(new Error('Network error'));
 
       const component = textReaderData();
       await component.markAllIgnored();
 
+      await settle();
       expect(consoleSpy).toHaveBeenCalledWith('Error marking all ignored:', expect.any(Error));
       expect(component.statusMessage).toBe('Error marking words as ignored.');
     });

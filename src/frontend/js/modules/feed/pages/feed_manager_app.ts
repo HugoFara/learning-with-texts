@@ -8,6 +8,8 @@
  * @since   3.0.0
  */
 
+import { t } from '@shared/i18n/translator';
+import { confirmDeletion } from '@shared/components/confirm_dialog';
 import { onDomReady } from '@shared/utils/dom_ready';
 import Alpine from 'alpinejs';
 import { initFeedManagerStore, getFeedManagerStore } from '../stores/feed_manager_store';
@@ -69,7 +71,7 @@ function feedListComponent() {
     },
 
     async deleteFeed(feed: Feed): Promise<void> {
-      if (confirm(`Delete feed "${feed.name}"?`)) {
+      if (await confirmDeletion(t('common.dialog.delete_feed', { name: feed.name }))) {
         await this.store.deleteFeed(feed.id);
       }
     },
@@ -84,7 +86,7 @@ function feedListComponent() {
 
     async deleteSelected(): Promise<void> {
       if (this.selectedCount === 0) return;
-      if (confirm(`Delete ${this.selectedCount} selected feed(s)?`)) {
+      if (await confirmDeletion(t('common.dialog.delete_selected_feeds', { count: this.selectedCount }))) {
         await this.store.deleteSelectedFeeds();
       }
     },
@@ -193,13 +195,13 @@ function articleListComponent() {
 
     async deleteSelected(): Promise<void> {
       if (this.selectedCount === 0) return;
-      if (confirm(`Delete ${this.selectedCount} selected article(s)?`)) {
+      if (await confirmDeletion(t('common.dialog.delete_selected_articles', { count: this.selectedCount }))) {
         await this.store.deleteSelectedArticles();
       }
     },
 
     async deleteAll(): Promise<void> {
-      if (confirm(`Delete ALL articles from "${this.feed?.name}"?`)) {
+      if (await confirmDeletion(t('common.dialog.delete_all_articles', { name: this.feed?.name ?? '' }))) {
         await this.store.deleteAllArticles();
       }
     },

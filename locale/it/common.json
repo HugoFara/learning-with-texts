@@ -49,5 +49,19 @@
     "dialog.discard_title": "Annullare le modifiche?",
     "dialog.discard_message": "Le modifiche a questo termine non sono state salvate.",
     "dialog.discard": "Annulla modifiche",
-    "dialog.keep_editing": "Continua a modificare"
+    "dialog.keep_editing": "Continua a modificare",
+    "dialog.confirm": "Conferma",
+    "dialog.are_you_sure": "Sei sicuro?",
+    "dialog.delete_term": "Eliminare questo termine?",
+    "dialog.mark_all_known": "Segnare tutte le parole sconosciute come ben note?",
+    "dialog.mark_all_ignored": "Segnare tutte le parole sconosciute come ignorate?",
+    "dialog.delete_feed": "Eliminare il feed «{name}»?",
+    "dialog.delete_selected_feeds": "Eliminare i feed selezionati? ({count})",
+    "dialog.delete_selected_articles": "Eliminare gli articoli selezionati? ({count})",
+    "dialog.delete_all_articles": "Eliminare tutti gli articoli di «{name}»?",
+    "dialog.clear_offline": "Rimuovere tutti i dati offline? L'operazione non può essere annullata.",
+    "dialog.translation_exists": "«{text}» sembra essere già una traduzione. Inserirla comunque?",
+    "dialog.records_affected": "Record interessati: {count}",
+    "dialog.all_records_warning": "Vale per tutti i record di tutte le pagine della query corrente.",
+    "dialog.delete_table_set": "Eliminare il set di tabelle «{name}»? Tutti i suoi dati andranno persi."
 }

@@ -90,8 +90,14 @@ describe('Local dictionaries', () => {
       cy.visit(`/languages/${LANG_ID}/dictionaries`);
       cy.waitForAlpine();
 
-      cy.on('window:confirm', () => true);
+      // Declining leaves it in place.
       cy.contains('table tbody tr', 'Doomed Dict').find('button.is-danger').click();
+      cy.get('.confirm-dialog').contains('button', 'Cancel').click();
+      cy.get('.confirm-dialog').should('not.exist');
+      cy.contains('table tbody tr', 'Doomed Dict').should('exist');
+
+      cy.contains('table tbody tr', 'Doomed Dict').find('button.is-danger').click();
+      cy.get('.confirm-dialog .button.is-danger').click();
 
       cy.contains('table tbody tr', 'Doomed Dict').should('not.exist');
 

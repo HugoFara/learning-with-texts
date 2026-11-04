@@ -11,6 +11,7 @@
  * @since   3.0.0
  */
 
+import { confirmAction, confirmDeletion } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import { initIcons } from '@shared/icons/lucide_icons';
 import { t, tn } from '@shared/i18n/translator';
@@ -504,7 +505,7 @@ export function wordListData(): WordListData {
 
       // Confirm destructive actions
       if (action === 'del') {
-        if (!confirm(tn('vocabulary.list.confirm_delete', ids.length))) {
+        if (!await confirmDeletion(tn('vocabulary.list.confirm_delete', ids.length))) {
           select.value = '';
           return;
         }
@@ -562,7 +563,7 @@ export function wordListData(): WordListData {
       }
 
       if (
-        !confirm(
+        !await confirmAction(
           tn('vocabulary.list.confirm_apply_all', this.pagination.total)
         )
       ) {

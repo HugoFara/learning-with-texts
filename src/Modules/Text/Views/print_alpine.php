@@ -234,7 +234,7 @@ $hasAnnotation = $viewData['hasAnnotation'];
                         <span class="ms-1">Edit</span>
                     </button>
                     <button type="button" class="button is-danger is-outlined"
-                        @click="confirmDeleteAnnotation(<?php echo $textId; ?>, 'Are you sure?')">
+                        @click="confirmDeleteAnnotation(<?php echo $textId; ?>)">
                         <?php echo IconHelper::render('trash-2', ['size' => 16]); ?>
                         <span class="ms-1">Delete</span>
                     </button>

@@ -49,5 +49,19 @@
     "dialog.discard_title": "変更を破棄しますか？",
     "dialog.discard_message": "この用語への変更は保存されていません。",
     "dialog.discard": "破棄",
-    "dialog.keep_editing": "編集を続ける"
+    "dialog.keep_editing": "編集を続ける",
+    "dialog.confirm": "確認",
+    "dialog.are_you_sure": "よろしいですか？",
+    "dialog.delete_term": "この用語を削除しますか？",
+    "dialog.mark_all_known": "未知の単語をすべて既知としてマークしますか？",
+    "dialog.mark_all_ignored": "未知の単語をすべて無視としてマークしますか？",
+    "dialog.delete_feed": "フィード「{name}」を削除しますか？",
+    "dialog.delete_selected_feeds": "選択したフィードを削除しますか？（{count}）",
+    "dialog.delete_selected_articles": "選択した記事を削除しますか？（{count}）",
+    "dialog.delete_all_articles": "「{name}」のすべての記事を削除しますか？",
+    "dialog.clear_offline": "オフラインデータをすべて削除しますか？この操作は元に戻せません。",
+    "dialog.translation_exists": "「{text}」はすでに訳語として登録されているようです。それでも挿入しますか？",
+    "dialog.records_affected": "対象レコード数: {count}",
+    "dialog.all_records_warning": "現在のクエリの全ページにあるすべてのレコードが対象です。",
+    "dialog.delete_table_set": "テーブルセット「{name}」を削除しますか？すべてのデータが失われます。"
 }

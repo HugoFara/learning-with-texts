@@ -12,6 +12,7 @@
  * @since   3.0.0
  */
 
+import { confirmAction, confirmDeletion } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import { initIcons } from '@shared/icons/lucide_icons';
 import { apiPost, getCsrfToken } from '@shared/api/client';
@@ -102,8 +103,8 @@ export interface TextPrintAppData {
   // Actions
   handlePrint(): void;
   navigateTo(url: string): void;
-  confirmNavigateTo(url: string, message: string): void;
-  confirmDeleteAnnotation(textId: number, message: string): void;
+  confirmNavigateTo(url: string, message: string): Promise<void>;
+  confirmDeleteAnnotation(textId: number): Promise<void>;
   openWindow(url: string): void;
 
   // CSP-compatible innerHTML setters (use with x-effect)
@@ -512,14 +513,14 @@ export function textPrintAppData(): TextPrintAppData {
       window.location.href = url;
     },
 
-    confirmNavigateTo(url: string, message: string) {
-      if (confirm(message)) {
+    async confirmNavigateTo(url: string, message: string) {
+      if (await confirmAction(message)) {
         window.location.href = url;
       }
     },
 
-    confirmDeleteAnnotation(textId: number, message: string) {
-      if (confirm(message)) {
+    async confirmDeleteAnnotation(textId: number) {
+      if (await confirmDeletion()) {
         const headers: Record<string, string> = {
           'Content-Type': 'application/json'
         };
