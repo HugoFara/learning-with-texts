@@ -1,6 +1,6 @@
 {
   "name": "lwt",
-  "version": "3.8.1",
+  "version": "3.8.2",
   "description": "Learning with Texts - A self-hosted language learning application for reading-based vocabulary acquisition",
   "type": "module",
   "main": "index.js",
