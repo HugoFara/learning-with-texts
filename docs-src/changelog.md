@@ -26,6 +26,15 @@ ones are marked like "v1.0.0-fork".
   and now persist per user, and none of these values reach the shared defaults
   any more.
 
+* **Term API returned an empty language.** `GET /api/v1/terms/{id}` gave
+  `"langId": {}` instead of the language ID.
+
+### Changed
+
+* **Leaving a changed form by a link now asks in the page.** The in-app dialog
+  replaces the browser's prompt on every form, not only term forms. Closing or
+  reloading the tab still shows the browser's prompt, as nothing else can.
+
 ## [3.8.1-fork] - 2026-11-04
 
 ### Changed in 3.8.1-fork

@@ -48,6 +48,7 @@
     "status_unknown": "Sconosciuta",
     "dialog.discard_title": "Annullare le modifiche?",
     "dialog.discard_message": "Le modifiche a questo termine non sono state salvate.",
+    "dialog.leave_message": "Le modifiche in questa pagina non sono state salvate.",
     "dialog.discard": "Annulla modifiche",
     "dialog.keep_editing": "Continua a modificare",
     "dialog.confirm": "Conferma",

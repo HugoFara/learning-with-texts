@@ -48,6 +48,7 @@
     "status_unknown": "Unbekannt",
     "dialog.discard_title": "Änderungen verwerfen?",
     "dialog.discard_message": "Ihre Änderungen an diesem Begriff wurden nicht gespeichert.",
+    "dialog.leave_message": "Ihre Änderungen auf dieser Seite wurden nicht gespeichert.",
     "dialog.discard": "Verwerfen",
     "dialog.keep_editing": "Weiter bearbeiten",
     "dialog.confirm": "Bestätigen",

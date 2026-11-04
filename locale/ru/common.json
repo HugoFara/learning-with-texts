@@ -48,6 +48,7 @@
     "status_unknown": "Неизвестно",
     "dialog.discard_title": "Отменить изменения?",
     "dialog.discard_message": "Изменения этого термина не сохранены.",
+    "dialog.leave_message": "Изменения на этой странице не сохранены.",
     "dialog.discard": "Отменить изменения",
     "dialog.keep_editing": "Продолжить редактирование",
     "dialog.confirm": "Подтвердить",

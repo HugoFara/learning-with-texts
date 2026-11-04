@@ -48,6 +48,7 @@
     "status_unknown": "Desconhecida",
     "dialog.discard_title": "Descartar as alterações?",
     "dialog.discard_message": "As alterações neste termo não foram guardadas.",
+    "dialog.leave_message": "As alterações nesta página não foram guardadas.",
     "dialog.discard": "Descartar",
     "dialog.keep_editing": "Continuar a editar",
     "dialog.confirm": "Confirmar",
