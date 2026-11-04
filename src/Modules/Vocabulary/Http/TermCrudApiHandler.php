@@ -930,7 +930,7 @@ class TermCrudApiHandler
              WoStatusChanged = NOW()
              WHERE WoID = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
-            [$text, $translation, $romanization, $sentence, $notes, $lemma, $lemmaLc, $status, $termId]
+            $bindings
         );
 
         // A term whose occurrences were never linked stays invisible to the
