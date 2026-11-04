@@ -123,9 +123,6 @@ class ReviewController extends BaseController
     private function renderReviewPage(): void
     {
         $langId = $this->param('lang') !== '' ? (int) $this->param('lang') : null;
-        if ($langId !== null) {
-            CurrentLanguage::follow($langId);
-        }
         $textId = $this->param('text') !== '' ? (int) $this->param('text') : null;
         $selection = $this->param('selection') !== '' ? (int) $this->param('selection') : null;
 
@@ -181,6 +178,7 @@ class ReviewController extends BaseController
         // Get language settings
         $langIdFromSql = $this->reviewFacade->getLanguageIdFromReviewSql($reviewsql, $reviewParams);
         if ($langIdFromSql === null) {
+            CurrentLanguage::follow($langId ?? 0);
             PageLayoutHelper::renderPageStartNobody(__('review.page_title'), 'full-width');
             include __DIR__ . '/../Views/no_terms.php';
             PageLayoutHelper::renderPageEnd();
@@ -239,6 +237,7 @@ class ReviewController extends BaseController
             'property' => $testData['property']
         ];
 
+        CurrentLanguage::follow($langIdFromSql);
         PageLayoutHelper::renderPageStartNobody(__('review.page_title'), 'full-width');
         include __DIR__ . '/../Views/review_desktop.php';
         PageLayoutHelper::renderPageEnd();
