@@ -51,7 +51,13 @@ composer.phar
 # Editor
 .vscode
 
-_*
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# PHPUnit HTML coverage report
+/coverage_report/
+
 # For Mac Users
 .DS_Store
 
