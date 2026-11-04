@@ -8,6 +8,8 @@
  * @since   3.0.0
  */
 
+import { t } from '@shared/i18n/translator';
+import { confirmAction } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import type { WordStoreState } from '@modules/vocabulary/stores/word_store';
 import { renderText, updateWordStatusInDOM, renderParseWarning, type RenderSettings }
@@ -319,7 +321,7 @@ export function textReaderData(): TextReaderData {
     },
 
     async markAllWellKnown(): Promise<void> {
-      if (!confirm('Mark all unknown words as Well Known?')) return;
+      if (!await confirmAction(t('common.dialog.mark_all_known'))) return;
 
       this.statusMessage = null;
 
@@ -350,7 +352,7 @@ export function textReaderData(): TextReaderData {
     },
 
     async markAllIgnored(): Promise<void> {
-      if (!confirm('Mark all unknown words as Ignored?')) return;
+      if (!await confirmAction(t('common.dialog.mark_all_ignored'))) return;
 
       this.statusMessage = null;
 

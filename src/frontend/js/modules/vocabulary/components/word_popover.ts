@@ -8,6 +8,8 @@
  * @since   3.0.0
  */
 
+import { t } from '@shared/i18n/translator';
+import { confirmDeletion } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import type { WordStoreState, WordData } from '../stores/word_store';
 import { speechDispatcher } from '@shared/utils/user_interactions';
@@ -263,7 +265,7 @@ export function wordPopoverData(): WordPopoverData {
       const word = this.word;
       if (!word) return;
 
-      if (confirm('Delete this term?')) {
+      if (await confirmDeletion(t('common.dialog.delete_term'))) {
         await this.store.deleteWord(word.hex);
       }
     },

@@ -6,6 +6,7 @@
  * @since   1.6.16-fork
  */
 
+import { confirmDeletion } from '@shared/components/confirm_dialog';
 import { check } from '@shared/forms/form_validation';
 import { getCsrfToken } from '@shared/api/client';
 import { changeImprAnnText, changeImprAnnRadio, showSimilarTerms } from '@modules/vocabulary/services/term_operations';
@@ -42,10 +43,10 @@ export function markClick(): void {
 /**
  * Show a confirmation dialog for delete operations.
  *
- * @returns true if user confirmed deletion, false otherwise
+ * @returns Promise resolving to true if the user confirmed deletion
  */
-export function confirmDelete(): boolean {
-  return confirm('CONFIRM\n\nAre you sure you want to delete?');
+export function confirmDelete(): Promise<boolean> {
+  return confirmDeletion();
 }
 
 /**
@@ -59,14 +60,14 @@ async function handleConfirmDelete(event: Event): Promise<void> {
   const href = el.getAttribute('href');
   const method = el.getAttribute('data-method');
 
-  if (!confirmDelete()) {
-    event.preventDefault();
+  // Cancel first: by the time the user answers, the link would be followed.
+  event.preventDefault();
+  if (!await confirmDelete()) {
     return;
   }
 
   // If data-method="delete", send DELETE request instead of following link
   if (method?.toLowerCase() === 'delete' && href) {
-    event.preventDefault();
     try {
       const headers: Record<string, string> = {};
       const csrf = getCsrfToken();
@@ -86,7 +87,9 @@ async function handleConfirmDelete(event: Event): Promise<void> {
       alert('Delete failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   }
-  // Otherwise, let the default link behavior proceed (confirmDelete already returned true)
+  else if (href) {
+    window.location.href = href;
+  }
 }
 
 /**

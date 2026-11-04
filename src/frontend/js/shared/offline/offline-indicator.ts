@@ -8,6 +8,8 @@
  * @since   3.0.0
  */
 
+import { t } from '@shared/i18n/translator';
+import { confirmDeletion } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import {
   isOfflineStorageAvailable,
@@ -110,7 +112,7 @@ export function offlineIndicator(): OfflineIndicatorData {
     async clearAllOfflineData() {
       if (this.isClearing) return;
 
-      if (!confirm('Are you sure you want to remove all offline data? This cannot be undone.')) {
+      if (!await confirmDeletion(t('common.dialog.clear_offline'))) {
         return;
       }
 

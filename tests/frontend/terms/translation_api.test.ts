@@ -1,6 +1,7 @@
 /**
  * Tests for translation_api.ts - Translation API functions
  */
+import { answerConfirms, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   deleteTranslation,
@@ -205,7 +206,7 @@ describe('translation_api.ts', () => {
       expect(mockInput.value).toBe('existing / additional');
     });
 
-    it('prompts for confirmation when translation already exists', () => {
+    it('prompts for confirmation when translation already exists', async () => {
       const mockInput = { value: 'duplicate', name: 'WoTranslation' };
       const mockForm = { WoTranslation: mockInput };
       const makeDirtySpy = vi.fn();
@@ -221,14 +222,15 @@ describe('translation_api.ts', () => {
       });
 
       // User confirms
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      answerConfirms(true);
 
       addTranslation('duplicate');
 
+      await settle();
       expect(mockInput.value).toBe('duplicate / duplicate');
     });
 
-    it('does not add when user declines duplicate', () => {
+    it('does not add when user declines duplicate', async () => {
       const mockInput = { value: 'duplicate', name: 'WoTranslation' };
       const mockForm = { WoTranslation: mockInput };
       const makeDirtySpy = vi.fn();
@@ -244,11 +246,12 @@ describe('translation_api.ts', () => {
       });
 
       // User declines
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      answerConfirms(false);
 
       addTranslation('duplicate');
 
       // Value should remain unchanged
+      await settle();
       expect(mockInput.value).toBe('duplicate');
       expect(makeDirtySpy).not.toHaveBeenCalled();
     });

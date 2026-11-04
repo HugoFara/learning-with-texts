@@ -5,6 +5,10 @@
  * the theme and shows a browser-chosen title. The native dialog remains only
  * as a fallback for when this one cannot be built.
  *
+ * The answer comes later, so a handler cannot wait for it and then cancel a
+ * link or a form submission: by then the browser has already acted. A form
+ * handler must use confirmBeforeSubmit(), which cancels first and resubmits.
+ *
  * Choosing either button, pressing Escape or clicking outside settles the
  * promise. Everything except the confirm button counts as declining, and the
  * decline button has the focus, so a stray Enter loses nothing.
@@ -16,9 +20,9 @@
 import { t } from '@shared/i18n/translator';
 
 export interface ConfirmDialogOptions {
-  /** The question, shown as the dialog's heading. */
-  title: string;
-  /** What will happen if the user confirms. */
+  /** Heading, for when the message needs one. */
+  title?: string;
+  /** The question, or what will happen if the user confirms. */
   message: string;
   /** Label of the confirming button. */
   confirmLabel: string;
@@ -48,7 +52,6 @@ function buildDialog(options: ConfirmDialogOptions): {
   root.className = 'modal is-active confirm-dialog';
   root.setAttribute('role', 'alertdialog');
   root.setAttribute('aria-modal', 'true');
-  root.setAttribute('aria-labelledby', 'confirm-dialog-title');
   root.setAttribute('aria-describedby', 'confirm-dialog-message');
 
   const background = document.createElement('div');
@@ -60,10 +63,14 @@ function buildDialog(options: ConfirmDialogOptions): {
   const body = document.createElement('section');
   body.className = 'modal-card-body';
 
-  const title = document.createElement('p');
-  title.id = 'confirm-dialog-title';
-  title.className = 'title is-5 mb-2';
-  title.textContent = options.title;
+  if (options.title) {
+    const title = document.createElement('p');
+    title.id = 'confirm-dialog-title';
+    title.className = 'title is-5 mb-2';
+    title.textContent = options.title;
+    root.setAttribute('aria-labelledby', title.id);
+    body.append(title);
+  }
 
   const message = document.createElement('p');
   message.id = 'confirm-dialog-message';
@@ -82,7 +89,7 @@ function buildDialog(options: ConfirmDialogOptions): {
   confirmButton.className = options.danger ? 'button is-danger' : 'button is-primary';
   confirmButton.textContent = options.confirmLabel;
 
-  body.append(title, message);
+  body.append(message);
   footer.append(cancelButton, confirmButton);
   card.append(body, footer);
   root.append(background, card);
@@ -105,7 +112,8 @@ export function confirmDialog(options: ConfirmDialogOptions): Promise<boolean> {
     dialog = buildDialog(options);
     document.body.append(dialog.root);
   } catch {
-    return Promise.resolve(window.confirm(`${options.title}\n\n${options.message}`));
+    const text = options.title ? `${options.title}\n\n${options.message}` : options.message;
+    return Promise.resolve(window.confirm(text));
   }
 
   const { root, confirmButton, cancelButton, background } = dialog;
@@ -157,4 +165,76 @@ export function confirmDiscardChanges(): Promise<boolean> {
     cancelLabel: t('common.dialog.keep_editing'),
     danger: true
   });
+}
+
+/**
+ * Ask the user to confirm an action, with the usual buttons.
+ *
+ * @param message The question
+ * @param options Anything to override
+ *
+ * @returns Promise resolving to true if the user confirmed
+ */
+export function confirmAction(
+  message: string,
+  options: Partial<ConfirmDialogOptions> = {}
+): Promise<boolean> {
+  return confirmDialog({
+    message,
+    confirmLabel: t('common.dialog.confirm'),
+    cancelLabel: t('common.cancel'),
+    ...options
+  });
+}
+
+/**
+ * Ask the user to confirm a deletion.
+ *
+ * @param message The question; defaults to a generic one
+ *
+ * @returns Promise resolving to true if the user confirmed
+ */
+export function confirmDeletion(message: string = t('common.confirm_delete')): Promise<boolean> {
+  return confirmAction(message, { confirmLabel: t('common.delete'), danger: true });
+}
+
+/** Forms whose next submit event is the confirmed one. */
+const confirmedForms = new WeakSet<HTMLFormElement>();
+
+/**
+ * Hold a form submission until the user confirms it.
+ *
+ * Call this first thing in a submit handler, and carry on only if it returns
+ * true. The first time it cancels the submission and returns false. If the
+ * user confirms, it submits the form again, with the same submit button, and
+ * this time it returns true.
+ *
+ * @param event   The submit event
+ * @param form    The form
+ * @param ask     Asks the user
+ *
+ * @returns Whether this submission has been confirmed
+ */
+export function confirmBeforeSubmit(
+  event: Event,
+  form: HTMLFormElement,
+  ask: () => Promise<boolean>
+): boolean {
+  if (confirmedForms.has(form)) {
+    return true;
+  }
+
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  const submitter = (event as SubmitEvent).submitter ?? undefined;
+
+  void ask().then((confirmed) => {
+    if (!confirmed) return;
+    confirmedForms.add(form);
+    form.requestSubmit(submitter);
+    // Submitting runs synchronously. If validation stopped it, the next
+    // attempt must ask again.
+    confirmedForms.delete(form);
+  });
+  return false;
 }

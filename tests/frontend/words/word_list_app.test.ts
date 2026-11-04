@@ -1,6 +1,7 @@
 /**
  * Tests for words/word_list_app.ts - Word List Alpine.js component
  */
+import { answerConfirms, confirmPrompts } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { wordListData, initWordListAlpine } from '../../../src/frontend/js/modules/vocabulary/pages/word_list_app';
 
@@ -54,7 +55,7 @@ describe('words/word_list_app.ts', () => {
 
     // Mock alert and confirm
     vi.spyOn(window, 'alert').mockImplementation(() => {});
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    answerConfirms(true);
     vi.spyOn(window, 'prompt').mockReturnValue('test-tag');
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
 
@@ -559,7 +560,7 @@ describe('words/word_list_app.ts', () => {
       const data = wordListData();
       data.marked.add(1);
 
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      answerConfirms(false);
 
       const select = document.createElement('select');
       select.value = 'del';
@@ -586,7 +587,7 @@ describe('words/word_list_app.ts', () => {
 
       await data.handleAllAction(event);
 
-      expect(window.confirm).not.toHaveBeenCalled();
+      expect(confirmPrompts).not.toHaveBeenCalled();
     });
   });
 

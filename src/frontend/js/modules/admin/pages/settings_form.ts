@@ -7,6 +7,8 @@
  * @since   3.1.0 Migrated to Alpine.js component
  */
 
+import { confirmAction, confirmBeforeSubmit } from '@shared/components/confirm_dialog';
+import { t } from '@shared/i18n/translator';
 import { onDomReady } from '@shared/utils/dom_ready';
 import Alpine from 'alpinejs';
 import { lwtFormCheck } from '@shared/forms/unloadformcheck';
@@ -49,9 +51,9 @@ export function settingsFormApp() {
     /**
      * Handle form submission with confirmation.
      */
-    confirmSubmit(event: Event, message: string = 'Are you sure?') {
-      if (!confirm(message)) {
-        event.preventDefault();
+    confirmSubmit(event: Event, message: string = t('common.dialog.are_you_sure')) {
+      const form = event.target as HTMLFormElement;
+      if (!confirmBeforeSubmit(event, form, () => confirmAction(message))) {
         return false;
       }
       this.isSubmitting = true;
@@ -156,9 +158,8 @@ export function initConfirmSubmitForms(): void {
   document.addEventListener('submit', (e) => {
     const form = (e.target as HTMLElement).closest<HTMLFormElement>('form[data-action="confirm-submit"]');
     if (form) {
-      const message = form.dataset.confirmMessage || 'Are you sure?';
-      if (!confirm(message)) {
-        e.preventDefault();
+      const message = form.dataset.confirmMessage || t('common.dialog.are_you_sure');
+      if (!confirmBeforeSubmit(e, form, () => confirmAction(message))) {
         return false;
       }
       // Show loading state on submit button after confirmation

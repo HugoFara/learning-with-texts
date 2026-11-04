@@ -1,6 +1,7 @@
 /**
  * Tests for text_list.ts - Text list page interactions
  */
+import { settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { initTextList } from '../../../src/frontend/js/modules/text/pages/text_list';
 
@@ -367,20 +368,21 @@ describe('text_list.ts', () => {
   // ===========================================================================
 
   describe('Delete Confirmation', () => {
-    it('navigates to delete URL when confirmed', () => {
+    it('navigates to delete URL when confirmed', async () => {
       document.body.innerHTML = `
         <form name="form1">
           <a data-action="confirm-delete" data-url="/texts/delete/5">Delete</a>
         </form>
       `;
 
-      (confirmDelete as any).mockReturnValue(true);
+      (confirmDelete as any).mockResolvedValue(true);
 
       initTextList();
 
       const link = document.querySelector<HTMLElement>('[data-action="confirm-delete"]')!;
       link.click();
 
+      await settle();
       expect(confirmDelete).toHaveBeenCalled();
       expect(window.location.href).toBe('/texts/delete/5');
     });

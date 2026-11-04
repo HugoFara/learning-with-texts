@@ -9,6 +9,7 @@
  * @since   3.4.0
  */
 
+import { confirmDeletion } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import { t } from '@shared/i18n/translator';
 import { LanguagesApi, type LanguageListItem } from '@modules/language/api/languages_api';
@@ -139,7 +140,7 @@ export function bookListData(): BookListData {
     },
 
     async confirmDelete(book: Book) {
-      if (!window.confirm(t('book.confirm_delete_book'))) {
+      if (!await confirmDeletion(t('book.confirm_delete_book'))) {
         return;
       }
 

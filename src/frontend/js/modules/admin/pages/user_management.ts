@@ -13,6 +13,7 @@
  * @since   3.4.0
  */
 
+import { confirmAction, confirmDeletion } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import { t } from '@shared/i18n/translator';
 import {
@@ -195,7 +196,7 @@ export function userManagementData(): UserManagementData {
 
     async toggleRole(user: AdminUser): Promise<void> {
       const next = user.isAdmin ? 'user' : 'admin';
-      if (!confirm(t('admin.users.confirm_role', { username: user.username, role: next }))) {
+      if (!await confirmAction(t('admin.users.confirm_role', { username: user.username, role: next }))) {
         return;
       }
       this.busyId = user.id;
@@ -210,7 +211,7 @@ export function userManagementData(): UserManagementData {
     },
 
     async confirmDelete(user: AdminUser): Promise<void> {
-      if (!confirm(t('admin.users.confirm_delete', { username: user.username }))) {
+      if (!await confirmDeletion(t('admin.users.confirm_delete', { username: user.username }))) {
         return;
       }
       this.busyId = user.id;

@@ -49,5 +49,19 @@
     "dialog.discard_title": "Отменить изменения?",
     "dialog.discard_message": "Изменения этого термина не сохранены.",
     "dialog.discard": "Отменить изменения",
-    "dialog.keep_editing": "Продолжить редактирование"
+    "dialog.keep_editing": "Продолжить редактирование",
+    "dialog.confirm": "Подтвердить",
+    "dialog.are_you_sure": "Вы уверены?",
+    "dialog.delete_term": "Удалить этот термин?",
+    "dialog.mark_all_known": "Отметить все неизвестные слова как хорошо известные?",
+    "dialog.mark_all_ignored": "Отметить все неизвестные слова как игнорируемые?",
+    "dialog.delete_feed": "Удалить ленту «{name}»?",
+    "dialog.delete_selected_feeds": "Удалить выбранные ленты? ({count})",
+    "dialog.delete_selected_articles": "Удалить выбранные статьи? ({count})",
+    "dialog.delete_all_articles": "Удалить все статьи из «{name}»?",
+    "dialog.clear_offline": "Удалить все офлайн-данные? Это действие нельзя отменить.",
+    "dialog.translation_exists": "«{text}», похоже, уже есть среди переводов. Всё равно добавить?",
+    "dialog.records_affected": "Затронуто записей: {count}",
+    "dialog.all_records_warning": "Это относится ко всем записям на всех страницах текущего запроса.",
+    "dialog.delete_table_set": "Удалить набор таблиц «{name}»? Все его данные будут потеряны."
 }

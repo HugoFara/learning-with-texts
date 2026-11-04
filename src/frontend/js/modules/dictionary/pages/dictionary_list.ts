@@ -8,6 +8,7 @@
  * @since   3.4.0
  */
 
+import { confirmDeletion } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import { t } from '@shared/i18n/translator';
 import {
@@ -139,7 +140,7 @@ export function dictionaryListData(): DictionaryListData {
     },
 
     async confirmDelete(dict: LocalDictionary) {
-      if (!window.confirm(t('dictionary.confirm_delete_dict'))) {
+      if (!await confirmDeletion(t('dictionary.confirm_delete_dict'))) {
         return;
       }
 

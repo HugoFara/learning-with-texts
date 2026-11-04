@@ -123,9 +123,9 @@ export interface ArchivedTextsGroupedData {
   getMarkedCount(langId: number): number;
 
   // Actions
-  handleMultiAction(langId: number, event: Event): void;
-  handleDelete(event: Event, url: string): void;
-  handleRestDelete(event: Event, url: string): void;
+  handleMultiAction(langId: number, event: Event): Promise<void>;
+  handleDelete(event: Event, url: string): Promise<void>;
+  handleRestDelete(event: Event, url: string): Promise<void>;
   handlePostAction(event: Event, url: string): void;
 
   // Sorting
@@ -369,7 +369,7 @@ export function archivedTextsGroupedData(): ArchivedTextsGroupedData {
     },
 
     // Actions
-    handleMultiAction(langId: number, event: Event) {
+    async handleMultiAction(langId: number, event: Event) {
       const select = event.target as HTMLSelectElement;
       const action = select.value;
       if (!action) return;
@@ -414,7 +414,7 @@ export function archivedTextsGroupedData(): ArchivedTextsGroupedData {
 
       // Handle special actions that need confirmation
       if (action === 'del') {
-        if (!confirmDelete()) {
+        if (!await confirmDelete()) {
           select.value = '';
           return;
         }
@@ -425,16 +425,16 @@ export function archivedTextsGroupedData(): ArchivedTextsGroupedData {
       form.submit();
     },
 
-    handleDelete(event: Event, url: string) {
+    async handleDelete(event: Event, url: string) {
       event.preventDefault();
-      if (confirmDelete()) {
+      if (await confirmDelete()) {
         window.location.href = url;
       }
     },
 
-    handleRestDelete(event: Event, url: string) {
+    async handleRestDelete(event: Event, url: string) {
       event.preventDefault();
-      if (confirmDelete()) {
+      if (await confirmDelete()) {
         const headers: Record<string, string> = {
           'X-Requested-With': 'XMLHttpRequest',
         };

@@ -1,6 +1,7 @@
 /**
  * Tests for bulk_actions.ts - Bulk action utilities for LWT
  */
+import { answerConfirms, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   selectToggle,
@@ -280,7 +281,7 @@ describe('bulk_actions.ts', () => {
       expect(alertSpy).toHaveBeenCalledWith('Please no tags longer than 20 char.!');
     });
 
-    it('confirms for del action', () => {
+    it('confirms for del action', async () => {
       document.body.innerHTML = `
         <form name="testform"></form>
         <select id="action">
@@ -293,15 +294,16 @@ describe('bulk_actions.ts', () => {
       const form = document.querySelector('form') as HTMLFormElement;
       const select = document.querySelector('select') as HTMLSelectElement;
       const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const confirmSpy = answerConfirms(true);
 
       multiActionGo(form, select);
 
+      await settle();
       expect(confirmSpy).toHaveBeenCalled();
       expect(submitSpy).toHaveBeenCalled();
     });
 
-    it('does not submit when confirmation is cancelled', () => {
+    it('does not submit when confirmation is cancelled', async () => {
       document.body.innerHTML = `
         <form name="testform"></form>
         <select id="action">
@@ -313,16 +315,17 @@ describe('bulk_actions.ts', () => {
       const form = document.querySelector('form') as HTMLFormElement;
       const select = document.querySelector('select') as HTMLSelectElement;
       const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      answerConfirms(false);
 
       multiActionGo(form, select);
 
+      await settle();
       expect(submitSpy).not.toHaveBeenCalled();
     });
 
     it.each(['smi1', 'spl1', 's1', 's5', 's98', 's99', 'today', 'delsent', 'lower', 'cap'])(
       'confirms for %s action',
-      (action) => {
+      async (action) => {
         document.body.innerHTML = `
           <form name="testform"></form>
           <select id="action">
@@ -334,10 +337,11 @@ describe('bulk_actions.ts', () => {
         const form = document.querySelector('form') as HTMLFormElement;
         const select = document.querySelector('select') as HTMLSelectElement;
         const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
-        const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+        const confirmSpy = answerConfirms(true);
 
         multiActionGo(form, select);
 
+        await settle();
         expect(confirmSpy).toHaveBeenCalled();
         expect(submitSpy).toHaveBeenCalled();
       }
@@ -449,7 +453,7 @@ describe('bulk_actions.ts', () => {
       );
     });
 
-    it('confirms for delall action', () => {
+    it('confirms for delall action', async () => {
       document.body.innerHTML = `
         <form name="testform"></form>
         <select id="action">
@@ -460,19 +464,20 @@ describe('bulk_actions.ts', () => {
       const form = document.querySelector('form') as HTMLFormElement;
       const select = document.querySelector('select') as HTMLSelectElement;
       const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const confirmSpy = answerConfirms(true);
 
       allActionGo(form, select, 25);
 
+      await settle();
       expect(confirmSpy).toHaveBeenCalledWith(
-        expect.stringContaining('25 Record(s)')
+        expect.stringContaining('Records affected: 25')
       );
       expect(submitSpy).toHaveBeenCalled();
     });
 
     it.each(['smi1all', 'spl1all', 's1all', 's5all', 's98all', 's99all', 'todayall', 'delsentall', 'capall', 'lowerall'])(
       'confirms for %s action',
-      (action) => {
+      async (action) => {
         document.body.innerHTML = `
           <form name="testform"></form>
           <select id="action">
@@ -483,16 +488,17 @@ describe('bulk_actions.ts', () => {
         const form = document.querySelector('form') as HTMLFormElement;
         const select = document.querySelector('select') as HTMLSelectElement;
         const submitSpy = vi.spyOn(form, 'submit').mockImplementation(() => {});
-        const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+        const confirmSpy = answerConfirms(true);
 
         allActionGo(form, select, 10);
 
+        await settle();
         expect(confirmSpy).toHaveBeenCalled();
         expect(submitSpy).toHaveBeenCalled();
       }
     );
 
-    it('shows warning about all pages in confirm dialog', () => {
+    it('shows warning about all pages in confirm dialog', async () => {
       document.body.innerHTML = `
         <form name="testform"></form>
         <select id="action">
@@ -503,12 +509,13 @@ describe('bulk_actions.ts', () => {
       const form = document.querySelector('form') as HTMLFormElement;
       const select = document.querySelector('select') as HTMLSelectElement;
       vi.spyOn(form, 'submit').mockImplementation(() => {});
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const confirmSpy = answerConfirms(true);
 
       allActionGo(form, select, 10);
 
+      await settle();
       expect(confirmSpy).toHaveBeenCalledWith(
-        expect.stringContaining('ALL PAGES')
+        expect.stringContaining('all pages')
       );
     });
 

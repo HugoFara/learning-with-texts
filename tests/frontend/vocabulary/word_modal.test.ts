@@ -1,6 +1,7 @@
 /**
  * Tests for word_modal.ts - Alpine.js component for Bulma word edit modal.
  */
+import { answerConfirms, confirmPrompts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Alpine from 'alpinejs';
 
@@ -9,7 +10,8 @@ const mockSpeechDispatcher = vi.hoisted(() => vi.fn());
 
 // In-app confirmation
 const mockConfirmDiscard = vi.hoisted(() => vi.fn());
-vi.mock('../../../src/frontend/js/shared/components/confirm_dialog', () => ({
+vi.mock('../../../src/frontend/js/shared/components/confirm_dialog', async (importOriginal) => ({
+  ...await importOriginal<object>(),
   confirmDiscardChanges: mockConfirmDiscard
 }));
 
@@ -103,7 +105,7 @@ describe('word_modal.ts', () => {
     });
 
     // Mock confirm
-    global.confirm = vi.fn().mockReturnValue(true);
+    answerConfirms(true);
   });
 
   afterEach(() => {
@@ -300,7 +302,7 @@ describe('word_modal.ts', () => {
 
         await wordModalData().close();
 
-        expect(confirm).not.toHaveBeenCalled();
+        expect(confirmPrompts).not.toHaveBeenCalled();
         expect(mockFormStore.reset).toHaveBeenCalled();
         expect(mockWordStore.closeEditModal).toHaveBeenCalled();
       });
@@ -403,21 +405,23 @@ describe('word_modal.ts', () => {
 
     describe('deleteWord', () => {
       it('confirms and calls store.deleteWord when user confirms', async () => {
-        vi.mocked(confirm).mockReturnValue(true);
+        answerConfirms(true);
         const component = wordModalData();
 
         await component.deleteWord();
 
-        expect(confirm).toHaveBeenCalledWith('Delete this term?');
+        await settle();
+        expect(confirmPrompts).toHaveBeenCalledWith('Delete this term?');
         expect(mockWordStore.deleteWord).toHaveBeenCalledWith('abc123');
       });
 
       it('does not delete when user cancels', async () => {
-        vi.mocked(confirm).mockReturnValue(false);
+        answerConfirms(false);
         const component = wordModalData();
 
         await component.deleteWord();
 
+        await settle();
         expect(mockWordStore.deleteWord).not.toHaveBeenCalled();
       });
 
@@ -427,7 +431,7 @@ describe('word_modal.ts', () => {
 
         await component.deleteWord();
 
-        expect(confirm).not.toHaveBeenCalled();
+        expect(confirmPrompts).not.toHaveBeenCalled();
         expect(mockWordStore.deleteWord).not.toHaveBeenCalled();
       });
     });

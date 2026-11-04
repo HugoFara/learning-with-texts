@@ -9,7 +9,7 @@
  * @since   3.0.0
  */
 
-import { confirmDiscardChanges } from '@shared/components/confirm_dialog';
+import { confirmDeletion, confirmDiscardChanges } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import type { WordStoreState, WordData } from '../stores/word_store';
 import type { WordFormStoreState } from '../stores/word_form_store';
@@ -323,7 +323,7 @@ export function wordModalData(): WordModalData {
       const word = this.word;
       if (!word) return;
 
-      if (confirm('Delete this term?')) {
+      if (await confirmDeletion(t('common.dialog.delete_term'))) {
         await this.store.deleteWord(word.hex);
       }
     },

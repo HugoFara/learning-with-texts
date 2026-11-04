@@ -3370,6 +3370,10 @@ Searchable Select Component (Alpine.js)
   width: calc(100% - 2rem);
 }
 
+#confirm-dialog-message {
+  white-space: pre-line;
+}
+
 .confirm-dialog__actions {
   gap: 0.5rem;
   justify-content: flex-end;
