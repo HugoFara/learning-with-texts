@@ -163,7 +163,7 @@ export function languageEditorData(): LanguageEditorData {
 
     async save(): Promise<void> {
       if (this.lang.name.trim() === '') {
-        this.error = t('language.form.name_required');
+        this.error = t('language.errors.name_required');
         return;
       }
 

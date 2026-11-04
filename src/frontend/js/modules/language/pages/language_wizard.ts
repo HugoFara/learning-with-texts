@@ -17,6 +17,7 @@ import { onDomReady } from '@shared/utils/dom_ready';
 import { saveSetting } from '@shared/utils/ajax_utilities';
 import { lwtFormCheck } from '@shared/forms/unloadformcheck';
 import { languageForm } from './language_form';
+import { setBoundChecked, setBoundValue } from './bound_fields';
 
 /**
  * Build a URL query string from an object (replaces $.param).
@@ -34,31 +35,17 @@ function getInputValue(selector: string, context: Document = document): string {
 }
 
 /**
- * Set the value of an input element and optionally trigger a change event.
+ * Set the value of a form field, keeping the Alpine form state in step.
  */
-function setInputValue(
-  selector: string,
-  value: string | number,
-  triggerChange = false,
-  context: Document = document
-): void {
-  const el = context.querySelector(selector) as HTMLInputElement | null;
-  if (el) {
-    el.value = String(value);
-    if (triggerChange) {
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-  }
+function setInputValue(selector: string, value: string | number): void {
+  setBoundValue(document.querySelector<HTMLInputElement>(selector), String(value));
 }
 
 /**
- * Set the checked state of a checkbox.
+ * Set the checked state of a checkbox, keeping the Alpine form state in step.
  */
-function setChecked(selector: string, checked: boolean, context: Document = document): void {
-  const el = context.querySelector(selector) as HTMLInputElement | null;
-  if (el) {
-    el.checked = checked;
-  }
+function setChecked(selector: string, checked: boolean): void {
+  setBoundChecked(document.querySelector<HTMLInputElement>(selector), checked);
 }
 
 /**
@@ -71,6 +58,7 @@ function setChecked(selector: string, checked: boolean, context: Document = docu
  * [5] = Split each char flag
  * [6] = Remove spaces flag
  * [7] = Right-to-left flag
+ * [8] = Parser type (empty or absent leaves it to be inferred)
  */
 type LanguageDefinition = [
   string,   // Glosbe code
@@ -80,7 +68,8 @@ type LanguageDefinition = [
   string,   // Sentence split regexp
   boolean,  // Split each char
   boolean,  // Remove spaces
-  boolean   // RTL
+  boolean,  // RTL
+  string?   // Parser type
 ];
 
 /**
@@ -126,14 +115,14 @@ export const languageWizard = {
     const learningLg = this.langDefs[l2];
     if (!learningLg) return;
 
-    // Set language name and trigger change event
-    setInputValue('input[name="LgName"]', l2, true);
+    // Set language name
+    setInputValue('input[name="LgName"]', l2);
 
     // Set source language code
     setInputValue('input[name="LgSourceLang"]', learningLg[1]);
 
     // Set text size based on language needs
-    setInputValue('input[name="LgTextSize"]', learningLg[2] ? 200 : 150, true);
+    setInputValue('input[name="LgTextSize"]', learningLg[2] ? 200 : 150);
 
     // Set language parsing rules
     setInputValue('input[name="LgRegexpSplitSentences"]', learningLg[4]);
@@ -141,6 +130,7 @@ export const languageWizard = {
     setChecked('input[name="LgSplitEachChar"]', learningLg[5]);
     setChecked('input[name="LgRemoveSpaces"]', learningLg[6]);
     setChecked('input[name="LgRightToLeft"]', learningLg[7]);
+    setInputValue('select[name="LgParserType"]', learningLg[8] ?? '');
 
     // Also update dictionary URLs if L1 is already set
     this.updateDictionaryUrls();
@@ -180,6 +170,9 @@ export const languageWizard = {
     const knownLg = this.langDefs[l1];
     if (!learningLg || !knownLg) return;
 
+    // L1 may be preselected from a saved setting, so onL1Change never ran
+    setInputValue('input[name="LgTargetLang"]', knownLg[1]);
+
     // Reload dictionary URLs with the new language codes
     languageForm.reloadDictURLs(learningLg[1], knownLg[1]);
 
@@ -203,9 +196,13 @@ export const languageWizard = {
     setChecked('input[name="LgDict1PopUp"]', true);
 
     // Set translator URL
-    if (window.GGTRANSLATE) {
-      setInputValue('input[name="LgGoogleTranslateURI"]', window.GGTRANSLATE);
-    }
+    window.GGTRANSLATE = 'https://translate.google.com/?' + buildQueryString({
+      sl: learningLg[1],
+      tl: knownLg[1],
+      text: 'lwt_term',
+      op: 'translate'
+    });
+    setInputValue('input[name="LgGoogleTranslateURI"]', window.GGTRANSLATE);
   },
 
   /**

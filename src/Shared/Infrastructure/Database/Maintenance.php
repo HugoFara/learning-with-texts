@@ -181,6 +181,33 @@ class Maintenance
     }
 
     /**
+     * Point a language's unlinked occurrences at the terms matching them.
+     *
+     * Single-word occurrences only: a multi-word occurrence is an expression,
+     * matched by its own mechanism rather than through Ti2WoID.
+     *
+     * Nothing here filters by user, and it does not need to: the join pins
+     * occurrence and term to the same LgID, and a `languages` row has exactly
+     * one owner, so the statement cannot reach across users. Callers must have
+     * established that the language is the current user's.
+     *
+     * @param int $languageId Language ID
+     *
+     * @return void
+     */
+    public static function linkOccurrencesToTerms(int $languageId): void
+    {
+        Connection::preparedExecute(
+            "UPDATE word_occurrences o
+             JOIN words w
+               ON LOWER(o.Ti2Text) = w.WoTextLC AND o.Ti2LgID = w.WoLgID
+             SET o.Ti2WoID = w.WoID
+             WHERE o.Ti2WoID IS NULL AND o.Ti2WordCount = 1 AND o.Ti2LgID = ?",
+            [$languageId]
+        );
+    }
+
+    /**
      * Initiate the number of words in terms for all languages.
      *
      * Only terms with a word count set to 0 are changed.
