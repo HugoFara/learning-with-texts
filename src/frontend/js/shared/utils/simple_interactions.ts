@@ -14,7 +14,7 @@
  */
 
 import { t } from '@shared/i18n/translator';
-import { confirmAction, confirmBeforeSubmit, confirmDeletion } from '@shared/components/confirm_dialog';
+import { confirmAction, confirmBeforeSubmit, confirmDeletion, showError } from '@shared/components/confirm_dialog';
 import { lwtFormCheck } from '@shared/forms/unloadformcheck';
 import { getCsrfToken } from '@shared/api/client';
 import { showAllwordsClick } from './ui_utilities';
@@ -266,7 +266,7 @@ export function initSimpleInteractions(): void {
               })
               .catch(err => {
                 console.error('Failed to mark all as well-known:', err);
-                alert('Failed to mark words. Please try again.');
+                void showError(t('common.dialog.mark_failed'));
               })
               .finally(() => {
                 el.classList.remove('is-loading');
@@ -293,7 +293,7 @@ export function initSimpleInteractions(): void {
               })
               .catch(err => {
                 console.error('Failed to mark all as ignored:', err);
-                alert('Failed to mark words. Please try again.');
+                void showError(t('common.dialog.mark_failed'));
               })
               .finally(() => {
                 el.classList.remove('is-loading');

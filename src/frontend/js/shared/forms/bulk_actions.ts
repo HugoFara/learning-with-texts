@@ -8,7 +8,7 @@
  * @since   2.10.0-fork Extracted from pgm.ts
  */
 
-import { confirmAction } from '@shared/components/confirm_dialog';
+import { confirmAction, promptDialog } from '@shared/components/confirm_dialog';
 import { t as translate } from '@shared/i18n/translator';
 import { markClick } from '@shared/utils/ui_utilities';
 
@@ -29,40 +29,39 @@ interface FormWithData extends HTMLFormElement {
   data?: HTMLInputElement;
 }
 
+/**
+ * Ask for a tag, then submit the form with it.
+ *
+ * @param f       The form
+ * @param context What the action will affect
+ * @param title   The action's name
+ */
+function submitWithTag(f: HTMLFormElement | FormWithData, context: string, title: string): void {
+  void promptDialog(`${context}\n\n${translate('common.dialog.enter_tag')}`, {
+    title,
+    validate: (value) => (
+      value.includes(' ') || value.includes(',') || value.length > 20
+        ? translate('common.dialog.tag_invalid')
+        : null
+    )
+  }).then((tag) => {
+    if (!tag) return;
+    const formWithData = f as FormWithData;
+    if (formWithData.data) {
+      formWithData.data.value = tag;
+    }
+    f.submit();
+  });
+}
+
 export function multiActionGo(f: HTMLFormElement | FormWithData | undefined, sel: HTMLSelectElement | undefined): void {
   if (f !== undefined && sel !== undefined) {
     const v = sel.value;
     const t = sel.options[sel.selectedIndex].text;
     if (typeof v === 'string') {
       if (v === 'addtag' || v === 'deltag') {
-        let notok = true;
-        let answer: string | null = '';
         const checkedCount = document.querySelectorAll('input.markcheck:checked').length;
-        while (notok) {
-          answer = prompt(
-            '*** ' + t + ' ***' +
-            '\n\n*** ' + checkedCount +
-            ' Record(s) will be affected ***' +
-            '\n\nPlease enter one tag (20 char. max., no spaces, no commas -- ' +
-            'or leave empty to cancel:',
-            answer || ''
-          );
-          if (answer === null) answer = '';
-          if (answer.indexOf(' ') > 0 || answer.indexOf(',') > 0) {
-            alert('Please no spaces or commas!');
-          } else if (answer.length > 20) {
-            alert('Please no tags longer than 20 char.!');
-          } else {
-            notok = false;
-          }
-        }
-        if (answer !== '') {
-          const formWithData = f as FormWithData;
-          if (formWithData.data) {
-            formWithData.data.value = answer;
-          }
-          f.submit();
-        }
+        submitWithTag(f, translate('common.dialog.records_affected', { count: checkedCount }), t);
       } else if (
         v === 'del' || v === 'smi1' || v === 'spl1' || v === 's1' || v === 's5' ||
         v === 's98' || v === 's99' || v === 'today' || v === 'delsent' ||
@@ -91,33 +90,9 @@ export function allActionGo(f: HTMLFormElement | FormWithData | undefined, sel: 
     const t = sel.options[sel.selectedIndex].text;
     if (typeof v === 'string') {
       if (v === 'addtagall' || v === 'deltagall') {
-        let notok = true;
-        let answer: string | null = '';
-        while (notok) {
-          answer = prompt(
-            'THIS IS AN ACTION ON ALL RECORDS\n' +
-            'ON ALL PAGES OF THE CURRENT QUERY!\n\n' +
-            '*** ' + t + ' ***\n\n*** ' + n + ' Record(s) will be affected ***\n\n' +
-            'Please enter one tag (20 char. max., no spaces, no commas -- ' +
-            'or leave empty to cancel:',
-            answer || ''
-          );
-          if (answer === null) answer = '';
-          if (answer.indexOf(' ') > 0 || answer.indexOf(',') > 0) {
-            alert('Please no spaces or commas!');
-          } else if (answer.length > 20) {
-            alert('Please no tags longer than 20 char.!');
-          } else {
-            notok = false;
-          }
-        }
-        if (answer !== '') {
-          const formWithData = f as FormWithData;
-          if (formWithData.data) {
-            formWithData.data.value = answer;
-          }
-          f.submit();
-        }
+        const warning = translate('common.dialog.all_records_warning');
+        const affected = translate('common.dialog.records_affected', { count: n });
+        submitWithTag(f, `${warning}\n\n${affected}`, t);
       } else if (
         v === 'delall' || v === 'smi1all' || v === 'spl1all' || v === 's1all' ||
         v === 's5all' || v === 's98all' || v === 's99all' || v === 'todayall' ||

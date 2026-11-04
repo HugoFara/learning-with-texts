@@ -1,6 +1,7 @@
 /**
  * Tests for inline_edit.ts - Click-to-edit functionality for text elements
  */
+import { dismissAlerts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { initInlineEdit } from '../../../src/frontend/js/shared/components/inline_edit';
 
@@ -331,7 +332,7 @@ describe('inline_edit.ts', () => {
         status: 500
       });
 
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = dismissAlerts();
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       initInlineEdit('.editable', { url: '/save' });
@@ -345,7 +346,8 @@ describe('inline_edit.ts', () => {
       await new Promise(r => setTimeout(r, 10));
 
       expect(consoleSpy).toHaveBeenCalled();
-      expect(alertSpy).toHaveBeenCalledWith('Error saving changes. Please try again.');
+      await settle();
+      expect(alertSpy).toHaveBeenCalledWith('Failed to save. Please try again.');
     });
 
     it('restores editing UI after save error', async () => {
@@ -353,7 +355,7 @@ describe('inline_edit.ts', () => {
 
       (global.fetch as any).mockRejectedValue(new Error('Network error'));
 
-      vi.spyOn(window, 'alert').mockImplementation(() => {});
+      dismissAlerts();
       vi.spyOn(console, 'error').mockImplementation(() => {});
 
       initInlineEdit('.editable', { url: '/save' });

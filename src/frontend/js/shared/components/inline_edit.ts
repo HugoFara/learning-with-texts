@@ -8,6 +8,8 @@
  * @since 3.0.0
  */
 
+import { t } from '@shared/i18n/translator';
+import { showError } from '@shared/components/confirm_dialog';
 import { spinnerHtml } from '../icons/icons';
 import { getCsrfToken } from '@shared/api/client';
 
@@ -237,7 +239,7 @@ async function saveEdit(
       cancelEdit(edit);
     });
 
-    alert('Error saving changes. Please try again.');
+    void showError(t('common.dialog.save_failed'));
   }
 }
 

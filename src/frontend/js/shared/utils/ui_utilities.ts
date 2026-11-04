@@ -6,7 +6,8 @@
  * @since   1.6.16-fork
  */
 
-import { confirmDeletion } from '@shared/components/confirm_dialog';
+import { t } from '@shared/i18n/translator';
+import { confirmDeletion, showError } from '@shared/components/confirm_dialog';
 import { check } from '@shared/forms/form_validation';
 import { getCsrfToken } from '@shared/api/client';
 import { changeImprAnnText, changeImprAnnRadio, showSimilarTerms } from '@modules/vocabulary/services/term_operations';
@@ -81,10 +82,12 @@ async function handleConfirmDelete(event: Event): Promise<void> {
         // Reload page to show updated list
         window.location.reload();
       } else {
-        alert('Delete failed: ' + response.statusText);
+        void showError(t('common.dialog.delete_failed_reason', { reason: response.statusText }));
       }
     } catch (error) {
-      alert('Delete failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      void showError(t('common.dialog.delete_failed_reason', {
+        reason: error instanceof Error ? error.message : String(error)
+      }));
     }
   }
   else if (href) {
@@ -136,7 +139,7 @@ export async function showAllwordsClick(): Promise<void> {
     window.location.reload();
   } catch (err) {
     console.error('Failed to save display settings:', err);
-    alert('Failed to save settings. Please try again.');
+    void showError(t('common.dialog.save_failed'));
     // Revert checkbox states on error
     if (showAllEl) showAllEl.checked = showAll !== '1';
     if (showLearningEl) showLearningEl.checked = showLearning !== '1';

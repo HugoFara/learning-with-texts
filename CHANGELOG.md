@@ -15,10 +15,12 @@ ones are marked like "v1.0.0-fork".
 
 ### Fixed in Unreleased
 
-* Confirmation prompts are now an in-app dialog that follows the theme and the
-  interface language, instead of the browser's, and prompts that were English
-  in every locale are translated. The browser's own dialog remains only as a
-  fallback, and for its warning when leaving a page with unsaved changes.
+* Confirmations, alerts and text prompts are now in-app dialogs that follow the
+  theme and the interface language, instead of the browser's, and messages that
+  were English in every locale are translated. Entering an invalid tag shows
+  what is wrong without closing the dialog. The browser's own dialogs remain
+  only as a fallback, and for the warning when leaving a page with unsaved
+  changes.
 
 * Cancelling a database restore no longer leaves the page showing "restoring".
 

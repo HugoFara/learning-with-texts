@@ -11,7 +11,7 @@
  * @since   3.0.0
  */
 
-import { confirmAction, confirmDeletion } from '@shared/components/confirm_dialog';
+import { confirmAction, confirmDeletion, promptDialog, showAlert, showError } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import { initIcons } from '@shared/icons/lucide_icons';
 import { t, tn } from '@shared/i18n/translator';
@@ -481,7 +481,7 @@ export function wordListData(): WordListData {
 
       const ids = this.getMarkedIds();
       if (ids.length === 0) {
-        alert(t('vocabulary.list.no_terms_selected'));
+        void showAlert(t('vocabulary.list.no_terms_selected'));
         select.value = '';
         return;
       }
@@ -490,13 +490,14 @@ export function wordListData(): WordListData {
 
       // Handle actions that need extra data
       if (action === 'addtag' || action === 'deltag') {
-        const tag = prompt(t('vocabulary.list.prompt_tag'));
+        const tag = await promptDialog(t('vocabulary.list.prompt_tag'), {
+          validate: (value) => (
+            value.includes(' ') || value.includes(',') || value.length > 20
+              ? t('vocabulary.list.invalid_tag')
+              : null
+          )
+        });
         if (!tag) {
-          select.value = '';
-          return;
-        }
-        if (tag.includes(' ') || tag.includes(',') || tag.length > 20) {
-          alert(t('vocabulary.list.invalid_tag'));
           select.value = '';
           return;
         }
@@ -539,7 +540,7 @@ export function wordListData(): WordListData {
         this.marked.clear();
         await this.loadWords();
       } else {
-        alert(response.data?.message || response.error || t('vocabulary.list.action_failed'));
+        void showError(response.data?.message || response.error || t('vocabulary.list.action_failed'));
       }
 
       select.value = '';
@@ -574,7 +575,7 @@ export function wordListData(): WordListData {
       let data: string | undefined;
 
       if (action.endsWith('addtag') || action.endsWith('deltag')) {
-        const tag = prompt(t('vocabulary.list.prompt_tag_simple'));
+        const tag = await promptDialog(t('vocabulary.list.prompt_tag_simple'));
         if (!tag) {
           select.value = '';
           return;
@@ -590,7 +591,7 @@ export function wordListData(): WordListData {
       if (response.data?.success) {
         await this.loadWords();
       } else {
-        alert(response.data?.message || response.error || t('vocabulary.list.action_failed'));
+        void showError(response.data?.message || response.error || t('vocabulary.list.action_failed'));
       }
 
       select.value = '';
@@ -637,7 +638,7 @@ export function wordListData(): WordListData {
           }
         }
       } else {
-        alert(response.data?.error || response.error || t('vocabulary.list.save_failed'));
+        void showError(response.data?.error || response.error || t('vocabulary.list.save_failed'));
       }
 
       this.editingWord = null;

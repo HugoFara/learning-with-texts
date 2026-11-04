@@ -1,7 +1,7 @@
 /**
  * Tests for core/language_settings.ts - Language settings utilities
  */
-import { answerConfirms, settle } from '../helpers/confirm_answers';
+import { answerConfirms, dismissAlerts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 
 // Mock dependencies
@@ -339,58 +339,64 @@ describe('core/language_settings.ts', () => {
       expect(result).toBe(true);
     });
 
-    it('returns false for empty prefix', () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    it('returns false for empty prefix', async () => {
+      const alertSpy = dismissAlerts();
 
       const result = validateTablePrefix('');
 
       expect(result).toBe(false);
+      await settle();
       expect(alertSpy).toHaveBeenCalled();
     });
 
-    it('returns false for prefix longer than 20 characters', () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    it('returns false for prefix longer than 20 characters', async () => {
+      const alertSpy = dismissAlerts();
 
       const result = validateTablePrefix('a'.repeat(21));
 
       expect(result).toBe(false);
+      await settle();
       expect(alertSpy).toHaveBeenCalled();
     });
 
-    it('returns false for prefix with special characters', () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    it('returns false for prefix with special characters', async () => {
+      const alertSpy = dismissAlerts();
 
       const result = validateTablePrefix('my-prefix');
 
       expect(result).toBe(false);
+      await settle();
       expect(alertSpy).toHaveBeenCalled();
     });
 
-    it('returns false for prefix with spaces', () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    it('returns false for prefix with spaces', async () => {
+      const alertSpy = dismissAlerts();
 
       const result = validateTablePrefix('my prefix');
 
       expect(result).toBe(false);
+      await settle();
       expect(alertSpy).toHaveBeenCalled();
     });
 
-    it('returns false for prefix with dots', () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    it('returns false for prefix with dots', async () => {
+      const alertSpy = dismissAlerts();
 
       const result = validateTablePrefix('my.prefix');
 
       expect(result).toBe(false);
+      await settle();
       expect(alertSpy).toHaveBeenCalled();
     });
 
-    it('shows error message for invalid prefix', () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    it('shows error message for invalid prefix', async () => {
+      const alertSpy = dismissAlerts();
 
       validateTablePrefix('invalid!');
 
+      await settle();
       expect(alertSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Table Set Name')
+        expect.stringContaining('table set name')
       );
     });
 
@@ -406,12 +412,13 @@ describe('core/language_settings.ts', () => {
       expect(result).toBe(true);
     });
 
-    it('returns false for Unicode characters', () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    it('returns false for Unicode characters', async () => {
+      const alertSpy = dismissAlerts();
 
       const result = validateTablePrefix('日本語');
 
       expect(result).toBe(false);
+      await settle();
       expect(alertSpy).toHaveBeenCalled();
     });
 
@@ -433,11 +440,12 @@ describe('core/language_settings.ts', () => {
       expect(result).toBe(true);
     });
 
-    it('does not show alert for valid prefix', () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    it('does not show alert for valid prefix', async () => {
+      const alertSpy = dismissAlerts();
 
       validateTablePrefix('validprefix');
 
+      await settle();
       expect(alertSpy).not.toHaveBeenCalled();
     });
   });
@@ -514,7 +522,7 @@ describe('core/language_settings.ts', () => {
       expect(validateTablePrefix(exactLength)).toBe(true);
 
       const tooLong = 'a'.repeat(21);
-      vi.spyOn(window, 'alert').mockImplementation(() => {});
+      dismissAlerts();
       expect(validateTablePrefix(tooLong)).toBe(false);
     });
 

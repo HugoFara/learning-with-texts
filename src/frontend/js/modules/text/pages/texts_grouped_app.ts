@@ -11,6 +11,8 @@
  * @since   3.0.0
  */
 
+import { t } from '@shared/i18n/translator';
+import { showError } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import { initIcons } from '@shared/icons/lucide_icons';
 import { apiGet, getCsrfToken } from '@shared/api/client';
@@ -307,7 +309,7 @@ export function textsGroupedData(): TextsGroupedData {
     async submitBulkApiAction(action: 'archive' | 'delete', ids: number[]) {
       const res = await TextsApi.bulkAction(action, ids);
       if (res.error) {
-        alert('Action failed. Please try again.');
+        void showError(t('common.dialog.action_failed'));
         return;
       }
       window.location.reload();
@@ -327,7 +329,7 @@ export function textsGroupedData(): TextsGroupedData {
           window.location.reload();
         }).catch((error) => {
           console.error('Delete failed:', error);
-          alert('Failed to delete. Please try again.');
+          void showError(t('common.dialog.delete_failed'));
         });
       }
     },

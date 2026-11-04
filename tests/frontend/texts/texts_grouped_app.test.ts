@@ -1,6 +1,7 @@
 /**
  * Tests for texts_grouped_app.ts - Texts list Alpine component (single language)
  */
+import { dismissAlerts, settle } from '../helpers/confirm_answers';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Mock Alpine.js
@@ -656,15 +657,14 @@ describe('texts_grouped_app.ts', () => {
       (TextsApi.bulkAction as ReturnType<typeof vi.fn>).mockResolvedValue({
         error: 'boom'
       });
-      const alertMock = vi.fn();
-      vi.stubGlobal('alert', alertMock);
+      const alertSpy = dismissAlerts();
 
       const component = textsGroupedData();
       await component.submitBulkApiAction('delete', [10]);
 
-      expect(alertMock).toHaveBeenCalled();
+      await settle();
+      expect(alertSpy).toHaveBeenCalledWith('Action failed. Please try again.');
       expect(reloadMock).not.toHaveBeenCalled();
-      vi.unstubAllGlobals();
     });
   });
 

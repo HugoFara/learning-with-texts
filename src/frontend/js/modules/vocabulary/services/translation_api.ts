@@ -7,7 +7,7 @@
  */
 
 import { t } from '@shared/i18n/translator';
-import { confirmAction } from '@shared/components/confirm_dialog';
+import { confirmAction, showError } from '@shared/components/confirm_dialog';
 import { iconHtml } from '@shared/icons/icons';
 import { escapeHtml } from '@shared/utils/html_utils';
 
@@ -73,12 +73,12 @@ export async function addTranslation(s: string): Promise<void> {
     frame = window.opener as LwtFrame | undefined;
   }
   if (frame === undefined) {
-    alert('Translation can not be copied!');
+    void showError(t('common.dialog.translation_not_copied'));
     return;
   }
   const word_trans = (frame.document.forms[0] as HTMLFormElement & { WoTranslation: HTMLInputElement }).WoTranslation;
   if (typeof word_trans !== 'object') {
-    alert('Translation can not be copied!');
+    void showError(t('common.dialog.translation_not_copied'));
     return;
   }
   const oldValue = word_trans.value;
