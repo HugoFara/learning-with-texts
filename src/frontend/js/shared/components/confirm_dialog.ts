@@ -338,12 +338,15 @@ export async function promptDialog(
 /**
  * Ask whether to throw away unsaved changes.
  *
+ * @param message What is about to be lost; defaults to the term form's wording
  * @returns Promise resolving to true if the changes can be discarded
  */
-export function confirmDiscardChanges(): Promise<boolean> {
+export function confirmDiscardChanges(
+  message: string = t('common.dialog.discard_message')
+): Promise<boolean> {
   return confirmDialog({
     title: t('common.dialog.discard_title'),
-    message: t('common.dialog.discard_message'),
+    message,
     confirmLabel: t('common.dialog.discard'),
     cancelLabel: t('common.dialog.keep_editing'),
     danger: true

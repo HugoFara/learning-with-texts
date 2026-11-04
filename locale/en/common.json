@@ -48,6 +48,7 @@
     "status_unknown": "Unknown",
     "dialog.discard_title": "Discard your changes?",
     "dialog.discard_message": "Your changes to this term have not been saved.",
+    "dialog.leave_message": "Your changes on this page have not been saved.",
     "dialog.discard": "Discard",
     "dialog.keep_editing": "Keep editing",
     "dialog.confirm": "Confirm",

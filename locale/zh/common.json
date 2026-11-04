@@ -48,6 +48,7 @@
     "status_unknown": "未知",
     "dialog.discard_title": "放弃更改？",
     "dialog.discard_message": "您对此词条的更改尚未保存。",
+    "dialog.leave_message": "您在此页面上的更改尚未保存。",
     "dialog.discard": "放弃",
     "dialog.keep_editing": "继续编辑",
     "dialog.confirm": "确认",
