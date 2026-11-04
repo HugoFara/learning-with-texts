@@ -8,6 +8,7 @@
  * @since   3.0.0
  */
 
+import { confirmDiscardChanges } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import type { WordFormStoreState, SaveResult } from '../stores/word_form_store';
 import type { WordStoreState } from '../stores/word_store';
@@ -110,7 +111,7 @@ export interface WordEditFormData {
   hasFieldError(field: FormDataField): boolean;
   getFieldError(field: FormDataField): string | null;
   save(): Promise<void>;
-  cancel(): void;
+  cancel(): Promise<void>;
   addTag(tag: string): void;
   removeTag(tag: string): void;
   filterTags(): void;
@@ -323,11 +324,9 @@ export function wordEditFormData(): WordEditFormData {
       }
     },
 
-    cancel(): void {
-      if (this.isDirty) {
-        if (!confirm('You have unsaved changes. Are you sure you want to cancel?')) {
-          return;
-        }
+    async cancel(): Promise<void> {
+      if (this.isDirty && !await confirmDiscardChanges()) {
+        return;
       }
 
       // Call the onCancelled callback if set, otherwise signal to return to info view

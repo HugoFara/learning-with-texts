@@ -7,6 +7,12 @@ import Alpine from 'alpinejs';
 // Use vi.hoisted to ensure mock function is available during hoisting
 const mockSpeechDispatcher = vi.hoisted(() => vi.fn());
 
+// In-app confirmation
+const mockConfirmDiscard = vi.hoisted(() => vi.fn());
+vi.mock('../../../src/frontend/js/shared/components/confirm_dialog', () => ({
+  confirmDiscardChanges: mockConfirmDiscard
+}));
+
 // Mock Alpine.js
 vi.mock('alpinejs', () => ({
   default: {
@@ -279,42 +285,31 @@ describe('word_modal.ts', () => {
     });
 
     describe('close', () => {
-      it('closes modal without confirmation when form is not dirty', () => {
+      it('closes modal without confirmation when form is not dirty', async () => {
         mockFormStore.isDirty = false;
-        const component = wordModalData();
 
-        component.close();
+        await wordModalData().close();
 
-        expect(confirm).not.toHaveBeenCalled();
+        expect(mockConfirmDiscard).not.toHaveBeenCalled();
         expect(mockWordStore.closeEditModal).toHaveBeenCalled();
       });
 
-      it('prompts for confirmation when form is dirty', () => {
+      it('resets form and closes modal when user confirms', async () => {
         mockFormStore.isDirty = true;
-        const component = wordModalData();
+        mockConfirmDiscard.mockResolvedValue(true);
 
-        component.close();
+        await wordModalData().close();
 
-        expect(confirm).toHaveBeenCalledWith('You have unsaved changes. Are you sure you want to close?');
-      });
-
-      it('resets form and closes modal when user confirms', () => {
-        mockFormStore.isDirty = true;
-        vi.mocked(confirm).mockReturnValue(true);
-        const component = wordModalData();
-
-        component.close();
-
+        expect(confirm).not.toHaveBeenCalled();
         expect(mockFormStore.reset).toHaveBeenCalled();
         expect(mockWordStore.closeEditModal).toHaveBeenCalled();
       });
 
-      it('does not close modal when user cancels', () => {
+      it('does not close modal when user cancels', async () => {
         mockFormStore.isDirty = true;
-        vi.mocked(confirm).mockReturnValue(false);
-        const component = wordModalData();
+        mockConfirmDiscard.mockResolvedValue(false);
 
-        component.close();
+        await wordModalData().close();
 
         expect(mockFormStore.reset).not.toHaveBeenCalled();
         expect(mockWordStore.closeEditModal).not.toHaveBeenCalled();

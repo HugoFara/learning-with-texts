@@ -45,5 +45,9 @@
     "status_learned": "Изучено",
     "status_well_known": "Хорошо известно",
     "status_ignored": "Игнорируется",
-    "status_unknown": "Неизвестно"
+    "status_unknown": "Неизвестно",
+    "dialog.discard_title": "Отменить изменения?",
+    "dialog.discard_message": "Изменения этого термина не сохранены.",
+    "dialog.discard": "Отменить изменения",
+    "dialog.keep_editing": "Продолжить редактирование"
 }

@@ -8,6 +8,7 @@
  * @since   3.0.0
  */
 
+import { confirmDiscardChanges } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import { TermsApi, type MultiWordData, type MultiWordInput } from '@modules/vocabulary/api/terms_api';
 import { updateWordStatusInDOM } from '@modules/text/pages/reading/text_renderer';
@@ -80,7 +81,7 @@ export interface MultiWordFormStoreState {
   // Methods
   loadForEdit(textId: number, position: number, text: string, wordCount: number, wordId?: number): Promise<void>;
   reset(): void;
-  close(): void;
+  close(): Promise<boolean>;
   validate(): boolean;
   validateField(field: keyof MultiWordFormData): void;
   save(): Promise<SaveResult>;
@@ -296,15 +297,16 @@ function createMultiWordFormStore(): MultiWordFormStoreState {
     },
 
     /**
-     * Close the modal.
+     * Close the modal, unless the user chooses to keep their changes.
+     *
+     * @returns Whether it closed
      */
-    close(): void {
-      if (this.isDirty) {
-        if (!confirm('You have unsaved changes. Are you sure you want to close?')) {
-          return;
-        }
+    async close(): Promise<boolean> {
+      if (this.isDirty && !await confirmDiscardChanges()) {
+        return false;
       }
       this.reset();
+      return true;
     },
 
     /**

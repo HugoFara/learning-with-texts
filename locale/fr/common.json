@@ -45,5 +45,9 @@
     "status_learned": "Apprise",
     "status_well_known": "Bien connue",
     "status_ignored": "Ignorée",
-    "status_unknown": "Inconnue"
+    "status_unknown": "Inconnue",
+    "dialog.discard_title": "Abandonner vos modifications ?",
+    "dialog.discard_message": "Vos modifications de ce terme n'ont pas été enregistrées.",
+    "dialog.discard": "Abandonner",
+    "dialog.keep_editing": "Continuer à modifier"
 }

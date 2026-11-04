@@ -9,6 +9,7 @@
  * @since   3.0.0
  */
 
+import { confirmDiscardChanges } from '@shared/components/confirm_dialog';
 import Alpine from 'alpinejs';
 import type { WordStoreState, WordData } from '../stores/word_store';
 import type { WordFormStoreState } from '../stores/word_form_store';
@@ -100,7 +101,7 @@ export interface WordModalData {
   init(): void;
 
   // Methods
-  close(): void;
+  close(): Promise<void>;
   speakWord(): void;
   setStatus(status: number): Promise<void>;
   markWellKnown(): Promise<void>;
@@ -276,10 +277,10 @@ export function wordModalData(): WordModalData {
       return !!this.word?.wordId;
     },
 
-    close(): void {
+    async close(): Promise<void> {
       // Check for unsaved changes
       if (this.formStore.isDirty) {
-        if (!confirm('You have unsaved changes. Are you sure you want to close?')) {
+        if (!await confirmDiscardChanges()) {
           return;
         }
         this.formStore.reset();
