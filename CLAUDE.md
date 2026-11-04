@@ -95,6 +95,8 @@ if (!defined('LWT_TEST_DB_AVAILABLE') || !LWT_TEST_DB_AVAILABLE) {
 
 Prefer mocking or restructuring code to avoid DB calls in unit tests. Use the skip guard only when static/global DB calls cannot be avoided (e.g., deeply nested static method calls).
 
+**What CI runs:** pull requests run only the workflows their changed paths can affect, on Ubuntu; each workflow's `paths:` list says which. A push to `main` runs everything, including PHPUnit on Windows, which takes about 30 times as long. So when a new test reads a file outside a workflow's list, add that path to the list, or a pull request can skip the check that would have failed.
+
 Always serve the app with `npm run serve`, not a bare `php -S`: the built-in
 server is single-request unless `PHP_CLI_SERVER_WORKERS` is set, so one slow
 request blocks the rest and Cypress times out on pages that are only queued.
